@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>OpenClaw Multi-Agent Architecture</title>
+    <style>
+        body {
+            background-color: #1a1a1a;
+            color: #ffffff;
+            font-family: 'Helvetica Neue', Arial, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+        }
+        .container {
+            width: 800px;
+            height: 450px;
+            padding: 40px;
+            box-sizing: border-box;
+            border: 2px solid #333;
+            border-radius: 12px;
+            position: relative;
+        }
+        h1 {
+            color: #FF4500;
+            margin-top: 0;
+            font-size: 28px;
+        }
+        .node {
+            padding: 15px;
+            border-radius: 8px;
+            text-align: center;
+            font-weight: bold;
+            position: absolute;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.5);
+        }
+        .parent { background-color: #FF4500; top: 180px; left: 280px; width: 180px; z-index: 10; }
+        .user { background-color: #00AA00; top: 180px; left: 40px; width: 150px; }
+        .sub { background-color: #1DA1F2; width: 160px; right: 40px; }
+        .sub1 { top: 80px; }
+        .sub2 { top: 180px; }
+        .sub3 { top: 280px; }
+        .arrow {
+            position: absolute;
+            height: 2px;
+            background-color: #555;
+        }
+        .arrow-main { top: 205px; left: 190px; width: 90px; }
+        .arrow-sub1 { top: 105px; right: 200px; width: 100px; transform: rotate(-30deg); transform-origin: right; }
+        .arrow-sub2 { top: 205px; right: 200px; width: 80px; }
+        .arrow-sub3 { top: 305px; right: 200px; width: 100px; transform: rotate(30deg); transform-origin: right; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>OpenClaw Multi-Agent Flow</h1>
+        <div class="node user">User (Request)</div>
+        <div class="arrow arrow-main"></div>
+        <div class="node parent">Shiro (Orchestrator)</div>
+        <div class="arrow arrow-sub1"></div>
+        <div class="node sub sub1">X-Agent 1</div>
+        <div class="arrow arrow-sub2"></div>
+        <div class="node sub sub2">X-Agent 2</div>
+        <div class="arrow arrow-sub3"></div>
+        <div class="node sub sub3">Research-Agent</div>
+    </div>
+</body>
+</html>
