@@ -1,0 +1,114 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <meta name="robots" content="noindex,nofollow" />
+  <title>threads-watcher status</title>
+  <style>
+    :root {
+      color-scheme: light dark;
+      --fg: #111;
+      --muted: #666;
+      --bg: #fafafa;
+      --card: #fff;
+      --border: #e5e5e5;
+    }
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --fg: #eee;
+        --muted: #999;
+        --bg: #111;
+        --card: #1b1b1b;
+        --border: #2a2a2a;
+      }
+    }
+    body {
+      margin: 0;
+      font: 14px/1.5 -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;
+      color: var(--fg);
+      background: var(--bg);
+      padding: 24px;
+    }
+    main { max-width: 720px; margin: 0 auto; }
+    h1 { font-size: 18px; margin: 0 0 4px; }
+    .muted { color: var(--muted); font-size: 12px; }
+    .card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 16px;
+      margin-top: 16px;
+    }
+    .row { display: flex; justify-content: space-between; gap: 16px; padding: 6px 0; }
+    .row + .row { border-top: 1px solid var(--border); }
+    .label { color: var(--muted); }
+    ul { list-style: none; padding: 0; margin: 8px 0 0; }
+    li { padding: 4px 0; border-top: 1px solid var(--border); font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 12px; }
+    li:first-child { border-top: 0; }
+    a { color: inherit; }
+    .err { color: #c33; }
+    .pill {
+      display: inline-block; padding: 2px 8px; border-radius: 999px;
+      background: var(--border); font-size: 11px; color: var(--muted);
+    }
+  </style>
+</head>
+<body>
+  <main>
+    <h1>threads-watcher <span class="pill">status</span></h1>
+    <div class="muted">公開 Threads アカウントの新規投稿観測ステータス。スクリーンショット本体は配信しません。</div>
+
+    <section class="card" id="summary">
+      <div class="row"><span class="label">handle</span><span id="handle">—</span></div>
+      <div class="row"><span class="label">last checked (UTC)</span><span id="last">—</span></div>
+      <div class="row"><span class="label">seen posts</span><span id="count">—</span></div>
+      <div class="row"><span class="label">snapshot generated (UTC)</span><span id="generated">—</span></div>
+    </section>
+
+    <section class="card">
+      <div class="label" style="margin-bottom:8px">recent post ids (newest first)</div>
+      <ul id="posts"><li class="muted">loading…</li></ul>
+    </section>
+
+    <p class="muted" style="margin-top:24px">
+      このページは静的スナップショットです。データはローカル watcher が手動コミットされた時点のものです。
+    </p>
+  </main>
+
+  <script>
+    (async () => {
+      try {
+        const res = await fetch('state.json', { cache: 'no-store' });
+        if (!res.ok) throw new Error('HTTP ' + res.status);
+        const data = await res.json();
+        document.getElementById('handle').textContent = data.handle || '—';
+        document.getElementById('last').textContent = data.last_checked_at || '—';
+        document.getElementById('count').textContent = (data.post_ids || []).length;
+        document.getElementById('generated').textContent = data.snapshot_generated_at || '—';
+        const ul = document.getElementById('posts');
+        ul.innerHTML = '';
+        const ids = (data.post_ids || []).slice().reverse();
+        if (!ids.length) {
+          ul.innerHTML = '<li class="muted">no posts recorded yet</li>';
+          return;
+        }
+        const handle = (data.handle || '').replace(/^@/, '');
+        for (const pid of ids) {
+          const li = document.createElement('li');
+          const a = document.createElement('a');
+          a.href = 'https://www.threads.com/@' + handle + '/post/' + pid;
+          a.rel = 'noopener noreferrer';
+          a.target = '_blank';
+          a.textContent = pid;
+          li.appendChild(a);
+          ul.appendChild(li);
+        }
+      } catch (e) {
+        document.getElementById('posts').innerHTML =
+          '<li class="err">snapshot load failed: ' + (e && e.message || e) + '</li>';
+      }
+    })();
+  </script>
+</body>
+</html>

@@ -50,8 +50,17 @@ python watcher.py --watch --interval 600
 - `state.json`: `{"<handle>": {"seen_post_ids": [...], "last_checked_at": "..."}}`
 - `screenshots/<handle>/<post_id>__<YYYYMMDDTHHMMSSZ>.png`
 
+## 静的ステータスページ (`threads-watcher-status/`)
+
+`watcher.py` 実行ごとに `threads-watcher-status/state.json` にサニタイズ済みスナップショット(handle / 投稿 ID / タイムスタンプのみ、画像 path 含まず)を書き出す。`threads-watcher-status/index.html` がクライアントサイドでそれを読み公開ステータスを表示する。Vercel に静的サイトとしてデプロイされ、画像本体は配信しない(第三者投稿の再配布回避)。
+
+```bash
+cd threads-watcher-status
+vercel deploy --prod --yes   # 初回はプロジェクト作成プロンプトに沿う
+```
+
 ## 既知の制約 / TODO
 
 - Threads の DOM 構造変更でセレクタが壊れる可能性。フォールバックとして anchor href の正規表現抽出を併用
 - Cloudflare/ボット検知に当たる可能性。低頻度運用と `user-agent` の現実的設定で回避を試みる
-- Vercel など serverless へのデプロイは Playwright + Chromium のサイズ・実行時間制約あり(別途検討)
+- 収集スクリプト本体は Vercel に乗らない(Playwright + Chromium のサイズ・実行時間・永続ストレージ制約のため)。ローカル / Mac mini での cron / launchd 実行が前提

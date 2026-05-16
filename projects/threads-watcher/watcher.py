@@ -28,6 +28,8 @@ from playwright.sync_api import (
 PROJECT_ROOT = Path(__file__).resolve().parent
 STATE_FILE = PROJECT_ROOT / "state.json"
 SCREENSHOTS_DIR = PROJECT_ROOT / "screenshots"
+WEB_SNAPSHOT_FILE = PROJECT_ROOT / "threads-watcher-status" / "state.json"
+WEB_SNAPSHOT_HANDLE = "@hal.lifedesign"
 
 DEFAULT_HANDLE = "@hal.lifedesign"
 DEFAULT_USER_AGENT = (
@@ -55,6 +57,23 @@ def _load_state() -> dict[str, Any]:
 
 def _save_state(state: dict[str, Any]) -> None:
     STATE_FILE.write_text(json.dumps(state, ensure_ascii=False, indent=2), encoding="utf-8")
+
+
+def _write_web_snapshot(state: dict[str, Any], handle: str) -> None:
+    """Write a sanitized snapshot for the public Vercel status page.
+
+    Includes only the handle, post IDs (which are public), and timestamps.
+    Never includes screenshot file paths or other internal state.
+    """
+    handle_state = state.get(handle) or {}
+    snapshot = {
+        "handle": handle,
+        "last_checked_at": handle_state.get("last_checked_at"),
+        "post_ids": list(handle_state.get("seen_post_ids", [])),
+        "snapshot_generated_at": _now_iso(),
+    }
+    WEB_SNAPSHOT_FILE.parent.mkdir(parents=True, exist_ok=True)
+    WEB_SNAPSHOT_FILE.write_text(json.dumps(snapshot, ensure_ascii=False, indent=2), encoding="utf-8")
 
 
 def _now_iso() -> str:
@@ -174,6 +193,8 @@ def run_once(handle: str) -> int:
     with sync_playwright() as p:
         result = _check_handle(p, handle, state)
     _save_state(state)
+    if handle == WEB_SNAPSHOT_HANDLE:
+        _write_web_snapshot(state, handle)
     print(f"[done] {handle} new={result['new_count']} at={result['checked_at']}")
     return result["new_count"]
 
