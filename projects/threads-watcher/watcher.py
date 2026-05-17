@@ -17,7 +17,7 @@ from pathlib import Path
 from typing import Any
 
 from db import connect, get_seen_post_ids, init_db, latest_snapshot, record_check, save_post_screenshot
-from health import check_dom_regression, check_recent_errors
+from health import check_dom_regression, check_recent_errors, judge_partial_error, previous_max_found
 from playwright.sync_api import (
     Browser,
     Page,
@@ -221,17 +221,11 @@ def run_once(handle: str) -> int:
 
                 if not post_ids:
                     print(f"[warn] no post links found on {profile_url} — DOM may have changed or content gated", file=sys.stderr)
-                previous_max_row = conn.execute(
-                    "SELECT MAX(found_count) AS max_found FROM checks WHERE handle = ? AND status = 'ok'",
-                    (handle,),
-                ).fetchone()
-                previous_max_found = int(previous_max_row["max_found"] or 0) if previous_max_row else 0
-                if previous_max_found and found_count < previous_max_found:
+                prev_max = previous_max_found(conn, handle)
+                partial_reason = judge_partial_error(found_count, prev_max)
+                if partial_reason is not None:
                     status = "partial_error"
-                    error = (
-                        f"profile extraction returned partial result: found={found_count} "
-                        f"previous_max={previous_max_found}"
-                    )
+                    error = partial_reason
                     print(f"[warn] {error}", file=sys.stderr)
 
                 seen_set = set(get_seen_post_ids(conn, handle))
