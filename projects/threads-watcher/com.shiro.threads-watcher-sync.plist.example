@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  launchd template (draft / Yakon 承認待ち)
+
+  配置先候補:
+    ~/Library/LaunchAgents/com.shiro.threads-watcher-sync.plist
+
+  有効化(承認後):
+    launchctl load -w ~/Library/LaunchAgents/com.shiro.threads-watcher-sync.plist
+
+  無効化(ロールバック):
+    launchctl unload -w ~/Library/LaunchAgents/com.shiro.threads-watcher-sync.plist
+
+  デフォルト挙動:
+    - 30 分ごとに sync.sh を起動
+    - DB 増分があれば git commit、push は ENABLE_PUSH=1 を渡した時のみ
+    - logs/sync.{out,err}.log にローテーションなしで追記
+-->
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+  <key>Label</key>
+  <string>com.shiro.threads-watcher-sync</string>
+
+  <key>ProgramArguments</key>
+  <array>
+    <!-- sync.py (現行版) を使用。シェル版 sync.sh.example は superseded で残置. -->
+    <string>/opt/homebrew/bin/python3</string>
+    <string>/Users/umi/.openclaw/workspace/projects/threads-watcher/sync.py</string>
+    <!-- デフォルト dry-run。本番運用に切替時は次行を有効化(Yakon 承認後): -->
+    <!-- <string>- -confirm</string> -->
+    <!-- <string>- -enable-push</string> -->
+  </array>
+
+  <key>EnvironmentVariables</key>
+  <dict>
+    <key>PATH</key>
+    <string>/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin</string>
+  </dict>
+
+  <key>StartInterval</key>
+  <integer>1800</integer> <!-- 30 分 -->
+
+  <key>RunAtLoad</key>
+  <false/>
+
+  <key>StandardOutPath</key>
+  <string>/Users/umi/.openclaw/workspace/projects/threads-watcher/logs/sync.out.log</string>
+  <key>StandardErrorPath</key>
+  <string>/Users/umi/.openclaw/workspace/projects/threads-watcher/logs/sync.err.log</string>
+
+  <key>WorkingDirectory</key>
+  <string>/Users/umi/.openclaw/workspace/projects/threads-watcher</string>
+</dict>
+</plist>
