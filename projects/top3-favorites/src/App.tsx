@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 
 type Rank = 1 | 2 | 3
 
@@ -21,6 +21,12 @@ type Draft = {
   name: string
   rank: Rank
   memo: string
+}
+
+type PendingImport = {
+  items: FavoriteItem[]
+  filename: string
+  originalCount: number
 }
 
 const initialDraft: Draft = {
@@ -78,6 +84,50 @@ function rankItems(items: FavoriteItem[], target?: FavoriteItem): FavoriteItem[]
     .map((item, index) => ({ ...item, rank: (index + 1) as Rank }))
 }
 
+function isValidImportItem(value: unknown): value is FavoriteItem {
+  if (!value || typeof value !== 'object') return false
+  const o = value as Record<string, unknown>
+
+  const id = typeof o.id === 'string' ? o.id.trim() : ''
+  const tag = typeof o.tag === 'string' ? o.tag.trim() : ''
+  const name = typeof o.name === 'string' ? o.name.trim() : ''
+
+  return (
+    id.length > 0 &&
+    tag.length > 0 &&
+    typeof o.location === 'string' &&
+    name.length > 0 &&
+    (o.rank === 1 || o.rank === 2 || o.rank === 3 || o.rank === '1' || o.rank === '2' || o.rank === '3') &&
+    typeof o.memo === 'string'
+  )
+}
+
+function hasDuplicateImportIds(items: FavoriteItem[]): boolean {
+  return new Set(items.map((item) => item.id.trim())).size !== items.length
+}
+
+function themeKey(item: Pick<FavoriteItem, 'tag'>): string {
+  return item.tag.trim().toLowerCase()
+}
+
+function normalizeImportedTop3(items: FavoriteItem[]): FavoriteItem[] {
+  const byTheme = new Map<string, FavoriteItem[]>()
+  for (const item of items) {
+    const key = themeKey(item)
+    byTheme.set(key, [...(byTheme.get(key) ?? []), item])
+  }
+
+  const normalized: FavoriteItem[] = []
+  for (const list of byTheme.values()) {
+    const top3 = [...list]
+      .sort((a, b) => a.rank - b.rank || b.updatedAt.localeCompare(a.updatedAt))
+      .slice(0, 3)
+      .map((item, index) => ({ ...item, rank: (index + 1) as Rank }))
+    normalized.push(...top3)
+  }
+  return normalized
+}
+
 async function api<T>(path: string, options?: RequestInit): Promise<T> {
   const res = await fetch(path, {
     ...options,
@@ -103,6 +153,8 @@ export function App() {
   const [isSaving, setIsSaving] = useState(false)
   const [error, setError] = useState('')
   const [notice, setNotice] = useState('')
+  const [pendingImport, setPendingImport] = useState<PendingImport | null>(null)
+  const fileRef = useRef<HTMLInputElement | null>(null)
 
   const loadItems = async () => {
     setIsLoading(true)
@@ -149,6 +201,19 @@ export function App() {
       .map(([tag, list]) => [tag, rankItems(list)] as const)
       .sort((a, b) => a[0].localeCompare(b[0], 'ja'))
   }, [items, query, selectedTag])
+
+  const pendingImportImpact = useMemo(() => {
+    if (!pendingImport) return null
+    const currentIds = new Set(items.map((item) => item.id))
+    const importIds = new Set(pendingImport.items.map((item) => item.id))
+    const added = pendingImport.items.filter((item) => !currentIds.has(item.id)).length
+    const kept = pendingImport.items.filter((item) => currentIds.has(item.id)).length
+    const removed = items.filter((item) => !importIds.has(item.id)).length
+    const tagSet = new Set<string>()
+    for (const item of items) tagSet.add(item.tag)
+    for (const item of pendingImport.items) tagSet.add(item.tag)
+    return { added, kept, removed, tags: Array.from(tagSet).filter(Boolean) }
+  }, [items, pendingImport])
 
   const updateDraft = (patch: Partial<Draft>) => setDraft((prev) => ({ ...prev, ...patch }))
   const updateEditingDraft = (patch: Partial<Draft>) => setEditingDraft((prev) => ({ ...prev, ...patch }))
@@ -202,13 +267,110 @@ export function App() {
     }
   }
 
+  const exportJson = () => {
+    const blob = new Blob([JSON.stringify(items, null, 2)], { type: 'application/json' })
+    const url = URL.createObjectURL(blob)
+    const a = document.createElement('a')
+    const stamp = new Date().toISOString().slice(0, 19).replace(/[:T]/g, '-')
+    a.href = url
+    a.download = `top3-favorites-${stamp}.json`
+    document.body.appendChild(a)
+    a.click()
+    document.body.removeChild(a)
+    URL.revokeObjectURL(url)
+    setError('')
+    setNotice('JSONをエクスポートしました。')
+  }
+
+  const triggerImport = () => {
+    fileRef.current?.click()
+  }
+
+  const onImportFile: React.ChangeEventHandler<HTMLInputElement> = async (e) => {
+    const file = e.target.files?.[0]
+    e.target.value = ''
+    if (!file) return
+
+    try {
+      const text = await file.text()
+      const parsed = JSON.parse(text) as unknown
+      if (!Array.isArray(parsed)) {
+        setError('インポート失敗: JSON配列形式ではありません。既存データは保持しました。')
+        setNotice('')
+        setPendingImport(null)
+        return
+      }
+      if (parsed.some((v) => !isValidImportItem(v))) {
+        setError('インポート失敗: 不正な要素が含まれています。既存データは保持しました。')
+        setNotice('')
+        setPendingImport(null)
+        return
+      }
+      if (hasDuplicateImportIds(parsed)) {
+        setError('インポート失敗: IDが重複しています。既存データは保持しました。')
+        setNotice('')
+        setPendingImport(null)
+        return
+      }
+
+      const normalized = normalizeImportedTop3(parsed)
+      setPendingImport({ items: normalized, filename: file.name, originalCount: parsed.length })
+      setError('')
+      setNotice(`インポート確認: ${normalized.length}件。内容を確認してから反映してください。`)
+    } catch {
+      setError('インポート失敗: JSONの読み取りに失敗しました。既存データは保持しました。')
+      setNotice('')
+      setPendingImport(null)
+    }
+  }
+
+  const applyPendingImport = async () => {
+    if (!pendingImport) return
+    setIsSaving(true)
+    try {
+      const data = await api<{ items: FavoriteItem[] }>('/api/items?mode=replace', {
+        method: 'POST',
+        body: JSON.stringify({ items: pendingImport.items }),
+      })
+      setItems(data.items)
+      setTags(Array.from(new Set(data.items.map((item) => item.tag))).sort((a, b) => a.localeCompare(b, 'ja')))
+      setSelectedTag('')
+      setQuery('')
+      setPendingImport(null)
+      setError('')
+      setNotice(`インポート成功: ${data.items.length}件を反映しました。`)
+    } catch (e) {
+      setError(e instanceof Error ? `インポート失敗: ${e.message}` : 'インポート失敗: API反映に失敗しました。既存データは保持しました。')
+      setNotice('')
+    } finally {
+      setIsSaving(false)
+    }
+  }
+
+  const cancelPendingImport = () => {
+    setPendingImport(null)
+    setError('')
+    setNotice('インポートをキャンセルしました。')
+  }
+
   const startEdit = (item: FavoriteItem) => {
     setEditingId(item.id)
     setEditingDraft({ tag: item.tag, location: item.location, name: item.name, rank: item.rank, memo: item.memo })
+    setError('')
+  }
+
+  const cancelEdit = () => {
+    setEditingId(null)
+    setError('')
   }
 
   const saveEdit = async () => {
     if (!editingId) return
+    if (!editingDraft.tag.trim() || !editingDraft.name.trim()) {
+      setError('タグと店舗名は必須です。')
+      setNotice('')
+      return
+    }
     setIsSaving(true)
     try {
       const data = await api<{ items: FavoriteItem[] }>('/api/items', {
@@ -227,10 +389,13 @@ export function App() {
     }
   }
 
-  const removeItem = async (id: string) => {
+  const removeItem = async (item: FavoriteItem) => {
+    const ok = window.confirm(`${item.name} をTop3から削除しますか？`)
+    if (!ok) return
+
     setIsSaving(true)
     try {
-      const data = await api<{ items: FavoriteItem[] }>(`/api/items?id=${encodeURIComponent(id)}`, { method: 'DELETE' })
+      const data = await api<{ items: FavoriteItem[] }>(`/api/items?id=${encodeURIComponent(item.id)}`, { method: 'DELETE' })
       setItems(data.items)
       setTags(Array.from(new Set(data.items.map((item) => item.tag))).sort((a, b) => a.localeCompare(b, 'ja')))
       setNotice('削除しました。')
@@ -279,7 +444,12 @@ export function App() {
 
         <div className="rank-picker" aria-label="順位を選択">
           {[1, 2, 3].map((rank) => (
-            <button key={rank} className={draft.rank === rank ? 'rank active' : 'rank'} onClick={() => updateDraft({ rank: rank as Rank })}>
+            <button
+              key={rank}
+              className={draft.rank === rank ? 'rank active' : 'rank'}
+              onClick={() => updateDraft({ rank: rank as Rank })}
+              aria-label={`登録 ${rank}位に入れる`}
+            >
               {rank}位に入れる
             </button>
           ))}
@@ -303,9 +473,50 @@ export function App() {
 
         <div className="row feedback">
           <button className="ghost" onClick={addSamples} disabled={isSaving}>サンプルをDB保存</button>
-          {error && <p className="error">{error}</p>}
-          {notice && <p className="notice">{notice}</p>}
+          {error && <p className="error" role="alert">{error}</p>}
+          {notice && <p className="notice" role="status" aria-live="polite">{notice}</p>}
         </div>
+      </section>
+
+      <section className="card">
+        <h2>データ管理</h2>
+        <p className="hint">DBデータをJSONでエクスポート/インポートできます。</p>
+        <div className="row">
+          <button onClick={exportJson}>JSONエクスポート</button>
+          <button className="ghost" onClick={triggerImport}>JSONインポート</button>
+          <input
+            ref={fileRef}
+            type="file"
+            accept="application/json,.json"
+            style={{ display: 'none' }}
+            onChange={onImportFile}
+          />
+        </div>
+        <p className="hint">インポートは全件バリデーション成功時のみ反映。失敗時は既存データ保持（fail-closed）。</p>
+        {pendingImport && (
+          <div className="preview-panel" aria-label="インポート確認">
+            <div className="row between no-margin">
+              <div>
+                <strong>インポート確認</strong>
+                <p className="hint compact">{pendingImport.filename}</p>
+                <p className="hint compact">現在{items.length}件 → インポート後{pendingImport.items.length}件</p>
+                {pendingImport.originalCount !== pendingImport.items.length && (
+                  <p className="hint compact">同一タグはTop3に正規化: {pendingImport.originalCount}件中{pendingImport.items.length}件を反映予定</p>
+                )}
+                {pendingImportImpact && (
+                  <>
+                    <p className="hint compact">追加{pendingImportImpact.added}件 / 更新・保持{pendingImportImpact.kept}件 / 削除予定{pendingImportImpact.removed}件</p>
+                    <p className="hint compact">影響タグ: {pendingImportImpact.tags.length ? pendingImportImpact.tags.join(', ') : 'なし'}</p>
+                  </>
+                )}
+              </div>
+              <div className="row no-margin">
+                <button onClick={applyPendingImport} disabled={isSaving}>{isSaving ? '反映中…' : 'この内容でインポート'}</button>
+                <button className="ghost" onClick={cancelPendingImport} disabled={isSaving}>インポートをキャンセル</button>
+              </div>
+            </div>
+          </div>
+        )}
       </section>
 
       <section className="card">
@@ -317,7 +528,13 @@ export function App() {
           {selectedTag && <button className="ghost" onClick={() => setSelectedTag('')}>タグ解除</button>}
         </div>
 
-        <input className="search" value={query} onChange={(e) => setQuery(e.target.value)} placeholder="例: カフェラテ / 柏の葉 / Solito" />
+        <input
+          className="search"
+          value={query}
+          onChange={(e) => setQuery(e.target.value)}
+          placeholder="例: カフェラテ / 柏の葉 / Solito"
+          aria-label="Top3検索"
+        />
         <TagPicker tags={tags} activeTag={selectedTag} selectedTag={selectedTag} onSelect={setSelectedTag} onClear={() => setSelectedTag('')} />
 
         {filteredGroups.length === 0 ? (
@@ -330,7 +547,7 @@ export function App() {
                 {list.map((item) => (
                   <li key={item.id} className="item">
                     {editingId === item.id ? (
-                      <EditForm draft={editingDraft} tags={tags} onChange={updateEditingDraft} onSave={saveEdit} onCancel={() => setEditingId(null)} />
+                      <EditForm draft={editingDraft} tags={tags} onChange={updateEditingDraft} onSave={saveEdit} onCancel={cancelEdit} />
                     ) : (
                       <details>
                         <summary>
@@ -341,8 +558,8 @@ export function App() {
                           {item.memo && <p className="memo">{item.memo}</p>}
                           <div className="row no-margin">
                             <a href={item.mapsUrl || buildMapsUrl(item)} target="_blank" rel="noreferrer">Mapsで開く</a>
-                            <button className="ghost" onClick={() => startEdit(item)}>編集</button>
-                            <button className="danger" onClick={() => removeItem(item.id)}>削除</button>
+                            <button className="ghost" onClick={() => startEdit(item)} aria-label={`${item.name}を編集`}>編集</button>
+                            <button className="danger" onClick={() => removeItem(item)} aria-label={`${item.name}を削除`}>削除</button>
                           </div>
                         </div>
                       </details>
@@ -417,22 +634,27 @@ function EditForm({
   return (
     <div className="edit-form">
       <div className="form-grid">
-        <input value={draft.tag} onChange={(e) => onChange({ tag: e.target.value })} placeholder="タグ" list="edit-tag-options" />
+        <input value={draft.tag} onChange={(e) => onChange({ tag: e.target.value })} placeholder="タグ" list="edit-tag-options" aria-label="編集 タグ" />
         <datalist id="edit-tag-options">{tags.map((tag) => <option key={tag} value={tag} />)}</datalist>
-        <input value={draft.location} onChange={(e) => onChange({ location: e.target.value })} placeholder="場所" />
-        <input value={draft.name} onChange={(e) => onChange({ name: e.target.value })} placeholder="店舗名" />
+        <input value={draft.location} onChange={(e) => onChange({ location: e.target.value })} placeholder="場所" aria-label="編集 場所" />
+        <input value={draft.name} onChange={(e) => onChange({ name: e.target.value })} placeholder="店舗名" aria-label="編集 店舗名" />
       </div>
       <div className="rank-picker compact-picker">
         {[1, 2, 3].map((rank) => (
-          <button key={rank} className={draft.rank === rank ? 'rank active' : 'rank'} onClick={() => onChange({ rank: rank as Rank })}>
+          <button
+            key={rank}
+            className={draft.rank === rank ? 'rank active' : 'rank'}
+            onClick={() => onChange({ rank: rank as Rank })}
+            aria-label={`編集 ${rank}位に変更`}
+          >
             {rank}位
           </button>
         ))}
       </div>
-      <textarea value={draft.memo} onChange={(e) => onChange({ memo: e.target.value })} rows={2} placeholder="メモ" />
+      <textarea value={draft.memo} onChange={(e) => onChange({ memo: e.target.value })} rows={2} placeholder="メモ" aria-label="編集 メモ" />
       <div className="row">
-        <button onClick={onSave}>保存</button>
-        <button className="ghost" onClick={onCancel}>キャンセル</button>
+        <button onClick={onSave} aria-label="編集を保存">保存</button>
+        <button className="ghost" onClick={onCancel} aria-label="編集をキャンセル">キャンセル</button>
       </div>
     </div>
   )
