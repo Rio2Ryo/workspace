@@ -209,10 +209,11 @@ export function App() {
     const added = pendingImport.items.filter((item) => !currentIds.has(item.id)).length
     const kept = pendingImport.items.filter((item) => currentIds.has(item.id)).length
     const removed = items.filter((item) => !importIds.has(item.id)).length
+    const excluded = pendingImport.originalCount - pendingImport.items.length
     const tagSet = new Set<string>()
     for (const item of items) tagSet.add(item.tag)
     for (const item of pendingImport.items) tagSet.add(item.tag)
-    return { added, kept, removed, tags: Array.from(tagSet).filter(Boolean) }
+    return { added, kept, removed, excluded, tags: Array.from(tagSet).filter(Boolean) }
   }, [items, pendingImport])
 
   const updateDraft = (patch: Partial<Draft>) => setDraft((prev) => ({ ...prev, ...patch }))
@@ -505,7 +506,10 @@ export function App() {
                 )}
                 {pendingImportImpact && (
                   <>
-                    <p className="hint compact">追加{pendingImportImpact.added}件 / 更新・保持{pendingImportImpact.kept}件 / 削除予定{pendingImportImpact.removed}件</p>
+                    <p className="hint compact">
+                      追加{pendingImportImpact.added}件 / 更新・保持{pendingImportImpact.kept}件 / 削除予定{pendingImportImpact.removed}件
+                      {pendingImportImpact.excluded > 0 ? ` / 正規化で除外予定${pendingImportImpact.excluded}件` : ''}
+                    </p>
                     <p className="hint compact">影響タグ: {pendingImportImpact.tags.length ? pendingImportImpact.tags.join(', ') : 'なし'}</p>
                   </>
                 )}

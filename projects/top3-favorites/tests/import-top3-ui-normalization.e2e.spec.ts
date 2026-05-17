@@ -27,7 +27,7 @@ test('UI shows only Top3 after importing 4 items of same tag', async ({ page }) 
 
   await expect(page.getByText('現在0件 → インポート後3件')).toBeVisible()
   await expect(page.getByText('同一タグはTop3に正規化: 4件中3件を反映予定')).toBeVisible()
-  await expect(page.getByText('追加3件 / 更新・保持0件 / 削除予定0件')).toBeVisible()
+  await expect(page.getByText('追加3件 / 更新・保持0件 / 削除予定0件 / 正規化で除外予定1件')).toBeVisible()
   await page.getByRole('button', { name: 'この内容でインポート' }).click()
   await expect(page.getByText(/インポート成功/)).toBeVisible()
 
