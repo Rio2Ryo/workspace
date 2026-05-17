@@ -1,288 +1,244 @@
-import { useEffect, useMemo, useRef, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
+
+type Rank = 1 | 2 | 3
 
 type FavoriteItem = {
   id: string
-  tags: string[]
-  rank: 1 | 2 | 3
+  tag: string
+  location: string
   name: string
+  rank: Rank
   memo: string
+  mapsUrl: string
+  placeId: string
   createdAt: string
+  updatedAt: string
 }
 
 type Draft = {
-  category: string
-  area: string
+  tag: string
+  location: string
   name: string
-  rank: 1 | 2 | 3
+  rank: Rank
   memo: string
 }
 
-const STORAGE_KEY = 'top3-favorites-items'
-
-const sampleItems: Omit<FavoriteItem, 'id' | 'createdAt'>[] = [
-  { tags: ['カフェラテ', '柏の葉'], rank: 1, name: 'Solito MAGO', memo: 'ラテアートがきれい。ミルク感も好き' },
-  { tags: ['カフェラテ', '柏の葉'], rank: 2, name: 'T-SITEのカフェ', memo: '作業ついでに寄りやすい' },
-  { tags: ['つけ麺', '松戸'], rank: 1, name: 'とみ田', memo: '濃厚つけ麺が強い' },
-]
-
-function normalizeTag(tag: string): string {
-  return tag.trim().replace(/^#/, '')
-}
-
-function normalizeTags(tags: string[]): string[] {
-  return Array.from(new Set(tags.map(normalizeTag).filter(Boolean)))
-}
-
-function themeKeyFromTags(tags: string[]): string {
-  return normalizeTags(tags)[0] ?? ''
-}
-
-function themeLabel(tags: string[]): string {
-  return normalizeTags(tags)[0] ?? ''
-}
-
-function itemContext(tags: string[]): string {
-  return normalizeTags(tags).slice(1).join(' / ')
-}
-
-function isValidRank(v: unknown): v is 1 | 2 | 3 {
-  return v === 1 || v === 2 || v === 3
-}
-
-function toValidItem(v: unknown): FavoriteItem | null {
-  if (!v || typeof v !== 'object') return null
-  const o = v as Record<string, unknown>
-
-  const id = typeof o.id === 'string' ? o.id : ''
-  const name = typeof o.name === 'string' ? o.name.trim() : ''
-  const memo = typeof o.memo === 'string' ? o.memo : ''
-  const createdAt = typeof o.createdAt === 'string' ? o.createdAt : new Date().toISOString()
-  const rankRaw = typeof o.rank === 'number' ? o.rank : Number(o.rank)
-  const tagsRaw = Array.isArray(o.tags) ? o.tags : []
-  const tags = normalizeTags(tagsRaw.filter((t): t is string => typeof t === 'string'))
-
-  if (!id || !name || !isValidRank(rankRaw) || tags.length === 0) return null
-
-  return { id, tags, rank: rankRaw, name, memo, createdAt }
-}
-
-function loadItems(): FavoriteItem[] {
-  try {
-    const raw = localStorage.getItem(STORAGE_KEY)
-    if (!raw) return []
-    const parsed = JSON.parse(raw) as unknown
-    if (!Array.isArray(parsed)) return []
-    return parsed.map((v) => toValidItem(v)).filter((v): v is FavoriteItem => v !== null)
-  } catch {
-    return []
-  }
-}
-
-function rebalanceTheme(items: FavoriteItem[], target: FavoriteItem): FavoriteItem[] {
-  const targetTheme = themeKeyFromTags(target.tags)
-  const sameTheme = items
-    .filter((i) => themeKeyFromTags(i.tags) === targetTheme)
-    .filter((i) => i.id !== target.id)
-    .sort((a, b) => a.rank - b.rank || b.createdAt.localeCompare(a.createdAt))
-
-  const inserted: FavoriteItem[] = []
-  let pushed = false
-  for (const item of sameTheme) {
-    if (!pushed && inserted.length === target.rank - 1) {
-      inserted.push(target)
-      pushed = true
-    }
-    inserted.push(item)
-  }
-  if (!pushed) inserted.push(target)
-
-  const normalized = inserted.slice(0, 3).map((item, idx) => ({
-    ...item,
-    rank: (idx + 1) as 1 | 2 | 3,
-  }))
-
-  const others = items.filter((i) => themeKeyFromTags(i.tags) !== targetTheme)
-  return [...others, ...normalized]
-}
-
-function buildMapsQuery(item: FavoriteItem): string {
-  const q = `${item.name} ${item.tags.join(' ')}`.trim()
-  return `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(q)}`
-}
-
-function toDraftItem(draft: Draft, id?: string, createdAt?: string): FavoriteItem {
-  return {
-    id: id ?? crypto.randomUUID(),
-    tags: normalizeTags([draft.category, draft.area]),
-    rank: draft.rank,
-    name: draft.name.trim(),
-    memo: draft.memo.trim(),
-    createdAt: createdAt ?? new Date().toISOString(),
-  }
-}
-
 const initialDraft: Draft = {
-  category: 'カフェラテ',
-  area: '',
+  tag: 'カフェラテ',
+  location: '',
   name: '',
   rank: 1,
   memo: '',
 }
 
+const sampleItems: Draft[] = [
+  { tag: 'カフェラテ', location: '柏の葉', rank: 1, name: 'Solito MAGO', memo: 'ラテアートがきれい。ミルク感も好き' },
+  { tag: 'カフェラテ', location: '柏の葉', rank: 2, name: 'T-SITEのカフェ', memo: '作業ついでに寄りやすい' },
+  { tag: 'つけ麺', location: '松戸', rank: 1, name: 'とみ田', memo: '濃厚つけ麺が強い' },
+]
+
+function normalizeTag(tag: string): string {
+  return tag.trim()
+}
+
+function buildMapsUrl(input: Pick<FavoriteItem, 'name' | 'tag' | 'location'> | Draft): string {
+  const query = [input.name, input.location, input.tag].filter(Boolean).join(' ')
+  return `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(query)}`
+}
+
+function draftToPreview(draft: Draft): FavoriteItem {
+  const now = new Date().toISOString()
+  return {
+    id: '__preview__',
+    tag: normalizeTag(draft.tag),
+    location: draft.location.trim(),
+    name: draft.name.trim(),
+    rank: draft.rank,
+    memo: draft.memo.trim(),
+    mapsUrl: buildMapsUrl(draft),
+    placeId: '',
+    createdAt: now,
+    updatedAt: now,
+  }
+}
+
+function rankItems(items: FavoriteItem[], target?: FavoriteItem): FavoriteItem[] {
+  const source = target ? [...items.filter((item) => item.id !== target.id), target] : items
+  return source
+    .sort((a, b) => a.rank - b.rank || b.updatedAt.localeCompare(a.updatedAt))
+    .reduce<FavoriteItem[]>((acc, item) => {
+      if (target && item.id === target.id) {
+        acc.splice(target.rank - 1, 0, item)
+      } else {
+        acc.push(item)
+      }
+      return acc
+    }, [])
+    .slice(0, 3)
+    .map((item, index) => ({ ...item, rank: (index + 1) as Rank }))
+}
+
+async function api<T>(path: string, options?: RequestInit): Promise<T> {
+  const res = await fetch(path, {
+    ...options,
+    headers: {
+      'content-type': 'application/json',
+      ...(options?.headers ?? {}),
+    },
+  })
+  const data = await res.json().catch(() => ({}))
+  if (!res.ok) throw new Error(data.error ?? 'API error')
+  return data as T
+}
+
 export function App() {
   const [items, setItems] = useState<FavoriteItem[]>([])
+  const [tags, setTags] = useState<string[]>([])
   const [draft, setDraft] = useState<Draft>(initialDraft)
-  const [filterText, setFilterText] = useState('')
   const [editingId, setEditingId] = useState<string | null>(null)
   const [editingDraft, setEditingDraft] = useState<Draft>(initialDraft)
+  const [query, setQuery] = useState('')
+  const [selectedTag, setSelectedTag] = useState('')
+  const [isLoading, setIsLoading] = useState(true)
+  const [isSaving, setIsSaving] = useState(false)
   const [error, setError] = useState('')
   const [notice, setNotice] = useState('')
-  const fileRef = useRef<HTMLInputElement | null>(null)
+
+  const loadItems = async () => {
+    setIsLoading(true)
+    try {
+      const data = await api<{ items: FavoriteItem[]; tags: string[] }>('/api/items')
+      setItems(data.items)
+      setTags(data.tags)
+      setError('')
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'データ取得に失敗しました')
+    } finally {
+      setIsLoading(false)
+    }
+  }
 
   useEffect(() => {
-    setItems(loadItems())
+    void loadItems()
   }, [])
 
-  useEffect(() => {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(items))
-  }, [items])
-
-  const draftTags = useMemo(() => normalizeTags([draft.category, draft.area]), [draft.category, draft.area])
-  const draftThemeKey = useMemo(() => themeKeyFromTags(draftTags), [draftTags])
-
-  const currentTop3 = useMemo(() => {
-    if (!draftThemeKey) return []
-    return items
-      .filter((item) => themeKeyFromTags(item.tags) === draftThemeKey)
-      .sort((a, b) => a.rank - b.rank || b.createdAt.localeCompare(a.createdAt))
-  }, [draftThemeKey, items])
+  const currentTag = normalizeTag(draft.tag)
+  const currentTop3 = useMemo(
+    () => rankItems(items.filter((item) => item.tag === currentTag)),
+    [currentTag, items],
+  )
 
   const previewTop3 = useMemo(() => {
-    if (!draft.name.trim() || draftTags.length === 0) return currentTop3
-    return rebalanceTheme(items, toDraftItem(draft)).filter((item) => themeKeyFromTags(item.tags) === draftThemeKey)
-  }, [currentTop3, draft, draftTags.length, draftThemeKey, items])
+    if (!draft.name.trim() || !currentTag) return currentTop3
+    return rankItems(currentTop3, draftToPreview(draft))
+  }, [currentTag, currentTop3, draft])
 
-  const allTags = useMemo(() => {
-    const set = new Set<string>()
-    items.forEach((item) => item.tags.forEach((t) => set.add(t)))
-    return Array.from(set).sort((a, b) => a.localeCompare(b, 'ja'))
-  }, [items])
+  const filteredGroups = useMemo(() => {
+    const q = query.trim().toLowerCase()
+    const activeTag = selectedTag || ''
+    const filtered = items.filter((item) => {
+      const hay = `${item.tag} ${item.location} ${item.name} ${item.memo}`.toLowerCase()
+      return (!activeTag || item.tag === activeTag) && (!q || hay.includes(q))
+    })
 
-  const grouped = useMemo(() => {
-    const q = filterText.trim().toLowerCase()
     const map = new Map<string, FavoriteItem[]>()
-    for (const item of items) {
-      const hay = `${item.tags.join(' ')} ${item.name} ${item.memo}`.toLowerCase()
-      if (q && !hay.includes(q)) continue
-      const key = themeKeyFromTags(item.tags)
-      const arr = map.get(key) ?? []
-      arr.push(item)
-      map.set(key, arr)
+    for (const item of filtered) {
+      map.set(item.tag, [...(map.get(item.tag) ?? []), item])
     }
-    return Array.from(map.values())
-      .map((list) => [...list].sort((a, b) => a.rank - b.rank || b.createdAt.localeCompare(a.createdAt)))
-      .sort((a, b) => themeLabel(a[0].tags).localeCompare(themeLabel(b[0].tags), 'ja'))
-  }, [filterText, items])
+    return Array.from(map.entries())
+      .map(([tag, list]) => [tag, rankItems(list)] as const)
+      .sort((a, b) => a[0].localeCompare(b[0], 'ja'))
+  }, [items, query, selectedTag])
 
   const updateDraft = (patch: Partial<Draft>) => setDraft((prev) => ({ ...prev, ...patch }))
   const updateEditingDraft = (patch: Partial<Draft>) => setEditingDraft((prev) => ({ ...prev, ...patch }))
 
-  const addItem = () => {
-    if (!draft.category.trim() || !draft.name.trim()) {
-      setError('「何のTop3か」と「店舗名」は必須です。')
+  const selectTag = (tag: string) => {
+    setSelectedTag(tag)
+    setDraft((prev) => ({ ...prev, tag }))
+  }
+
+  const saveNew = async () => {
+    if (!draft.tag.trim() || !draft.name.trim()) {
+      setError('タグと店舗名は必須です。')
       setNotice('')
       return
     }
-    const next = toDraftItem(draft)
-    setItems((prev) => rebalanceTheme(prev, next))
-    setDraft((prev) => ({ ...prev, name: '', memo: '' }))
-    setError('')
-    setNotice(`${themeLabel(next.tags)} の ${next.rank}位に追加しました。`)
+    setIsSaving(true)
+    try {
+      const data = await api<{ items: FavoriteItem[]; item: FavoriteItem }>('/api/items', {
+        method: 'POST',
+        body: JSON.stringify(draft),
+      })
+      setItems(data.items)
+      setTags(Array.from(new Set(data.items.map((item) => item.tag))).sort((a, b) => a.localeCompare(b, 'ja')))
+      setDraft((prev) => ({ ...prev, name: '', memo: '' }))
+      setSelectedTag(data.item.tag)
+      setError('')
+      setNotice(`${data.item.tag} の${data.item.rank}位に保存しました。`)
+    } catch (e) {
+      setError(e instanceof Error ? e.message : '保存に失敗しました')
+    } finally {
+      setIsSaving(false)
+    }
   }
 
-  const removeItem = (id: string) => {
-    setItems((prev) => prev.filter((i) => i.id !== id))
-    if (editingId === id) setEditingId(null)
+  const addSamples = async () => {
+    setIsSaving(true)
+    try {
+      let latest: FavoriteItem[] = items
+      for (const sample of sampleItems) {
+        const data = await api<{ items: FavoriteItem[] }>('/api/items', { method: 'POST', body: JSON.stringify(sample) })
+        latest = data.items
+      }
+      setItems(latest)
+      setTags(Array.from(new Set(latest.map((item) => item.tag))).sort((a, b) => a.localeCompare(b, 'ja')))
+      setNotice('サンプルをDBに保存しました。')
+      setError('')
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'サンプル保存に失敗しました')
+    } finally {
+      setIsSaving(false)
+    }
   }
 
   const startEdit = (item: FavoriteItem) => {
     setEditingId(item.id)
-    setEditingDraft({
-      category: item.tags[0] ?? '',
-      area: item.tags.slice(1).join(' '),
-      name: item.name,
-      rank: item.rank,
-      memo: item.memo,
-    })
+    setEditingDraft({ tag: item.tag, location: item.location, name: item.name, rank: item.rank, memo: item.memo })
   }
 
-  const saveEdit = () => {
+  const saveEdit = async () => {
     if (!editingId) return
-    if (!editingDraft.category.trim() || !editingDraft.name.trim()) {
-      setError('編集時も「何のTop3か」と「店舗名」は必須です。')
-      setNotice('')
-      return
-    }
-
-    setItems((prev) => {
-      const old = prev.find((i) => i.id === editingId)
-      if (!old) return prev
-      const base = prev.filter((i) => i.id !== editingId)
-      return rebalanceTheme(base, toDraftItem(editingDraft, old.id, old.createdAt))
-    })
-    setEditingId(null)
-    setError('')
-    setNotice('編集を保存しました。')
-  }
-
-  const addSampleData = () => {
-    setItems((prev) => {
-      let next = [...prev]
-      for (const sample of sampleItems) {
-        next = rebalanceTheme(next, {
-          ...sample,
-          id: crypto.randomUUID(),
-          createdAt: new Date().toISOString(),
-        })
-      }
-      return next
-    })
-    setError('')
-    setNotice('サンプルデータを投入しました。')
-  }
-
-  const exportJson = () => {
-    const blob = new Blob([JSON.stringify(items, null, 2)], { type: 'application/json' })
-    const url = URL.createObjectURL(blob)
-    const a = document.createElement('a')
-    const stamp = new Date().toISOString().slice(0, 19).replace(/[:T]/g, '-')
-    a.href = url
-    a.download = `top3-favorites-${stamp}.json`
-    document.body.appendChild(a)
-    a.click()
-    document.body.removeChild(a)
-    URL.revokeObjectURL(url)
-    setError('')
-    setNotice('JSONをエクスポートしました。')
-  }
-
-  const onImportFile: React.ChangeEventHandler<HTMLInputElement> = async (e) => {
-    const file = e.target.files?.[0]
-    e.target.value = ''
-    if (!file) return
-
+    setIsSaving(true)
     try {
-      const text = await file.text()
-      const parsed = JSON.parse(text) as unknown
-      if (!Array.isArray(parsed)) throw new Error('not array')
-      const validated = parsed.map((v) => toValidItem(v))
-      if (validated.some((v) => v === null)) throw new Error('invalid item')
-      setItems(validated.filter((v): v is FavoriteItem => v !== null))
+      const data = await api<{ items: FavoriteItem[] }>('/api/items', {
+        method: 'PUT',
+        body: JSON.stringify({ id: editingId, ...editingDraft }),
+      })
+      setItems(data.items)
+      setTags(Array.from(new Set(data.items.map((item) => item.tag))).sort((a, b) => a.localeCompare(b, 'ja')))
+      setEditingId(null)
+      setNotice('編集を保存しました。')
       setError('')
-      setNotice(`インポート成功: ${validated.length}件を反映しました。`)
-    } catch {
-      setError('インポート失敗: 既存データは保持しました。')
-      setNotice('')
+    } catch (e) {
+      setError(e instanceof Error ? e.message : '編集保存に失敗しました')
+    } finally {
+      setIsSaving(false)
+    }
+  }
+
+  const removeItem = async (id: string) => {
+    setIsSaving(true)
+    try {
+      const data = await api<{ items: FavoriteItem[] }>(`/api/items?id=${encodeURIComponent(id)}`, { method: 'DELETE' })
+      setItems(data.items)
+      setTags(Array.from(new Set(data.items.map((item) => item.tag))).sort((a, b) => a.localeCompare(b, 'ja')))
+      setNotice('削除しました。')
+      setError('')
+    } catch (e) {
+      setError(e instanceof Error ? e.message : '削除に失敗しました')
+    } finally {
+      setIsSaving(false)
     }
   }
 
@@ -290,129 +246,106 @@ export function App() {
     <main className="container">
       <header className="hero">
         <p className="eyebrow">Top3 Favorites</p>
-        <h1>「これうめぇ」を、その場で順位に入れる</h1>
-        <p className="sub">例: カフェラテを選ぶ → 今の1〜3位を見る → 店舗名を入れて順位を決める。</p>
+        <h1>好きな店を、タグ別Top3で残す</h1>
+        <p className="sub">タグを選ぶ → いまの順位を見る → 店舗と場所を入れて保存。</p>
       </header>
 
       <section className="card input-card">
-        <div>
-          <h2>いま良かったものを記録</h2>
-          <p className="hint">まず「何のTop3か」を決めると、既存順位を見ながら入れられます。</p>
+        <div className="section-head">
+          <div>
+            <h2>登録する</h2>
+            <p className="hint">登録済みタグはポチッと選択。なければ入力すると新規タグになります。</p>
+          </div>
+          <span className={isLoading ? 'status loading' : 'status'}>{isLoading ? 'DB読込中' : 'DB保存'}</span>
         </div>
+
+        <TagPicker tags={tags} activeTag={draft.tag} selectedTag={selectedTag} onSelect={selectTag} onClear={() => setSelectedTag('')} />
 
         <div className="form-grid">
           <label>
-            <span>何のTop3？</span>
-            <input
-              value={draft.category}
-              onChange={(e) => updateDraft({ category: e.target.value })}
-              placeholder="例: カフェラテ / つけ麺 / 焼肉ランチ"
-            />
+            <span>タグ</span>
+            <input value={draft.tag} onChange={(e) => updateDraft({ tag: e.target.value })} placeholder="例: カフェラテ" list="tag-options" />
+            <datalist id="tag-options">{tags.map((tag) => <option key={tag} value={tag} />)}</datalist>
           </label>
           <label>
-            <span>エリア・補足（任意）</span>
-            <input
-              value={draft.area}
-              onChange={(e) => updateDraft({ area: e.target.value })}
-              placeholder="例: 柏の葉 / 松戸 / 東京駅"
-            />
+            <span>場所</span>
+            <input value={draft.location} onChange={(e) => updateDraft({ location: e.target.value })} placeholder="例: 松戸 / 柏の葉" />
           </label>
           <label className="wide">
             <span>店舗名</span>
-            <input
-              value={draft.name}
-              onChange={(e) => updateDraft({ name: e.target.value })}
-              placeholder="例: Solito MAGO"
-            />
+            <input value={draft.name} onChange={(e) => updateDraft({ name: e.target.value })} placeholder="例: Solito MAGO" />
           </label>
         </div>
 
         <div className="rank-picker" aria-label="順位を選択">
           {[1, 2, 3].map((rank) => (
-            <button
-              key={rank}
-              className={draft.rank === rank ? 'rank active' : 'rank'}
-              onClick={() => updateDraft({ rank: rank as 1 | 2 | 3 })}
-            >
+            <button key={rank} className={draft.rank === rank ? 'rank active' : 'rank'} onClick={() => updateDraft({ rank: rank as Rank })}>
               {rank}位に入れる
             </button>
           ))}
         </div>
 
         <label>
-          <span>一言メモ（任意）</span>
-          <textarea
-            value={draft.memo}
-            onChange={(e) => updateDraft({ memo: e.target.value })}
-            placeholder="例: ミルク感が強くて、今日飲んだ中で一番うまい"
-            rows={3}
-          />
+          <span>メモ</span>
+          <textarea value={draft.memo} onChange={(e) => updateDraft({ memo: e.target.value })} placeholder="例: ミルク感が強くて、今日飲んだ中で一番うまい" rows={2} />
         </label>
 
         <div className="preview-panel">
           <div className="row between no-margin">
             <div>
-              <strong>{draftTags.length ? themeLabel(draftTags) : 'テーマ未入力'} の現在Top3</strong>
-              <p className="hint compact">エリア違いも含めて、同じテーマの1〜3位を見ながら入れられます。</p>
+              <strong>{currentTag || 'タグ未入力'} のTop3プレビュー</strong>
+              <p className="hint compact">店舗名を入れると、保存後の順位が見えます。</p>
             </div>
-            <button onClick={addItem}>この順位で追加</button>
+            <button onClick={saveNew} disabled={isSaving}>{isSaving ? '保存中…' : 'DBに保存'}</button>
           </div>
-          <Top3List items={previewTop3} empty="まだ登録なし。ここが1位候補です。" highlightName={draft.name} />
+          <CompactTop3 items={previewTop3} previewName={draft.name} empty="まだ登録なし。ここが1位候補です。" />
         </div>
 
-        <div className="row">
-          <button className="ghost" onClick={addSampleData}>サンプル投入</button>
+        <div className="row feedback">
+          <button className="ghost" onClick={addSamples} disabled={isSaving}>サンプルをDB保存</button>
           {error && <p className="error">{error}</p>}
           {notice && <p className="notice">{notice}</p>}
         </div>
       </section>
 
       <section className="card">
-        <div className="row between no-margin">
-          <h2>登録済みTop3</h2>
-          <input
-            className="search"
-            value={filterText}
-            onChange={(e) => setFilterText(e.target.value)}
-            placeholder="カフェラテ、店舗名、メモで検索"
-          />
-        </div>
-        <div className="tags">
-          {allTags.map((tag) => (
-            <button key={tag} className="chip" onClick={() => setFilterText(tag)}>#{tag}</button>
-          ))}
-          {filterText && <button className="ghost" onClick={() => setFilterText('')}>クリア</button>}
+        <div className="section-head">
+          <div>
+            <h2>探す</h2>
+            <p className="hint">タグを選ぶか、店舗名・場所・メモで検索できます。</p>
+          </div>
+          {selectedTag && <button className="ghost" onClick={() => setSelectedTag('')}>タグ解除</button>}
         </div>
 
-        {grouped.length === 0 ? (
-          <p className="hint">まだデータがありません。まずは「カフェラテ」などで1件入れてみてください。</p>
+        <input className="search" value={query} onChange={(e) => setQuery(e.target.value)} placeholder="例: カフェラテ / 柏の葉 / Solito" />
+        <TagPicker tags={tags} activeTag={selectedTag} selectedTag={selectedTag} onSelect={setSelectedTag} onClear={() => setSelectedTag('')} />
+
+        {filteredGroups.length === 0 ? (
+          <p className="hint empty">該当するTop3がありません。</p>
         ) : (
-          grouped.map((list) => (
-            <div className="group" key={themeKeyFromTags(list[0].tags)}>
-              <h3>{themeLabel(list[0].tags)}</h3>
+          filteredGroups.map(([tag, list]) => (
+            <div className="group" key={tag}>
+              <h3>{tag}</h3>
               <ul>
                 {list.map((item) => (
                   <li key={item.id} className="item">
                     {editingId === item.id ? (
-                      <EditForm
-                        draft={editingDraft}
-                        onChange={updateEditingDraft}
-                        onSave={saveEdit}
-                        onCancel={() => setEditingId(null)}
-                      />
+                      <EditForm draft={editingDraft} tags={tags} onChange={updateEditingDraft} onSave={saveEdit} onCancel={() => setEditingId(null)} />
                     ) : (
-                      <>
-                        <div className="row between no-margin">
-                          <strong>{item.rank}位: {item.name}</strong>
+                      <details>
+                        <summary>
+                          <span className="summary-title">{item.rank}位: {item.name}</span>
+                          {item.location && <span className="summary-meta">{item.location}</span>}
+                        </summary>
+                        <div className="details-body">
+                          {item.memo && <p className="memo">{item.memo}</p>}
                           <div className="row no-margin">
-                            <a href={buildMapsQuery(item)} target="_blank" rel="noreferrer">Maps</a>
+                            <a href={item.mapsUrl || buildMapsUrl(item)} target="_blank" rel="noreferrer">Mapsで開く</a>
                             <button className="ghost" onClick={() => startEdit(item)}>編集</button>
                             <button className="danger" onClick={() => removeItem(item.id)}>削除</button>
                           </div>
                         </div>
-                        {itemContext(item.tags) && <p className="hint">補足: {itemContext(item.tags)}</p>}
-                        {item.memo && <p className="memo">{item.memo}</p>}
-                      </>
+                      </details>
                     )}
                   </li>
                 ))}
@@ -421,31 +354,46 @@ export function App() {
           ))
         )}
       </section>
-
-      <section className="card utility-card">
-        <h2>データ管理</h2>
-        <p className="hint">端末内保存です。必要な時だけJSONで退避できます。</p>
-        <div className="row">
-          <button onClick={exportJson}>JSONエクスポート</button>
-          <button className="ghost" onClick={() => fileRef.current?.click()}>JSONインポート</button>
-          <input ref={fileRef} type="file" accept="application/json,.json" hidden onChange={onImportFile} />
-        </div>
-      </section>
     </main>
   )
 }
 
-function Top3List({ items, empty, highlightName }: { items: FavoriteItem[]; empty: string; highlightName?: string }) {
+function TagPicker({
+  tags,
+  activeTag,
+  selectedTag,
+  onSelect,
+  onClear,
+}: {
+  tags: string[]
+  activeTag: string
+  selectedTag: string
+  onSelect: (tag: string) => void
+  onClear: () => void
+}) {
+  if (tags.length === 0) return <p className="hint">登録済みタグはまだありません。</p>
+  return (
+    <div className="tags" aria-label="タグ選択">
+      {tags.map((tag) => (
+        <button key={tag} className={activeTag === tag || selectedTag === tag ? 'chip active-chip' : 'chip'} onClick={() => onSelect(tag)}>
+          #{tag}
+        </button>
+      ))}
+      {selectedTag && <button className="ghost small" onClick={onClear}>すべて</button>}
+    </div>
+  )
+}
+
+function CompactTop3({ items, empty, previewName }: { items: FavoriteItem[]; empty: string; previewName?: string }) {
   if (items.length === 0) return <p className="hint empty">{empty}</p>
   return (
-    <ol className="top3-list">
+    <ol className="top3-list compact-list">
       {items.map((item) => (
-        <li key={item.id} className={highlightName && item.name === highlightName.trim() ? 'preview-new' : ''}>
+        <li key={item.id} className={previewName && item.name === previewName.trim() ? 'preview-new' : ''}>
           <span className="rank-badge">{item.rank}</span>
           <div>
             <strong>{item.name}</strong>
-            {itemContext(item.tags) && <p>{itemContext(item.tags)}</p>}
-            {item.memo && <p>{item.memo}</p>}
+            {item.location && <p>{item.location}</p>}
           </div>
         </li>
       ))}
@@ -455,11 +403,13 @@ function Top3List({ items, empty, highlightName }: { items: FavoriteItem[]; empt
 
 function EditForm({
   draft,
+  tags,
   onChange,
   onSave,
   onCancel,
 }: {
   draft: Draft
+  tags: string[]
   onChange: (patch: Partial<Draft>) => void
   onSave: () => void
   onCancel: () => void
@@ -467,13 +417,14 @@ function EditForm({
   return (
     <div className="edit-form">
       <div className="form-grid">
-        <input value={draft.category} onChange={(e) => onChange({ category: e.target.value })} placeholder="何のTop3？" />
-        <input value={draft.area} onChange={(e) => onChange({ area: e.target.value })} placeholder="エリア・補足" />
+        <input value={draft.tag} onChange={(e) => onChange({ tag: e.target.value })} placeholder="タグ" list="edit-tag-options" />
+        <datalist id="edit-tag-options">{tags.map((tag) => <option key={tag} value={tag} />)}</datalist>
+        <input value={draft.location} onChange={(e) => onChange({ location: e.target.value })} placeholder="場所" />
         <input value={draft.name} onChange={(e) => onChange({ name: e.target.value })} placeholder="店舗名" />
       </div>
       <div className="rank-picker compact-picker">
         {[1, 2, 3].map((rank) => (
-          <button key={rank} className={draft.rank === rank ? 'rank active' : 'rank'} onClick={() => onChange({ rank: rank as 1 | 2 | 3 })}>
+          <button key={rank} className={draft.rank === rank ? 'rank active' : 'rank'} onClick={() => onChange({ rank: rank as Rank })}>
             {rank}位
           </button>
         ))}
