@@ -152,6 +152,28 @@ def collect_post_ids_until_stable(
 _collect_post_ids_until_stable = collect_post_ids_until_stable
 
 
+def combine_error_messages(base: str | None, capture_errors: list[str]) -> str | None:
+    """Merge an optional base reason with per-post capture failures.
+
+    `base` is the partial-result reason from `judge_partial_error` (may be None).
+    `capture_errors` is a list of "post_id: <exception str>" entries collected
+    while iterating new posts. Either, both, or neither may be present.
+
+    Returns the combined audit-log message, or None when there's nothing to say.
+    Without this, per-post failures previously vanished from `checks.error`.
+    """
+    if not capture_errors:
+        return base
+    failure_summary = "capture_failures: " + "; ".join(capture_errors)
+    if base:
+        return f"{base} | {failure_summary}"
+    return failure_summary
+
+
+# Module-private alias mirroring _collect_post_ids_until_stable.
+_combine_error_messages = combine_error_messages
+
+
 def _screenshot_post(
     browser: Browser,
     handle: str,
@@ -230,6 +252,7 @@ def run_once(handle: str) -> int:
 
                 seen_set = set(get_seen_post_ids(conn, handle))
                 new_ids = [pid for pid in reversed(post_ids) if pid not in seen_set]
+                capture_errors: list[str] = []
                 for pid in new_ids:
                     first_seen_at = _now_iso()
                     try:
@@ -256,7 +279,9 @@ def run_once(handle: str) -> int:
                             print(f"[skip] {pid} already exists in DB")
                     except Exception as e:
                         status = "partial_error"
+                        capture_errors.append(f"{pid}: {e}")
                         print(f"[error] failed to capture/store {pid}: {e}", file=sys.stderr)
+                error = _combine_error_messages(error, capture_errors)
             finally:
                 browser.close()
     except Exception as e:
