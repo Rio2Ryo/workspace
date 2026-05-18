@@ -87,6 +87,10 @@ test('[Docs][completeness] automated QA coverage doc references every E2E spec',
   assert.ok(sortedSpecs.length > 0, contractMessage({ scope: 'Docs-Completeness', rule: 'at least one E2E spec discovered', expected: 'non-empty tests/**/*.e2e.spec.ts set', fix: 'ensure E2E specs exist and collection logic points to tests/' }))
 
   const missing = sortedSpecs.filter((spec) => !doc.includes(spec))
+  const completenessContext = {
+    discovered: sortedSpecs.length,
+    documentedMatches: sortedSpecs.length - missing.length,
+  }
   assert.deepEqual(
     missing,
     [],
@@ -94,6 +98,7 @@ test('[Docs][completeness] automated QA coverage doc references every E2E spec',
       scope: 'Docs-Completeness',
       rule: 'all E2E specs are documented in AUTOMATED_QA_COVERAGE',
       fix: 'add missing tests/**/*.e2e.spec.ts entries to docs/AUTOMATED_QA_COVERAGE.md',
+      context: completenessContext,
       items: missing,
     }),
   )
@@ -116,6 +121,10 @@ test('[Docs][integrity] automated QA coverage doc does not include non-existent 
     }
   }
 
+  const integrityContext = {
+    listed: listed.length,
+    missingOnDisk: missingOnDisk.length,
+  }
   assert.deepEqual(
     missingOnDisk,
     [],
@@ -123,6 +132,7 @@ test('[Docs][integrity] automated QA coverage doc does not include non-existent 
       scope: 'Docs-Integrity',
       rule: 'all documented E2E paths exist on disk',
       fix: 'remove or correct stale test paths in docs/AUTOMATED_QA_COVERAGE.md',
+      context: integrityContext,
       items: missingOnDisk,
     }),
   )

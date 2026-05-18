@@ -235,11 +235,23 @@ const rawManualAutomatedLinkContracts = {
       pattern: /API取得失敗耐性[\s\S]*自動確認: `tests\/api-load-retry\.e2e\.spec\.ts`/,
       message: 'manual checklist should connect API failure resilience to the automated retry spec',
     },
+    {
+      pattern: /JSONエクスポート成功[\s\S]*自動確認: `tests\/import-export\.e2e\.spec\.ts`/,
+      message: 'manual checklist should connect JSON export success to the automated import/export roundtrip spec',
+    },
+    {
+      pattern: /JSONインポート成功（正常データ）[\s\S]*自動確認: `tests\/import-export\.e2e\.spec\.ts`/,
+      message: 'manual checklist should connect JSON import success to the automated import/export roundtrip spec',
+    },
   ],
   coverageChecks: [
     {
       pattern: /tests\/startup-console-health\.e2e\.spec\.ts/,
       message: 'automated QA coverage should list the startup console health smoke spec',
+    },
+    {
+      pattern: /tests\/import-export\.e2e\.spec\.ts/,
+      message: 'automated QA coverage should list the import/export roundtrip spec',
     },
   ],
 }
@@ -267,6 +279,13 @@ export const contractMessageLimits = rawContractMessageLimits
 const rawDeepFreezeSkipTypeRules = ['function', 'RegExp']
 Object.freeze(rawDeepFreezeSkipTypeRules)
 export const deepFreezeSkipTypeRules = rawDeepFreezeSkipTypeRules
+
+const rawMissingItemsContextKeyContract = {
+  allowed: ['configured', 'discovered', 'documentedMatches', 'listed', 'missingOnDisk', 'observed'],
+}
+Object.freeze(rawMissingItemsContextKeyContract.allowed)
+Object.freeze(rawMissingItemsContextKeyContract)
+export const missingItemsContextKeyContract = rawMissingItemsContextKeyContract
 
 const rawQaTestTitleSubscopeContract = {
   allowedByScope: {

@@ -18,6 +18,7 @@ import {
   importPreviewContractCases,
   contractMessageLimits,
   deepFreezeSkipTypeRules,
+  missingItemsContextKeyContract,
   scopeDescriptionContract,
   scopeLimitRules,
   qaTestTitleSubscopeContract,
@@ -27,6 +28,7 @@ import {
   analyzeEnumList,
   assertDeepFrozen,
   collectBracketScopeAndSubscopePairs,
+  collectContextObjectKeysFromSource,
   collectFiles,
   collectSpecUrlsByNamePredicate,
   findBeforeEachOffenders,
@@ -82,7 +84,10 @@ test('[App][config-quality] QA test title subscope contract is enforced across q
 
   const missingScopeMappings = observedScopes.filter((scope) => !configuredScopes.includes(scope))
   const extraScopeMappings = configuredScopes.filter((scope) => !observedScopes.includes(scope))
-  const scopeOverview = configuredObservedOverview(configuredScopes, observedScopes)
+  const scopeOverview = {
+    configured: configuredScopes,
+    observed: observedScopes,
+  }
 
   const deadSubscope = []
   const deadScope = []
@@ -263,6 +268,41 @@ test('[App][config-quality] QA title subscope dictionaries are non-empty, unique
       }),
     )
   }
+})
+
+test('[App][config-quality] missingItemsMessage context keys follow naming and allowed-set contract', async () => {
+  const lowerCamel = /^[a-z][a-zA-Z0-9]*$/
+  const allowed = new Set(missingItemsContextKeyContract.allowed)
+  const qaCurrentSource = await readFile(new URL('tests/qa-current-contract.test.mjs', `${root}/`), 'utf8')
+  const qaDocsSource = await readFile(new URL('tests/qa-coverage-doc.test.mjs', `${root}/`), 'utf8')
+  const keys = [
+    ...await collectContextObjectKeysFromSource(qaCurrentSource),
+    ...await collectContextObjectKeysFromSource(qaDocsSource),
+  ]
+  const uniqueKeys = Array.from(new Set(keys)).sort((a, b) => a.localeCompare(b, 'en'))
+  const malformed = uniqueKeys.filter((k) => !lowerCamel.test(k))
+  const unknown = uniqueKeys.filter((k) => !allowed.has(k))
+
+  assert.deepEqual(
+    malformed,
+    [],
+    missingItemsMessage({
+      scope: 'App',
+      rule: 'missingItemsMessage context key naming policy',
+      fix: 'rename context keys to lowerCamelCase in qa-current/qa-docs tests',
+      items: malformed,
+    }),
+  )
+  assert.deepEqual(
+    unknown,
+    [],
+    missingItemsMessage({
+      scope: 'App',
+      rule: 'missingItemsMessage context key allowed set',
+      fix: 'add new keys to missingItemsContextKeyContract.allowed or rename context keys',
+      items: unknown,
+    }),
+  )
 })
 
 test('[App][behavior] current implementation uses API-backed structured form, not legacy localStorage or natural parsing', async () => {
@@ -688,7 +728,7 @@ test('[Manual][a11y] manual checklist uses the current import preview toggle ari
   )
 })
 
-test('[Manual][automation-link] manual checklist marks browser-console and API-failure checks as automated where possible', async () => {
+test('[Manual][automation-link] manual checklist marks browser-console, API-failure, and import/export checks as automated where possible', async () => {
   const markdown = await readFile(new URL('docs/MANUAL_TEST_CHECKLIST.md', `${root}/`), 'utf8')
   const coverageDoc = await readFile(new URL('docs/AUTOMATED_QA_COVERAGE.md', `${root}/`), 'utf8')
 

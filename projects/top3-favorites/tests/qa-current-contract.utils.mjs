@@ -113,6 +113,20 @@ export function assertDeepFrozen(value, { label = 'value', visit = new Set(), sk
   }
 }
 
+export async function collectContextObjectKeysFromSource(source) {
+  const blocks = source.match(/context\s*:\s*\{[\s\S]*?\}/g) ?? []
+  const keys = []
+
+  for (const block of blocks) {
+    const quoted = Array.from(block.matchAll(/['"]([a-zA-Z0-9_-]+)['"]\s*:/g)).map((m) => m[1])
+    const unquoted = Array.from(block.matchAll(/\b([a-zA-Z][a-zA-Z0-9_]*)\s*:/g)).map((m) => m[1])
+
+    keys.push(...quoted, ...unquoted)
+  }
+
+  return Array.from(new Set(keys)).sort((a, b) => a.localeCompare(b, 'en'))
+}
+
 export async function findBeforeEachOffenders(rootUrl, specUrls, blockPattern) {
   const offenders = []
 

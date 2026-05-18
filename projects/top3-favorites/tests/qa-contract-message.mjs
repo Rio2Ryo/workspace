@@ -18,9 +18,20 @@ export function resolveLimitForScope(scope) {
   return contractMessageLimits.default
 }
 
+export function formatContextPairs(context, { locale = 'en' } = {}) {
+  if (!context) return ''
+  if (typeof context === 'string') return context
+  const entries = Object.entries(context)
+    .map(([k, v]) => [k, Array.isArray(v) ? v.join(', ') : String(v)])
+    .sort((a, b) => a[0].localeCompare(b[0], locale))
+  if (entries.length === 0) return ''
+  return entries.map(([k, v]) => `${k}=${v}`).join(' | ')
+}
+
 export function missingItemsMessage({ scope, rule, fix, items, limit, context = '' }) {
   const resolvedLimit = limit ?? resolveLimitForScope(scope)
-  const contextBlock = context ? `\ncontext: ${context}` : ''
+  const renderedContext = formatContextPairs(context)
+  const contextBlock = renderedContext ? `\ncontext: ${renderedContext}` : ''
   return `${contractMessage({ scope, rule, expected: 'no missing items', fix })}${contextBlock}\n${summarizeItems(items, resolvedLimit)}`
 }
 
