@@ -1,4 +1,5 @@
 import { get, put } from '@vercel/blob'
+import { normalizeTagKey, normalizeTagText } from '../src/shared/tag-normalization.mjs'
 
 type Rank = 1 | 2 | 3
 
@@ -23,10 +24,6 @@ const DATA_PATH = 'top3-favorites/items.json'
 
 function normalizeText(value: unknown): string {
   return typeof value === 'string' ? value.trim() : ''
-}
-
-function normalizeTagText(value: unknown): string {
-  return typeof value === 'string' ? value.normalize('NFKC').replace(/\s+/g, ' ').trim() : ''
 }
 
 function normalizeRank(value: unknown): Rank {
@@ -176,7 +173,7 @@ async function writeData(data: DataFile): Promise<void> {
 }
 
 function themeKey(item: Pick<FavoriteItem, 'tag'>): string {
-  return normalizeTagText(item.tag).toLocaleLowerCase('ja')
+  return normalizeTagKey(item.tag)
 }
 
 function compareTop3Items(a: FavoriteItem, b: FavoriteItem): number {

@@ -4,6 +4,7 @@ import { readFile, rename, writeFile } from 'node:fs/promises'
 import { createReadStream, existsSync } from 'node:fs'
 import { extname, join, resolve } from 'node:path'
 import { randomUUID } from 'node:crypto'
+import { normalizeTagKey, normalizeTagText } from '../src/shared/tag-normalization.mjs'
 
 const root = resolve(import.meta.dirname, '..')
 const distDir = join(root, 'dist')
@@ -22,10 +23,6 @@ const mime = {
 
 function normalizeText(value) {
   return typeof value === 'string' ? value.trim() : ''
-}
-
-function normalizeTagText(value) {
-  return typeof value === 'string' ? value.normalize('NFKC').replace(/\s+/g, ' ').trim() : ''
 }
 
 function normalizeRank(value) {
@@ -142,7 +139,7 @@ async function withDataMutation(mutator) {
 }
 
 function themeKey(item) {
-  return normalizeTagText(item.tag).toLocaleLowerCase('ja')
+  return normalizeTagKey(item.tag)
 }
 
 function compareTop3Items(a, b) {

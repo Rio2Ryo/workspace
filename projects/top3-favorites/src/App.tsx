@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
+import { normalizeTagKey, normalizeTagText } from './shared/tag-normalization.mjs'
 
 type Rank = 1 | 2 | 3
 
@@ -30,17 +31,6 @@ type ImportExcludedDetail = {
 }
 
 const SYNC_BREAK_NOTICE = '手入力によりタグ連動を解除しました。'
-
-function normalizeTagText(value: string): string {
-  return value
-    .normalize('NFKC')
-    .replace(/\s+/g, ' ')
-    .trim()
-}
-
-function normalizeTagForSync(value: string): string {
-  return normalizeTagText(value).toLocaleLowerCase('ja')
-}
 
 type PendingImport = {
   items: FavoriteItem[]
@@ -169,7 +159,7 @@ function duplicateImportIdError(items: FavoriteItem[], filename: string): string
 }
 
 function themeKey(item: Pick<FavoriteItem, 'tag'>): string {
-  return normalizeTagForSync(item.tag)
+  return normalizeTagKey(item.tag)
 }
 
 function analyzeImportedTop3(items: FavoriteItem[]): { items: FavoriteItem[]; excludedDetails: ImportExcludedDetail[] } {
@@ -340,7 +330,7 @@ export function App() {
   }, [])
 
   useEffect(() => {
-    if (selectedTag && normalizeTagForSync(draft.tag) !== normalizeTagForSync(selectedTag)) setSelectedTag('')
+    if (selectedTag && normalizeTagKey(draft.tag) !== normalizeTagKey(selectedTag)) setSelectedTag('')
   }, [draft.tag, selectedTag])
 
   useEffect(() => {
@@ -476,8 +466,8 @@ export function App() {
   const updateEditingDraft = (patch: Partial<Draft>) => setEditingDraft((prev) => ({ ...prev, ...patch }))
 
   const updateDraftTag = (tag: string) => {
-    const normalizedSelected = normalizeTagForSync(selectedTag ?? '')
-    const normalizedInput = normalizeTagForSync(tag)
+    const normalizedSelected = normalizeTagKey(selectedTag ?? '')
+    const normalizedInput = normalizeTagKey(tag)
     const shouldClearSync = !!normalizedSelected && normalizedSelected !== normalizedInput
     setDraft((prev) => ({ ...prev, tag }))
     if (shouldClearSync) {
@@ -501,7 +491,7 @@ export function App() {
     setSelectedTag((prevSelected) => {
       setDraft((prevDraft) => ({
         ...prevDraft,
-        tag: prevSelected && normalizeTagForSync(prevDraft.tag) === normalizeTagForSync(prevSelected) ? '' : prevDraft.tag,
+        tag: prevSelected && normalizeTagKey(prevDraft.tag) === normalizeTagKey(prevSelected) ? '' : prevDraft.tag,
       }))
       return ''
     })
