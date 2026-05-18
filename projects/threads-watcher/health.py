@@ -145,6 +145,79 @@ def judge_partial_error(found_count: int, prev_max: int) -> str | None:
     )
 
 
+def check_process_staleness(
+    *,
+    process_start_iso: str | None,
+    source_files: list[tuple[str, str | None]],
+) -> HealthReport:
+    """Detect when the live watcher is running stale (pre-edit) code.
+
+    `process_start_iso` is the ISO-8601 start time of the `--watch`
+    process, or None if no such process is running.
+
+    `source_files` is a list of (path, mtime_iso) tuples for the files
+    whose changes need a restart to pick up — typically watcher.py,
+    watcher_pure.py, health.py, db.py. mtime_iso may be None for a
+    missing file (treated as "no constraint from this file").
+
+    Detects the silent-stale-code bug observed on 2026-05-18: the
+    `--watch` loop ran from 5/17 20:00 but the partial_error code
+    landed at 5/17 23:16; Python's import-once model meant the live
+    process never picked up the new behaviour for ~13 hours.
+    Reports unhealthy when the process started BEFORE any source
+    file's mtime — the operator should run `restart-watcher.sh`.
+
+    Pure function: no os.stat, no pgrep, no fs/process access. Caller
+    feeds in pre-resolved values so this is unit-testable without a
+    live process or mutable filesystem state.
+    """
+    if process_start_iso is None:
+        # No running --watch loop. Not a staleness issue per se; the
+        # caller may want to treat this as a separate "watcher down"
+        # warning, but we don't conflate the two checks.
+        return HealthReport(
+            handle="<process>",
+            is_healthy=True,
+            reason="no running watcher process — staleness not applicable",
+            recent_checks=[],
+        )
+
+    # Find the newest source-file mtime that's strictly after the
+    # process start. Any such file means the live code is older than
+    # what's on disk.
+    process_started = process_start_iso
+    newer_files: list[dict] = []
+    for path, mtime in source_files:
+        if mtime is None:
+            continue
+        if mtime > process_started:
+            newer_files.append({
+                "checked_at": mtime,
+                "found_count": 0,
+                "new_count": 0,
+                "status": f"newer-than-process: {path}",
+            })
+
+    if not newer_files:
+        return HealthReport(
+            handle="<process>",
+            is_healthy=True,
+            reason=f"watcher running fresh code (started {process_started})",
+            recent_checks=[],
+        )
+
+    return HealthReport(
+        handle="<process>",
+        is_healthy=False,
+        reason=(
+            f"watcher started at {process_started} but {len(newer_files)} source "
+            f"file(s) have been edited since — Python won't reload imports. "
+            f"Run ./restart-watcher.sh to pick up the new code."
+        ),
+        recent_checks=newer_files,
+    )
+
+
 def check_recent_errors(
     conn: sqlite3.Connection,
     handle: str,

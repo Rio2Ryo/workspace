@@ -17,7 +17,13 @@ from pathlib import Path
 from typing import Any
 
 from db import connect, get_seen_post_ids, init_db, latest_snapshot, record_check, save_post_screenshot
-from health import check_dom_regression, check_recent_errors, judge_partial_error, previous_max_found
+from health import (
+    check_dom_regression,
+    check_process_staleness,
+    check_recent_errors,
+    judge_partial_error,
+    previous_max_found,
+)
 from playwright.sync_api import (
     Browser,
     Page,
@@ -233,10 +239,73 @@ def run_watch(handle: str, interval_s: int) -> None:
         time.sleep(interval_s)
 
 
+def _find_watcher_process_start_iso() -> str | None:
+    """Locate the live `watcher.py --watch` process and return its ISO-8601
+    start time, or None when no such process is running.
+
+    Uses pgrep + ps. Returns None on any error so the health check
+    degrades gracefully — staleness is a soft signal, not load-bearing.
+    """
+    import subprocess
+    try:
+        pids = subprocess.check_output(
+            ["pgrep", "-f", "watcher.py --watch"], text=True, stderr=subprocess.DEVNULL,
+        ).strip().split()
+    except subprocess.CalledProcessError:
+        return None
+    if not pids:
+        return None
+    try:
+        # Use the OLDEST PID if multiple (e.g., a stale + a fresh — we
+        # want to catch the case where someone forgot to kill the old one).
+        out = subprocess.check_output(
+            ["ps", "-o", "lstart=", "-p", pids[0]], text=True, stderr=subprocess.DEVNULL,
+        ).strip()
+    except subprocess.CalledProcessError:
+        return None
+    if not out:
+        return None
+    # ps lstart format: "Sun May 17 20:00:14 2026" — LOCAL time.
+    # Convert to UTC so it can be compared apples-to-apples against
+    # the source-file mtimes (which _collect_source_mtimes already
+    # normalises to UTC via datetime.fromtimestamp(..., tz=timezone.utc)).
+    # Without this, on a JST-local host we'd compare "17:39 (local)"
+    # against "08:45 (UTC)" and conclude the process is newer when
+    # actually it started before the edits. Bug observed 2026-05-18
+    # while building this very check; fixed in the same commit.
+    try:
+        from datetime import datetime, timezone
+        dt_local = datetime.strptime(out, "%a %b %d %H:%M:%S %Y")
+        # Naive datetime → astimezone() treats as system local time and
+        # converts to UTC. Documented behaviour since Python 3.6.
+        dt_utc = dt_local.astimezone(timezone.utc)
+        return dt_utc.strftime("%Y-%m-%dT%H:%M:%SZ")
+    except ValueError:
+        return None
+
+
+def _collect_source_mtimes() -> list[tuple[str, str | None]]:
+    """Read the mtime of every file whose changes need a watcher restart
+    to take effect (Python import-once invariant).
+    """
+    from datetime import datetime, timezone
+    paths = ["watcher.py", "watcher_pure.py", "health.py", "db.py"]
+    out: list[tuple[str, str | None]] = []
+    for p in paths:
+        f = PROJECT_ROOT / p
+        if not f.exists():
+            out.append((p, None))
+            continue
+        ts = datetime.fromtimestamp(f.stat().st_mtime, tz=timezone.utc)
+        out.append((p, ts.strftime("%Y-%m-%dT%H:%M:%SZ")))
+    return out
+
+
 def run_health_check(handle: str, threshold: int = 3) -> int:
     """Run audit-log-based health checks. Returns 0 if healthy, 1 if any regression.
 
-    Cron-friendly: no network calls, no Chromium, reads only the SQLite audit log.
+    Cron-friendly: no network calls, no Chromium, reads only the SQLite audit log
+    plus the process table (for staleness).
     """
     conn = connect(DB_FILE)
     init_db(conn)
@@ -244,6 +313,10 @@ def run_health_check(handle: str, threshold: int = 3) -> int:
         reports = [
             check_dom_regression(conn, handle, threshold=threshold),
             check_recent_errors(conn, handle, threshold=threshold),
+            check_process_staleness(
+                process_start_iso=_find_watcher_process_start_iso(),
+                source_files=_collect_source_mtimes(),
+            ),
         ]
     finally:
         conn.close()
