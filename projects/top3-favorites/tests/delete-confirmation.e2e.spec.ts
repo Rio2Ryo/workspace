@@ -47,5 +47,7 @@ test('delete confirmation accept removes the item', async ({ page }) => {
 
   expect(sawDialog).toBe(true)
   await expect(page.getByText('削除しました。')).toBeVisible()
-  await expect(page.getByText('Solito MAGO')).not.toBeVisible()
+
+  const apiData = (await page.request.get('/api/items').then((res) => res.json())) as { items: Array<{ name: string }> }
+  expect(apiData.items.some((item) => item.name === 'Solito MAGO')).toBe(false)
 })

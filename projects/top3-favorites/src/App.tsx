@@ -23,6 +23,12 @@ type Draft = {
   memo: string
 }
 
+type ImportExcludedDetail = {
+  name: string
+  tag: string
+  reason: string
+}
+
 const SYNC_BREAK_NOTICE = '手入力によりタグ連動を解除しました。'
 
 function normalizeTagForSync(value: string): string {
@@ -38,6 +44,7 @@ type PendingImport = {
   filename: string
   originalCount: number
   excludedNames: string[]
+  excludedDetails: ImportExcludedDetail[]
 }
 
 const initialDraft: Draft = {
@@ -149,7 +156,7 @@ function themeKey(item: Pick<FavoriteItem, 'tag'>): string {
   return item.tag.trim().toLowerCase()
 }
 
-function normalizeImportedTop3(items: FavoriteItem[]): FavoriteItem[] {
+function analyzeImportedTop3(items: FavoriteItem[]): { items: FavoriteItem[]; excludedDetails: ImportExcludedDetail[] } {
   const byTheme = new Map<string, FavoriteItem[]>()
   for (const item of items) {
     const key = themeKey(item)
@@ -157,14 +164,28 @@ function normalizeImportedTop3(items: FavoriteItem[]): FavoriteItem[] {
   }
 
   const normalized: FavoriteItem[] = []
+  const excludedDetails: ImportExcludedDetail[] = []
   for (const list of byTheme.values()) {
-    const top3 = [...list]
-      .sort(compareTop3Items)
+    const sorted = [...list].sort(compareTop3Items)
+    const tag = sorted[0]?.tag.trim() || 'このタグ'
+    const top3 = sorted
       .slice(0, 3)
       .map((item, index) => ({ ...item, rank: (index + 1) as Rank }))
     normalized.push(...top3)
+    excludedDetails.push(
+      ...sorted.slice(3).map((item, index) => ({
+        name: item.name.trim(),
+        tag,
+        reason: `${tag}でTop3外: ${index + 4}位相当`,
+      })),
+    )
   }
-  return normalized
+  return {
+    items: normalized,
+    excludedDetails: excludedDetails
+      .filter((detail) => detail.name)
+      .sort((a, b) => a.name.localeCompare(b.name, 'ja') || a.tag.localeCompare(b.tag, 'ja') || a.reason.localeCompare(b.reason, 'ja')),
+  }
 }
 
 async function api<T>(path: string, options?: RequestInit): Promise<T> {
@@ -242,6 +263,8 @@ export function App() {
     return () => window.clearTimeout(id)
   }, [notice])
 
+  const isImportPreviewActive = !!pendingImport
+
   const currentTag = normalizeTag(draft.tag)
   const currentTop3 = useMemo(
     () => rankItems(items.filter((item) => item.tag === currentTag)),
@@ -298,6 +321,7 @@ export function App() {
       excluded: pendingImportImpact.excluded,
       tags: pendingImportImpact.tags,
       excludedNames: pendingImport.excludedNames,
+      excludedDetails: pendingImport.excludedDetails,
     }
   }, [items.length, pendingImport, pendingImportImpact])
 
@@ -431,14 +455,21 @@ export function App() {
       }
 
       const normalizedInput = parsed.map(normalizeImportItem)
-      const normalized = normalizeImportedTop3(normalizedInput)
+      const analyzed = analyzeImportedTop3(normalizedInput)
+      const normalized = analyzed.items
       const normalizedIds = new Set(normalized.map((item) => item.id))
       const excludedNames = normalizedInput
         .filter((item) => !normalizedIds.has(item.id))
         .map((item) => item.name.trim())
         .filter(Boolean)
         .sort((a, b) => a.localeCompare(b, 'ja'))
-      setPendingImport({ items: normalized, filename: file.name, originalCount: normalizedInput.length, excludedNames })
+      setPendingImport({
+        items: normalized,
+        filename: file.name,
+        originalCount: normalizedInput.length,
+        excludedNames,
+        excludedDetails: analyzed.excludedDetails,
+      })
       setError('')
       setNotice(`インポート確認: ${normalized.length}件。内容を確認してから反映してください。`)
     } catch {
@@ -563,6 +594,7 @@ export function App() {
         </div>
 
         <TagPicker tags={tags} activeTag={draft.tag} selectedTag={selectedTag} onSelect={selectTag} onClear={clearSelectedTag} />
+        {isImportPreviewActive && <p className="hint compact" data-testid="import-lock-hint">インポート確認中のため登録フォームは一時ロック中です。</p>}
         {selectedTag && (
           <p className="hint compact" data-testid="tag-sync-status">
             検索タグ「{selectedTag}」と登録タグを連動中
@@ -572,16 +604,16 @@ export function App() {
         <div className="form-grid">
           <label>
             <span>タグ</span>
-            <input value={draft.tag} onChange={(e) => updateDraftTag(e.target.value)} placeholder="例: カフェラテ" list="tag-options" />
+            <input value={draft.tag} onChange={(e) => updateDraftTag(e.target.value)} placeholder="例: カフェラテ" list="tag-options" disabled={isImportPreviewActive} />
             <datalist id="tag-options">{tags.map((tag) => <option key={tag} value={tag} />)}</datalist>
           </label>
           <label>
             <span>場所</span>
-            <input value={draft.location} onChange={(e) => updateDraft({ location: e.target.value })} placeholder="例: 松戸 / 柏の葉" />
+            <input value={draft.location} onChange={(e) => updateDraft({ location: e.target.value })} placeholder="例: 松戸 / 柏の葉" disabled={isImportPreviewActive} />
           </label>
           <label className="wide">
             <span>店舗名</span>
-            <input value={draft.name} onChange={(e) => updateDraft({ name: e.target.value })} placeholder="例: Solito MAGO" />
+            <input value={draft.name} onChange={(e) => updateDraft({ name: e.target.value })} placeholder="例: Solito MAGO" disabled={isImportPreviewActive} />
           </label>
         </div>
 
@@ -592,6 +624,7 @@ export function App() {
               className={draft.rank === rank ? 'rank active' : 'rank'}
               onClick={() => updateDraft({ rank: rank as Rank })}
               aria-label={`登録 ${rank}位に入れる`}
+              disabled={isImportPreviewActive}
             >
               {rank}位に入れる
             </button>
@@ -600,7 +633,7 @@ export function App() {
 
         <label>
           <span>メモ</span>
-          <textarea value={draft.memo} onChange={(e) => updateDraft({ memo: e.target.value })} placeholder="例: ミルク感が強くて、今日飲んだ中で一番うまい" rows={2} />
+          <textarea value={draft.memo} onChange={(e) => updateDraft({ memo: e.target.value })} placeholder="例: ミルク感が強くて、今日飲んだ中で一番うまい" rows={2} disabled={isImportPreviewActive} />
         </label>
 
         <div className="preview-panel">
@@ -609,13 +642,13 @@ export function App() {
               <strong>{currentTag || 'タグ未入力'} のTop3プレビュー</strong>
               <p className="hint compact">店舗名を入れると、保存後の順位が見えます。</p>
             </div>
-            <button onClick={saveNew} disabled={isSaving}>{isSaving ? '保存中…' : 'DBに保存'}</button>
+            <button onClick={saveNew} disabled={isSaving || !!pendingImport}>{isSaving ? '保存中…' : 'DBに保存'}</button>
           </div>
           <CompactTop3 items={previewTop3} previewName={draft.name} empty="まだ登録なし。ここが1位候補です。" />
         </div>
 
         <div className="row feedback">
-          <button className="ghost" onClick={addSamples} disabled={isSaving}>サンプルをDB保存</button>
+          <button className="ghost" onClick={addSamples} disabled={isSaving || !!pendingImport}>サンプルをDB保存</button>
           {loadError && <button className="ghost" onClick={retryLoadItems} disabled={isLoading}>データを再読み込み</button>}
           {error && <p className="error" role="alert">{error}</p>}
           {notice && <p className="notice" role="status" aria-live="polite">{notice}</p>}
@@ -656,6 +689,11 @@ export function App() {
                 )}
                 {pendingImport.excludedNames.length > 0 && (
                   <p className="hint compact" data-testid="import-preview-excluded-names">除外予定の店舗: {pendingImport.excludedNames.join(', ')}</p>
+                )}
+                {pendingImport.excludedDetails.length > 0 && (
+                  <p className="hint compact" data-testid="import-preview-excluded-details">
+                    除外理由: {pendingImport.excludedDetails.map((detail) => `${detail.name}（${detail.reason}）`).join(', ')}
+                  </p>
                 )}
                 {pendingImportImpact && (
                   <>
@@ -729,8 +767,8 @@ export function App() {
                           {item.memo && <p className="memo">{item.memo}</p>}
                           <div className="row no-margin">
                             <a href={buildMapsUrl(item)} target="_blank" rel="noreferrer">Mapsで開く</a>
-                            <button className="ghost" onClick={() => startEdit(item)} aria-label={`${item.name}を編集`}>編集</button>
-                            <button className="danger" onClick={() => removeItem(item)} aria-label={`${item.name}を削除`}>削除</button>
+                            <button className="ghost" onClick={() => startEdit(item)} aria-label={`${item.name}を編集`} disabled={!!pendingImport}>編集</button>
+                            <button className="danger" onClick={() => removeItem(item)} aria-label={`${item.name}を削除`} disabled={!!pendingImport}>削除</button>
                           </div>
                         </div>
                       </details>

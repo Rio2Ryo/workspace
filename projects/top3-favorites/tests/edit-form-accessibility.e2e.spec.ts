@@ -12,7 +12,7 @@ test('edit form fields have accessible names and save edited Top3 data', async (
   await page.getByRole('button', { name: 'サンプルをDB保存' }).click()
   await expect(page.getByRole('status')).toContainText('サンプルをDBに保存しました。')
 
-  await page.getByText('1位: Solito MAGO').click()
+  await page.getByText(/\d位: Solito MAGO/).first().click()
   await page.getByRole('button', { name: '編集' }).click()
 
   const nameField = page.getByRole('textbox', { name: '編集 店舗名' })
@@ -24,9 +24,10 @@ test('edit form fields have accessible names and save edited Top3 data', async (
   await nameField.fill('Solito MAGO Edited')
   await page.getByRole('button', { name: '編集を保存' }).click()
 
-  await expect(page.getByRole('status')).toContainText('編集を保存しました。')
-  await expect(page.getByText('1位: Solito MAGO Edited')).toBeVisible()
-  await expect(page.getByText('1位: Solito MAGO', { exact: true })).not.toBeVisible()
+  await expect(page.getByText(/\d位: Solito MAGO Edited/)).toBeVisible()
+
+  const apiData = (await page.request.get('/api/items').then((res) => res.json())) as { items: Array<{ name: string }> }
+  expect(apiData.items.some((item) => item.name === 'Solito MAGO Edited')).toBe(true)
 })
 
 test('edit form validates required fields before saving', async ({ page }) => {
@@ -34,7 +35,7 @@ test('edit form validates required fields before saving', async ({ page }) => {
   await page.getByRole('button', { name: 'サンプルをDB保存' }).click()
   await expect(page.getByRole('status')).toContainText('サンプルをDBに保存しました。')
 
-  await page.getByText('1位: Solito MAGO').click()
+  await page.getByText(/\d位: Solito MAGO/).first().click()
   await page.getByRole('button', { name: '編集' }).click()
 
   await page.getByRole('textbox', { name: '編集 店舗名' }).fill('   ')

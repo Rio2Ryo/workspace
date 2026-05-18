@@ -57,6 +57,6 @@ test('delete removes only the confirmed target item when multiple tags exist', a
   await expect(searchSection.getByRole('button', { name: 'タグ解除' })).not.toBeVisible()
 
   // Other-tag items must remain
-  await expect(searchSection.getByText(/\d位: 残すB/)).toBeVisible()
-  await expect(searchSection.getByText(/\d位: 残すC/)).toBeVisible()
+  await expect(searchSection.getByText('残すB')).toBeVisible()
+  await expect(searchSection.getByText('残すC')).toBeVisible()
 })

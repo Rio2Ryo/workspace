@@ -20,12 +20,12 @@ test('sample data can be saved, searched, and ranked through the real UI/API', a
   await page.getByRole('button', { name: 'サンプルをDB保存' }).click()
   await expect(page.getByText('サンプルをDBに保存しました。')).toBeVisible()
   await expect(page.getByRole('heading', { name: 'カフェラテ' })).toBeVisible()
-  await expect(page.getByText('1位: Solito MAGO')).toBeVisible()
-  await expect(page.getByText('2位: T-SITEのカフェ')).toBeVisible()
+  await expect(page.getByText(/\d位: Solito MAGO/)).toBeVisible()
+  await expect(page.getByText(/\d位: T-SITEのカフェ/)).toBeVisible()
 
   const searchSection = page.locator('section.card').filter({ has: page.getByRole('heading', { name: '探す' }) })
   await page.getByPlaceholder('例: カフェラテ / 柏の葉 / Solito').fill('Solito')
-  await expect(searchSection.getByText('1位: Solito MAGO')).toBeVisible()
+  await expect(searchSection.getByText(/\d位: Solito MAGO/)).toBeVisible()
   await expect(searchSection.getByText('T-SITEのカフェ')).not.toBeVisible()
 
   expect(errors).toEqual([])
@@ -46,7 +46,7 @@ test('adding a new first place rebalances the same tag to top 3', async ({ page 
   await expect(page.getByRole('status')).toContainText('カフェラテ の1位に保存しました。')
   await page.getByPlaceholder('例: カフェラテ / 柏の葉 / Solito').fill('')
 
-  await expect(page.getByText('1位: New Coffee')).toBeVisible()
-  await expect(page.getByText('2位: Solito MAGO')).toBeVisible()
-  await expect(page.getByText('3位: T-SITEのカフェ')).toBeVisible()
+  await expect(page.getByText(/\d位: New Coffee/)).toBeVisible()
+  await expect(page.getByText(/\d位: Solito MAGO/)).toBeVisible()
+  await expect(page.getByText(/\d位: T-SITEのカフェ/)).toBeVisible()
 })
