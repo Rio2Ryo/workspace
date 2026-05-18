@@ -103,6 +103,20 @@ function isValidImportItem(value: unknown): value is FavoriteItem {
   )
 }
 
+function normalizeImportItem(value: FavoriteItem): FavoriteItem {
+  const rankNum = Number(value.rank)
+  const rank = (rankNum === 2 || rankNum === 3 ? rankNum : 1) as Rank
+  return {
+    ...value,
+    id: value.id.trim(),
+    tag: value.tag.trim(),
+    location: value.location.trim(),
+    name: value.name.trim(),
+    memo: value.memo.trim(),
+    rank,
+  }
+}
+
 function hasDuplicateImportIds(items: FavoriteItem[]): boolean {
   return new Set(items.map((item) => item.id.trim())).size !== items.length
 }
@@ -315,13 +329,14 @@ export function App() {
         return
       }
 
-      const normalized = normalizeImportedTop3(parsed)
+      const normalizedInput = parsed.map(normalizeImportItem)
+      const normalized = normalizeImportedTop3(normalizedInput)
       const normalizedIds = new Set(normalized.map((item) => item.id))
-      const excludedNames = parsed
+      const excludedNames = normalizedInput
         .filter((item) => !normalizedIds.has(item.id))
         .map((item) => item.name.trim())
         .filter(Boolean)
-      setPendingImport({ items: normalized, filename: file.name, originalCount: parsed.length, excludedNames })
+      setPendingImport({ items: normalized, filename: file.name, originalCount: normalizedInput.length, excludedNames })
       setError('')
       setNotice(`インポート確認: ${normalized.length}件。内容を確認してから反映してください。`)
     } catch {
