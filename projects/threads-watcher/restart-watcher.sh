@@ -91,6 +91,27 @@ if [ -n "$remain" ]; then
   exit 1
 fi
 
+# ── rotate watcher.log if oversized ───────────────────────────────────
+# watcher.log grows ~100 KB/day (observed install 2026-05-17 → 19:
+# 103 KB over 2 days). Python-internal rotation can't reach this file
+# (it's written via the inherited bash `>>` redirection below), so
+# the rotation must happen here, between SIGKILL-of-old and
+# launch-of-new — the only moment no process has the file open.
+# Defaults: 1 MB cap, 5 backups = 5 MB ceiling for the watcher.log
+# family. Override via WATCHER_LOG_MAX_BYTES / WATCHER_LOG_BACKUP_COUNT
+# env vars if a noisier loglevel ships.
+WATCHER_LOG_MAX_BYTES="${WATCHER_LOG_MAX_BYTES:-1048576}"
+WATCHER_LOG_BACKUP_COUNT="${WATCHER_LOG_BACKUP_COUNT:-5}"
+if [ -x venv/bin/python ]; then
+  PY=venv/bin/python
+else
+  PY=python3
+fi
+"$PY" log_rotation.py "$LOG_FILE" \
+  --max-bytes "$WATCHER_LOG_MAX_BYTES" \
+  --backup-count "$WATCHER_LOG_BACKUP_COUNT" || \
+  echo "WARN: log rotation failed (continuing — log will keep appending)" >&2
+
 # ── launch fresh ──────────────────────────────────────────────────────
 echo "launching fresh watcher (will run-watcher.sh in background, logging to $LOG_FILE)"
 echo "--- restart marker: $(date -u +%FT%TZ) ---" >> "$LOG_FILE"

@@ -293,46 +293,12 @@ def get_last_commit_ts(workspace: Path, relpath: str) -> int:
 # ── logging ─────────────────────────────────────────────────────────────
 
 
-def _rotate_log_files(path: Path, backup_count: int) -> None:
-    """Rotate `path` to `path.1`, shifting existing `.N` → `.N+1`,
-    dropping anything beyond `backup_count`. Mirrors stdlib's
-    RotatingFileHandler.doRollover() without subclassing it (we
-    want full control over the timestamp prefix + atomic
-    open-append-close pattern that TeeLogger uses).
-
-    Best-effort: silently ignores rename failures (rare on local
-    disk; the next log() call will retry the size check). Never
-    raises.
-    """
-    if backup_count <= 0:
-        # No backups requested — just truncate.
-        try:
-            path.unlink(missing_ok=True)
-        except OSError:
-            pass
-        return
-
-    # Shift .N → .N+1 from the highest existing index downward to
-    # avoid clobbering. Drop anything past backup_count.
-    for i in range(backup_count - 1, 0, -1):
-        src = path.with_suffix(path.suffix + f".{i}")
-        dst = path.with_suffix(path.suffix + f".{i + 1}")
-        if src.exists():
-            try:
-                if dst.exists():
-                    dst.unlink()
-                src.rename(dst)
-            except OSError:
-                pass
-    # Rename current → .1
-    if path.exists():
-        try:
-            dst = path.with_suffix(path.suffix + ".1")
-            if dst.exists():
-                dst.unlink()
-            path.rename(dst)
-        except OSError:
-            pass
+# Rotation primitive lives in log_rotation.py so both TeeLogger
+# (Python-internal, per-log() call) and restart-watcher.sh
+# (bash-invoked at watcher restart time) share the same dance.
+# Backwards-compat alias preserved — existing tests import
+# `_rotate_log_files` from sync.py.
+from log_rotation import rotate_log_files as _rotate_log_files  # noqa: E402, F401
 
 
 class TeeLogger:
