@@ -23,7 +23,7 @@ test('API replace import rejects invalid rank (server-side validation)', async (
   expect(res.status()).toBe(400)
 
   const json = await res.json()
-  expect(String(json.error ?? '')).toMatch(/invalid/i)
+  expect(json.error).toBe('invalid item at row 1: rank must be 1, 2, or 3')
 })
 
 test('API replace import rejects duplicate item ids', async ({ request }) => {

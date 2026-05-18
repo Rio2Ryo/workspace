@@ -70,6 +70,17 @@ function isItem(value: unknown): value is FavoriteItem {
   )
 }
 
+function importItemValidationError(value: unknown, index: number): string | null {
+  const row = index + 1
+  if (!value || typeof value !== 'object') return `invalid item at row ${row}: item must be an object`
+  const o = value as Record<string, unknown>
+  if (!normalizeText(o.id)) return `invalid item at row ${row}: id is required`
+  if (!normalizeText(o.tag)) return `invalid item at row ${row}: tag is required`
+  if (!normalizeText(o.name)) return `invalid item at row ${row}: name is required`
+  if (parseImportRank(o.rank) === null) return `invalid item at row ${row}: rank must be 1, 2, or 3`
+  return null
+}
+
 function toValidItem(value: unknown): FavoriteItem | null {
   if (!value || typeof value !== 'object') return null
   const o = value as Record<string, unknown>
@@ -84,7 +95,7 @@ function toValidItem(value: unknown): FavoriteItem | null {
   const createdAt = normalizeText(o.createdAt) || new Date().toISOString()
   const updatedAt = normalizeText(o.updatedAt) || new Date().toISOString()
 
-  if (!id || !tag || !name || rank === null) return null
+  if (importItemValidationError(value, 0) || rank === null) return null
 
   const base: FavoriteItem = {
     id,
@@ -240,6 +251,11 @@ export default async function handler(req: any, res: any) {
           ? ((payload as Record<string, unknown>).items as unknown[])
           : null
         if (!arr) return send(res, 400, { error: 'items array is required' })
+
+        const validationError = arr.map((v, index) => importItemValidationError(v, index)).find(Boolean)
+        if (validationError) {
+          return send(res, 400, { error: validationError })
+        }
 
         const normalized = arr.map((v) => toValidItem(v))
         if (normalized.some((v) => v === null)) {

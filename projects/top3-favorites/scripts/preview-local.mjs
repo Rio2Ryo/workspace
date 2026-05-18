@@ -66,6 +66,16 @@ function isItem(value) {
     typeof value.updatedAt === 'string'
 }
 
+function importItemValidationError(value, index) {
+  const row = index + 1
+  if (!value || typeof value !== 'object') return `invalid item at row ${row}: item must be an object`
+  if (!normalizeText(value.id)) return `invalid item at row ${row}: id is required`
+  if (!normalizeText(value.tag)) return `invalid item at row ${row}: tag is required`
+  if (!normalizeText(value.name)) return `invalid item at row ${row}: name is required`
+  if (parseImportRank(value.rank) === null) return `invalid item at row ${row}: rank must be 1, 2, or 3`
+  return null
+}
+
 function toValidItem(value) {
   if (!value || typeof value !== 'object') return null
   const id = normalizeText(value.id)
@@ -78,7 +88,7 @@ function toValidItem(value) {
   const createdAt = normalizeText(value.createdAt) || new Date().toISOString()
   const updatedAt = normalizeText(value.updatedAt) || new Date().toISOString()
 
-  if (!id || !tag || !name || rank === null) return null
+  if (importItemValidationError(value, 0) || rank === null) return null
 
   const base = { id, tag, location, name, rank, memo, placeId, createdAt, updatedAt, mapsUrl: '' }
   return { ...base, mapsUrl: buildMapsUrl(base) }
@@ -206,6 +216,11 @@ async function handleApi(req, res, url) {
     if (url.searchParams.get('mode') === 'replace') {
       const arr = Array.isArray(payload?.items) ? payload.items : null
       if (!arr) return sendJson(res, 400, { error: 'items array is required' })
+
+      const validationError = arr.map((item, index) => importItemValidationError(item, index)).find(Boolean)
+      if (validationError) {
+        return sendJson(res, 400, { error: validationError })
+      }
 
       const normalized = arr.map((item) => toValidItem(item))
       if (normalized.some((item) => item === null)) {
