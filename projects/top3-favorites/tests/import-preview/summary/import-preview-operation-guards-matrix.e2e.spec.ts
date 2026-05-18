@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test'
-import { itemEditButton, uploadJsonImportFile, resetItemsByReplace , itemDeleteButton} from '../../e2e-helpers'
+import { itemEditButton, uploadJsonImportFile, resetItemsByReplace , itemDeleteButton, importCancelButton, importConfirmButton} from '../../e2e-helpers'
 
 test.beforeEach(async ({ request }) => {
   await resetItemsByReplace(request)
@@ -46,6 +46,6 @@ test('pending import preview enforces operation guards across registration/searc
   await expect(page.getByTestId('import-list-action-lock-hint')).toHaveText('インポート確認中のため、既存Top3の編集・削除は一時停止中です。')
 
   // import controls remain available to finish/cancel
-  await expect(page.getByRole('button', { name: 'この内容でインポート' })).toBeEnabled()
-  await expect(page.getByRole('button', { name: 'インポートをキャンセル' })).toBeEnabled()
+  await expect(importConfirmButton(page)).toBeEnabled()
+  await expect(importCancelButton(page)).toBeEnabled()
 })

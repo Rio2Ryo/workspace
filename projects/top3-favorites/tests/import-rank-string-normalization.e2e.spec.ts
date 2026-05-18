@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test'
-import { uploadJsonImportFile, resetItemsByReplace } from './e2e-helpers'
+import { uploadJsonImportFile, resetItemsByReplace , importConfirmButton} from './e2e-helpers'
 
 test.beforeEach(async ({ request }) => {
   await resetItemsByReplace(request)
@@ -23,7 +23,7 @@ test('import preview handles string ranks and still normalizes same tag to Top3'
   await expect(page.getByTestId('import-preview-impact-math')).toContainText('正規化除外1件')
   await expect(page.getByText(/^除外予定の店舗:/)).toBeVisible()
 
-  await page.getByRole('button', { name: 'この内容でインポート' }).click()
+  await importConfirmButton(page).click()
   await expect(page.getByRole('status')).toContainText('インポート成功: 3件を反映しました。')
 
   const group = page.locator('.group').filter({ has: page.getByRole('heading', { name: 'カフェラテ' }) })

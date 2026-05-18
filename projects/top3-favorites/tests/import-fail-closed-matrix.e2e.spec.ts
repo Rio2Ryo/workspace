@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test'
-import { uploadJsonImportFile, resetItemsByReplace } from './e2e-helpers'
+import { uploadJsonImportFile, resetItemsByReplace , importConfirmButton} from './e2e-helpers'
 
 test.beforeEach(async ({ request }) => {
   await resetItemsByReplace(request)
@@ -69,7 +69,7 @@ test('import fail-closed matrix: all invalid inputs keep existing data and clear
 
   await uploadJsonImportFile(page, 'valid-last.json', validItems)
   await expect(page.getByLabel('インポート確認')).toBeVisible()
-  await page.getByRole('button', { name: 'この内容でインポート' }).click()
+  await importConfirmButton(page).click()
   await expect(page.getByRole('status')).toContainText('インポート成功: 2件を反映しました。')
 
   const finalApiData = (await request.get('/api/items').then((res) => res.json())) as { items: { name: string }[] }

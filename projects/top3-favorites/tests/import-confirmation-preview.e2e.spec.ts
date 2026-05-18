@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test'
-import { uploadJsonImportFile, resetItemsByReplace, saveSampleItems } from './e2e-helpers'
+import { uploadJsonImportFile, resetItemsByReplace, saveSampleItems , importCancelButton, importConfirmButton} from './e2e-helpers'
 
 function item(id: string, tag: string, name: string, rank = 1) {
   const now = new Date().toISOString()
@@ -37,12 +37,12 @@ test('import shows a confirmation preview before replacing existing data', async
   const beforeConfirm = (await request.get('/api/items').then((res) => res.json())) as { items: { name: string }[] }
   expect(beforeConfirm.items.map((saved) => saved.name).sort()).toEqual(['Solito MAGO', 'T-SITEのカフェ', 'とみ田'].sort())
 
-  await page.getByRole('button', { name: 'インポートをキャンセル' }).click()
+  await importCancelButton(page).click()
   await expect(page.getByText('インポートをキャンセルしました。')).toBeVisible()
   await expect(page.getByText('1位: Solito MAGO')).toBeVisible()
 
   await uploadJsonImportFile(page, 'preview-import.json', replacement)
-  await page.getByRole('button', { name: 'この内容でインポート' }).click()
+  await importConfirmButton(page).click()
 
   await expect(page.getByText('インポート成功: 1件を反映しました。')).toBeVisible()
   await expect(page.getByText('1位: Preview Pudding')).toBeVisible()

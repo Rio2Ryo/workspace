@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test'
-import { itemEditButton, editSaveButton, uploadJsonImportFile, resetItemsByReplace } from './e2e-helpers'
+import { itemEditButton, editSaveButton, uploadJsonImportFile, resetItemsByReplace , importCancelButton} from './e2e-helpers'
 
 test.beforeEach(async ({ request }) => {
   await resetItemsByReplace(request)
@@ -24,7 +24,7 @@ test('pending import preview blocks edit until user cancels the import context',
   await page.getByText('1位: Edit Target').click()
   await expect(itemEditButton(page, 'Edit Target')).toBeDisabled()
 
-  await page.getByRole('button', { name: 'インポートをキャンセル' }).click()
+  await importCancelButton(page).click()
   await itemEditButton(page, 'Edit Target').click()
   await expect(editSaveButton(page)).toBeVisible()
   await expect(page.getByLabel('インポート確認')).toHaveCount(0)
