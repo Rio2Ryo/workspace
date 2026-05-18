@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test'
-import { resetItemsByReplace } from './e2e-helpers'
+import { clearSearchTagFilter, resetItemsByReplace } from './e2e-helpers'
 
 test.beforeEach(async ({ request }) => {
   await resetItemsByReplace(request)
@@ -19,7 +19,7 @@ test('shows sync status when tag is selected and hides after clear', async ({ pa
 
   await expect(page.getByTestId('tag-sync-status')).toHaveText('検索タグ「カフェラテ」と登録タグを連動中')
 
-  await searchSection.getByRole('button', { name: 'クリア' }).click()
+  await clearSearchTagFilter(searchSection)
   await expect(page.getByTestId('tag-sync-status')).toHaveCount(0)
   await expect(page.getByLabel('タグ', { exact: true })).toHaveValue('')
 })

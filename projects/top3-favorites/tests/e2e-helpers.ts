@@ -21,6 +21,12 @@ export async function saveSampleItems(page: Page): Promise<void> {
   await expect(page.getByRole('status')).toContainText('サンプルをDBに保存しました。')
 }
 
+export async function clearSearchTagFilter(searchSection: Locator): Promise<void> {
+  const clearButton = searchSection.getByRole('button', { name: 'クリア' })
+  await expect(clearButton).toBeVisible()
+  await clearButton.click()
+}
+
 export async function uploadJsonImportFile(page: Page, name: string, body: string | unknown): Promise<void> {
   const buffer = Buffer.from(typeof body === 'string' ? body : JSON.stringify(body), 'utf-8')
   await page.locator('input[type="file"][accept*="json"]').setInputFiles({

@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test'
-import { resetItemsByReplace } from './e2e-helpers'
+import { clearSearchTagFilter, resetItemsByReplace } from './e2e-helpers'
 
 test.beforeEach(async ({ request }) => {
   await resetItemsByReplace(request)
@@ -17,10 +17,7 @@ test('clearing search tag also clears registration tag to avoid stale input cont
   // selecting a tag in search section
   const searchSection = page.locator('section.card').filter({ has: page.getByRole('heading', { name: '探す' }) })
   await searchSection.getByRole('button', { name: '#カフェラテ' }).click()
-  await expect(searchSection.getByRole('button', { name: 'クリア' })).toBeVisible()
-
-  // clear search tag
-  await searchSection.getByRole('button', { name: 'クリア' }).click()
+  await clearSearchTagFilter(searchSection)
 
   // registration tag should also be cleared to avoid stale context mismatch
   await expect(page.getByLabel('タグ', { exact: true })).toHaveValue('')
