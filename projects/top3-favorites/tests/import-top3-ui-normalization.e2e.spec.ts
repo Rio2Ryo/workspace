@@ -15,7 +15,7 @@ test('UI shows only Top3 after importing 4 items of same tag', async ({ page }) 
     { id: 'u1', tag: 'カフェラテ', location: '柏の葉', name: 'A', rank: 1, memo: '', mapsUrl: '', placeId: '', createdAt: now, updatedAt: now },
     { id: 'u2', tag: 'カフェラテ', location: '柏の葉', name: 'B', rank: 2, memo: '', mapsUrl: '', placeId: '', createdAt: now, updatedAt: now },
     { id: 'u3', tag: 'カフェラテ', location: '柏の葉', name: 'C', rank: 3, memo: '', mapsUrl: '', placeId: '', createdAt: now, updatedAt: now },
-    { id: 'u4', tag: 'カフェラテ', location: '柏の葉', name: 'D', rank: 1, memo: '', mapsUrl: '', placeId: '', createdAt: now, updatedAt: now },
+    { id: 'u4', tag: 'カフェラテ', location: '柏の葉', name: 'D', rank: 3, memo: '', mapsUrl: '', placeId: '', createdAt: now, updatedAt: '2000-01-01T00:00:00.000Z' },
   ]
 
   const fileInput = page.locator('input[type="file"][accept*="json"]')
@@ -28,6 +28,7 @@ test('UI shows only Top3 after importing 4 items of same tag', async ({ page }) 
   await expect(page.getByText('現在0件 → インポート後3件')).toBeVisible()
   await expect(page.getByText('同一タグはTop3に正規化: 4件中3件を反映予定')).toBeVisible()
   await expect(page.getByText('追加3件 / 更新・保持0件 / 削除予定0件 / 正規化で除外予定1件')).toBeVisible()
+  await expect(page.getByText(/^除外予定の店舗:/)).toBeVisible()
   await page.getByRole('button', { name: 'この内容でインポート' }).click()
   await expect(page.getByText(/インポート成功/)).toBeVisible()
 
