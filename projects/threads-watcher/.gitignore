@@ -18,5 +18,8 @@ logs/
 # Mutex for restart-watcher.sh concurrent invocations — local-only.
 .restart-watcher.lock.d/
 
+# Mutex for sync.py concurrent invocations — local-only.
+.sync.lock.d/
+
 # One-off QA artifact dumps (screenshots, reports, zips).
 artifacts/

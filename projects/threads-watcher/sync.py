@@ -47,6 +47,7 @@ DEFAULT_CURSOR = PROJECT_ROOT / ".sync_cursor"
 DEFAULT_LOG = PROJECT_ROOT / "logs" / "sync.log"
 DEFAULT_WORKSPACE = PROJECT_ROOT.parent.parent  # .../workspace
 DEFAULT_BRANCH = "shiro/phase2-perf-metrics"
+DEFAULT_LOCKDIR = PROJECT_ROOT / ".sync.lock.d"
 
 SNAPSHOT_REL_FROM_WORKSPACE = "projects/threads-watcher/threads-watcher-status/state.json"
 
@@ -207,9 +208,54 @@ def parse_args(argv: list[str] | None) -> argparse.Namespace:
     p.add_argument("--window", type=int, default=DEFAULT_RECENT_CHECKS_WINDOW)
     p.add_argument("--confirm", action="store_true",
                    help="Actually commit. Without it, dry-run only — no git writes.")
+    p.add_argument(
+        "--lockdir",
+        type=Path,
+        default=DEFAULT_LOCKDIR,
+        help=(
+            "Per-process mkdir-atomic mutex directory. Default is "
+            f"{DEFAULT_LOCKDIR}. Override for tests or alternate cron "
+            "tenants. Only one sync.py can hold this directory at a time."
+        ),
+    )
     p.add_argument("--enable-push", action="store_true",
                    help="Also push after commit. Only effective with --confirm.")
     return p.parse_args(argv)
+
+
+def acquire_lock(lockdir: Path) -> bool:
+    """mkdir-atomic lock. Returns True on success, False if another sync
+    is already in progress. Matches restart-watcher.sh's lock pattern
+    (4355a8a) — portable across macOS / Linux without flock(1) which
+    macOS doesn't ship.
+
+    Race scenario this prevents (real once --confirm is enabled):
+      launchd 30-min cycle fires AND operator runs `python sync.py
+      --confirm` manually within the same second. Both read the same
+      cursor, both git add + git commit — second commit either
+      duplicates the first or hits an index.lock conflict. With
+      --enable-push, both push, second push fast-forwards over the
+      first.
+
+    Caller is responsible for releasing via release_lock() in a finally
+    block — there's no os.atexit wiring so an unhandled exception still
+    cleans up (vs leaving the lockdir wedged across reboots).
+    """
+    try:
+        lockdir.mkdir(parents=False, exist_ok=False)
+        return True
+    except FileExistsError:
+        return False
+
+
+def release_lock(lockdir: Path) -> None:
+    """Best-effort lock release. Idempotent — repeated calls are safe.
+    Swallows OSError so a missing/already-removed lockdir doesn't mask
+    the real error that brought us here."""
+    try:
+        lockdir.rmdir()
+    except OSError:
+        pass
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -222,6 +268,17 @@ def main(argv: list[str] | None = None) -> int:
     if not args.snapshot.exists():
         log.log(f"ERROR: snapshot not found: {args.snapshot}")
         return 1
+
+    # Lock BEFORE opening the DB / reading the cursor. The launchd cycle
+    # is purely periodic — if another sync is in progress, skipping this
+    # tick is the right answer (the next tick will catch up).
+    if not acquire_lock(args.lockdir):
+        log.log(
+            f"another sync.py is in progress — skipping "
+            f"(lock dir {args.lockdir} exists)"
+        )
+        log.log(f"  (operator force: rm -rf {args.lockdir} && python sync.py ...)")
+        return 0
 
     conn = sqlite3.connect(args.db)
     conn.row_factory = sqlite3.Row
@@ -260,6 +317,7 @@ def main(argv: list[str] | None = None) -> int:
         return _do_commit_and_maybe_push(args, log, current_max, decision)
     finally:
         conn.close()
+        release_lock(args.lockdir)
 
 
 def _log_decision(log: TeeLogger, decision: SyncDecision, current_max: int, last_cursor: int) -> None:
