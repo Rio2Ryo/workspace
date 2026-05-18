@@ -77,8 +77,10 @@ function importItemValidationError(value: unknown, index: number, source = 'API 
   const o = value as Record<string, unknown>
   if (!normalizeText(o.id)) return detail('id', 'IDを入力してください')
   if (!normalizeText(o.tag)) return detail('tag', 'タグを入力してください')
+  if (typeof o.location !== 'string') return detail('location', '場所を文字列で入力してください')
   if (!normalizeText(o.name)) return detail('name', '店舗名を入力してください')
   if (parseImportRank(o.rank) === null) return detail('rank', '順位は1、2、3のいずれかにしてください')
+  if (typeof o.memo !== 'string') return detail('memo', 'メモを文字列で入力してください')
   return null
 }
 

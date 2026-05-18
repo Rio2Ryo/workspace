@@ -26,6 +26,30 @@ test('API replace import rejects invalid rank (server-side validation)', async (
   expect(json.error).toBe('API replace importの1件目 / フィールド: rank / 修正: 順位は1、2、3のいずれかにしてください')
 })
 
+test('API replace import rejects missing location like the UI preflight', async ({ request }) => {
+  const payload = {
+    items: [validItem({ id: 'api-missing-location-1', name: 'Missing API Location', location: undefined })],
+  }
+
+  const res = await request.post('/api/items?mode=replace', { data: payload })
+  expect(res.status()).toBe(400)
+
+  const json = await res.json()
+  expect(json.error).toBe('API replace importの1件目 / フィールド: location / 修正: 場所を文字列で入力してください')
+})
+
+test('API replace import rejects missing memo like the UI preflight', async ({ request }) => {
+  const payload = {
+    items: [validItem({ id: 'api-missing-memo-1', name: 'Missing API Memo', memo: undefined })],
+  }
+
+  const res = await request.post('/api/items?mode=replace', { data: payload })
+  expect(res.status()).toBe(400)
+
+  const json = await res.json()
+  expect(json.error).toBe('API replace importの1件目 / フィールド: memo / 修正: メモを文字列で入力してください')
+})
+
 test('API replace import rejects duplicate item ids', async ({ request }) => {
   const payload = {
     items: [
