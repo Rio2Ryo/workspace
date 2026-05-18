@@ -781,6 +781,7 @@ export function App() {
               <div>
                 <strong>インポート確認</strong>
                 <p className="hint compact">{pendingImport.filename}</p>
+                <p className="hint compact" data-testid="import-preview-replace-hint">別ファイルを選ぶと現在のプレビューを置き換えます。反映するには「この内容でインポート」を押してください。</p>
                 <p className="hint compact" data-testid="import-preview-counts" data-before-count={items.length} data-after-count={pendingImport.items.length}>現在{items.length}件 → インポート後{pendingImport.items.length}件</p>
                 <p className="hint compact" data-testid="import-preview-live" aria-live="polite" aria-atomic="true">
                   {importPreviewLiveSummary}

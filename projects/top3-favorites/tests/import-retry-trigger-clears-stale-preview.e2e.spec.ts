@@ -5,7 +5,7 @@ test.beforeEach(async ({ request }) => {
   await resetItemsByReplace(request)
 })
 
-test('re-opening JSON import clears stale pending preview to avoid accidental old import', async ({ page }) => {
+test('pending import preview explains that re-opening JSON import replaces the current preview', async ({ page }) => {
   await page.goto('/')
 
   const now = new Date().toISOString()
@@ -21,6 +21,7 @@ test('re-opening JSON import clears stale pending preview to avoid accidental ol
   })
 
   await expect(page.getByLabel('インポート確認')).toBeVisible()
+  await expect(page.getByTestId('import-preview-replace-hint')).toContainText('別ファイルを選ぶと現在のプレビューを置き換えます')
 
   // user decides to retry import selection; stale pending preview should be cleared first
   await page.getByRole('button', { name: 'JSONインポート' }).click()
