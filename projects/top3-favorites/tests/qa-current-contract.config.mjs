@@ -216,7 +216,7 @@ export const directMutationContractCases = rawDirectMutationContractCases
 const rawE2EHelperMessagePrefixContract = {
   maxLength: 120,
   requiredIncludes: [' should '],
-  allowedVerbs: ['call', 'import', 'use'],
+  allowedVerbs: ['call', 'use'],
   allowedNouns: ['beforeEach hooks', 'specs'],
 }
 Object.freeze(rawE2EHelperMessagePrefixContract.requiredIncludes)

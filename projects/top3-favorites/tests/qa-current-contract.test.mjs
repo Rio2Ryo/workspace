@@ -661,6 +661,142 @@ test('[E2E-Helper] resetItemsByDelete is an asserted atomic reset alias, not a p
   )
 })
 
+test('[E2E-Helper][config-quality] e2eHelperMessagePrefixContract dictionaries are non-empty, unique, sorted, and ASCII', async () => {
+  const verbs = [...e2eHelperMessagePrefixContract.allowedVerbs]
+  const nouns = [...e2eHelperMessagePrefixContract.allowedNouns]
+  const requiredIncludes = [...e2eHelperMessagePrefixContract.requiredIncludes]
+  const { duplicates: duplicateVerbs, unsorted: unsortedVerbs } = analyzeEnumList(verbs, { locale: 'en' })
+  const { duplicates: duplicateNouns, unsorted: unsortedNouns } = analyzeEnumList(nouns, { locale: 'en' })
+  const { duplicates: duplicateRequiredIncludes, unsorted: unsortedRequiredIncludes } = analyzeEnumList(requiredIncludes, { locale: 'en' })
+  const emptyVerbs = verbs.filter((v) => v.trim().length === 0)
+  const emptyNouns = nouns.filter((v) => v.trim().length === 0)
+  const emptyRequiredIncludes = requiredIncludes.filter((v) => v.trim().length === 0)
+  const nonAsciiVerbs = verbs.filter((v) => /[^\x20-\x7E]/.test(v))
+  const nonAsciiNouns = nouns.filter((v) => /[^\x20-\x7E]/.test(v))
+  const nonAsciiRequiredIncludes = requiredIncludes.filter((v) => /[^\x20-\x7E]/.test(v))
+
+  assert.deepEqual(
+    emptyVerbs,
+    [],
+    missingItemsMessage({
+      scope: 'E2E-Helper',
+      rule: 'messagePrefix allowedVerbs non-empty',
+      fix: 'remove empty entries from allowedVerbs',
+      items: emptyVerbs,
+    }),
+  )
+  assert.deepEqual(
+    emptyNouns,
+    [],
+    missingItemsMessage({
+      scope: 'E2E-Helper',
+      rule: 'messagePrefix allowedNouns non-empty',
+      fix: 'remove empty entries from allowedNouns',
+      items: emptyNouns,
+    }),
+  )
+  assert.deepEqual(
+    duplicateVerbs,
+    [],
+    missingItemsMessage({
+      scope: 'E2E-Helper',
+      rule: 'messagePrefix allowedVerbs uniqueness',
+      fix: 'deduplicate allowedVerbs entries',
+      items: duplicateVerbs,
+    }),
+  )
+  assert.deepEqual(
+    duplicateNouns,
+    [],
+    missingItemsMessage({
+      scope: 'E2E-Helper',
+      rule: 'messagePrefix allowedNouns uniqueness',
+      fix: 'deduplicate allowedNouns entries',
+      items: duplicateNouns,
+    }),
+  )
+  assert.deepEqual(
+    unsortedVerbs,
+    [],
+    missingItemsMessage({
+      scope: 'E2E-Helper',
+      rule: 'messagePrefix allowedVerbs sorted order',
+      fix: 'sort allowedVerbs in ascending en locale order',
+      items: unsortedVerbs,
+    }),
+  )
+  assert.deepEqual(
+    unsortedNouns,
+    [],
+    missingItemsMessage({
+      scope: 'E2E-Helper',
+      rule: 'messagePrefix allowedNouns sorted order',
+      fix: 'sort allowedNouns in ascending en locale order',
+      items: unsortedNouns,
+    }),
+  )
+  assert.deepEqual(
+    nonAsciiVerbs,
+    [],
+    missingItemsMessage({
+      scope: 'E2E-Helper',
+      rule: 'messagePrefix allowedVerbs ASCII policy',
+      fix: 'keep allowedVerbs ASCII to maintain English-only log consistency',
+      items: nonAsciiVerbs,
+    }),
+  )
+  assert.deepEqual(
+    nonAsciiNouns,
+    [],
+    missingItemsMessage({
+      scope: 'E2E-Helper',
+      rule: 'messagePrefix allowedNouns ASCII policy',
+      fix: 'keep allowedNouns ASCII to maintain English-only log consistency',
+      items: nonAsciiNouns,
+    }),
+  )
+  assert.deepEqual(
+    emptyRequiredIncludes,
+    [],
+    missingItemsMessage({
+      scope: 'E2E-Helper',
+      rule: 'messagePrefix requiredIncludes non-empty',
+      fix: 'remove empty entries from requiredIncludes',
+      items: emptyRequiredIncludes,
+    }),
+  )
+  assert.deepEqual(
+    duplicateRequiredIncludes,
+    [],
+    missingItemsMessage({
+      scope: 'E2E-Helper',
+      rule: 'messagePrefix requiredIncludes uniqueness',
+      fix: 'deduplicate requiredIncludes entries',
+      items: duplicateRequiredIncludes,
+    }),
+  )
+  assert.deepEqual(
+    unsortedRequiredIncludes,
+    [],
+    missingItemsMessage({
+      scope: 'E2E-Helper',
+      rule: 'messagePrefix requiredIncludes sorted order',
+      fix: 'sort requiredIncludes in ascending en locale order',
+      items: unsortedRequiredIncludes,
+    }),
+  )
+  assert.deepEqual(
+    nonAsciiRequiredIncludes,
+    [],
+    missingItemsMessage({
+      scope: 'E2E-Helper',
+      rule: 'messagePrefix requiredIncludes ASCII policy',
+      fix: 'keep requiredIncludes ASCII to maintain English-only log consistency',
+      items: nonAsciiRequiredIncludes,
+    }),
+  )
+})
+
 test('[E2E-Helper] messagePrefix strings follow contract (non-empty, max-length, required phrases)', async () => {
   const allCases = [...helperContractCases, ...directMutationContractCases]
   const prefixes = allCases.map(({ messagePrefix }) => String(messagePrefix ?? ''))
@@ -672,11 +808,31 @@ test('[E2E-Helper] messagePrefix strings follow contract (non-empty, max-length,
   const missingRequired = prefixes.filter(
     (v) => !e2eHelperMessagePrefixContract.requiredIncludes.every((needle) => v.includes(needle)),
   )
+
+  const usedRequiredIncludes = new Set()
+  for (const phrase of e2eHelperMessagePrefixContract.requiredIncludes) {
+    if (prefixes.some((line) => line.includes(phrase))) usedRequiredIncludes.add(phrase)
+  }
+  const deadRequiredIncludes = e2eHelperMessagePrefixContract.requiredIncludes
+    .filter((phrase) => !usedRequiredIncludes.has(phrase))
+    .sort((a, b) => a.localeCompare(b, 'en'))
+
+  const usedVerbs = new Set()
+  const usedNouns = new Set()
   const disallowedVerbOrNoun = prefixes.filter((v) => {
-    const hasAllowedVerb = e2eHelperMessagePrefixContract.allowedVerbs.some((verb) => v.includes(` ${verb} `))
-    const hasAllowedNoun = e2eHelperMessagePrefixContract.allowedNouns.some((noun) => v.includes(` ${noun} `))
-    return !hasAllowedVerb || !hasAllowedNoun
+    const matchedVerb = e2eHelperMessagePrefixContract.allowedVerbs.find((verb) => v.includes(` ${verb} `))
+    const matchedNoun = e2eHelperMessagePrefixContract.allowedNouns.find((noun) => v.includes(` ${noun} `))
+    if (matchedVerb) usedVerbs.add(matchedVerb)
+    if (matchedNoun) usedNouns.add(matchedNoun)
+    return !matchedVerb || !matchedNoun
   })
+
+  const deadAllowedVerbs = e2eHelperMessagePrefixContract.allowedVerbs
+    .filter((verb) => !usedVerbs.has(verb))
+    .sort((a, b) => a.localeCompare(b, 'en'))
+  const deadAllowedNouns = e2eHelperMessagePrefixContract.allowedNouns
+    .filter((noun) => !usedNouns.has(noun))
+    .sort((a, b) => a.localeCompare(b, 'en'))
 
   assert.deepEqual(
     empty,
@@ -716,6 +872,36 @@ test('[E2E-Helper] messagePrefix strings follow contract (non-empty, max-length,
       rule: 'messagePrefix allowed vocabulary',
       fix: `use allowed verbs (${e2eHelperMessagePrefixContract.allowedVerbs.join(', ')}) and nouns (${e2eHelperMessagePrefixContract.allowedNouns.join(', ')})`,
       items: disallowedVerbOrNoun,
+    }),
+  )
+  assert.deepEqual(
+    deadAllowedVerbs,
+    [],
+    missingItemsMessage({
+      scope: 'E2E-Helper',
+      rule: 'messagePrefix allowedVerbs dead vocabulary',
+      fix: 'remove unused verbs from allowedVerbs or use them in messagePrefix values',
+      items: deadAllowedVerbs,
+    }),
+  )
+  assert.deepEqual(
+    deadAllowedNouns,
+    [],
+    missingItemsMessage({
+      scope: 'E2E-Helper',
+      rule: 'messagePrefix allowedNouns dead vocabulary',
+      fix: 'remove unused nouns from allowedNouns or use them in messagePrefix values',
+      items: deadAllowedNouns,
+    }),
+  )
+  assert.deepEqual(
+    deadRequiredIncludes,
+    [],
+    missingItemsMessage({
+      scope: 'E2E-Helper',
+      rule: 'messagePrefix requiredIncludes dead tokens',
+      fix: 'remove unused requiredIncludes tokens or use them in messagePrefix values',
+      items: deadRequiredIncludes,
     }),
   )
 })
