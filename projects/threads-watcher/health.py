@@ -107,17 +107,55 @@ def check_dom_regression(
     )
 
 
-def previous_max_found(conn: sqlite3.Connection, handle: str) -> int:
+def previous_max_found(
+    conn: sqlite3.Connection,
+    handle: str,
+    *,
+    lookback_days: int | None = None,
+) -> int:
     """Return MAX(found_count) across this handle's successful checks.
 
     Returns 0 when the handle has no `status='ok'` history yet (i.e. brand
     new handle), which the partial-error judge below treats as "no baseline,
     don't flag".
+
+    `lookback_days`: if set, restrict the MAX to checks newer than N days.
+    Default `None` preserves the historical all-time-peak semantics.
+
+    Why the lookback exists:
+        The all-time MAX is sticky. If a handle's true baseline
+        permanently drops (user deletes posts, account churns,
+        Threads UI change shifts what 'a post' means), the historic
+        peak still wins forever, and every new run trips
+        partial_error against a baseline that no longer reflects
+        reality.
+
+        An empirical look at @hal.lifedesign on 2026-05-18 showed the
+        common steady state is actually found=15 with occasional
+        ~8% partial blips down to found=4 — so the *immediate*
+        operator problem is transient noise, not a stuck baseline.
+        But for handles that DO drift permanently (this is mostly a
+        question of when, not if, over a year of watching), the
+        lookback gives operators an opt-in escape valve. Default
+        remains all-time to keep existing callers' behaviour intact;
+        opt-in via a future watcher.py CLI flag.
     """
-    row = conn.execute(
-        "SELECT MAX(found_count) AS max_found FROM checks WHERE handle = ? AND status = 'ok'",
-        (handle,),
-    ).fetchone()
+    if lookback_days is None:
+        row = conn.execute(
+            "SELECT MAX(found_count) AS max_found FROM checks WHERE handle = ? AND status = 'ok'",
+            (handle,),
+        ).fetchone()
+    else:
+        # `datetime('now', '-N days')` is SQLite's native time arithmetic;
+        # checked_at is stored as ISO-8601 UTC ('YYYY-MM-DDTHH:MM:SSZ').
+        # The 'Z' suffix doesn't affect the string comparison since
+        # SQLite returns the same shape from datetime().
+        row = conn.execute(
+            "SELECT MAX(found_count) AS max_found FROM checks "
+            "WHERE handle = ? AND status = 'ok' "
+            "AND checked_at > strftime('%Y-%m-%dT%H:%M:%SZ', datetime('now', ? || ' days'))",
+            (handle, f"-{int(lookback_days)}"),
+        ).fetchone()
     if row is None:
         return 0
     raw = row["max_found"]

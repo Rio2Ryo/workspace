@@ -115,3 +115,91 @@ class TestPreviousMaxJudgeIntegration:
         prev = previous_max_found(conn, "@brand_new")
         assert prev == 0
         assert judge_partial_error(found_count=0, prev_max=prev) is None
+
+
+# ── previous_max_found(lookback_days=N) ─────────────────────────────────
+
+
+class TestPreviousMaxFoundLookback:
+    """Verify that the optional `lookback_days` argument lets the baseline
+    adapt to a new steady state. Motivation: the all-time MAX is sticky
+    — if a handle's true baseline permanently drops (user deletes
+    posts, Threads UI change shifts what counts as 'a post', etc.),
+    the historic peak still wins forever and every new run trips
+    partial_error. Lookback is the opt-in escape valve."""
+
+    def test_default_remains_all_time_peak(self, conn: sqlite3.Connection) -> None:
+        # Old peak, then everything-low for a long time. Without
+        # lookback, the old 15 still wins (existing behaviour preserved).
+        record_check(
+            conn, handle="@h", checked_at="2026-04-01T00:00:00Z",
+            found_count=15, new_count=0, status="ok",
+        )
+        for day in range(1, 30):
+            record_check(
+                conn, handle="@h",
+                checked_at=f"2026-05-{day:02d}T00:00:00Z",
+                found_count=4, new_count=0, status="ok",
+            )
+        assert previous_max_found(conn, "@h") == 15
+
+    def test_lookback_7d_ignores_old_peak(self, conn: sqlite3.Connection) -> None:
+        # Same data shape, but ask for the 7-day peak — old 15 falls
+        # outside the window, current 4 becomes the baseline.
+        record_check(
+            conn, handle="@h", checked_at="2026-04-01T00:00:00Z",
+            found_count=15, new_count=0, status="ok",
+        )
+        # Insert one recent ok within 7 days of "now" (the test runs
+        # at real now, so use a freshly-timestamped row).
+        from datetime import datetime, timezone, timedelta
+        recent_iso = (datetime.now(timezone.utc) - timedelta(days=1)).strftime("%Y-%m-%dT%H:%M:%SZ")
+        record_check(
+            conn, handle="@h", checked_at=recent_iso,
+            found_count=4, new_count=0, status="ok",
+        )
+        # With 7-day lookback, only the 4-found row qualifies.
+        assert previous_max_found(conn, "@h", lookback_days=7) == 4
+        # And without lookback, still the old peak.
+        assert previous_max_found(conn, "@h") == 15
+
+    def test_lookback_returns_zero_when_no_recent_ok(self, conn: sqlite3.Connection) -> None:
+        # Old data only → 7-day window returns 0 → judge_partial_error
+        # would not flag (no baseline). This is the "handle just woke
+        # up after a long gap" path.
+        record_check(
+            conn, handle="@h", checked_at="2026-01-01T00:00:00Z",
+            found_count=42, new_count=0, status="ok",
+        )
+        assert previous_max_found(conn, "@h", lookback_days=7) == 0
+
+    def test_lookback_zero_means_only_today_strict(self, conn: sqlite3.Connection) -> None:
+        # lookback_days=0 → strftime('-0 days') is "today only" in
+        # SQLite's date arithmetic. Defensive pin: should still find
+        # rows whose checked_at is now.
+        from datetime import datetime, timezone
+        now_iso = datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
+        record_check(
+            conn, handle="@h", checked_at=now_iso,
+            found_count=99, new_count=0, status="ok",
+        )
+        # With lookback_days=0, SQLite's `datetime('now', '-0 days')`
+        # equals NOW; the strict `>` would exclude even rows at NOW.
+        # Documenting this edge: lookback_days=0 is effectively useless,
+        # operators should pass >=1.
+        assert previous_max_found(conn, "@h", lookback_days=0) == 0
+
+    def test_lookback_isolated_per_handle(self, conn: sqlite3.Connection) -> None:
+        # Multi-handle: lookback for one handle doesn't leak to another.
+        from datetime import datetime, timezone, timedelta
+        recent = (datetime.now(timezone.utc) - timedelta(hours=2)).strftime("%Y-%m-%dT%H:%M:%SZ")
+        record_check(
+            conn, handle="@a", checked_at=recent,
+            found_count=10, new_count=0, status="ok",
+        )
+        record_check(
+            conn, handle="@b", checked_at=recent,
+            found_count=20, new_count=0, status="ok",
+        )
+        assert previous_max_found(conn, "@a", lookback_days=7) == 10
+        assert previous_max_found(conn, "@b", lookback_days=7) == 20
