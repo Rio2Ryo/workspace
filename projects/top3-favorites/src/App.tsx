@@ -503,6 +503,7 @@ export function App() {
       setError('')
     } catch (e) {
       setError(e instanceof Error ? e.message : '編集保存に失敗しました')
+      setNotice('')
     } finally {
       setIsSaving(false)
     }
@@ -527,6 +528,7 @@ export function App() {
       setError('')
     } catch (e) {
       setError(e instanceof Error ? e.message : '削除に失敗しました')
+      setNotice('')
     } finally {
       setIsSaving(false)
     }
