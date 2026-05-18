@@ -30,4 +30,5 @@ test('excluded store names preview includes tag context when multiple themes exc
   await expect(names).toHaveAttribute('data-excluded-name-count', '2')
   await expect(names).toHaveAttribute('data-excluded-name-labels', 'カフェラテ: 同名店|つけ麺: 同名店')
   await expect(names).toHaveText('除外予定の店舗: カフェラテ: 同名店, つけ麺: 同名店')
+  await expect(page.getByTestId('import-preview-live')).toContainText('正規化除外2件（例: カフェラテ: 同名店）')
 })

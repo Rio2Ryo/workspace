@@ -199,22 +199,35 @@ function analyzeImportedTop3(items: FavoriteItem[]): { items: FavoriteItem[]; ex
   }
 }
 
-function buildExcludedNameLabels(details: ImportExcludedDetail[]): string[] {
+function buildExcludedNameLabel(detail: ImportExcludedDetail, nameCounts: Map<string, number>): string {
+  const name = detail.name.trim()
+  if (!name) return ''
+  return (nameCounts.get(name) ?? 0) > 1 ? `${detail.tag}: ${name}` : name
+}
+
+function countExcludedNames(details: ImportExcludedDetail[]): Map<string, number> {
   const nameCounts = new Map<string, number>()
   for (const detail of details) {
     const name = detail.name.trim()
     if (!name) continue
     nameCounts.set(name, (nameCounts.get(name) ?? 0) + 1)
   }
+  return nameCounts
+}
+
+function buildExcludedNameLabels(details: ImportExcludedDetail[]): string[] {
+  const nameCounts = countExcludedNames(details)
 
   return details
-    .map((detail) => {
-      const name = detail.name.trim()
-      if (!name) return ''
-      return (nameCounts.get(name) ?? 0) > 1 ? `${detail.tag}: ${name}` : name
-    })
+    .map((detail) => buildExcludedNameLabel(detail, nameCounts))
     .filter(Boolean)
     .sort((a, b) => a.localeCompare(b, 'ja'))
+}
+
+function buildExcludedLeadLabel(details: ImportExcludedDetail[]): string {
+  const nameCounts = countExcludedNames(details)
+  const firstDetail = details.find((detail) => detail.name.trim())
+  return firstDetail ? buildExcludedNameLabel(firstDetail, nameCounts) : ''
 }
 
 async function api<T>(path: string, options?: RequestInit): Promise<T> {
@@ -385,7 +398,7 @@ export function App() {
     if (!pendingImport || !pendingImportImpact) return ''
     const noChange = pendingImportImpact.added === 0 && pendingImportImpact.removed === 0 && pendingImportImpact.excluded === 0
     if (noChange) return `差分なし。インポート後${pendingImport.items.length}件。`
-    const excludedLead = pendingImport.excludedDetails[0]?.name?.trim() ?? ''
+    const excludedLead = buildExcludedLeadLabel(pendingImport.excludedDetails)
     const parts = [
       `追加${pendingImportImpact.added}件`,
       `削除予定${pendingImportImpact.removed}件`,

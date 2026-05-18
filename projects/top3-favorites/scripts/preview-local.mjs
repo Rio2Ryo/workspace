@@ -50,6 +50,10 @@ function mutationRequiredFieldValidationError(action, item) {
   return null
 }
 
+function mutationMissingTargetValidationError(action) {
+  return `API ${action} / フィールド: id / 修正: 更新対象が見つかりません。最新データを再読み込みしてください。`
+}
+
 function parseImportRank(value) {
   if (value === 1 || value === '1') return 1
   if (value === 2 || value === '2') return 2
@@ -281,7 +285,7 @@ async function handleApi(req, res, url) {
     if (hasInvalidMutationRank(payload)) return sendJson(res, 400, { error: mutationRankValidationError('edit') })
     return withDataMutation(async (data) => {
       const existing = data.items.find((item) => item.id === normalizeText(payload.id))
-      if (!existing) return sendJson(res, 404, { error: 'item not found' })
+      if (!existing) return sendJson(res, 404, { error: mutationMissingTargetValidationError('edit') })
       const edited = makeItem(payload, existing)
       const requiredFieldError = mutationRequiredFieldValidationError('edit', edited)
       if (requiredFieldError) return sendJson(res, 400, { error: requiredFieldError })

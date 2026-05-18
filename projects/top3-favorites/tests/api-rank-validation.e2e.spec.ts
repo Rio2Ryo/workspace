@@ -92,3 +92,26 @@ test('API edit identifies the missing required field with a localized repair hin
   expect(apiData.items).toContainEqual(expect.objectContaining({ id: createdBody.item.id, tag: '検証', name: 'Required Field Base' }))
   expect(apiData.items.some((item) => item.name === 'Invalid Missing Tag Edit')).toBe(false)
 })
+
+test('API edit identifies a missing target item with a localized recovery hint and leaves data unchanged', async ({ request }) => {
+  const created = await request.post('/api/items', {
+    data: { tag: '検証', location: '代々木', rank: 1, name: 'Existing Item Before Missing Target Edit', memo: '' },
+  })
+  expect(created.status()).toBe(200)
+  const createdBody = (await created.json()) as { item: { id: string } }
+
+  const res = await request.put('/api/items', {
+    data: { id: 'missing-edit-target', tag: '検証', location: '代々木', rank: 1, name: 'Should Not Be Inserted By Edit', memo: '' },
+  })
+
+  expect(res.status()).toBe(404)
+  await expect(res.json()).resolves.toEqual({
+    error: 'API edit / フィールド: id / 修正: 更新対象が見つかりません。最新データを再読み込みしてください。',
+  })
+
+  const apiData = (await request.get('/api/items').then((response) => response.json())) as {
+    items: Array<{ id: string; name: string }>
+  }
+  expect(apiData.items).toContainEqual(expect.objectContaining({ id: createdBody.item.id, name: 'Existing Item Before Missing Target Edit' }))
+  expect(apiData.items.some((item) => item.name === 'Should Not Be Inserted By Edit')).toBe(false)
+})

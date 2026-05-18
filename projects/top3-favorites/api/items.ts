@@ -51,6 +51,10 @@ function mutationRequiredFieldValidationError(action: 'create' | 'edit', item: P
   return null
 }
 
+function mutationMissingTargetValidationError(action: 'edit'): string {
+  return `API ${action} / フィールド: id / 修正: 更新対象が見つかりません。最新データを再読み込みしてください。`
+}
+
 function parseImportRank(value: unknown): Rank | null {
   if (value === 1 || value === '1') return 1
   if (value === 2 || value === '2') return 2
@@ -298,7 +302,7 @@ export default async function handler(req: any, res: any) {
       const payload = typeof req.body === 'object' && req.body ? req.body : JSON.parse(req.body || '{}')
       const id = normalizeText(payload.id)
       const existing = data.items.find((item) => item.id === id)
-      if (!existing) return send(res, 404, { error: 'item not found' })
+      if (!existing) return send(res, 404, { error: mutationMissingTargetValidationError('edit') })
       const base = data.items.filter((item) => item.id !== id)
       const edited = makeItem(payload, existing)
       if (hasInvalidMutationRank(payload)) return send(res, 400, { error: mutationRankValidationError('edit') })
