@@ -20,6 +20,8 @@ test('import validation error identifies the first invalid row and field for qui
     buffer: Buffer.from(JSON.stringify(invalidItems), 'utf-8'),
   })
 
-  await expect(page.getByRole('alert')).toContainText('インポート失敗: 2件目のタグが空です。既存データは保持しました。')
+  await expect(page.getByRole('alert')).toContainText(
+    'インポート失敗: ファイル「invalid-import-field-details.json」の2件目 / フィールド: tag / 修正: タグを入力してください。既存データは保持しました。',
+  )
   await expect(page.getByTestId('import-preview-summary')).toHaveCount(0)
 })

@@ -111,21 +111,23 @@ function rankItems(items: FavoriteItem[], target?: FavoriteItem): FavoriteItem[]
     .slice(0, 3)
 }
 
-function importItemValidationError(value: unknown, index: number): string | null {
+function importItemValidationError(value: unknown, index: number, filename: string): string | null {
   const row = `${index + 1}件目`
-  if (!value || typeof value !== 'object') return `${row}がオブジェクト形式ではありません。`
+  const prefix = `ファイル「${filename}」の${row}`
+  const detail = (field: string, fix: string) => `${prefix} / フィールド: ${field} / 修正: ${fix}`
+  if (!value || typeof value !== 'object') return detail('item', '各行をオブジェクト形式にしてください。')
   const o = value as Record<string, unknown>
 
   const id = typeof o.id === 'string' ? o.id.trim() : ''
   const tag = typeof o.tag === 'string' ? o.tag.trim() : ''
   const name = typeof o.name === 'string' ? o.name.trim() : ''
 
-  if (id.length === 0) return `${row}のIDが空です。`
-  if (tag.length === 0) return `${row}のタグが空です。`
-  if (typeof o.location !== 'string') return `${row}の場所が文字列ではありません。`
-  if (name.length === 0) return `${row}の店舗名が空です。`
-  if (!(o.rank === 1 || o.rank === 2 || o.rank === 3 || o.rank === '1' || o.rank === '2' || o.rank === '3')) return `${row}の順位が1〜3ではありません。`
-  if (typeof o.memo !== 'string') return `${row}のメモが文字列ではありません。`
+  if (id.length === 0) return detail('id', 'IDを入力してください。')
+  if (tag.length === 0) return detail('tag', 'タグを入力してください。')
+  if (typeof o.location !== 'string') return detail('location', '場所を文字列で入力してください。')
+  if (name.length === 0) return detail('name', '店舗名を入力してください。')
+  if (!(o.rank === 1 || o.rank === 2 || o.rank === 3 || o.rank === '1' || o.rank === '2' || o.rank === '3')) return detail('rank', '順位は1〜3で入力してください。')
+  if (typeof o.memo !== 'string') return detail('memo', 'メモを文字列で入力してください。')
   return null
 }
 
@@ -537,7 +539,7 @@ export function App() {
         return
       }
       const importValidationError = parsed
-        .map((item, index) => importItemValidationError(item, index))
+        .map((item, index) => importItemValidationError(item, index, file.name))
         .find((message): message is string => Boolean(message))
       if (importValidationError) {
         setError(`インポート失敗: ${importValidationError}既存データは保持しました。`)

@@ -33,6 +33,8 @@ test('import rejects whitespace-only required fields with clear validation messa
     buffer: Buffer.from(JSON.stringify(invalidItems), 'utf-8'),
   })
 
-  await expect(page.getByRole('alert')).toContainText('インポート失敗: 1件目のIDが空です。既存データは保持しました。')
+  await expect(page.getByRole('alert')).toContainText(
+    'インポート失敗: ファイル「invalid-whitespace-fields.json」の1件目 / フィールド: id / 修正: IDを入力してください。既存データは保持しました。',
+  )
   await expect(page.getByText('1位: Solito MAGO')).toBeVisible()
 })
