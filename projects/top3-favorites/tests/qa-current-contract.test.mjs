@@ -80,8 +80,18 @@ test('[App] scopeLimitRules ids follow naming contract (scope- prefix, kebab-cas
   const nonEnglishDescription = scopeLimitRules
     .filter(({ description }) => typeof description === 'string' && /[^\x20-\x7E]/.test(description))
     .map(({ id, description }) => `${id ?? '(missing-id)'} -> ${description ?? '(missing-description)'}`)
-  const allowedTargets = new Set(scopeDescriptionContract.allowedTargets)
-  const allowedPurposes = new Set(scopeDescriptionContract.allowedPurposes)
+  const targetTerms = [...scopeDescriptionContract.allowedTargets]
+  const purposeTerms = [...scopeDescriptionContract.allowedPurposes]
+  const duplicatedTargetTerms = targetTerms.filter((term, idx) => targetTerms.indexOf(term) !== idx)
+  const duplicatedPurposeTerms = purposeTerms.filter((term, idx) => purposeTerms.indexOf(term) !== idx)
+  const unsortedTargetTerms = targetTerms
+    .filter((term, idx, arr) => idx > 0 && arr[idx - 1].localeCompare(term, 'en') > 0)
+    .sort((a, b) => a.localeCompare(b, 'en'))
+  const unsortedPurposeTerms = purposeTerms
+    .filter((term, idx, arr) => idx > 0 && arr[idx - 1].localeCompare(term, 'en') > 0)
+    .sort((a, b) => a.localeCompare(b, 'en'))
+  const allowedTargets = new Set(targetTerms)
+  const allowedPurposes = new Set(purposeTerms)
   const usedTargets = new Set()
   const usedPurposes = new Set()
   const disallowedVocabulary = scopeLimitRules
@@ -189,6 +199,46 @@ test('[App] scopeLimitRules ids follow naming contract (scope- prefix, kebab-cas
       rule: 'scopeLimitRules description language policy',
       fix: 'keep descriptions ASCII English to avoid mixed-language overlap logs',
       items: nonEnglishDescription,
+    }),
+  )
+  assert.deepEqual(
+    duplicatedTargetTerms,
+    [],
+    missingItemsMessage({
+      scope: 'App',
+      rule: 'scopeDescriptionContract allowedTargets uniqueness',
+      fix: 'deduplicate allowedTargets entries in scopeDescriptionContract',
+      items: duplicatedTargetTerms,
+    }),
+  )
+  assert.deepEqual(
+    duplicatedPurposeTerms,
+    [],
+    missingItemsMessage({
+      scope: 'App',
+      rule: 'scopeDescriptionContract allowedPurposes uniqueness',
+      fix: 'deduplicate allowedPurposes entries in scopeDescriptionContract',
+      items: duplicatedPurposeTerms,
+    }),
+  )
+  assert.deepEqual(
+    unsortedTargetTerms,
+    [],
+    missingItemsMessage({
+      scope: 'App',
+      rule: 'scopeDescriptionContract allowedTargets sorted order',
+      fix: 'sort allowedTargets in ascending en locale order',
+      items: unsortedTargetTerms,
+    }),
+  )
+  assert.deepEqual(
+    unsortedPurposeTerms,
+    [],
+    missingItemsMessage({
+      scope: 'App',
+      rule: 'scopeDescriptionContract allowedPurposes sorted order',
+      fix: 'sort allowedPurposes in ascending en locale order',
+      items: unsortedPurposeTerms,
     }),
   )
   assert.deepEqual(
