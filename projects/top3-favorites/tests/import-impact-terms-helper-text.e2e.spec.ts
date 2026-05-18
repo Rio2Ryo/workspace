@@ -29,7 +29,7 @@ test('import preview explains difference between 削除予定 and 正規化除�
   })
 
   await page.getByRole('button', { name: '差分用語の詳細説明を表示' }).click()
-  const helper = page.getByTestId('import-impact-terms-helper')
+  const helper = page.getByTestId('import-preview-terms-helper')
   await expect(helper).toContainText('削除予定: 現在DBにあるが、インポート後データに含まれない項目')
   await expect(helper).toContainText('正規化除外: インポートJSON内で同一タグTop3に収まらず取り込まれない項目')
 })

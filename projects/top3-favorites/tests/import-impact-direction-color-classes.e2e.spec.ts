@@ -23,7 +23,7 @@ test('impact direction metrics expose semantic color classes for quick scan', as
     buffer: Buffer.from(JSON.stringify(payload), 'utf-8'),
   })
 
-  await expect(page.getByTestId('import-impact-added')).toHaveClass(/impact-plus/)
-  await expect(page.getByTestId('import-impact-kept')).toHaveClass(/impact-neutral/)
-  await expect(page.getByTestId('import-impact-removed')).toHaveClass(/impact-minus/)
+  await expect(page.getByTestId('import-preview-metric-added')).toHaveClass(/impact-plus/)
+  await expect(page.getByTestId('import-preview-metric-kept')).toHaveClass(/impact-neutral/)
+  await expect(page.getByTestId('import-preview-metric-removed')).toHaveClass(/impact-minus/)
 })

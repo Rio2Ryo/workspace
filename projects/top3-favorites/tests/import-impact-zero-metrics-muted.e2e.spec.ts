@@ -17,7 +17,7 @@ test('zero-value impact metric is marked as muted for quick visual scan', async 
     buffer: Buffer.from(JSON.stringify(current.items), 'utf-8'),
   })
 
-  await expect(page.getByTestId('import-impact-added')).toHaveClass(/is-zero/)
-  await expect(page.getByTestId('import-impact-kept')).not.toHaveClass(/is-zero/)
-  await expect(page.getByTestId('import-impact-removed')).toHaveClass(/is-zero/)
+  await expect(page.getByTestId('import-preview-metric-added')).toHaveClass(/is-zero/)
+  await expect(page.getByTestId('import-preview-metric-kept')).not.toHaveClass(/is-zero/)
+  await expect(page.getByTestId('import-preview-metric-removed')).toHaveClass(/is-zero/)
 })

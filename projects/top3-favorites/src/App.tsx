@@ -758,9 +758,10 @@ export function App() {
                       <button
                         className="ghost small"
                         onClick={() => setIsExcludedDetailsExpanded((prev) => !prev)}
-                        data-testid="import-excluded-details-toggle"
+                        data-testid="import-preview-toggle-excluded-details"
                         aria-controls="import-preview-excluded-details"
                         aria-expanded={isExcludedDetailsExpanded}
+                        aria-label={`インポート詳細: ${isExcludedDetailsExpanded ? '除外理由を折りたたむ' : '除外理由を全件表示'}`}
                       >
                         {isExcludedDetailsExpanded ? '除外理由を折りたたむ' : '除外理由を全件表示'}
                       </button>
@@ -780,24 +781,25 @@ export function App() {
                       追加{pendingImportImpact.added}件 / 更新・保持{pendingImportImpact.kept}件 / 削除予定{pendingImportImpact.removed}件
                       {pendingImportImpact.excluded > 0 ? ` / 正規化除外${pendingImportImpact.excluded}件` : ''}
                     </p>
-                    <p className="hint compact" data-testid="import-impact-direction-metrics">
-                      <span className={`impact-plus${pendingImportImpact.added === 0 ? ' is-zero' : ''}`} data-testid="import-impact-added" aria-label={`追加 ${pendingImportImpact.added}件`}>+{pendingImportImpact.added} 追加</span>
+                    <p className="hint compact" data-testid="import-preview-direction-metrics">
+                      <span className={`impact-plus${pendingImportImpact.added === 0 ? ' is-zero' : ''}`} data-testid="import-preview-metric-added" aria-label={`追加 ${pendingImportImpact.added}件`}>+{pendingImportImpact.added} 追加</span>
                       {' / '}
-                      <span className={`impact-neutral${pendingImportImpact.kept === 0 ? ' is-zero' : ''}`} data-testid="import-impact-kept" aria-label={`保持 ${pendingImportImpact.kept}件`}>±{pendingImportImpact.kept} 保持</span>
+                      <span className={`impact-neutral${pendingImportImpact.kept === 0 ? ' is-zero' : ''}`} data-testid="import-preview-metric-kept" aria-label={`保持 ${pendingImportImpact.kept}件`}>±{pendingImportImpact.kept} 保持</span>
                       {' / '}
-                      <span className={`impact-minus${pendingImportImpact.removed === 0 ? ' is-zero' : ''}`} data-testid="import-impact-removed" aria-label={`削除予定 ${pendingImportImpact.removed}件`}>-{pendingImportImpact.removed} 削除予定</span>
+                      <span className={`impact-minus${pendingImportImpact.removed === 0 ? ' is-zero' : ''}`} data-testid="import-preview-metric-removed" aria-label={`削除予定 ${pendingImportImpact.removed}件`}>-{pendingImportImpact.removed} 削除予定</span>
                     </p>
                     <button
                       className="ghost small"
                       onClick={() => setIsImpactTermsHelperExpanded((prev) => !prev)}
-                      data-testid="import-impact-terms-helper-toggle"
-                      aria-controls="import-impact-terms-helper"
+                      data-testid="import-preview-toggle-terms-helper"
+                      aria-controls="import-preview-terms-helper"
                       aria-expanded={isImpactTermsHelperExpanded}
+                      aria-label={`インポート詳細: ${isImpactTermsHelperExpanded ? '差分用語の詳細説明を隠す' : '差分用語の詳細説明を表示'}`}
                     >
                       {isImpactTermsHelperExpanded ? '差分用語の詳細説明を隠す' : '差分用語の詳細説明を表示'}
                     </button>
                     {isImpactTermsHelperExpanded && (
-                      <p id="import-impact-terms-helper" className="hint compact" data-testid="import-impact-terms-helper">
+                      <p id="import-preview-terms-helper" className="hint compact" data-testid="import-preview-terms-helper">
                         削除予定: 現在DBにあるが、インポート後データに含まれない項目 / 正規化除外: インポートJSON内で同一タグTop3に収まらず取り込まれない項目
                       </p>
                     )}
@@ -818,9 +820,10 @@ export function App() {
                       <button
                         className="ghost small"
                         onClick={() => setIsImpactTagsExpanded((prev) => !prev)}
-                        data-testid="import-impact-tags-toggle"
+                        data-testid="import-preview-toggle-impact-tags"
                         aria-controls="import-preview-impact-tags"
                         aria-expanded={isImpactTagsExpanded}
+                        aria-label={`インポート詳細: ${isImpactTagsExpanded ? '影響タグを折りたたむ' : '影響タグを全件表示'}`}
                       >
                         {isImpactTagsExpanded ? '影響タグを折りたたむ' : '影響タグを全件表示'}
                       </button>

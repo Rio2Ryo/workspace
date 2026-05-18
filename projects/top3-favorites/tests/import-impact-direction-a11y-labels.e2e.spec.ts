@@ -23,7 +23,7 @@ test('impact direction metrics expose explicit aria-labels for screen readers', 
     buffer: Buffer.from(JSON.stringify(payload), 'utf-8'),
   })
 
-  await expect(page.getByTestId('import-impact-added')).toHaveAttribute('aria-label', '追加 1件')
-  await expect(page.getByTestId('import-impact-kept')).toHaveAttribute('aria-label', '保持 1件')
-  await expect(page.getByTestId('import-impact-removed')).toHaveAttribute('aria-label', '削除予定 2件')
+  await expect(page.getByTestId('import-preview-metric-added')).toHaveAttribute('aria-label', '追加 1件')
+  await expect(page.getByTestId('import-preview-metric-kept')).toHaveAttribute('aria-label', '保持 1件')
+  await expect(page.getByTestId('import-preview-metric-removed')).toHaveAttribute('aria-label', '削除予定 2件')
 })

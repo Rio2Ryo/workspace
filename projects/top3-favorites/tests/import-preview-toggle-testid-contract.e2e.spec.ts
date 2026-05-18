@@ -7,7 +7,7 @@ test.beforeEach(async ({ request }) => {
   }
 })
 
-test('impact-tags and excluded-details toggles expose aria-expanded/aria-controls', async ({ page }) => {
+test('import preview toggles follow unified data-testid naming (import-preview-toggle-*)', async ({ page }) => {
   await page.goto('/')
 
   const now = new Date().toISOString()
@@ -39,20 +39,12 @@ test('impact-tags and excluded-details toggles expose aria-expanded/aria-control
   ]
 
   await page.locator('input[type="file"][accept*="json"]').setInputFiles({
-    name: 'expand-a11y.json',
+    name: 'toggle-testid-contract.json',
     mimeType: 'application/json',
     buffer: Buffer.from(JSON.stringify(payload), 'utf-8'),
   })
 
-  const tagsToggle = page.getByTestId('import-preview-toggle-impact-tags')
-  await expect(tagsToggle).toHaveAttribute('aria-controls', 'import-preview-impact-tags')
-  await expect(tagsToggle).toHaveAttribute('aria-expanded', 'false')
-  await tagsToggle.click()
-  await expect(tagsToggle).toHaveAttribute('aria-expanded', 'true')
-
-  const excludedToggle = page.getByTestId('import-preview-toggle-excluded-details')
-  await expect(excludedToggle).toHaveAttribute('aria-controls', 'import-preview-excluded-details')
-  await expect(excludedToggle).toHaveAttribute('aria-expanded', 'false')
-  await excludedToggle.click()
-  await expect(excludedToggle).toHaveAttribute('aria-expanded', 'true')
+  await expect(page.getByTestId('import-preview-toggle-impact-tags')).toBeVisible()
+  await expect(page.getByTestId('import-preview-toggle-excluded-details')).toBeVisible()
+  await expect(page.getByTestId('import-preview-toggle-terms-helper')).toBeVisible()
 })

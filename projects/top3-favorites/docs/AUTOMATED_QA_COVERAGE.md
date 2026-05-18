@@ -72,6 +72,9 @@
 - `tests/import-preview-live-summary-excluded-lead-consistency.e2e.spec.ts`
 - `tests/import-preview-live-summary-includes-excluded-name.e2e.spec.ts`
 - `tests/import-preview-operation-guards-matrix.e2e.spec.ts`
+- `tests/import-preview-toggle-aria-label-consistency.e2e.spec.ts`
+- `tests/import-preview-toggle-testid-contract.e2e.spec.ts`
+- `tests/import-preview-testid-naming-consistency.e2e.spec.ts`
 - `tests/import-rank-string-normalization.e2e.spec.ts`
 - `tests/import-retry-trigger-clears-stale-error.e2e.spec.ts`
 - `tests/import-retry-trigger-clears-stale-preview.e2e.spec.ts`

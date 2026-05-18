@@ -7,7 +7,7 @@ test.beforeEach(async ({ request }) => {
   }
 })
 
-test('impact-tags and excluded-details toggles expose aria-expanded/aria-controls', async ({ page }) => {
+test('all import preview toggles use consistent aria-label prefix without colliding with the panel label', async ({ page }) => {
   await page.goto('/')
 
   const now = new Date().toISOString()
@@ -39,20 +39,26 @@ test('impact-tags and excluded-details toggles expose aria-expanded/aria-control
   ]
 
   await page.locator('input[type="file"][accept*="json"]').setInputFiles({
-    name: 'expand-a11y.json',
+    name: 'toggle-aria-label-consistency.json',
     mimeType: 'application/json',
     buffer: Buffer.from(JSON.stringify(payload), 'utf-8'),
   })
 
   const tagsToggle = page.getByTestId('import-preview-toggle-impact-tags')
-  await expect(tagsToggle).toHaveAttribute('aria-controls', 'import-preview-impact-tags')
-  await expect(tagsToggle).toHaveAttribute('aria-expanded', 'false')
-  await tagsToggle.click()
-  await expect(tagsToggle).toHaveAttribute('aria-expanded', 'true')
-
   const excludedToggle = page.getByTestId('import-preview-toggle-excluded-details')
-  await expect(excludedToggle).toHaveAttribute('aria-controls', 'import-preview-excluded-details')
-  await expect(excludedToggle).toHaveAttribute('aria-expanded', 'false')
+  const termsToggle = page.getByTestId('import-preview-toggle-terms-helper')
+
+  await expect(page.getByLabel('インポート確認')).toHaveCount(1)
+  await expect(tagsToggle).toHaveAttribute('aria-label', /^インポート詳細: 影響タグを全件表示/)
+  await expect(excludedToggle).toHaveAttribute('aria-label', /^インポート詳細: 除外理由を全件表示/)
+  await expect(termsToggle).toHaveAttribute('aria-label', /^インポート詳細: 差分用語の詳細説明を表示/)
+
+  await tagsToggle.click()
   await excludedToggle.click()
-  await expect(excludedToggle).toHaveAttribute('aria-expanded', 'true')
+  await termsToggle.click()
+
+  await expect(page.getByLabel('インポート確認')).toHaveCount(1)
+  await expect(tagsToggle).toHaveAttribute('aria-label', /^インポート詳細: 影響タグを折りたたむ/)
+  await expect(excludedToggle).toHaveAttribute('aria-label', /^インポート詳細: 除外理由を折りたたむ/)
+  await expect(termsToggle).toHaveAttribute('aria-label', /^インポート詳細: 差分用語の詳細説明を隠す/)
 })

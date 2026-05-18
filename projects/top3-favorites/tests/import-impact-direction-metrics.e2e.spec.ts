@@ -23,7 +23,7 @@ test('import impact metrics show directional signs (+ / ± / -)', async ({ page,
     buffer: Buffer.from(JSON.stringify(payload), 'utf-8'),
   })
 
-  await expect(page.getByTestId('import-impact-added')).toHaveText(/\+1\s*追加/)
-  await expect(page.getByTestId('import-impact-kept')).toHaveText(/±1\s*保持/)
-  await expect(page.getByTestId('import-impact-removed')).toHaveText(/-2\s*削除予定/)
+  await expect(page.getByTestId('import-preview-metric-added')).toHaveText(/\+1\s*追加/)
+  await expect(page.getByTestId('import-preview-metric-kept')).toHaveText(/±1\s*保持/)
+  await expect(page.getByTestId('import-preview-metric-removed')).toHaveText(/-2\s*削除予定/)
 })

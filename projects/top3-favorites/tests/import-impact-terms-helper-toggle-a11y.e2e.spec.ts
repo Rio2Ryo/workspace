@@ -26,13 +26,13 @@ test('terms helper toggle exposes aria-expanded and aria-controls correctly', as
     buffer: Buffer.from(JSON.stringify(payload), 'utf-8'),
   })
 
-  const toggle = page.getByTestId('import-impact-terms-helper-toggle')
-  await expect(toggle).toHaveAttribute('aria-controls', 'import-impact-terms-helper')
+  const toggle = page.getByTestId('import-preview-toggle-terms-helper')
+  await expect(toggle).toHaveAttribute('aria-controls', 'import-preview-terms-helper')
   await expect(toggle).toHaveAttribute('aria-expanded', 'false')
 
   await toggle.click()
   await expect(toggle).toHaveAttribute('aria-expanded', 'true')
-  await expect(page.locator('#import-impact-terms-helper')).toBeVisible()
+  await expect(page.locator('#import-preview-terms-helper')).toBeVisible()
 
   await toggle.click()
   await expect(toggle).toHaveAttribute('aria-expanded', 'false')

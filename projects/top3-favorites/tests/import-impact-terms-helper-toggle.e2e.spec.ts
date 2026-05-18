@@ -27,13 +27,13 @@ test('impact terms helper is collapsed by default and can be expanded/collapsed'
   })
 
   await expect(page.getByRole('button', { name: '差分用語の詳細説明を表示' })).toBeVisible()
-  await expect(page.getByTestId('import-impact-terms-helper')).toHaveCount(0)
+  await expect(page.getByTestId('import-preview-terms-helper')).toHaveCount(0)
 
   await page.getByRole('button', { name: '差分用語の詳細説明を表示' }).click()
-  const helper = page.getByTestId('import-impact-terms-helper')
+  const helper = page.getByTestId('import-preview-terms-helper')
   await expect(helper).toContainText('削除予定: 現在DBにあるが、インポート後データに含まれない項目')
   await expect(helper).toContainText('正規化除外: インポートJSON内で同一タグTop3に収まらず取り込まれない項目')
 
   await page.getByRole('button', { name: '差分用語の詳細説明を隠す' }).click()
-  await expect(page.getByTestId('import-impact-terms-helper')).toHaveCount(0)
+  await expect(page.getByTestId('import-preview-terms-helper')).toHaveCount(0)
 })
