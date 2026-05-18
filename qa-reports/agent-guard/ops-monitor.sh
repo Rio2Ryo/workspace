@@ -36,13 +36,15 @@ set -uo pipefail
 
 cd "$(dirname "$0")/../.."   # repo root (workspace)
 
-LOG_DIR="qa-reports/agent-guard/logs"
-LOG_FILE="$LOG_DIR/ops-monitor.log"
-MARKER_FILE="qa-reports/agent-guard/.ops-monitor.last-flags"
+# MARKER_FILE and LOG_FILE accept env override so tests (and any future
+# multi-tenant runner) can isolate state. Defaults match the launchd
+# plist's expectations.
+LOG_FILE="${LOG_FILE:-qa-reports/agent-guard/logs/ops-monitor.log}"
+MARKER_FILE="${MARKER_FILE:-qa-reports/agent-guard/.ops-monitor.last-flags}"
 AUDIT="qa-reports/agent-guard/audit-recent-commits.sh"
 NOW=$(date -u +%FT%TZ)
 
-mkdir -p "$LOG_DIR"
+mkdir -p "$(dirname "$LOG_FILE")"
 [ -f "$LOG_FILE" ] || : > "$LOG_FILE"
 
 ts_log() {
