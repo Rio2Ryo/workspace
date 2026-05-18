@@ -44,9 +44,21 @@
     .row + .row { border-top: 1px solid var(--border); }
     .label { color: var(--muted); }
     ul { list-style: none; padding: 0; margin: 8px 0 0; }
-    li { padding: 4px 0; border-top: 1px solid var(--border); font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 12px; }
+    li { padding: 10px 0; border-top: 1px solid var(--border); font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 12px; }
     li:first-child { border-top: 0; }
     a { color: inherit; }
+    .post-link { display: inline-block; margin-bottom: 8px; }
+    .thumb-link { display: block; }
+    .thumb {
+      display: block;
+      width: 100%;
+      max-width: 360px;
+      max-height: 420px;
+      object-fit: contain;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      background: #fff;
+    }
     .err { color: #c33; }
     .pill {
       display: inline-block; padding: 2px 8px; border-radius: 999px;
@@ -73,7 +85,7 @@
 <body>
   <main>
     <h1>threads-watcher <span class="pill">status</span></h1>
-    <div class="muted">公開 Threads アカウントの新規投稿観測ステータス。スクリーンショット本体はDB保存し、このページでは配信しません。</div>
+    <div class="muted">公開 Threads アカウントの新規投稿観測ステータス。スクリーンショット本体はDB保存し、このページでは表示用コピーをサムネイル配信します。</div>
 
     <!-- dry_run_alert banner: hidden by default; shown when
          data.dry_run_alert is populated (sync.py has accumulated
@@ -213,8 +225,29 @@
           a.target = '_blank';
           const size = post.screenshot_size_bytes ? ` / ${(post.screenshot_size_bytes / 1024).toFixed(0)}KB` : '';
           const captured = post.captured_at ? ` / ${post.captured_at}` : '';
+          a.className = 'post-link';
           a.textContent = `${pid}${size}${captured}`;
           li.appendChild(a);
+
+          if (post.screenshot_path) {
+            const imgLink = document.createElement('a');
+            imgLink.href = post.screenshot_path;
+            imgLink.rel = 'noopener noreferrer';
+            imgLink.target = '_blank';
+            imgLink.className = 'thumb-link';
+            const img = document.createElement('img');
+            img.className = 'thumb';
+            img.loading = 'lazy';
+            img.src = post.screenshot_path;
+            img.alt = `${pid} screenshot`;
+            imgLink.appendChild(img);
+            li.appendChild(imgLink);
+          } else {
+            const noImg = document.createElement('div');
+            noImg.className = 'muted';
+            noImg.textContent = 'screenshot asset not exported yet';
+            li.appendChild(noImg);
+          }
           ul.appendChild(li);
         }
       } catch (e) {

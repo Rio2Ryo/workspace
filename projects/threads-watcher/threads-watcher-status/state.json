@@ -1,14 +1,25 @@
 {
   "handle": "@hal.lifedesign",
   "last_check": {
-    "checked_at": "2026-05-17T23:23:08Z",
+    "checked_at": "2026-05-18T15:01:32Z",
     "found_count": 4,
     "new_count": 0,
-    "status": "ok",
-    "error": null
+    "status": "partial_error",
+    "error": "profile extraction returned partial result: found=4 previous_max=15"
   },
-  "saved_count": 20,
+  "saved_count": 21,
   "posts": [
+    {
+      "handle": "@hal.lifedesign",
+      "post_id": "DYeWkolEhU9",
+      "post_url": "https://www.threads.com/@hal.lifedesign/post/DYeWkolEhU9",
+      "first_seen_at": "2026-05-18T09:02:58Z",
+      "captured_at": "2026-05-18T09:03:01Z",
+      "screenshot_size_bytes": 436202,
+      "screenshot_width": 1280,
+      "screenshot_height": 1800,
+      "screenshot_path": "screenshots/hal.lifedesign/DYeWkolEhU9__20260518T090301Z.png"
+    },
     {
       "handle": "@hal.lifedesign",
       "post_id": "DYdQRfUkkV2",
@@ -17,7 +28,8 @@
       "captured_at": "2026-05-17T22:49:15Z",
       "screenshot_size_bytes": 397885,
       "screenshot_width": 1280,
-      "screenshot_height": 1800
+      "screenshot_height": 1800,
+      "screenshot_path": "screenshots/hal.lifedesign/DYdQRfUkkV2__20260517T224915Z.png"
     },
     {
       "handle": "@hal.lifedesign",
@@ -27,7 +39,8 @@
       "captured_at": "2026-05-17T12:26:11Z",
       "screenshot_size_bytes": 428920,
       "screenshot_width": 1280,
-      "screenshot_height": 1800
+      "screenshot_height": 1800,
+      "screenshot_path": "screenshots/hal.lifedesign/DYcI_OAEl-f__20260517T122611Z.png"
     },
     {
       "handle": "@hal.lifedesign",
@@ -37,7 +50,8 @@
       "captured_at": "2026-05-17T10:57:38Z",
       "screenshot_size_bytes": 381003,
       "screenshot_width": 1280,
-      "screenshot_height": 1800
+      "screenshot_height": 1800,
+      "screenshot_path": "screenshots/hal.lifedesign/DYaoW9vkp0A__20260517T105738Z.png"
     },
     {
       "handle": "@hal.lifedesign",
@@ -47,7 +61,8 @@
       "captured_at": "2026-05-17T10:57:34Z",
       "screenshot_size_bytes": 292910,
       "screenshot_width": 1280,
-      "screenshot_height": 1800
+      "screenshot_height": 1800,
+      "screenshot_path": "screenshots/hal.lifedesign/DYZOvSNETWl__20260517T105734Z.png"
     },
     {
       "handle": "@hal.lifedesign",
@@ -57,7 +72,8 @@
       "captured_at": "2026-05-17T10:57:30Z",
       "screenshot_size_bytes": 214369,
       "screenshot_width": 1280,
-      "screenshot_height": 1800
+      "screenshot_height": 1800,
+      "screenshot_path": "screenshots/hal.lifedesign/DYY-OF5EdmA__20260517T105730Z.png"
     },
     {
       "handle": "@hal.lifedesign",
@@ -67,7 +83,8 @@
       "captured_at": "2026-05-17T10:57:26Z",
       "screenshot_size_bytes": 304798,
       "screenshot_width": 1280,
-      "screenshot_height": 1800
+      "screenshot_height": 1800,
+      "screenshot_path": "screenshots/hal.lifedesign/DYYUsJcEo3h__20260517T105725Z.png"
     },
     {
       "handle": "@hal.lifedesign",
@@ -77,7 +94,8 @@
       "captured_at": "2026-05-16T02:59:14Z",
       "screenshot_size_bytes": 590175,
       "screenshot_width": 1280,
-      "screenshot_height": 1800
+      "screenshot_height": 1800,
+      "screenshot_path": "screenshots/hal.lifedesign/DYTopLnktn___20260516T025914Z.png"
     },
     {
       "handle": "@hal.lifedesign",
@@ -87,7 +105,8 @@
       "captured_at": "2026-05-16T02:59:10Z",
       "screenshot_size_bytes": 541223,
       "screenshot_width": 1280,
-      "screenshot_height": 1800
+      "screenshot_height": 1800,
+      "screenshot_path": "screenshots/hal.lifedesign/DYTb5DqEuIN__20260516T025910Z.png"
     },
     {
       "handle": "@hal.lifedesign",
@@ -97,7 +116,8 @@
       "captured_at": "2026-05-16T02:59:04Z",
       "screenshot_size_bytes": 366930,
       "screenshot_width": 1280,
-      "screenshot_height": 1800
+      "screenshot_height": 1800,
+      "screenshot_path": "screenshots/hal.lifedesign/DYS3RKvEnsq__20260516T025904Z.png"
     },
     {
       "handle": "@hal.lifedesign",
@@ -107,7 +127,8 @@
       "captured_at": "2026-05-16T02:58:59Z",
       "screenshot_size_bytes": 411841,
       "screenshot_width": 1280,
-      "screenshot_height": 1800
+      "screenshot_height": 1800,
+      "screenshot_path": "screenshots/hal.lifedesign/DYRO5psksk1__20260516T025859Z.png"
     },
     {
       "handle": "@hal.lifedesign",
@@ -117,7 +138,8 @@
       "captured_at": "2026-05-16T02:58:55Z",
       "screenshot_size_bytes": 550427,
       "screenshot_width": 1280,
-      "screenshot_height": 1800
+      "screenshot_height": 1800,
+      "screenshot_path": "screenshots/hal.lifedesign/DYQTRr8EpCz__20260516T025855Z.png"
     },
     {
       "handle": "@hal.lifedesign",
@@ -127,7 +149,8 @@
       "captured_at": "2026-05-16T02:58:50Z",
       "screenshot_size_bytes": 427608,
       "screenshot_width": 1280,
-      "screenshot_height": 1800
+      "screenshot_height": 1800,
+      "screenshot_path": "screenshots/hal.lifedesign/DYOksd4EuKD__20260516T025850Z.png"
     },
     {
       "handle": "@hal.lifedesign",
@@ -137,7 +160,8 @@
       "captured_at": "2026-05-16T02:58:45Z",
       "screenshot_size_bytes": 306196,
       "screenshot_width": 1280,
-      "screenshot_height": 1800
+      "screenshot_height": 1800,
+      "screenshot_path": "screenshots/hal.lifedesign/DYOSBB6kqz5__20260516T025845Z.png"
     },
     {
       "handle": "@hal.lifedesign",
@@ -147,7 +171,8 @@
       "captured_at": "2026-05-16T02:58:41Z",
       "screenshot_size_bytes": 444903,
       "screenshot_width": 1280,
-      "screenshot_height": 1800
+      "screenshot_height": 1800,
+      "screenshot_path": "screenshots/hal.lifedesign/DYNjra2knjt__20260516T025841Z.png"
     },
     {
       "handle": "@hal.lifedesign",
@@ -157,7 +182,8 @@
       "captured_at": "2026-05-16T02:58:36Z",
       "screenshot_size_bytes": 419888,
       "screenshot_width": 1280,
-      "screenshot_height": 1800
+      "screenshot_height": 1800,
+      "screenshot_path": "screenshots/hal.lifedesign/DYLz2VVjw2h__20260516T025836Z.png"
     },
     {
       "handle": "@hal.lifedesign",
@@ -167,7 +193,8 @@
       "captured_at": "2026-05-16T02:58:05Z",
       "screenshot_size_bytes": 308594,
       "screenshot_width": 1280,
-      "screenshot_height": 1800
+      "screenshot_height": 1800,
+      "screenshot_path": "screenshots/hal.lifedesign/DYYSOwYEnHR__20260516T025805Z.png"
     },
     {
       "handle": "@hal.lifedesign",
@@ -177,7 +204,8 @@
       "captured_at": "2026-05-16T02:58:01Z",
       "screenshot_size_bytes": 289239,
       "screenshot_width": 1280,
-      "screenshot_height": 1800
+      "screenshot_height": 1800,
+      "screenshot_path": "screenshots/hal.lifedesign/DYVokjzEv96__20260516T025801Z.png"
     },
     {
       "handle": "@hal.lifedesign",
@@ -187,7 +215,8 @@
       "captured_at": "2026-05-16T02:57:57Z",
       "screenshot_size_bytes": 477858,
       "screenshot_width": 1280,
-      "screenshot_height": 1800
+      "screenshot_height": 1800,
+      "screenshot_path": "screenshots/hal.lifedesign/DYVnNzVEtrK__20260516T025757Z.png"
     },
     {
       "handle": "@hal.lifedesign",
@@ -197,7 +226,8 @@
       "captured_at": "2026-05-16T02:57:52Z",
       "screenshot_size_bytes": 243075,
       "screenshot_width": 1280,
-      "screenshot_height": 1800
+      "screenshot_height": 1800,
+      "screenshot_path": "screenshots/hal.lifedesign/DYUE_dlEjSN__20260516T025752Z.png"
     },
     {
       "handle": "@hal.lifedesign",
@@ -207,8 +237,58 @@
       "captured_at": "2026-05-16T02:57:48Z",
       "screenshot_size_bytes": 518607,
       "screenshot_width": 1280,
-      "screenshot_height": 1800
+      "screenshot_height": 1800,
+      "screenshot_path": "screenshots/hal.lifedesign/DYT7Km9kj9y__20260516T025748Z.png"
     }
   ],
-  "snapshot_generated_at": "2026-05-17T23:23:08Z"
+  "recent_stats": {
+    "window_hours": 24,
+    "total": 843,
+    "ok": 803,
+    "partial_error": 40,
+    "error": 0,
+    "other": 0,
+    "success_rate": 0.9525504151838672
+  },
+  "recent_stats_by_window": {
+    "1": {
+      "window_hours": 1,
+      "total": 0,
+      "ok": 0,
+      "partial_error": 0,
+      "error": 0,
+      "other": 0,
+      "success_rate": null
+    },
+    "24": {
+      "window_hours": 24,
+      "total": 843,
+      "ok": 803,
+      "partial_error": 40,
+      "error": 0,
+      "other": 0,
+      "success_rate": 0.9525504151838672
+    },
+    "168": {
+      "window_hours": 168,
+      "total": 1501,
+      "ok": 1461,
+      "partial_error": 40,
+      "error": 0,
+      "other": 0,
+      "success_rate": 0.9733510992671552
+    }
+  },
+  "sync_state": {
+    "cursor": 43,
+    "db_max": 44,
+    "delta": 1,
+    "cursor_file_exists": true
+  },
+  "dry_run_alert": {
+    "pending_ticks": 7,
+    "since": "2026-05-18T14:57:28Z",
+    "delta": 3
+  },
+  "snapshot_generated_at": "2026-05-18T22:52:49Z"
 }

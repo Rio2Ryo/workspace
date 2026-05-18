@@ -1,18 +1,21 @@
 # threads-watcher
 
-指定した Threads アカウントの新規投稿を定期的に検出し、投稿ページのスクリーンショットをローカル保存する最小 PoC。
+指定した Threads アカウントの新規投稿を定期的に検出し、投稿ページのスクリーンショットを **DB に即時保存** する最小 PoC。
 
 - 初期テスト対象: `https://www.threads.com/@hal.lifedesign`
 - ログイン・投稿操作なし(公開プロフィールの観測のみ)
-- 外部サービス・有料 API 依存なし(Playwright + ローカル Chromium のみ)
+- 外部サービス・有料 API 依存なし(Playwright + ローカル Chromium + SQLite のみ)
+- 投稿削除に備え、投稿 ID だけでなくスクリーンショット PNG バイナリを `threads_watcher.db` に保存する
 
 ## アーキテクチャ
 
 | 観点 | 採用 | 理由 |
 |---|---|---|
 | 取得方式 | Playwright (Python) + Chromium ヘッドレス | Threads は SPA で初期 HTML に投稿情報がほぼ無い。スクショもこのツールで完結するため依存が最小 |
-| 状態保存 | `state.json` に投稿 ID / URL を記録 | 重複保存防止 |
-| スクショ保存 | `screenshots/<post_id>__<timestamp>.png` | フルページ |
+| 正本DB | `threads_watcher.db` (SQLite) | 投稿削除後もスクショ実体を保持するため |
+| 重複防止 | DB の `UNIQUE(handle, post_id)` | 同一投稿の二重保存防止 |
+| スクショ保存 | DB の `posts.screenshot_png` BLOB | PNG バイナリを即時保存 |
+| ローカルPNG | `screenshots/<handle>/<post_id>__<timestamp>.png` | 目視確認用の副産物。正本ではない |
 | 実行 | `python watcher.py --once`(単発) / `--watch --interval 600`(ループ) | cron / launchd 連携は将来 |
 
 ## 倫理・運用条件
@@ -43,16 +46,31 @@ python watcher.py --once --handle @other.user
 
 # 監視ループ(10 分間隔)
 python watcher.py --watch --interval 600
+
+# 運用用: 60秒間隔で常駐実行(現状の最短ポーリング)
+THREADS_WATCHER_INTERVAL=60 ./run-watcher.sh
 ```
 
-## 出力
+## 出力 / 保存データ
 
-- `state.json`: `{"<handle>": {"seen_post_ids": [...], "last_checked_at": "..."}}`
-- `screenshots/<handle>/<post_id>__<YYYYMMDDTHHMMSSZ>.png`
+- `threads_watcher.db`: 正本。`posts` テーブルに以下を保存
+  - `handle`
+  - `post_id`
+  - `post_url`
+  - `first_seen_at`
+  - `captured_at`
+  - `screenshot_png` (PNG BLOB)
+  - `screenshot_content_type`
+  - `screenshot_size_bytes`
+  - `screenshot_width` / `screenshot_height`
+  - `local_path` (確認用PNGの相対パス)
+- `screenshots/<handle>/<post_id>__<YYYYMMDDTHHMMSSZ>.png`: 目視確認用の副産物
 
 ## 静的ステータスページ (`threads-watcher-status/`)
 
-`watcher.py` 実行ごとに `threads-watcher-status/state.json` にサニタイズ済みスナップショット(handle / 投稿 ID / タイムスタンプのみ、画像 path 含まず)を書き出す。`threads-watcher-status/index.html` がクライアントサイドでそれを読み公開ステータスを表示する。Vercel に静的サイトとしてデプロイされ、画像本体は配信しない(第三者投稿の再配布回避)。
+`watcher.py` 実行ごとに DB から `threads-watcher-status/state.json` にサニタイズ済みスナップショットを書き出す。`threads-watcher-status/index.html` がクライアントサイドでそれを読み公開ステータスを表示する。保存済みスクショは DB の BLOB を正本とし、表示用コピーだけを `threads-watcher-status/screenshots/<handle>/...png` に書き出してサムネイル表示する。
+
+公開ステータスにはスクショ BLOB やホストローカル path は含めない。代わりに browser-safe な `screenshot_path` と、`screenshot_size_bytes` / 画像サイズ / 保存時刻を出すことで、投稿URLと保存スクショを同じ画面で確認できる。
 
 ```bash
 cd threads-watcher-status

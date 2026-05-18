@@ -51,6 +51,7 @@ DEFAULT_BRANCH = "shiro/phase2-perf-metrics"
 DEFAULT_LOCKDIR = PROJECT_ROOT / ".sync.lock.d"
 
 SNAPSHOT_REL_FROM_WORKSPACE = "projects/threads-watcher/threads-watcher-status/state.json"
+SCREENSHOT_ASSETS_REL_FROM_WORKSPACE = "projects/threads-watcher/threads-watcher-status/screenshots"
 
 # After this many consecutive ticks of "DRY: would commit (delta=N)" with
 # unchanged delta, emit an ALERT line so operators see the dry-run is
@@ -202,7 +203,7 @@ def build_git_add_args(workspace: Path, relpath: str) -> list[str]:
     return ["git", "-C", str(workspace), "add", "--", relpath]
 
 
-def build_git_commit_args(workspace: Path, message: str, relpath: str) -> list[str]:
+def build_git_commit_args(workspace: Path, message: str, relpath: str, extra_relpaths: list[str] | None = None) -> list[str]:
     """Commit ONLY the snapshot path.
 
     A bare `git commit -m ...` sweeps every staged change into the
@@ -212,7 +213,7 @@ def build_git_commit_args(workspace: Path, message: str, relpath: str) -> list[s
     forces git to commit only what matches the pathspec, leaving any
     other staged changes still staged and untouched.
     """
-    return ["git", "-C", str(workspace), "commit", "-m", message, "--", relpath]
+    return ["git", "-C", str(workspace), "commit", "-m", message, "--", relpath, *(extra_relpaths or [])]
 
 
 def build_git_push_args(workspace: Path, branch: str) -> list[str]:
@@ -226,24 +227,30 @@ def build_git_last_commit_ts_args(workspace: Path, relpath: str) -> list[str]:
     ]
 
 
-def build_git_staged_other_paths_args(workspace: Path, relpath: str) -> list[str]:
+def build_git_staged_other_paths_args(workspace: Path, relpath: str, extra_allowed_relpaths: list[str] | None = None) -> list[str]:
     """List staged paths *other than* the snapshot.
 
     Used as a pre-commit safety net: if anything unrelated is already
     staged, we refuse to commit instead of silently bundling it.
     """
+    exclusions = [f":!{relpath}"] + [f":!{p}" for p in (extra_allowed_relpaths or [])]
     return [
         "git", "-C", str(workspace),
         "diff", "--cached", "--name-only",
-        "--", ".", f":!{relpath}",
+        "--", ".", *exclusions,
     ]
 
 
 def build_git_diff_cached_snapshot_args(workspace: Path, relpath: str) -> list[str]:
     """Detect whether the snapshot itself has any staged changes."""
+    return build_git_diff_cached_allowed_args(workspace, relpath, [])
+
+
+def build_git_diff_cached_allowed_args(workspace: Path, relpath: str, extra_relpaths: list[str] | None = None) -> list[str]:
+    """Detect whether the snapshot or allowed companion assets are staged."""
     return [
         "git", "-C", str(workspace),
-        "diff", "--cached", "--quiet", "--", relpath,
+        "diff", "--cached", "--quiet", "--", relpath, *(extra_relpaths or []),
     ]
 
 
@@ -371,6 +378,8 @@ def parse_args(argv: list[str] | None) -> argparse.Namespace:
                    help="Path to the git repo containing the snapshot file.")
     p.add_argument("--snapshot-rel", default=SNAPSHOT_REL_FROM_WORKSPACE,
                    help="Snapshot path relative to --workspace, used by git add/log.")
+    p.add_argument("--screenshot-assets-rel", default=SCREENSHOT_ASSETS_REL_FROM_WORKSPACE,
+                   help="Screenshot assets directory relative to --workspace; committed with the snapshot when present.")
     p.add_argument("--branch", default=DEFAULT_BRANCH)
     p.add_argument("--min-gap-sec", type=int, default=DEFAULT_COMMIT_MIN_GAP_SEC)
     p.add_argument("--window", type=int, default=DEFAULT_RECENT_CHECKS_WINDOW)
@@ -577,7 +586,11 @@ def _do_commit_and_maybe_push(
     # snapshot commit silently include unrelated WIP. The path-scoped
     # commit below would already skip those changes, but the workspace
     # staying dirty after we run is itself a footgun — we surface it.
-    other = run_cmd(build_git_staged_other_paths_args(args.workspace, args.snapshot_rel))
+    asset_relpaths = []
+    if args.screenshot_assets_rel and (args.workspace / args.screenshot_assets_rel).exists():
+        asset_relpaths.append(args.screenshot_assets_rel)
+
+    other = run_cmd(build_git_staged_other_paths_args(args.workspace, args.snapshot_rel, asset_relpaths))
     if other.returncode != 0:
         log.log(f"ERROR: git diff --cached probe failed: {other.stderr}")
         return 1
@@ -593,18 +606,23 @@ def _do_commit_and_maybe_push(
     if add_res.returncode != 0:
         log.log(f"ERROR: git add failed: {add_res.stderr}")
         return 1
+    for asset_rel in asset_relpaths:
+        asset_add_res = run_cmd(build_git_add_args(args.workspace, asset_rel))
+        if asset_add_res.returncode != 0:
+            log.log(f"ERROR: git add screenshots failed: {asset_add_res.stderr}")
+            return 1
 
     # If staged diff is empty for *just the snapshot*, the in-DB snapshot
     # already matches what git has — bump the cursor anyway so we don't
     # keep re-checking, but skip the commit (mirrors sync.sh §5).
-    diff_check = run_cmd(build_git_diff_cached_snapshot_args(args.workspace, args.snapshot_rel))
+    diff_check = run_cmd(build_git_diff_cached_allowed_args(args.workspace, args.snapshot_rel, asset_relpaths))
     if diff_check.returncode == 0:
-        log.log("snapshot already matches git index; no commit needed")
+        log.log("snapshot and screenshot assets already match git index; no commit needed")
         write_cursor(args.cursor, current_max)
         return 0
 
     message = build_commit_message(now_iso(), decision.delta)
-    commit_res = run_cmd(build_git_commit_args(args.workspace, message, args.snapshot_rel))
+    commit_res = run_cmd(build_git_commit_args(args.workspace, message, args.snapshot_rel, asset_relpaths))
     if commit_res.returncode != 0:
         log.log(f"ERROR: git commit failed: {commit_res.stderr}")
         return 1

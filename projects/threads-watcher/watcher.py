@@ -16,7 +16,7 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
 
-from db import connect, get_seen_post_ids, init_db, latest_snapshot, record_check, save_post_screenshot
+from db import connect, export_status_screenshots, get_seen_post_ids, init_db, latest_snapshot, record_check, save_post_screenshot
 from health import (
     check_dom_regression,
     check_process_staleness,
@@ -61,18 +61,20 @@ def _normalize_handle(handle: str) -> str:
     return handle if handle.startswith("@") else f"@{handle}"
 
 
-def _write_web_snapshot_from_db(snapshot: dict[str, Any]) -> None:
+def _write_web_snapshot_from_db(conn: Any, handle: str) -> None:
     """Write a sanitized status snapshot derived from the DB source of truth.
 
-    The public status file intentionally excludes screenshot BLOBs and local file
-    paths, but includes proof that screenshots were captured and persisted.
-
-    Delegates payload shape to watcher_pure.build_web_snapshot_payload so the
-    field-presence contract is testable without importing this module (which
-    pulls in playwright). Side-effects here: dir create + JSON write +
-    reading the dry-run state file.
+    The status file still excludes screenshot BLOBs and local host paths, but
+    now includes browser-safe relative screenshot paths. PNG assets are exported
+    under threads-watcher-status/screenshots/ so the static page can render the
+    saved screenshots alongside each post URL.
     """
     WEB_SNAPSHOT_FILE.parent.mkdir(parents=True, exist_ok=True)
+    snapshot = latest_snapshot(conn, handle)
+    screenshot_paths = export_status_screenshots(conn, handle, WEB_SNAPSHOT_FILE.parent)
+    for post in snapshot.get("posts", []):
+        post["screenshot_path"] = screenshot_paths.get(str(post.get("post_id")))
+
     # Late import: sync.py imports sync_guards which imports json/sqlite —
     # all stdlib, no playwright dependency.
     from sync import get_active_dry_run_alert
@@ -223,7 +225,7 @@ def run_once(handle: str, *, baseline_lookback_days: int | None = None) -> int:
             error=error,
         )
         if handle == WEB_SNAPSHOT_HANDLE:
-            _write_web_snapshot_from_db(latest_snapshot(conn, handle))
+            _write_web_snapshot_from_db(conn, handle)
         conn.close()
 
     print(f"[done] {handle} found={found_count} new_saved_to_db={new_count} at={checked_at}")

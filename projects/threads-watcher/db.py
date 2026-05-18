@@ -9,6 +9,8 @@ from __future__ import annotations
 import sqlite3
 from pathlib import Path
 from typing import Any
+import re
+
 
 PROJECT_ROOT = Path(__file__).resolve().parent
 DEFAULT_DB_FILE = PROJECT_ROOT / "threads_watcher.db"
@@ -188,6 +190,54 @@ def recent_stats(
         "other": other_count,
         "success_rate": (ok_count / total) if total > 0 else None,
     }
+
+
+def _safe_asset_segment(value: str, fallback: str) -> str:
+    cleaned = re.sub(r"[^A-Za-z0-9._-]+", "_", value).strip("._")
+    return cleaned or fallback
+
+
+def export_status_screenshots(
+    conn: sqlite3.Connection,
+    handle: str,
+    status_root: Path,
+) -> dict[str, str]:
+    """Write DB screenshot BLOBs under the static status site and return public paths.
+
+    The DB remains the source of truth; this creates display-only PNG assets
+    inside ``threads-watcher-status/screenshots/`` so the static page can render
+    thumbnails without leaking host-local absolute paths or embedding large BLOBs
+    in state.json. Returned paths are relative to ``status_root`` and safe for
+    browser ``src`` attributes.
+    """
+    rows = conn.execute(
+        """
+        SELECT post_id, screenshot_png, screenshot_size_bytes, local_path
+        FROM posts
+        WHERE handle = ?
+        ORDER BY captured_at DESC
+        """,
+        (handle,),
+    ).fetchall()
+
+    safe_handle = _safe_asset_segment(handle.lstrip("@"), "handle")
+    out: dict[str, str] = {}
+    for row in rows:
+        post_id = str(row["post_id"])
+        local_name = Path(str(row["local_path"] or "")).name
+        if not local_name.lower().endswith(".png"):
+            local_name = f"{post_id}.png"
+        filename = _safe_asset_segment(local_name, f"{post_id}.png")
+        if not filename.lower().endswith(".png"):
+            filename += ".png"
+        rel = Path("screenshots") / safe_handle / filename
+        dest = status_root / rel
+        png = bytes(row["screenshot_png"])
+        dest.parent.mkdir(parents=True, exist_ok=True)
+        if not dest.exists() or dest.stat().st_size != len(png):
+            dest.write_bytes(png)
+        out[post_id] = rel.as_posix()
+    return out
 
 
 def sync_state(
