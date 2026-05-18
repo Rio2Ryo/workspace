@@ -1383,6 +1383,32 @@ for (const { title, commands } of readmeCommandContractGroups) {
   })
 }
 
+test('[App][config-quality] full verification script includes lightweight QA automation scripts documented in README', async () => {
+  const packageJson = JSON.parse(await readFile(new URL('package.json', `${root}/`), 'utf8'))
+  const scripts = packageJson.scripts ?? {}
+  const fullScript = scripts['test:full'] ?? ''
+  const documentedLightweightQaCommands = readmeCommandContractGroups
+    .flatMap(({ commands }) => commands)
+    .filter((command) => {
+      const scriptName = command.replace(/^pnpm\s+/, '')
+      return scriptName.startsWith('test:legacy-')
+    })
+
+  const missingFromFull = documentedLightweightQaCommands.filter((command) => !fullScript.includes(command))
+
+  assert.deepEqual(
+    missingFromFull,
+    [],
+    missingItemsMessage({
+      scope: 'App',
+      rule: 'test:full includes documented lightweight QA commands',
+      fix: 'add missing lightweight QA scripts to package.json test:full before E2E/build',
+      context: { fullScript },
+      items: missingFromFull,
+    }),
+  )
+})
+
 test('[E2E-Helper][config-quality] allowed category dictionary is unique, sorted, and kebab-case', async () => {
   const kebab = /^[a-z0-9]+(?:-[a-z0-9]+)*$/
   const allowedList = [...e2eHelperCategoryContract.allowed]

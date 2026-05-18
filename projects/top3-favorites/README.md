@@ -43,6 +43,13 @@ pnpm test:quick
 pnpm test:docs-only
 ```
 
+### legacy撤去の昇格判定スクリプト（dry-run）
+
+```bash
+pnpm test:legacy-zero-run-script
+pnpm test:legacy-zero-run-env-script
+```
+
 ### import preview 回帰のみ
 
 ```bash
