@@ -27,6 +27,7 @@ from playwright.sync_api import (
 )
 from watcher_pure import (
     _extract_post_ids,
+    capture_with_retry,
     collect_post_ids_until_stable,
     combine_error_messages,
     extract_post_ids_from_hrefs,
@@ -167,8 +168,28 @@ def run_once(handle: str) -> int:
                 capture_errors: list[str] = []
                 for pid in new_ids:
                     first_seen_at = _now_iso()
+
+                    # Retry only the network/Chromium step; the DB write below
+                    # is idempotent (INSERT OR IGNORE) and very local, so it
+                    # doesn't need backoff.
+                    captured, attempt_errors = capture_with_retry(
+                        lambda pid=pid: _screenshot_post(
+                            browser, handle, pid, SCREENSHOTS_DIR / handle_no_at
+                        ),
+                    )
+                    if captured is None:
+                        status = "partial_error"
+                        capture_errors.append(
+                            f"{pid}: capture exhausted retries [{'; '.join(attempt_errors)}]"
+                        )
+                        print(
+                            f"[error] failed to capture {pid} after {len(attempt_errors)} attempt(s): "
+                            f"{attempt_errors[-1] if attempt_errors else 'unknown'}",
+                            file=sys.stderr,
+                        )
+                        continue
+
                     try:
-                        captured = _screenshot_post(browser, handle, pid, SCREENSHOTS_DIR / handle_no_at)
                         local_rel_path = str(captured["path"].relative_to(PROJECT_ROOT))
                         inserted = save_post_screenshot(
                             conn,
@@ -184,15 +205,20 @@ def run_once(handle: str) -> int:
                         )
                         if inserted:
                             new_count += 1
+                            retry_note = (
+                                f" (after {len(attempt_errors)} retry/retries)"
+                                if attempt_errors
+                                else ""
+                            )
                             print(
-                                f"[saved-db] {pid} bytes={len(captured['png'])} local={local_rel_path}"
+                                f"[saved-db] {pid} bytes={len(captured['png'])} local={local_rel_path}{retry_note}"
                             )
                         else:
                             print(f"[skip] {pid} already exists in DB")
                     except Exception as e:
                         status = "partial_error"
-                        capture_errors.append(f"{pid}: {e}")
-                        print(f"[error] failed to capture/store {pid}: {e}", file=sys.stderr)
+                        capture_errors.append(f"{pid}: db write failed: {e}")
+                        print(f"[error] DB write failed for {pid}: {e}", file=sys.stderr)
                 error = _combine_error_messages(error, capture_errors)
             finally:
                 browser.close()

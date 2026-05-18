@@ -20,7 +20,8 @@ from __future__ import annotations
 
 import re
 import time
-from typing import Any, Callable
+from dataclasses import dataclass
+from typing import Any, Callable, TypeVar
 
 
 def extract_post_ids_from_hrefs(hrefs: list[str | None], handle: str) -> list[str]:
@@ -102,6 +103,87 @@ def collect_post_ids_until_stable(
         if now() >= deadline:
             return best or current
         page.wait_for_timeout(poll_ms)
+
+
+T = TypeVar("T")
+
+
+@dataclass(frozen=True)
+class RetryPolicy:
+    """How aggressively to retry a flaky capture.
+
+    Defaults: 3 attempts total (1 initial + 2 retries), starting at 1s and
+    doubling. Sums to ~3s of added latency in the worst case before giving
+    up — small enough to not stretch the run_once budget meaningfully, big
+    enough to ride out a typical Threads transient.
+    """
+
+    max_attempts: int = 3
+    initial_delay_s: float = 1.0
+    backoff: float = 2.0
+
+
+# Exceptions that almost always mean "the code is wrong, not the network."
+# Retrying them just delays the failure. Keep this small and conservative —
+# adding new types here weakens the safety net.
+_NON_RETRYABLE: tuple[type[BaseException], ...] = (
+    TypeError,
+    ValueError,
+    KeyError,
+    AttributeError,
+)
+
+
+def should_retry(attempt: int, max_attempts: int, exc: BaseException) -> bool:
+    """Pure decision: is one more attempt justified?
+
+    `attempt` is 1-indexed (the one that just failed).
+    """
+    if attempt >= max_attempts:
+        return False
+    if isinstance(exc, _NON_RETRYABLE):
+        return False
+    return True
+
+
+def delay_for_attempt(attempt: int, policy: RetryPolicy) -> float:
+    """Pure: exponential backoff for the *next* sleep before attempt+1.
+
+    delay = initial_delay_s * (backoff ** (attempt - 1)).
+    So with defaults: attempt 1 → 1.0s, attempt 2 → 2.0s, attempt 3 → 4.0s.
+    """
+    if attempt < 1:
+        return 0.0
+    return policy.initial_delay_s * (policy.backoff ** (attempt - 1))
+
+
+def capture_with_retry(
+    capture_fn: Callable[[], T],
+    *,
+    policy: RetryPolicy = RetryPolicy(),
+    sleep_fn: Callable[[float], None] = time.sleep,
+) -> tuple[T | None, list[str]]:
+    """Retry a flaky capture up to policy.max_attempts.
+
+    Returns ``(result, attempt_errors)``:
+      - On success: ``(<callable's result>, errors_for_attempts_that_failed)``
+      - On total failure: ``(None, errors_for_all_attempts)``
+
+    Each error string is prefixed with ``"attempt N/M: "`` so the audit log
+    can show how many attempts were spent. ``sleep_fn`` is injected for
+    deterministic tests; production passes ``time.sleep``.
+    """
+    errors: list[str] = []
+    for attempt in range(1, policy.max_attempts + 1):
+        try:
+            result = capture_fn()
+            return result, errors
+        except BaseException as exc:  # noqa: BLE001 — we record + re-decide
+            errors.append(f"attempt {attempt}/{policy.max_attempts}: {exc}")
+            if not should_retry(attempt, policy.max_attempts, exc):
+                break
+            sleep_fn(delay_for_attempt(attempt, policy))
+    return None, errors
 
 
 def combine_error_messages(base: str | None, capture_errors: list[str]) -> str | None:
