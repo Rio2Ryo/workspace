@@ -6,6 +6,7 @@ import {
   appRequiredPatterns,
   docs,
   forbiddenDocPatterns,
+  directMutationContractCases,
   helperContractCases,
   importPreviewManualHeadings,
   manualAutomatedLinkContracts,
@@ -13,9 +14,10 @@ import {
   readmeLinkContracts,
   requiredDocPatterns,
   importPreviewContractCases,
-  contractMessageLimits,
+  scopeLimitRules,
 } from './qa-current-contract.config.mjs'
 import {
+  collectBracketScopesFromTestTitles,
   collectFiles,
   collectSpecUrlsByNamePredicate,
   findBeforeEachOffenders,
@@ -25,6 +27,7 @@ import { contractMessage, missingItemsMessage } from './qa-contract-message.mjs'
 const root = new URL('..', import.meta.url)
 const appPath = new URL('src/App.tsx', `${root}/`)
 const importPreviewTestsPath = new URL('tests/import-preview/', `${root}/`)
+const currentContractTestPath = new URL('tests/qa-current-contract.test.mjs', `${root}/`)
 
 test('[App] current implementation uses API-backed structured form, not legacy localStorage or natural parsing', async () => {
   const appSource = await readFile(appPath, 'utf8')
@@ -36,6 +39,29 @@ test('[App] current implementation uses API-backed structured form, not legacy l
   for (const { pattern, message } of appForbiddenPatterns) {
     assert.doesNotMatch(appSource, pattern, message)
   }
+})
+
+test('[App] scopeLimitRules do not produce overlapping matches for known contract scopes', async () => {
+  const scopes = await collectBracketScopesFromTestTitles(currentContractTestPath)
+  const overlaps = []
+
+  for (const scope of scopes) {
+    const matched = scopeLimitRules.filter(({ pattern }) => pattern.test(scope))
+    if (matched.length > 1) {
+      overlaps.push(`${scope} -> ${matched.map(({ pattern }) => pattern).join(', ')}`)
+    }
+  }
+
+  assert.deepEqual(
+    overlaps,
+    [],
+    contractMessage({
+      scope: 'App',
+      rule: 'scopeLimitRules overlap check',
+      expected: 'each discovered [Scope] test title matches at most one scopeLimitRules pattern',
+      fix: 'tighten regex patterns in scopeLimitRules to avoid multi-match collisions',
+    }),
+  )
 })
 
 test('[Docs] QA manuals and QA result docs match the current implementation contract', async () => {
@@ -149,7 +175,7 @@ test('[E2E-Helper] import preview specs use shared reset helpers in beforeEach h
   }
 
   const message = importPreviewContractCases.inlineResetChecks[0].message
-  assert.deepEqual(offenders.sort(), [], missingItemsMessage({ scope: 'E2E-Helper', rule: message, fix: 'replace inline reset with shared helper', items: offenders, limit: contractMessageLimits.e2eHelper }))
+  assert.deepEqual(offenders.sort(), [], missingItemsMessage({ scope: 'E2E-Helper', rule: message, fix: 'replace inline reset with shared helper', items: offenders }))
 })
 
 test('[E2E-Helper] import preview specs import reset helpers directly from tests/e2e-helpers.ts', async () => {
@@ -173,7 +199,6 @@ test('[E2E-Helper] import preview specs import reset helpers directly from tests
       rule: message,
       fix: 'import reset helpers directly from ../../e2e-helpers',
       items: offenders,
-      limit: contractMessageLimits.e2eHelper,
     }),
   )
 })
@@ -201,7 +226,27 @@ for (const { title, predicate, blockPattern, messagePrefix } of helperContractCa
     assert.deepEqual(
       offenders,
       [],
-      missingItemsMessage({ scope: 'E2E-Helper', rule: messagePrefix, fix: 'replace inline reset with shared helper in beforeEach', items: offenders, limit: contractMessageLimits.e2eHelper }),
+      missingItemsMessage({ scope: 'E2E-Helper', rule: messagePrefix, fix: 'replace inline reset with shared helper in beforeEach', items: offenders }),
+    )
+  })
+}
+
+for (const { title, predicate, pattern, messagePrefix } of directMutationContractCases) {
+  test(`[E2E-Helper] ${title}`, async () => {
+    const specs = await collectSpecUrlsByNamePredicate(root, predicate)
+    const offenders = []
+
+    for (const specUrl of specs) {
+      const source = await readFile(specUrl, 'utf8')
+      if (pattern.test(source)) {
+        offenders.push(specUrl.pathname.replace(root.pathname, ''))
+      }
+    }
+
+    assert.deepEqual(
+      offenders.sort(),
+      [],
+      missingItemsMessage({ scope: 'E2E-Helper', rule: messagePrefix, fix: 'replace direct per-row mutation with resetItemsByReplace helper', items: offenders }),
     )
   })
 }

@@ -1,12 +1,13 @@
 import { expect, test } from '@playwright/test'
 import { readFile } from 'node:fs/promises'
+import { resetItemsByReplace } from './e2e-helpers'
 
 const requiredStringFields = ['id', 'tag', 'location', 'name', 'memo', 'mapsUrl', 'placeId', 'createdAt', 'updatedAt'] as const
 
 type ExportedItem = Record<(typeof requiredStringFields)[number], string> & { rank: number }
 
 test.beforeEach(async ({ request }) => {
-  await request.post('/api/items?mode=replace', { data: { items: [] } })
+  await resetItemsByReplace(request)
 })
 
 test('exported JSON file has valid item shape and can be imported back through the UI', async ({ page, request }) => {
@@ -40,9 +41,7 @@ test('exported JSON file has valid item shape and can be imported back through t
     expect(item.mapsUrl).toContain('https://www.google.com/maps/search/?api=1&query=')
   }
 
-  for (const item of exportedItems) {
-    await request.delete(`/api/items?id=${encodeURIComponent(item.id)}`)
-  }
+  await resetItemsByReplace(request)
   await page.reload()
   await expect(page.getByText('該当するTop3がありません。')).toBeVisible()
 

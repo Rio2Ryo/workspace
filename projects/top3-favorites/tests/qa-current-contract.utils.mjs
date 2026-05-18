@@ -1,5 +1,16 @@
 import { readdir, readFile } from 'node:fs/promises'
 
+export async function collectBracketScopesFromTestTitles(fileUrl) {
+  const source = await readFile(fileUrl, 'utf8')
+  const scopes = new Set()
+  const titleRegex = /test\(\s*(["'`])\[(.+?)\]/g
+  let m
+  while ((m = titleRegex.exec(source)) !== null) {
+    scopes.add(m[2])
+  }
+  return Array.from(scopes).sort((a, b) => a.localeCompare(b, 'en'))
+}
+
 export async function collectFiles(dirUrl, predicate) {
   const entries = await readdir(dirUrl, { withFileTypes: true })
   const files = []

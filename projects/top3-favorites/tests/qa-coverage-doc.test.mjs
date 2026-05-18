@@ -2,7 +2,6 @@ import assert from 'node:assert/strict'
 import { readdir, readFile, stat } from 'node:fs/promises'
 import test from 'node:test'
 import { contractMessage, missingItemsMessage } from './qa-contract-message.mjs'
-import { contractMessageLimits } from './qa-current-contract.config.mjs'
 
 const coverageDocPath = new URL('../docs/AUTOMATED_QA_COVERAGE.md', import.meta.url)
 const testsDir = new URL('./', import.meta.url)
@@ -74,7 +73,6 @@ test('[Docs-Completeness] automated QA coverage doc references every E2E spec', 
       rule: 'all E2E specs are documented in AUTOMATED_QA_COVERAGE',
       fix: 'add missing tests/**/*.e2e.spec.ts entries to docs/AUTOMATED_QA_COVERAGE.md',
       items: missing,
-      limit: contractMessageLimits.docsPaths,
     }),
   )
 })
@@ -104,7 +102,6 @@ test('[Docs-Integrity] automated QA coverage doc does not include non-existent E
       rule: 'all documented E2E paths exist on disk',
       fix: 'remove or correct stale test paths in docs/AUTOMATED_QA_COVERAGE.md',
       items: missingOnDisk,
-      limit: contractMessageLimits.docsPaths,
     }),
   )
 })

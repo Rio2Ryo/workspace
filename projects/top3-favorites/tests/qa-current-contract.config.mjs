@@ -129,6 +129,21 @@ export const helperContractCases = [
     blockPattern: /request\.delete\(`\/api\/items\?id=/,
     messagePrefix: 'import beforeEach hooks should call resetItemsByDelete helper instead of inline delete reset',
   },
+  {
+    title: 'export specs use shared resetItemsByReplace helper in beforeEach hooks',
+    predicate: (name) => name.startsWith('export-'),
+    blockPattern: /\/api\/items\?mode=replace/,
+    messagePrefix: 'export beforeEach hooks should call resetItemsByReplace helper instead of inline mode=replace reset',
+  },
+]
+
+export const directMutationContractCases = [
+  {
+    title: 'export specs avoid direct per-row API deletes during roundtrip cleanup',
+    predicate: (name) => name.startsWith('export-'),
+    pattern: /request\.delete\(`\/api\/items\?id=/,
+    messagePrefix: 'export specs should use resetItemsByReplace helper instead of per-row API deletes',
+  },
 ]
 
 export const manualAutomatedLinkContracts = {
@@ -155,6 +170,11 @@ export const contractMessageLimits = {
   e2eHelper: 5,
   docsPaths: 8,
 }
+
+export const scopeLimitRules = [
+  { pattern: /^E2E-Helper$/, limit: contractMessageLimits.e2eHelper },
+  { pattern: /^Docs/, limit: contractMessageLimits.docsPaths },
+]
 
 export const importPreviewContractCases = {
   inlineResetChecks: [
