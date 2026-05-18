@@ -501,6 +501,80 @@ test('[App][config-quality] missingItemsMessage context key dictionary and usage
     }),
   )
 
+  assert.equal(
+    typeof missingItemsContextKeyContract.promotionThresholds,
+    'object',
+    contractMessage({
+      scope: 'App',
+      rule: 'missingItemsContextKeyContract.promotionThresholds type guard',
+      expected: 'object map',
+      fix: 'set promotionThresholds to an object in tests/qa-current-contract.config.mjs',
+    }),
+  )
+  assert.equal(
+    typeof missingItemsContextKeyContract.promotionModes,
+    'object',
+    contractMessage({
+      scope: 'App',
+      rule: 'missingItemsContextKeyContract.promotionModes type guard',
+      expected: 'object map',
+      fix: 'set promotionModes to an object in tests/qa-current-contract.config.mjs',
+    }),
+  )
+
+  const thresholdKeys = Object.keys(missingItemsContextKeyContract.promotionThresholds).sort((a, b) => a.localeCompare(b, 'en'))
+  const modeKeys = Object.keys(missingItemsContextKeyContract.promotionModes).sort((a, b) => a.localeCompare(b, 'en'))
+  assert.deepEqual(
+    thresholdKeys,
+    modeKeys,
+    missingItemsMessage({
+      scope: 'App',
+      rule: 'missingItemsContextKeyContract promotion key parity',
+      fix: 'keep promotionThresholds and promotionModes key sets aligned',
+      context: {
+        thresholdKeys,
+        modeKeys,
+      },
+      items: [],
+    }),
+  )
+
+  const allowedPromotionModes = new Set(['observe', 'enforce'])
+  for (const [k, v] of Object.entries(missingItemsContextKeyContract.promotionThresholds)) {
+    assert.equal(
+      Number.isInteger(v),
+      true,
+      contractMessage({
+        scope: 'App',
+        rule: `missingItemsContextKeyContract.promotionThresholds.${k} integer policy`,
+        expected: 'integer threshold',
+        fix: `set promotionThresholds.${k} to an integer (e.g., 0)`,
+      }),
+    )
+    assert.equal(
+      v >= 0,
+      true,
+      contractMessage({
+        scope: 'App',
+        rule: `missingItemsContextKeyContract.promotionThresholds.${k} non-negative policy`,
+        expected: '>= 0',
+        fix: `set promotionThresholds.${k} to a non-negative integer`,
+      }),
+    )
+  }
+  for (const [k, v] of Object.entries(missingItemsContextKeyContract.promotionModes)) {
+    assert.equal(
+      allowedPromotionModes.has(v),
+      true,
+      contractMessage({
+        scope: 'App',
+        rule: `missingItemsContextKeyContract.promotionModes.${k} allowed values`,
+        expected: 'observe|enforce',
+        fix: `set promotionModes.${k} to observe or enforce`,
+      }),
+    )
+  }
+
   const scopePriority = [...missingItemsContextKeyContract.scopePriority]
   const expectedScopePriority = ['App', 'Docs', 'Manual', 'README', 'E2E-Helper']
   const { duplicates: duplicatedScopePriority } = analyzeEnumList(scopePriority, { locale: 'en' })
@@ -556,9 +630,15 @@ test('[App][config-quality] missingItemsMessage context key dictionary and usage
       items: [],
     }),
   )
-  const shouldPromoteDeadScope = deadScopePriority.length <= missingItemsContextKeyContract.promoteWhenDeadScopeCountLte
+  const deadScopeThreshold =
+    missingItemsContextKeyContract.promotionThresholds?.deadScopePriority ??
+    missingItemsContextKeyContract.promoteWhenDeadScopeCountLte
+  const deadScopeMode =
+    missingItemsContextKeyContract.promotionModes?.deadScopePriority ??
+    (missingItemsContextKeyContract.enforceDeadScopePriority ? 'enforce' : 'observe')
+  const shouldPromoteDeadScope = deadScopePriority.length <= deadScopeThreshold
 
-  if (missingItemsContextKeyContract.enforceDeadScopePriority) {
+  if (deadScopeMode === 'enforce') {
     assert.deepEqual(
       deadScopePriority,
       [],
@@ -581,11 +661,11 @@ test('[App][config-quality] missingItemsMessage context key dictionary and usage
       missingItemsMessage({
         scope: 'App',
         rule: 'missingItemsContextKeyContract.scopePriority promotion trigger',
-        fix: 'set enforceDeadScopePriority=true when dead scope count is at or below the promotion threshold',
+        fix: 'set promotionModes.deadScopePriority=enforce when dead scope count is at or below the promotion threshold',
         context: {
-          enforceDeadScopePriority: String(missingItemsContextKeyContract.enforceDeadScopePriority),
+          promotionModeDeadScopePriority: deadScopeMode,
           deadScopeCount: String(deadScopePriority.length),
-          promoteWhenDeadScopeCountLte: String(missingItemsContextKeyContract.promoteWhenDeadScopeCountLte),
+          promotionThresholdDeadScopePriority: String(deadScopeThreshold),
           deadScopes: deadScopePriority,
         },
         items: deadScopePriority,
