@@ -14,6 +14,7 @@ import {
   readmeLinkContracts,
   requiredDocPatterns,
   importPreviewContractCases,
+  scopeDescriptionContract,
   scopeLimitRules,
 } from './qa-current-contract.config.mjs'
 import {
@@ -79,6 +80,20 @@ test('[App] scopeLimitRules ids follow naming contract (scope- prefix, kebab-cas
   const nonEnglishDescription = scopeLimitRules
     .filter(({ description }) => typeof description === 'string' && /[^\x20-\x7E]/.test(description))
     .map(({ id, description }) => `${id ?? '(missing-id)'} -> ${description ?? '(missing-description)'}`)
+  const allowedTargets = new Set(scopeDescriptionContract.allowedTargets)
+  const allowedPurposes = new Set(scopeDescriptionContract.allowedPurposes)
+  const disallowedVocabulary = scopeLimitRules
+    .map(({ id, description }) => ({ id, description: String(description ?? '') }))
+    .map(({ id, description }) => {
+      const m = /^Controls\s(.+)\sfor\s(.+)$/.exec(description.trim())
+      if (!m) return `${id ?? '(missing-id)'} -> ${description}`
+      const [, target, purpose] = m
+      if (!allowedTargets.has(target) || !allowedPurposes.has(purpose)) {
+        return `${id ?? '(missing-id)'} -> target:${target} | purpose:${purpose}`
+      }
+      return null
+    })
+    .filter(Boolean)
   const seen = new Set()
   const duplicated = []
   for (const id of ids) {
@@ -164,6 +179,16 @@ test('[App] scopeLimitRules ids follow naming contract (scope- prefix, kebab-cas
       rule: 'scopeLimitRules description language policy',
       fix: 'keep descriptions ASCII English to avoid mixed-language overlap logs',
       items: nonEnglishDescription,
+    }),
+  )
+  assert.deepEqual(
+    disallowedVocabulary,
+    [],
+    missingItemsMessage({
+      scope: 'App',
+      rule: 'scopeLimitRules description allowed vocabulary',
+      fix: 'use only allowed target/purpose terms from scopeDescriptionContract',
+      items: disallowedVocabulary,
     }),
   )
 })

@@ -171,6 +171,14 @@ export const contractMessageLimits = {
   docsPaths: 8,
 }
 
+export const scopeDescriptionContract = {
+  allowedTargets: ['offender-list density'],
+  allowedPurposes: [
+    'E2E-Helper reset-helper violations',
+    'Docs* coverage and path mismatches',
+  ],
+}
+
 export const scopeLimitRules = [
   {
     id: 'scope-e2e-helper',
