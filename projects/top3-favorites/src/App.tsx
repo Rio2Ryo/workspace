@@ -368,6 +368,7 @@ export function App() {
       setError('')
     } catch (e) {
       setError(e instanceof Error ? e.message : 'サンプル保存に失敗しました')
+      setNotice('')
     } finally {
       setIsSaving(false)
     }
