@@ -132,42 +132,49 @@ export const readmeCommandContractGroups = rawReadmeCommandContractGroups
 
 const rawHelperContractCases = [
   {
+    category: 'before-each-reset',
     title: 'all E2E specs use shared resetItemsByReplace helper in beforeEach hooks',
     predicate: (name) => name.endsWith('.e2e.spec.ts'),
     blockPattern: /\/api\/items\?mode=replace/,
     messagePrefix: 'E2E beforeEach hooks should call resetItemsByReplace helper instead of inline mode=replace reset',
   },
   {
+    category: 'before-each-reset',
     title: 'search specs use shared resetItemsByReplace helper in beforeEach hooks',
     predicate: (name) => name.startsWith('search-'),
     blockPattern: /\/api\/items\?mode=replace/,
     messagePrefix: 'search beforeEach hooks should call resetItemsByReplace helper instead of inline mode=replace reset',
   },
   {
+    category: 'before-each-reset',
     title: 'tag-sync specs use shared resetItemsByReplace helper in beforeEach hooks',
     predicate: (name) => name.startsWith('tag-sync'),
     blockPattern: /\/api\/items\?mode=replace/,
     messagePrefix: 'tag-sync beforeEach hooks should call resetItemsByReplace helper instead of inline mode=replace reset',
   },
   {
+    category: 'before-each-reset',
     title: 'edit/delete specs use shared resetItemsByReplace helper in beforeEach hooks',
     predicate: (name) => name.startsWith('edit') || name.startsWith('delete'),
     blockPattern: /\/api\/items\?mode=replace/,
     messagePrefix: 'edit/delete beforeEach hooks should call resetItemsByReplace helper instead of inline mode=replace reset',
   },
   {
+    category: 'before-each-reset',
     title: 'import specs (outside import-preview) use shared resetItemsByReplace helper for mode=replace resets',
     predicate: (name) => name.startsWith('import-'),
     blockPattern: /\/api\/items\?mode=replace/,
     messagePrefix: 'import beforeEach hooks should call resetItemsByReplace helper instead of inline mode=replace reset',
   },
   {
+    category: 'before-each-reset',
     title: 'import specs (outside import-preview) use shared resetItemsByDelete helper for delete-based resets',
     predicate: (name) => name.startsWith('import-'),
     blockPattern: /request\.delete\(`\/api\/items\?id=/,
     messagePrefix: 'import beforeEach hooks should call resetItemsByDelete helper instead of inline delete reset',
   },
   {
+    category: 'before-each-reset',
     title: 'export specs use shared resetItemsByReplace helper in beforeEach hooks',
     predicate: (name) => name.startsWith('export-'),
     blockPattern: /\/api\/items\?mode=replace/,
@@ -182,8 +189,16 @@ Object.freeze(rawHelperContractCases)
 
 export const helperContractCases = rawHelperContractCases
 
+const rawE2EHelperCategoryContract = {
+  allowed: ['api-delete', 'before-each-reset'],
+}
+Object.freeze(rawE2EHelperCategoryContract.allowed)
+Object.freeze(rawE2EHelperCategoryContract)
+export const e2eHelperCategoryContract = rawE2EHelperCategoryContract
+
 const rawDirectMutationContractCases = [
   {
+    category: 'api-delete',
     title: 'export specs avoid direct per-row API deletes during roundtrip cleanup',
     predicate: (name) => name.startsWith('export-'),
     pattern: /request\.delete\(`\/api\/items\?id=/,

@@ -12,6 +12,7 @@ import {
   manualAutomatedLinkContracts,
   readmeCommandContractGroups,
   readmeLinkContracts,
+  e2eHelperCategoryContract,
   requiredDocPatterns,
   importPreviewContractCases,
   contractMessageLimits,
@@ -492,6 +493,99 @@ for (const { title, commands } of readmeCommandContractGroups) {
   })
 }
 
+test('[E2E-Helper] allowed category dictionary is unique, sorted, and kebab-case', async () => {
+  const kebab = /^[a-z0-9]+(?:-[a-z0-9]+)*$/
+  const allowedList = [...e2eHelperCategoryContract.allowed]
+  const { duplicates, unsorted } = analyzeEnumList(allowedList, { locale: 'en' })
+  const empty = allowedList.filter((v) => v.trim().length === 0)
+  const malformed = allowedList.filter((v) => !kebab.test(v))
+
+  assert.deepEqual(
+    empty,
+    [],
+    missingItemsMessage({
+      scope: 'E2E-Helper',
+      rule: 'e2eHelperCategoryContract.allowed non-empty values',
+      fix: 'remove empty category strings from e2eHelperCategoryContract.allowed',
+      items: empty,
+    }),
+  )
+  assert.deepEqual(
+    malformed,
+    [],
+    missingItemsMessage({
+      scope: 'E2E-Helper',
+      rule: 'e2eHelperCategoryContract.allowed kebab-case',
+      fix: 'rename allowed category labels to kebab-case format',
+      items: malformed,
+    }),
+  )
+  assert.deepEqual(
+    duplicates,
+    [],
+    missingItemsMessage({
+      scope: 'E2E-Helper',
+      rule: 'e2eHelperCategoryContract.allowed uniqueness',
+      fix: 'deduplicate entries in e2eHelperCategoryContract.allowed',
+      items: duplicates,
+    }),
+  )
+  assert.deepEqual(
+    unsorted,
+    [],
+    missingItemsMessage({
+      scope: 'E2E-Helper',
+      rule: 'e2eHelperCategoryContract.allowed sorted order',
+      fix: 'sort e2eHelperCategoryContract.allowed in ascending en locale order',
+      items: unsorted,
+    }),
+  )
+})
+
+test('[E2E-Helper] contract case categories follow naming contract (allowed, non-empty, kebab-case)', async () => {
+  const kebab = /^[a-z0-9]+(?:-[a-z0-9]+)*$/
+  const allowed = new Set(e2eHelperCategoryContract.allowed)
+  const categories = [
+    ...helperContractCases.map(({ category }) => String(category ?? '')),
+    ...directMutationContractCases.map(({ category }) => String(category ?? '')),
+  ]
+
+  const empty = categories.filter((v) => v.trim().length === 0)
+  const invalidAllowed = categories.filter((v) => !allowed.has(v))
+  const malformed = categories.filter((v) => !kebab.test(v))
+
+  assert.deepEqual(
+    empty,
+    [],
+    missingItemsMessage({
+      scope: 'E2E-Helper',
+      rule: 'contract case category presence',
+      fix: 'set non-empty category on every helper/direct-mutation contract case',
+      items: empty,
+    }),
+  )
+  assert.deepEqual(
+    invalidAllowed,
+    [],
+    missingItemsMessage({
+      scope: 'E2E-Helper',
+      rule: 'contract case category allowed set',
+      fix: 'use only allowed categories: api-delete, before-each-reset',
+      items: invalidAllowed,
+    }),
+  )
+  assert.deepEqual(
+    malformed,
+    [],
+    missingItemsMessage({
+      scope: 'E2E-Helper',
+      rule: 'contract case category kebab-case',
+      fix: 'rename categories to kebab-case format',
+      items: malformed,
+    }),
+  )
+})
+
 test('[E2E-Helper][beforeEach-reset] import preview specs use shared reset helpers in beforeEach hooks', async () => {
   const specs = await collectFiles(importPreviewTestsPath, (name) => name.endsWith('.e2e.spec.ts'))
   const offenders = []
@@ -552,8 +646,8 @@ test('[E2E-Helper] resetItemsByDelete is an asserted atomic reset alias, not a p
   )
 })
 
-for (const { title, predicate, blockPattern, messagePrefix } of helperContractCases) {
-  test(`[E2E-Helper] ${title}`, async () => {
+for (const { category, title, predicate, blockPattern, messagePrefix } of helperContractCases) {
+  test(`[E2E-Helper][${category}] ${title}`, async () => {
     const specs = await collectSpecUrlsByNamePredicate(root, predicate)
     const offenders = await findBeforeEachOffenders(root, specs, blockPattern)
 
@@ -565,8 +659,8 @@ for (const { title, predicate, blockPattern, messagePrefix } of helperContractCa
   })
 }
 
-for (const { title, predicate, pattern, messagePrefix } of directMutationContractCases) {
-  test(`[E2E-Helper] ${title}`, async () => {
+for (const { category, title, predicate, pattern, messagePrefix } of directMutationContractCases) {
+  test(`[E2E-Helper][${category}] ${title}`, async () => {
     const specs = await collectSpecUrlsByNamePredicate(root, predicate)
     const offenders = []
 
