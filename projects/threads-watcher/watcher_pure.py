@@ -20,7 +20,8 @@ from __future__ import annotations
 
 import re
 import time
-from dataclasses import dataclass
+from dataclasses import dataclass, field
+from pathlib import Path
 from typing import Any, Callable, TypeVar
 
 
@@ -184,6 +185,125 @@ def capture_with_retry(
                 break
             sleep_fn(delay_for_attempt(attempt, policy))
     return None, errors
+
+
+@dataclass(frozen=True)
+class CaptureOutcome:
+    """Result of processing one post in watcher.run_once's loop.
+
+    The caller folds these fields into shared run-scoped state
+    (`new_count`, `capture_errors`, `status`) and replays the log lines
+    to stdout/stderr. Keeping the outcome a pure value lets us unit-test
+    the entire per-post decision without booting Chromium.
+    """
+
+    new_inserted: bool
+    """True if a new row landed in the posts table this iteration."""
+
+    capture_error: str | None
+    """When non-None, append to the run-level capture_errors list. Already
+    pid-prefixed so the audit log read makes sense out of context."""
+
+    became_partial_error: bool
+    """When True, the caller should flip the run-level status to
+    'partial_error'. Decoupled from capture_error so we can in theory
+    record an error message without escalating status, though right now
+    they always travel together."""
+
+    info_log: list[str] = field(default_factory=list)
+    """Lines for stdout (saved/skip success paths)."""
+
+    error_log: list[str] = field(default_factory=list)
+    """Lines for stderr (capture exhausted, DB write failed)."""
+
+
+def process_post_capture(
+    *,
+    pid: str,
+    handle: str,
+    project_root: Path,
+    screenshot_fn: Callable[[], dict[str, Any]],
+    save_fn: Callable[..., bool],
+    now_iso_fn: Callable[[], str],
+    retry_policy: "RetryPolicy" = None,  # type: ignore[assignment]
+    sleep_fn: Callable[[float], None] = time.sleep,
+) -> CaptureOutcome:
+    """Capture-and-persist one post; return the outcome as a value.
+
+    `screenshot_fn` is the already-bound network/Chromium step (no args).
+    It returns the dict produced by watcher._screenshot_post (post_url,
+    png bytes, path, width, height).
+
+    `save_fn` is the already-bound DB writer (`save_post_screenshot`
+    with `conn` pre-applied). It returns True if a new row was inserted,
+    False on duplicate.
+
+    `now_iso_fn` is called *twice*: once for first_seen_at before the
+    retry loop, once for captured_at right before the DB insert. The
+    captured_at timestamp therefore reflects when the capture actually
+    landed, not when the post was first noticed.
+    """
+    if retry_policy is None:
+        retry_policy = RetryPolicy()
+
+    first_seen_at = now_iso_fn()
+    captured, attempt_errors = capture_with_retry(
+        screenshot_fn, policy=retry_policy, sleep_fn=sleep_fn,
+    )
+
+    if captured is None:
+        last = attempt_errors[-1] if attempt_errors else "unknown"
+        return CaptureOutcome(
+            new_inserted=False,
+            capture_error=(
+                f"{pid}: capture exhausted retries [{'; '.join(attempt_errors)}]"
+            ),
+            became_partial_error=True,
+            error_log=[
+                f"[error] failed to capture {pid} after {len(attempt_errors)} attempt(s): {last}"
+            ],
+        )
+
+    try:
+        local_rel_path = str(Path(captured["path"]).relative_to(project_root))
+        inserted = save_fn(
+            handle=handle,
+            post_id=pid,
+            post_url=captured["post_url"],
+            first_seen_at=first_seen_at,
+            captured_at=now_iso_fn(),
+            screenshot_png=captured["png"],
+            width=captured["width"],
+            height=captured["height"],
+            local_path=local_rel_path,
+        )
+    except Exception as e:  # noqa: BLE001 — must catch sqlite errors
+        return CaptureOutcome(
+            new_inserted=False,
+            capture_error=f"{pid}: db write failed: {e}",
+            became_partial_error=True,
+            error_log=[f"[error] DB write failed for {pid}: {e}"],
+        )
+
+    if inserted:
+        retry_note = (
+            f" (after {len(attempt_errors)} retry/retries)" if attempt_errors else ""
+        )
+        return CaptureOutcome(
+            new_inserted=True,
+            capture_error=None,
+            became_partial_error=False,
+            info_log=[
+                f"[saved-db] {pid} bytes={len(captured['png'])} local={local_rel_path}{retry_note}"
+            ],
+        )
+
+    return CaptureOutcome(
+        new_inserted=False,
+        capture_error=None,
+        became_partial_error=False,
+        info_log=[f"[skip] {pid} already exists in DB"],
+    )
 
 
 def combine_error_messages(base: str | None, capture_errors: list[str]) -> str | None:

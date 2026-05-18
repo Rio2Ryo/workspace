@@ -31,6 +31,7 @@ from watcher_pure import (
     collect_post_ids_until_stable,
     combine_error_messages,
     extract_post_ids_from_hrefs,
+    process_post_capture,
 )
 
 
@@ -167,58 +168,30 @@ def run_once(handle: str) -> int:
                 new_ids = [pid for pid in reversed(post_ids) if pid not in seen_set]
                 capture_errors: list[str] = []
                 for pid in new_ids:
-                    first_seen_at = _now_iso()
-
-                    # Retry only the network/Chromium step; the DB write below
-                    # is idempotent (INSERT OR IGNORE) and very local, so it
-                    # doesn't need backoff.
-                    captured, attempt_errors = capture_with_retry(
-                        lambda pid=pid: _screenshot_post(
+                    # process_post_capture lives in watcher_pure so the entire
+                    # per-post decision (retry, save, log routing) is tested
+                    # without booting Chromium. Here we only bind in the
+                    # browser/conn instances and replay the outcome.
+                    outcome = process_post_capture(
+                        pid=pid,
+                        handle=handle,
+                        project_root=PROJECT_ROOT,
+                        screenshot_fn=(lambda pid=pid: _screenshot_post(
                             browser, handle, pid, SCREENSHOTS_DIR / handle_no_at
-                        ),
+                        )),
+                        save_fn=(lambda **kw: save_post_screenshot(conn, **kw)),
+                        now_iso_fn=_now_iso,
                     )
-                    if captured is None:
+                    if outcome.new_inserted:
+                        new_count += 1
+                    if outcome.capture_error:
+                        capture_errors.append(outcome.capture_error)
+                    if outcome.became_partial_error:
                         status = "partial_error"
-                        capture_errors.append(
-                            f"{pid}: capture exhausted retries [{'; '.join(attempt_errors)}]"
-                        )
-                        print(
-                            f"[error] failed to capture {pid} after {len(attempt_errors)} attempt(s): "
-                            f"{attempt_errors[-1] if attempt_errors else 'unknown'}",
-                            file=sys.stderr,
-                        )
-                        continue
-
-                    try:
-                        local_rel_path = str(captured["path"].relative_to(PROJECT_ROOT))
-                        inserted = save_post_screenshot(
-                            conn,
-                            handle=handle,
-                            post_id=pid,
-                            post_url=captured["post_url"],
-                            first_seen_at=first_seen_at,
-                            captured_at=_now_iso(),
-                            screenshot_png=captured["png"],
-                            width=captured["width"],
-                            height=captured["height"],
-                            local_path=local_rel_path,
-                        )
-                        if inserted:
-                            new_count += 1
-                            retry_note = (
-                                f" (after {len(attempt_errors)} retry/retries)"
-                                if attempt_errors
-                                else ""
-                            )
-                            print(
-                                f"[saved-db] {pid} bytes={len(captured['png'])} local={local_rel_path}{retry_note}"
-                            )
-                        else:
-                            print(f"[skip] {pid} already exists in DB")
-                    except Exception as e:
-                        status = "partial_error"
-                        capture_errors.append(f"{pid}: db write failed: {e}")
-                        print(f"[error] DB write failed for {pid}: {e}", file=sys.stderr)
+                    for line in outcome.info_log:
+                        print(line)
+                    for line in outcome.error_log:
+                        print(line, file=sys.stderr)
                 error = _combine_error_messages(error, capture_errors)
             finally:
                 browser.close()
