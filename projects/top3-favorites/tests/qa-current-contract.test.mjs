@@ -14,10 +14,15 @@ import {
   readmeLinkContracts,
   requiredDocPatterns,
   importPreviewContractCases,
+  contractMessageLimits,
+  deepFreezeSkipTypeRules,
   scopeDescriptionContract,
   scopeLimitRules,
 } from './qa-current-contract.config.mjs'
 import {
+  analyzeDuplicates,
+  analyzeEnumList,
+  assertDeepFrozen,
   collectFiles,
   collectSpecUrlsByNamePredicate,
   findBeforeEachOffenders,
@@ -60,66 +65,121 @@ test('[App] scopeLimitRules do not produce overlapping matches across QA contrac
   )
 })
 
-test('[App] scopeLimitRules ids follow naming contract (scope- prefix, kebab-case, unique)', async () => {
+test('[App] contract configs are deeply frozen (recursive guard against nested drift)', async () => {
+  const skipByType = (value) => {
+    if (deepFreezeSkipTypeRules.includes('function') && typeof value === 'function') return true
+    if (deepFreezeSkipTypeRules.includes('RegExp') && value instanceof RegExp) return true
+    return false
+  }
+
+  assertDeepFrozen(contractMessageLimits, {
+    label: 'contractMessageLimits',
+    skip: skipByType,
+  })
+  assertDeepFrozen(scopeDescriptionContract, {
+    label: 'scopeDescriptionContract',
+    skip: skipByType,
+  })
+  assertDeepFrozen(scopeLimitRules, {
+    label: 'scopeLimitRules',
+    skip: skipByType,
+  })
+  assertDeepFrozen(importPreviewContractCases, {
+    label: 'importPreviewContractCases',
+    skip: skipByType,
+  })
+  assertDeepFrozen(helperContractCases, {
+    label: 'helperContractCases',
+    skip: skipByType,
+  })
+  assertDeepFrozen(directMutationContractCases, {
+    label: 'directMutationContractCases',
+    skip: skipByType,
+  })
+  assertDeepFrozen(manualAutomatedLinkContracts, {
+    label: 'manualAutomatedLinkContracts',
+    skip: skipByType,
+  })
+  assertDeepFrozen(readmeLinkContracts, {
+    label: 'readmeLinkContracts',
+    skip: skipByType,
+  })
+  assertDeepFrozen(readmeCommandContractGroups, {
+    label: 'readmeCommandContractGroups',
+    skip: skipByType,
+  })
+  assertDeepFrozen(requiredDocPatterns, {
+    label: 'requiredDocPatterns',
+    skip: skipByType,
+  })
+  assertDeepFrozen(forbiddenDocPatterns, {
+    label: 'forbiddenDocPatterns',
+    skip: skipByType,
+  })
+  assertDeepFrozen(appRequiredPatterns, {
+    label: 'appRequiredPatterns',
+    skip: skipByType,
+  })
+  assertDeepFrozen(appForbiddenPatterns, {
+    label: 'appForbiddenPatterns',
+    skip: skipByType,
+  })
+  assertDeepFrozen(importPreviewManualHeadings, {
+    label: 'importPreviewManualHeadings',
+    skip: skipByType,
+  })
+  assertDeepFrozen(docs, {
+    label: 'docs',
+    skip: skipByType,
+  })
+})
+
+
+test('[App] deepFreezeSkipTypeRules follows allowed-value contract (allowed-only, unique, sorted)', async () => {
+  const allowed = new Set(['function', 'RegExp'])
+  const { invalid, duplicates, unsorted } = analyzeEnumList(deepFreezeSkipTypeRules, {
+    allowed,
+    locale: 'en',
+  })
+
+  assert.deepEqual(
+    invalid,
+    [],
+    missingItemsMessage({
+      scope: 'App',
+      rule: 'deepFreezeSkipTypeRules allowed values',
+      fix: 'keep deepFreezeSkipTypeRules entries within [function, RegExp]',
+      items: invalid,
+    }),
+  )
+  assert.deepEqual(
+    duplicates,
+    [],
+    missingItemsMessage({
+      scope: 'App',
+      rule: 'deepFreezeSkipTypeRules uniqueness',
+      fix: 'remove duplicate entries from deepFreezeSkipTypeRules',
+      items: duplicates,
+    }),
+  )
+  assert.deepEqual(
+    unsorted,
+    [],
+    missingItemsMessage({
+      scope: 'App',
+      rule: 'deepFreezeSkipTypeRules sorted order',
+      fix: 'sort deepFreezeSkipTypeRules in ascending en locale order',
+      items: unsorted,
+    }),
+  )
+})
+
+test('[App] scopeLimitRules IDs follow naming and uniqueness contract', async () => {
   const idPattern = /^scope-[a-z0-9]+(?:-[a-z0-9]+)*$/
   const ids = scopeLimitRules.map((rule) => rule.id)
   const missing = ids.filter((id) => typeof id !== 'string' || id.length === 0)
   const malformed = ids.filter((id) => typeof id === 'string' && !idPattern.test(id))
-  const missingDescription = scopeLimitRules
-    .filter(({ description }) => typeof description !== 'string' || description.trim().length === 0)
-    .map(({ id }) => id ?? '(missing-id)')
-  const malformedDescription = scopeLimitRules
-    .filter(({ description }) => typeof description === 'string' && !/^Controls\s/.test(description.trim()))
-    .map(({ id, description }) => `${id ?? '(missing-id)'} -> ${description ?? '(missing-description)'}`)
-  const malformedDescriptionStructure = scopeLimitRules
-    .filter(({ description }) => typeof description === 'string' && !/^Controls\s.+\sfor\s.+/.test(description.trim()))
-    .map(({ id, description }) => `${id ?? '(missing-id)'} -> ${description ?? '(missing-description)'}`)
-  const overlongDescription = scopeLimitRules
-    .filter(({ description }) => typeof description === 'string' && description.trim().length > 90)
-    .map(({ id, description }) => `${id ?? '(missing-id)'} (${description.trim().length} chars)`)
-  const nonEnglishDescription = scopeLimitRules
-    .filter(({ description }) => typeof description === 'string' && /[^\x20-\x7E]/.test(description))
-    .map(({ id, description }) => `${id ?? '(missing-id)'} -> ${description ?? '(missing-description)'}`)
-  const targetTerms = [...scopeDescriptionContract.allowedTargets]
-  const purposeTerms = [...scopeDescriptionContract.allowedPurposes]
-  const duplicatedTargetTerms = targetTerms.filter((term, idx) => targetTerms.indexOf(term) !== idx)
-  const duplicatedPurposeTerms = purposeTerms.filter((term, idx) => purposeTerms.indexOf(term) !== idx)
-  const unsortedTargetTerms = targetTerms
-    .filter((term, idx, arr) => idx > 0 && arr[idx - 1].localeCompare(term, 'en') > 0)
-    .sort((a, b) => a.localeCompare(b, 'en'))
-  const unsortedPurposeTerms = purposeTerms
-    .filter((term, idx, arr) => idx > 0 && arr[idx - 1].localeCompare(term, 'en') > 0)
-    .sort((a, b) => a.localeCompare(b, 'en'))
-  const allowedTargets = new Set(targetTerms)
-  const allowedPurposes = new Set(purposeTerms)
-  const usedTargets = new Set()
-  const usedPurposes = new Set()
-  const disallowedVocabulary = scopeLimitRules
-    .map(({ id, description }) => ({ id, description: String(description ?? '') }))
-    .map(({ id, description }) => {
-      const m = /^Controls\s(.+)\sfor\s(.+)$/.exec(description.trim())
-      if (!m) return `${id ?? '(missing-id)'} -> ${description}`
-      const [, target, purpose] = m
-      usedTargets.add(target)
-      usedPurposes.add(purpose)
-      if (!allowedTargets.has(target) || !allowedPurposes.has(purpose)) {
-        return `${id ?? '(missing-id)'} -> target:${target} | purpose:${purpose}`
-      }
-      return null
-    })
-    .filter(Boolean)
-  const unusedAllowedTargets = Array.from(allowedTargets)
-    .filter((target) => !usedTargets.has(target))
-    .sort((a, b) => a.localeCompare(b, 'en'))
-  const unusedAllowedPurposes = Array.from(allowedPurposes)
-    .filter((purpose) => !usedPurposes.has(purpose))
-    .sort((a, b) => a.localeCompare(b, 'en'))
-  const seen = new Set()
-  const duplicated = []
-  for (const id of ids) {
-    if (seen.has(id)) duplicated.push(id)
-    seen.add(id)
-  }
+  const duplicated = analyzeDuplicates(ids)
 
   assert.deepEqual(
     missing,
@@ -151,6 +211,25 @@ test('[App] scopeLimitRules ids follow naming contract (scope- prefix, kebab-cas
       items: duplicated,
     }),
   )
+})
+
+test('[App] scopeLimitRules descriptions follow style, shape, length, and language policy', async () => {
+  const missingDescription = scopeLimitRules
+    .filter(({ description }) => typeof description !== 'string' || description.trim().length === 0)
+    .map(({ id }) => id ?? '(missing-id)')
+  const malformedDescription = scopeLimitRules
+    .filter(({ description }) => typeof description === 'string' && !/^Controls\s/.test(description.trim()))
+    .map(({ id, description }) => `${id ?? '(missing-id)'} -> ${description ?? '(missing-description)'}`)
+  const malformedDescriptionStructure = scopeLimitRules
+    .filter(({ description }) => typeof description === 'string' && !/^Controls\s.+\sfor\s.+/.test(description.trim()))
+    .map(({ id, description }) => `${id ?? '(missing-id)'} -> ${description ?? '(missing-description)'}`)
+  const overlongDescription = scopeLimitRules
+    .filter(({ description }) => typeof description === 'string' && description.trim().length > 90)
+    .map(({ id, description }) => `${id ?? '(missing-id)'} (${description.trim().length} chars)`)
+  const nonEnglishDescription = scopeLimitRules
+    .filter(({ description }) => typeof description === 'string' && /[^\x20-\x7E]/.test(description))
+    .map(({ id, description }) => `${id ?? '(missing-id)'} -> ${description ?? '(missing-description)'}`)
+
   assert.deepEqual(
     missingDescription,
     [],
@@ -172,16 +251,6 @@ test('[App] scopeLimitRules ids follow naming contract (scope- prefix, kebab-cas
     }),
   )
   assert.deepEqual(
-    overlongDescription,
-    [],
-    missingItemsMessage({
-      scope: 'App',
-      rule: 'scopeLimitRules description max length',
-      fix: 'keep each description within 90 characters to avoid wrapped overlap logs',
-      items: overlongDescription,
-    }),
-  )
-  assert.deepEqual(
     malformedDescriptionStructure,
     [],
     missingItemsMessage({
@@ -189,6 +258,16 @@ test('[App] scopeLimitRules ids follow naming contract (scope- prefix, kebab-cas
       rule: 'scopeLimitRules description semantic shape',
       fix: 'use "Controls <target> for <purpose>" format for every scope rule description',
       items: malformedDescriptionStructure,
+    }),
+  )
+  assert.deepEqual(
+    overlongDescription,
+    [],
+    missingItemsMessage({
+      scope: 'App',
+      rule: 'scopeLimitRules description max length',
+      fix: 'keep each description within 90 characters to avoid wrapped overlap logs',
+      items: overlongDescription,
     }),
   )
   assert.deepEqual(
@@ -201,6 +280,20 @@ test('[App] scopeLimitRules ids follow naming contract (scope- prefix, kebab-cas
       items: nonEnglishDescription,
     }),
   )
+})
+
+test('[App] scopeDescriptionContract vocabulary lists are unique and sorted', async () => {
+  const targetTerms = [...scopeDescriptionContract.allowedTargets]
+  const purposeTerms = [...scopeDescriptionContract.allowedPurposes]
+  const {
+    duplicates: duplicatedTargetTerms,
+    unsorted: unsortedTargetTerms,
+  } = analyzeEnumList(targetTerms, { locale: 'en' })
+  const {
+    duplicates: duplicatedPurposeTerms,
+    unsorted: unsortedPurposeTerms,
+  } = analyzeEnumList(purposeTerms, { locale: 'en' })
+
   assert.deepEqual(
     duplicatedTargetTerms,
     [],
@@ -241,6 +334,38 @@ test('[App] scopeLimitRules ids follow naming contract (scope- prefix, kebab-cas
       items: unsortedPurposeTerms,
     }),
   )
+})
+
+test('[App] scopeLimitRules descriptions use allowed vocabulary and avoid dead vocabulary', async () => {
+  const targetTerms = [...scopeDescriptionContract.allowedTargets]
+  const purposeTerms = [...scopeDescriptionContract.allowedPurposes]
+  const allowedTargets = new Set(targetTerms)
+  const allowedPurposes = new Set(purposeTerms)
+  const usedTargets = new Set()
+  const usedPurposes = new Set()
+
+  const disallowedVocabulary = scopeLimitRules
+    .map(({ id, description }) => ({ id, description: String(description ?? '') }))
+    .map(({ id, description }) => {
+      const m = /^Controls\s(.+)\sfor\s(.+)$/.exec(description.trim())
+      if (!m) return `${id ?? '(missing-id)'} -> ${description}`
+      const [, target, purpose] = m
+      usedTargets.add(target)
+      usedPurposes.add(purpose)
+      if (!allowedTargets.has(target) || !allowedPurposes.has(purpose)) {
+        return `${id ?? '(missing-id)'} -> target:${target} | purpose:${purpose}`
+      }
+      return null
+    })
+    .filter(Boolean)
+
+  const unusedAllowedTargets = Array.from(allowedTargets)
+    .filter((target) => !usedTargets.has(target))
+    .sort((a, b) => a.localeCompare(b, 'en'))
+  const unusedAllowedPurposes = Array.from(allowedPurposes)
+    .filter((purpose) => !usedPurposes.has(purpose))
+    .sort((a, b) => a.localeCompare(b, 'en'))
+
   assert.deepEqual(
     disallowedVocabulary,
     [],
@@ -367,7 +492,7 @@ for (const { title, commands } of readmeCommandContractGroups) {
   })
 }
 
-test('[E2E-Helper] import preview specs use shared reset helpers in beforeEach hooks', async () => {
+test('[E2E-Helper][beforeEach-reset] import preview specs use shared reset helpers in beforeEach hooks', async () => {
   const specs = await collectFiles(importPreviewTestsPath, (name) => name.endsWith('.e2e.spec.ts'))
   const offenders = []
 
@@ -387,7 +512,7 @@ test('[E2E-Helper] import preview specs use shared reset helpers in beforeEach h
   assert.deepEqual(offenders.sort(), [], missingItemsMessage({ scope: 'E2E-Helper', rule: message, fix: 'replace inline reset with shared helper', items: offenders }))
 })
 
-test('[E2E-Helper] import preview specs import reset helpers directly from tests/e2e-helpers.ts', async () => {
+test('[E2E-Helper][import-path] import preview specs import reset helpers directly from tests/e2e-helpers.ts', async () => {
   const specs = await collectFiles(importPreviewTestsPath, (name) => name.endsWith('.e2e.spec.ts'))
   const offenders = []
 

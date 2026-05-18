@@ -1,3 +1,4 @@
+import assert from 'node:assert/strict'
 import { readdir, readFile } from 'node:fs/promises'
 
 export async function collectBracketScopesFromTestTitles(fileUrl) {
@@ -62,6 +63,42 @@ export async function findScopeRuleOverlaps(contractTestPaths, scopeLimitRules) 
   }
 
   return overlaps.sort((a, b) => a.localeCompare(b, 'en'))
+}
+
+export function analyzeDuplicates(values) {
+  return values.filter((v, i, arr) => arr.indexOf(v) !== i)
+}
+
+export function analyzeEnumList(values, { allowed = null, locale = 'en' } = {}) {
+  const invalid = allowed ? values.filter((v) => !allowed.has(v)) : []
+  const duplicates = analyzeDuplicates(values)
+  const unsorted = values
+    .filter((v, i, arr) => i > 0 && arr[i - 1].localeCompare(v, locale) > 0)
+    .sort((a, b) => a.localeCompare(b, locale))
+
+  return { invalid, duplicates, unsorted }
+}
+
+export function assertDeepFrozen(value, { label = 'value', visit = new Set(), skip = () => false } = {}) {
+  if (value == null) return
+  if (typeof value !== 'object' && typeof value !== 'function') return
+  if (visit.has(value) || skip(value)) return
+  visit.add(value)
+
+  assert.equal(Object.isFrozen(value), true, `${label} must be deeply frozen`)
+
+  const entries = [
+    ...Object.entries(value),
+    ...Object.getOwnPropertySymbols(value).map((sym) => [sym, value[sym]]),
+  ]
+
+  for (const [key, child] of entries) {
+    assertDeepFrozen(child, {
+      label: `${label}.${String(key)}`,
+      visit,
+      skip,
+    })
+  }
 }
 
 export async function findBeforeEachOffenders(rootUrl, specUrls, blockPattern) {

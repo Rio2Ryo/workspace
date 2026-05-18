@@ -1,4 +1,5 @@
 import { expect, test } from '@playwright/test'
+import { resetItemsByReplace } from './e2e-helpers'
 
 const item = (id: string, tag: string, rank: 1 | 2 | 3, name: string) => ({
   id,
@@ -14,15 +15,11 @@ const item = (id: string, tag: string, rank: 1 | 2 | 3, name: string) => ({
 })
 
 test.beforeEach(async ({ request }) => {
-  await request.post('/api/items?mode=replace', {
-    data: {
-      items: [
-        item('same-tag-1', '重複タグ', 1, '重複タグA'),
-        item('same-tag-2', '重複タグ', 2, '重複タグB'),
-        item('other-tag-1', '別タグ', 1, '別タグA'),
-      ],
-    },
-  })
+  await resetItemsByReplace(request, [
+    item('same-tag-1', '重複タグ', 1, '重複タグA'),
+    item('same-tag-2', '重複タグ', 2, '重複タグB'),
+    item('other-tag-1', '別タグ', 1, '別タグA'),
+  ])
 })
 
 test('tag chip regions have distinct accessible labels and show each tag once per region', async ({ page }) => {

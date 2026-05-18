@@ -1,10 +1,12 @@
-export const docs = [
+const rawDocs = [
   'docs/QA.md',
   'docs/QA_RESULT.md',
   'docs/MANUAL_TEST_CHECKLIST.md',
 ]
+Object.freeze(rawDocs)
+export const docs = rawDocs
 
-export const requiredDocPatterns = [
+const rawRequiredDocPatterns = [
   {
     pattern: /\/api\/items/,
     message: 'should name the current API persistence path',
@@ -14,8 +16,11 @@ export const requiredDocPatterns = [
     message: 'should describe the structured form UI',
   },
 ]
+for (const rule of rawRequiredDocPatterns) Object.freeze(rule)
+Object.freeze(rawRequiredDocPatterns)
+export const requiredDocPatterns = rawRequiredDocPatterns
 
-export const forbiddenDocPatterns = [
+const rawForbiddenDocPatterns = [
   {
     pattern: /localStorage|top3-favorites-items/i,
     message: 'QA docs must not describe the removed localStorage persistence path',
@@ -25,8 +30,11 @@ export const forbiddenDocPatterns = [
     message: 'QA docs must not describe unsupported natural-language or legacy slash parsing',
   },
 ]
+for (const rule of rawForbiddenDocPatterns) Object.freeze(rule)
+Object.freeze(rawForbiddenDocPatterns)
+export const forbiddenDocPatterns = rawForbiddenDocPatterns
 
-export const appRequiredPatterns = [
+const rawAppRequiredPatterns = [
   {
     pattern: /api<[^>]+>\('\/api\/items'/,
     message: 'App should load items from /api/items',
@@ -36,8 +44,11 @@ export const appRequiredPatterns = [
     message: 'App should save the structured draft form',
   },
 ]
+for (const rule of rawAppRequiredPatterns) Object.freeze(rule)
+Object.freeze(rawAppRequiredPatterns)
+export const appRequiredPatterns = rawAppRequiredPatterns
 
-export const appForbiddenPatterns = [
+const rawAppForbiddenPatterns = [
   {
     pattern: /localStorage\.(getItem|setItem)/,
     message: 'App should not persist through localStorage',
@@ -47,8 +58,11 @@ export const appForbiddenPatterns = [
     message: 'App should not advertise legacy free-form parsers',
   },
 ]
+for (const rule of rawAppForbiddenPatterns) Object.freeze(rule)
+Object.freeze(rawAppForbiddenPatterns)
+export const appForbiddenPatterns = rawAppForbiddenPatterns
 
-export const importPreviewManualHeadings = [
+const rawImportPreviewManualHeadings = [
   '#### 4.2.1 direction（追加/保持/削除予定）',
   '#### 4.2.2 live（読み上げ要約）',
   '#### 4.2.3 tags（影響タグ）',
@@ -56,8 +70,10 @@ export const importPreviewManualHeadings = [
   '#### 4.2.5 naming（a11y命名）',
   '#### 4.2.6 summary（件数サマリ）',
 ]
+Object.freeze(rawImportPreviewManualHeadings)
+export const importPreviewManualHeadings = rawImportPreviewManualHeadings
 
-export const readmeLinkContracts = {
+const rawReadmeLinkContracts = {
   title: 'README links QA docs with import preview six-category guidance',
   checks: [
     {
@@ -75,7 +91,15 @@ export const readmeLinkContracts = {
   ],
 }
 
-export const readmeCommandContractGroups = [
+for (const rule of rawReadmeLinkContracts.checks) {
+  Object.freeze(rule)
+}
+Object.freeze(rawReadmeLinkContracts.checks)
+Object.freeze(rawReadmeLinkContracts)
+
+export const readmeLinkContracts = rawReadmeLinkContracts
+
+const rawReadmeCommandContractGroups = [
   {
     title: 'README provides staged verification commands (quick/docs-only/import-preview-only/full)',
     commands: [
@@ -98,7 +122,21 @@ export const readmeCommandContractGroups = [
   },
 ]
 
-export const helperContractCases = [
+for (const group of rawReadmeCommandContractGroups) {
+  Object.freeze(group.commands)
+  Object.freeze(group)
+}
+Object.freeze(rawReadmeCommandContractGroups)
+
+export const readmeCommandContractGroups = rawReadmeCommandContractGroups
+
+const rawHelperContractCases = [
+  {
+    title: 'all E2E specs use shared resetItemsByReplace helper in beforeEach hooks',
+    predicate: (name) => name.endsWith('.e2e.spec.ts'),
+    blockPattern: /\/api\/items\?mode=replace/,
+    messagePrefix: 'E2E beforeEach hooks should call resetItemsByReplace helper instead of inline mode=replace reset',
+  },
   {
     title: 'search specs use shared resetItemsByReplace helper in beforeEach hooks',
     predicate: (name) => name.startsWith('search-'),
@@ -137,7 +175,14 @@ export const helperContractCases = [
   },
 ]
 
-export const directMutationContractCases = [
+for (const rule of rawHelperContractCases) {
+  Object.freeze(rule)
+}
+Object.freeze(rawHelperContractCases)
+
+export const helperContractCases = rawHelperContractCases
+
+const rawDirectMutationContractCases = [
   {
     title: 'export specs avoid direct per-row API deletes during roundtrip cleanup',
     predicate: (name) => name.startsWith('export-'),
@@ -146,7 +191,14 @@ export const directMutationContractCases = [
   },
 ]
 
-export const manualAutomatedLinkContracts = {
+for (const rule of rawDirectMutationContractCases) {
+  Object.freeze(rule)
+}
+Object.freeze(rawDirectMutationContractCases)
+
+export const directMutationContractCases = rawDirectMutationContractCases
+
+const rawManualAutomatedLinkContracts = {
   manualChecklistChecks: [
     {
       pattern: /Console に致命的エラーがない[\s\S]*自動確認: `tests\/startup-console-health\.e2e\.spec\.ts`/,
@@ -165,13 +217,31 @@ export const manualAutomatedLinkContracts = {
   ],
 }
 
-export const contractMessageLimits = {
+for (const rule of rawManualAutomatedLinkContracts.manualChecklistChecks) {
+  Object.freeze(rule)
+}
+for (const rule of rawManualAutomatedLinkContracts.coverageChecks) {
+  Object.freeze(rule)
+}
+Object.freeze(rawManualAutomatedLinkContracts.manualChecklistChecks)
+Object.freeze(rawManualAutomatedLinkContracts.coverageChecks)
+Object.freeze(rawManualAutomatedLinkContracts)
+
+export const manualAutomatedLinkContracts = rawManualAutomatedLinkContracts
+
+const rawContractMessageLimits = {
   default: 5,
   e2eHelper: 5,
   docsPaths: 8,
 }
+Object.freeze(rawContractMessageLimits)
+export const contractMessageLimits = rawContractMessageLimits
 
-export const scopeDescriptionContract = {
+const rawDeepFreezeSkipTypeRules = ['function', 'RegExp']
+Object.freeze(rawDeepFreezeSkipTypeRules)
+export const deepFreezeSkipTypeRules = rawDeepFreezeSkipTypeRules
+
+const rawScopeDescriptionContract = {
   allowedTargets: ['offender-list density'],
   allowedPurposes: [
     'Docs* coverage and path mismatches',
@@ -179,7 +249,13 @@ export const scopeDescriptionContract = {
   ],
 }
 
-export const scopeLimitRules = [
+Object.freeze(rawScopeDescriptionContract.allowedTargets)
+Object.freeze(rawScopeDescriptionContract.allowedPurposes)
+Object.freeze(rawScopeDescriptionContract)
+
+export const scopeDescriptionContract = rawScopeDescriptionContract
+
+const rawScopeLimitRules = [
   {
     id: 'scope-e2e-helper',
     description: 'Controls offender-list density for E2E-Helper reset-helper violations',
@@ -194,7 +270,14 @@ export const scopeLimitRules = [
   },
 ]
 
-export const importPreviewContractCases = {
+for (const rule of rawScopeLimitRules) {
+  Object.freeze(rule)
+}
+Object.freeze(rawScopeLimitRules)
+
+export const scopeLimitRules = rawScopeLimitRules
+
+const rawImportPreviewContractCases = {
   inlineResetChecks: [
     {
       pattern: /\/api\/items\?mode=replace/,
@@ -211,3 +294,12 @@ export const importPreviewContractCases = {
     message: 'import preview specs should import reset helpers directly from ../../e2e-helpers',
   },
 }
+
+for (const rule of rawImportPreviewContractCases.inlineResetChecks) {
+  Object.freeze(rule)
+}
+Object.freeze(rawImportPreviewContractCases.inlineResetChecks)
+Object.freeze(rawImportPreviewContractCases.helperImportChecks)
+Object.freeze(rawImportPreviewContractCases)
+
+export const importPreviewContractCases = rawImportPreviewContractCases

@@ -1,7 +1,8 @@
 import { expect, test } from '@playwright/test'
+import { resetItemsByReplace } from './e2e-helpers'
 
 test.beforeEach(async ({ request }) => {
-  await request.post('/api/items?mode=replace', { data: { items: [] } })
+  await resetItemsByReplace(request)
 })
 
 test('sample data can be saved, searched, and ranked through the real UI/API', async ({ page }) => {
@@ -32,6 +33,8 @@ test('adding a new first place rebalances the same tag to top 3', async ({ page 
   await page.goto('/')
   await page.getByRole('button', { name: 'サンプルをDB保存' }).click()
   await expect(page.getByText('サンプルをDBに保存しました。')).toBeVisible()
+  await expect(page.getByText(/\d位: Solito MAGO/)).toBeVisible()
+  await expect(page.getByText(/\d位: T-SITEのカフェ/)).toBeVisible()
 
   await page.getByLabel('タグ', { exact: true }).fill('カフェラテ')
   await page.getByLabel('場所', { exact: true }).fill('柏の葉')

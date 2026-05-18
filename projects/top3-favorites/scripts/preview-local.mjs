@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 import { createServer } from 'node:http'
-import { readFile, writeFile } from 'node:fs/promises'
+import { readFile, rename, writeFile } from 'node:fs/promises'
 import { createReadStream, existsSync } from 'node:fs'
 import { extname, join, resolve } from 'node:path'
 import { randomUUID } from 'node:crypto'
@@ -103,8 +103,21 @@ async function readData() {
   }
 }
 
+let mutationQueue = Promise.resolve()
+
 async function writeData(data) {
-  await writeFile(dataFile, JSON.stringify(data, null, 2), 'utf8')
+  const tempFile = `${dataFile}.${process.pid}.tmp`
+  await writeFile(tempFile, JSON.stringify(data, null, 2), 'utf8')
+  await rename(tempFile, dataFile)
+}
+
+async function withDataMutation(mutator) {
+  const run = mutationQueue.then(async () => {
+    const data = await readData()
+    return mutator(data)
+  })
+  mutationQueue = run.catch(() => {})
+  return run
 }
 
 function themeKey(item) {
@@ -205,8 +218,8 @@ function sendJson(res, status, body) {
 }
 
 async function handleApi(req, res, url) {
-  const data = await readData()
   if (req.method === 'GET') {
+    const data = await readData()
     const tags = Array.from(new Set(data.items.map((item) => item.tag).filter(Boolean))).sort((a, b) => a.localeCompare(b, 'ja'))
     return sendJson(res, 200, { items: data.items, tags })
   }
@@ -234,33 +247,41 @@ async function handleApi(req, res, url) {
       }
 
       const items = normalizeImportedTop3(validItems)
-      await writeData({ items })
+      await withDataMutation(async () => {
+        await writeData({ items })
+      })
       return sendJson(res, 200, { items })
     }
 
-    const item = makeItem(payload)
     if (hasInvalidMutationRank(payload)) return sendJson(res, 400, { error: 'rank must be 1, 2, or 3' })
-    if (!item.tag || !item.name) return sendJson(res, 400, { error: 'tag and name are required' })
-    const items = rebalance(data.items, item)
-    await writeData({ items })
-    return sendJson(res, 200, { items, item })
+    return withDataMutation(async (data) => {
+      const item = makeItem(payload)
+      if (!item.tag || !item.name) return sendJson(res, 400, { error: 'tag and name are required' })
+      const items = rebalance(data.items, item)
+      await writeData({ items })
+      return sendJson(res, 200, { items, item })
+    })
   }
   if (req.method === 'PUT') {
     const payload = await readJsonBody(req)
-    const existing = data.items.find((item) => item.id === normalizeText(payload.id))
-    if (!existing) return sendJson(res, 404, { error: 'item not found' })
-    const edited = makeItem(payload, existing)
     if (hasInvalidMutationRank(payload)) return sendJson(res, 400, { error: 'rank must be 1, 2, or 3' })
-    if (!edited.tag || !edited.name) return sendJson(res, 400, { error: 'tag and name are required' })
-    const items = rebalance(data.items.filter((item) => item.id !== existing.id), edited)
-    await writeData({ items })
-    return sendJson(res, 200, { items, item: edited })
+    return withDataMutation(async (data) => {
+      const existing = data.items.find((item) => item.id === normalizeText(payload.id))
+      if (!existing) return sendJson(res, 404, { error: 'item not found' })
+      const edited = makeItem(payload, existing)
+      if (!edited.tag || !edited.name) return sendJson(res, 400, { error: 'tag and name are required' })
+      const items = rebalance(data.items.filter((item) => item.id !== existing.id), edited)
+      await writeData({ items })
+      return sendJson(res, 200, { items, item: edited })
+    })
   }
   if (req.method === 'DELETE') {
     const id = normalizeText(url.searchParams.get('id'))
-    const items = data.items.filter((item) => item.id !== id)
-    await writeData({ items })
-    return sendJson(res, 200, { items })
+    return withDataMutation(async (data) => {
+      const items = data.items.filter((item) => item.id !== id)
+      await writeData({ items })
+      return sendJson(res, 200, { items })
+    })
   }
   return sendJson(res, 405, { error: 'method not allowed' })
 }
@@ -277,7 +298,12 @@ const server = createServer(async (req, res) => {
       return res.end('not found')
     }
     res.writeHead(200, { 'content-type': mime[extname(filePath)] || 'application/octet-stream' })
-    createReadStream(filePath).pipe(res)
+    const stream = createReadStream(filePath)
+    stream.on('error', (error) => {
+      if (!res.headersSent) res.writeHead(500, { 'content-type': 'text/plain; charset=utf-8' })
+      res.end(error instanceof Error ? error.message : String(error))
+    })
+    stream.pipe(res)
   } catch (error) {
     sendJson(res, 500, { error: error instanceof Error ? error.message : String(error) })
   }
