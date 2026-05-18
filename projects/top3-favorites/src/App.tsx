@@ -471,11 +471,13 @@ export function App() {
     setEditingId(item.id)
     setEditingDraft({ tag: item.tag, location: item.location, name: item.name, rank: item.rank, memo: item.memo })
     setError('')
+    setNotice('')
   }
 
   const cancelEdit = () => {
     setEditingId(null)
     setError('')
+    setNotice('')
   }
 
   const saveEdit = async () => {
