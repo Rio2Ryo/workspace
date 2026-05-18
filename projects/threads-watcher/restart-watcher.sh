@@ -33,6 +33,27 @@ cd "$(dirname "$0")"
 LOG_FILE="logs/watcher.log"
 mkdir -p logs
 
+# ── mutex against concurrent restart-watcher.sh invocations ────────────
+# Without this, two near-simultaneous invocations (e.g., the
+# auto-restart-if-stale launchd cycle + an operator manual run, or two
+# overlapping auto-restart cycles when the dead-process gate fires)
+# both run pgrep → see existing PIDs → SIGTERM → wait → launch fresh.
+# Result: TWO new watchers spawn because the nohup launch at the bottom
+# isn't gated against the OTHER concurrent invocation's launch.
+#
+# macOS doesn't ship with `flock(1)`, and brew's `flock` cask is
+# different (not a CLI). Use `mkdir` as a portable atomic primitive —
+# mkdir of an existing directory fails atomically, and the trap on
+# EXIT cleans it up so a crashed invocation doesn't permanently
+# wedge the lock.
+LOCKDIR=".restart-watcher.lock.d"
+if ! mkdir "$LOCKDIR" 2>/dev/null; then
+  echo "another restart-watcher.sh is in progress — skipping (lock dir $LOCKDIR exists)" >&2
+  echo "  (operator force: rm -rf $LOCKDIR && ./restart-watcher.sh)" >&2
+  exit 0
+fi
+trap 'rmdir "$LOCKDIR" 2>/dev/null || true' EXIT
+
 # ── find existing watcher process(es) ──────────────────────────────────
 # `pgrep -f` matches anywhere in the cmdline; scope to "watcher.py --watch"
 # so we don't catch unrelated python processes.

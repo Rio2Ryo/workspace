@@ -15,5 +15,8 @@ logs/
 # Cooldown marker for auto-restart-if-stale.sh — local-only state.
 .last-auto-restart
 
+# Mutex for restart-watcher.sh concurrent invocations — local-only.
+.restart-watcher.lock.d/
+
 # One-off QA artifact dumps (screenshots, reports, zips).
 artifacts/
