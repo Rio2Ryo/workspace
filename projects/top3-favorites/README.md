@@ -79,6 +79,7 @@ pnpm test:full
 ```
 
 CI では軽量契約チェック（`.github/workflows/qa-current.yml`）と、nightly フル回帰（`.github/workflows/qa-full-nightly.yml`）を分離して運用します。
+nightly が失敗した場合は、GitHub Actions の `qa-full-nightly-failure-summary` artifact または job summary を開き、`focusedCommand` に記載された最小コマンドでローカル再現してから修正します。
 
 ## 受け入れ条件（インポート安全性）
 

@@ -1457,6 +1457,43 @@ test('[App][config-quality] GitHub Actions wires derive-legacy-zero-run output t
   )
 })
 
+test('[README] README explains nightly failure artifact triage with focusedCommand', async () => {
+  const readme = await readFile(new URL('README.md', `${root}/`), 'utf8')
+
+  assert.match(
+    readme,
+    /qa-full-nightly-failure-summary/,
+    contractMessage({
+      scope: 'README',
+      rule: 'README names nightly failure summary artifact',
+      expected: 'qa-full-nightly-failure-summary is documented',
+      fix: 'document the nightly failure summary artifact in README',
+    }),
+  )
+
+  assert.match(
+    readme,
+    /focusedCommand/,
+    contractMessage({
+      scope: 'README',
+      rule: 'README explains focusedCommand triage field',
+      expected: 'focusedCommand field is documented',
+      fix: 'document that nightly failure summaries include focusedCommand',
+    }),
+  )
+
+  assert.match(
+    readme,
+    /artifact.*focusedCommand.*再現/s,
+    contractMessage({
+      scope: 'README',
+      rule: 'README describes artifact to focused-command reproduction flow',
+      expected: 'artifact -> focusedCommand -> local reproduction flow is documented',
+      fix: 'add a short nightly failure triage flow to README',
+    }),
+  )
+})
+
 test('[App][config-quality] GitHub Actions nightly workflow runs test:full, receives derived env, and uploads failure artifacts', async () => {
   const workflow = await readFile(new URL('.github/workflows/qa-full-nightly.yml', `${root}/`), 'utf8')
 
@@ -1559,6 +1596,94 @@ test('[App][config-quality] GitHub Actions nightly workflow runs test:full, rece
       rule: 'qa-full-nightly appends failure summary to job summary',
       expected: 'job summary append step exists',
       fix: 'append qa-full-failure-summary.md to $GITHUB_STEP_SUMMARY on failure',
+    }),
+  )
+
+  assert.match(
+    workflow,
+    /name:\s+Notify Discord \(optional\)/,
+    contractMessage({
+      scope: 'App',
+      rule: 'qa-full-nightly includes optional Discord notification step',
+      expected: 'Notify Discord (optional) step exists',
+      fix: 'add optional Discord notify step guarded by failure + webhook secret',
+    }),
+  )
+
+  assert.match(
+    workflow,
+    /if:\s+failure\(\) && secrets\.DISCORD_WEBHOOK_URL != ''/,
+    contractMessage({
+      scope: 'App',
+      rule: 'qa-full-nightly Discord notify step is safely gated',
+      expected: "if: failure() && secrets.DISCORD_WEBHOOK_URL != ''",
+      fix: 'guard Discord notify step by failure() and non-empty webhook secret',
+    }),
+  )
+
+  assert.match(
+    workflow,
+    /\*\*contractScope\*\*:\s+`[^`]*scope[^`]*`/,
+    contractMessage({
+      scope: 'App',
+      rule: 'qa-full-nightly Discord message highlights contractScope',
+      expected: 'discord content includes bold contractScope field',
+      fix: 'include **contractScope** in Discord message body',
+    }),
+  )
+
+  assert.match(
+    workflow,
+    /\*\*contractRule\*\*:\s+`[^`]*rule[^`]*`/,
+    contractMessage({
+      scope: 'App',
+      rule: 'qa-full-nightly Discord message highlights contractRule',
+      expected: 'discord content includes bold contractRule field',
+      fix: 'include **contractRule** in Discord message body',
+    }),
+  )
+
+  assert.match(
+    workflow,
+    /\*\*focusedCommand\*\*:\s+`[^`]+`/,
+    contractMessage({
+      scope: 'App',
+      rule: 'qa-full-nightly Discord message includes focusedCommand for quick local reproduction',
+      expected: 'discord content includes bold focusedCommand field',
+      fix: 'include **focusedCommand** from qa-full-failure-summary.json in Discord content',
+    }),
+  )
+
+  assert.match(
+    workflow,
+    /```[\s\S]*firstFailingTest:[\s\S]*```/,
+    contractMessage({
+      scope: 'App',
+      rule: 'qa-full-nightly Discord message includes first failing test in code block',
+      expected: 'firstFailingTest is wrapped in a markdown code block',
+      fix: 'wrap firstFailingTest in ``` ... ``` block in Discord content',
+    }),
+  )
+
+  assert.match(
+    workflow,
+    /Run URL:\s+[^\n]+/,
+    contractMessage({
+      scope: 'App',
+      rule: 'qa-full-nightly Discord message includes run URL',
+      expected: 'Run URL line exists in Discord content',
+      fix: 'append Run URL to Discord content for one-click navigation',
+    }),
+  )
+
+  assert.match(
+    workflow,
+    /Artifact URL:\s+[^\n]+/,
+    contractMessage({
+      scope: 'App',
+      rule: 'qa-full-nightly Discord message includes artifact URL',
+      expected: 'Artifact URL line exists in Discord content',
+      fix: 'append Artifact URL to Discord content for direct artifact navigation',
     }),
   )
 })
