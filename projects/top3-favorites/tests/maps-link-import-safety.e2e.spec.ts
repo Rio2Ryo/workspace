@@ -1,0 +1,54 @@
+import { expect, test } from '@playwright/test'
+
+test.beforeEach(async ({ request }) => {
+  const data = (await request.get('/api/items').then((res) => res.json())) as { items: { id: string }[] }
+  for (const item of data.items) {
+    await request.delete(`/api/items?id=${encodeURIComponent(item.id)}`)
+  }
+})
+
+test('maps link ignores imported mapsUrl and uses Google Maps query built from item fields', async ({ page }) => {
+  await page.goto('/')
+
+  const now = new Date().toISOString()
+  const imported = [
+    {
+      id: 'evil-maps-1',
+      tag: 'カレー',
+      location: '神田',
+      name: '安全カレー店',
+      rank: 1,
+      memo: 'import maps safety',
+      mapsUrl: 'https://evil.example/phishing',
+      placeId: '',
+      createdAt: now,
+      updatedAt: now,
+    },
+  ]
+
+  await page.locator('input[type="file"][accept*="json"]').setInputFiles({
+    name: 'import-evil-maps.json',
+    mimeType: 'application/json',
+    buffer: Buffer.from(JSON.stringify(imported), 'utf-8'),
+  })
+
+  await page.getByRole('button', { name: 'この内容でインポート' }).click()
+  await expect(page.getByRole('status')).toContainText('インポート成功: 1件を反映しました。')
+
+  await page.getByText('1位: 安全カレー店').click()
+  const mapsLink = page.getByRole('link', { name: 'Mapsで開く' }).first()
+  await expect(mapsLink).toBeVisible()
+
+  const href = await mapsLink.getAttribute('href')
+  expect(href).toBeTruthy()
+  const url = new URL(href as string)
+
+  expect(url.origin).toBe('https://www.google.com')
+  expect(url.pathname).toBe('/maps/search/')
+  expect(url.searchParams.get('api')).toBe('1')
+
+  const query = url.searchParams.get('query') ?? ''
+  expect(query).toContain('安全カレー店')
+  expect(query).toContain('神田')
+  expect(query).toContain('カレー')
+})

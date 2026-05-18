@@ -30,6 +30,13 @@ function normalizeRank(value: unknown): Rank {
   return n === 2 || n === 3 ? n : 1
 }
 
+function parseImportRank(value: unknown): Rank | null {
+  if (value === 1 || value === '1') return 1
+  if (value === 2 || value === '2') return 2
+  if (value === 3 || value === '3') return 3
+  return null
+}
+
 function buildMapsUrl(item: Pick<FavoriteItem, 'name' | 'tag' | 'location'>): string {
   const query = [item.name, item.location, item.tag].filter(Boolean).join(' ')
   return `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(query)}`
@@ -50,6 +57,41 @@ function isItem(value: unknown): value is FavoriteItem {
     typeof o.createdAt === 'string' &&
     typeof o.updatedAt === 'string'
   )
+}
+
+function toValidItem(value: unknown): FavoriteItem | null {
+  if (!value || typeof value !== 'object') return null
+  const o = value as Record<string, unknown>
+
+  const id = normalizeText(o.id)
+  const tag = normalizeText(o.tag)
+  const location = normalizeText(o.location)
+  const name = normalizeText(o.name)
+  const rank = parseImportRank(o.rank)
+  const memo = normalizeText(o.memo)
+  const placeId = normalizeText(o.placeId)
+  const createdAt = normalizeText(o.createdAt) || new Date().toISOString()
+  const updatedAt = normalizeText(o.updatedAt) || new Date().toISOString()
+
+  if (!id || !tag || !name || rank === null) return null
+
+  const base: FavoriteItem = {
+    id,
+    tag,
+    location,
+    name,
+    rank,
+    memo,
+    placeId,
+    createdAt,
+    updatedAt,
+    mapsUrl: '',
+  }
+  return { ...base, mapsUrl: buildMapsUrl(base) }
+}
+
+function hasDuplicateIds(items: FavoriteItem[]): boolean {
+  return new Set(items.map((item) => item.id)).size !== items.length
 }
 
 async function streamToText(stream: ReadableStream<Uint8Array>): Promise<string> {
@@ -106,6 +148,24 @@ function rebalance(items: FavoriteItem[], target: FavoriteItem): FavoriteItem[] 
   return [...others, ...normalized]
 }
 
+function normalizeImportedTop3(items: FavoriteItem[]): FavoriteItem[] {
+  const byTheme = new Map<string, FavoriteItem[]>()
+  for (const item of items) {
+    const key = themeKey(item)
+    byTheme.set(key, [...(byTheme.get(key) ?? []), item])
+  }
+
+  const normalized: FavoriteItem[] = []
+  for (const list of byTheme.values()) {
+    const top3 = [...list]
+      .sort((a, b) => a.rank - b.rank || b.updatedAt.localeCompare(a.updatedAt))
+      .slice(0, 3)
+      .map((item, index) => ({ ...item, rank: (index + 1) as Rank }))
+    normalized.push(...top3)
+  }
+  return normalized
+}
+
 function makeItem(payload: Record<string, unknown>, existing?: FavoriteItem): FavoriteItem {
   const now = new Date().toISOString()
   const base = {
@@ -140,7 +200,29 @@ export default async function handler(req: any, res: any) {
     }
 
     if (req.method === 'POST') {
+      const mode = normalizeText(req.query?.mode)
       const payload = typeof req.body === 'object' && req.body ? req.body : JSON.parse(req.body || '{}')
+
+      if (mode === 'replace') {
+        const arr = Array.isArray((payload as Record<string, unknown>)?.items)
+          ? ((payload as Record<string, unknown>).items as unknown[])
+          : null
+        if (!arr) return send(res, 400, { error: 'items array is required' })
+
+        const normalized = arr.map((v) => toValidItem(v))
+        if (normalized.some((v) => v === null)) {
+          return send(res, 400, { error: 'invalid item exists' })
+        }
+
+        const validItems = normalized.filter((v): v is FavoriteItem => v !== null)
+        if (hasDuplicateIds(validItems)) {
+          return send(res, 400, { error: 'duplicate item id exists' })
+        }
+        const top3Normalized = normalizeImportedTop3(validItems)
+        await writeData({ items: top3Normalized })
+        return send(res, 200, { items: top3Normalized })
+      }
+
       const item = makeItem(payload)
       if (!item.tag || !item.name) return send(res, 400, { error: 'tag and name are required' })
       const items = rebalance(data.items, item)

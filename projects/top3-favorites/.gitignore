@@ -7,3 +7,6 @@ dist/
 .env.*
 .vercel
 .env*.local
+data.local.json
+playwright-report/
+test-results/

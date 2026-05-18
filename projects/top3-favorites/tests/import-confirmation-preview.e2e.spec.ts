@@ -1,0 +1,60 @@
+import { expect, test } from '@playwright/test'
+
+function item(id: string, tag: string, name: string, rank = 1) {
+  const now = new Date().toISOString()
+  return {
+    id,
+    tag,
+    location: '柏の葉',
+    name,
+    rank,
+    memo: 'import preview test',
+    mapsUrl: 'https://www.google.com/maps/search/?api=1&query=test',
+    placeId: '',
+    createdAt: now,
+    updatedAt: now,
+  }
+}
+
+test.beforeEach(async ({ request }) => {
+  const data = (await request.get('/api/items').then((res) => res.json())) as { items: { id: string }[] }
+  for (const existing of data.items) {
+    await request.delete(`/api/items?id=${encodeURIComponent(existing.id)}`)
+  }
+})
+
+test('import shows a confirmation preview before replacing existing data', async ({ page, request }) => {
+  await page.goto('/')
+  await page.getByRole('button', { name: 'サンプルをDB保存' }).click()
+  await expect(page.getByText('サンプルをDBに保存しました。')).toBeVisible()
+  await expect(page.getByText('1位: Solito MAGO')).toBeVisible()
+
+  const replacement = [item('preview-1', 'プリン', 'Preview Pudding')]
+  await page.locator('input[type="file"][accept*="json"]').setInputFiles({
+    name: 'preview-import.json',
+    mimeType: 'application/json',
+    buffer: Buffer.from(JSON.stringify(replacement), 'utf-8'),
+  })
+
+  await expect(page.getByRole('status')).toContainText('インポート確認: 1件')
+  await expect(page.getByText('現在3件 → インポート後1件')).toBeVisible()
+  await expect(page.getByText('Preview Pudding')).not.toBeVisible()
+
+  const beforeConfirm = (await request.get('/api/items').then((res) => res.json())) as { items: { name: string }[] }
+  expect(beforeConfirm.items.map((saved) => saved.name).sort()).toEqual(['Solito MAGO', 'T-SITEのカフェ', 'とみ田'].sort())
+
+  await page.getByRole('button', { name: 'インポートをキャンセル' }).click()
+  await expect(page.getByText('インポートをキャンセルしました。')).toBeVisible()
+  await expect(page.getByText('1位: Solito MAGO')).toBeVisible()
+
+  await page.locator('input[type="file"][accept*="json"]').setInputFiles({
+    name: 'preview-import.json',
+    mimeType: 'application/json',
+    buffer: Buffer.from(JSON.stringify(replacement), 'utf-8'),
+  })
+  await page.getByRole('button', { name: 'この内容でインポート' }).click()
+
+  await expect(page.getByText('インポート成功: 1件を反映しました。')).toBeVisible()
+  await expect(page.getByText('1位: Preview Pudding')).toBeVisible()
+  await expect(page.getByText('Solito MAGO')).not.toBeVisible()
+})

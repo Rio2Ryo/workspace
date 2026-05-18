@@ -27,6 +27,7 @@ type PendingImport = {
   items: FavoriteItem[]
   filename: string
   originalCount: number
+  excludedNames: string[]
 }
 
 const initialDraft: Draft = {
@@ -315,7 +316,12 @@ export function App() {
       }
 
       const normalized = normalizeImportedTop3(parsed)
-      setPendingImport({ items: normalized, filename: file.name, originalCount: parsed.length })
+      const normalizedIds = new Set(normalized.map((item) => item.id))
+      const excludedNames = parsed
+        .filter((item) => !normalizedIds.has(item.id))
+        .map((item) => item.name.trim())
+        .filter(Boolean)
+      setPendingImport({ items: normalized, filename: file.name, originalCount: parsed.length, excludedNames })
       setError('')
       setNotice(`インポート確認: ${normalized.length}件。内容を確認してから反映してください。`)
     } catch {
@@ -504,6 +510,9 @@ export function App() {
                 {pendingImport.originalCount !== pendingImport.items.length && (
                   <p className="hint compact">同一タグはTop3に正規化: {pendingImport.originalCount}件中{pendingImport.items.length}件を反映予定</p>
                 )}
+                {pendingImport.excludedNames.length > 0 && (
+                  <p className="hint compact">除外予定の店舗: {pendingImport.excludedNames.join(', ')}</p>
+                )}
                 {pendingImportImpact && (
                   <>
                     <p className="hint compact">
@@ -561,7 +570,7 @@ export function App() {
                         <div className="details-body">
                           {item.memo && <p className="memo">{item.memo}</p>}
                           <div className="row no-margin">
-                            <a href={item.mapsUrl || buildMapsUrl(item)} target="_blank" rel="noreferrer">Mapsで開く</a>
+                            <a href={buildMapsUrl(item)} target="_blank" rel="noreferrer">Mapsで開く</a>
                             <button className="ghost" onClick={() => startEdit(item)} aria-label={`${item.name}を編集`}>編集</button>
                             <button className="danger" onClick={() => removeItem(item)} aria-label={`${item.name}を削除`}>削除</button>
                           </div>
