@@ -130,7 +130,8 @@ test('[App][config-quality] QA test title subscope contract is enforced across q
     missingItemsMessage({
       scope: 'App',
       rule: 'QA title scope dictionary completeness (configured covers observed)',
-      fix: `add missing observed scope keys to qaTestTitleSubscopeContract.allowedByScope (${scopeOverview})`,
+      fix: 'add missing observed scope keys to qaTestTitleSubscopeContract.allowedByScope',
+      context: scopeOverview,
       items: missingScopeMappings,
     }),
   )
@@ -140,7 +141,8 @@ test('[App][config-quality] QA test title subscope contract is enforced across q
     missingItemsMessage({
       scope: 'App',
       rule: 'QA title scope dictionary exactness (no extra configured scopes)',
-      fix: `remove configured scope keys that are not observed in qa-current/qa-docs tests (${scopeOverview})`,
+      fix: 'remove configured scope keys that are not observed in qa-current/qa-docs tests',
+      context: scopeOverview,
       items: extraScopeMappings,
     }),
   )
@@ -160,7 +162,8 @@ test('[App][config-quality] QA test title subscope contract is enforced across q
     missingItemsMessage({
       scope: 'App',
       rule: 'QA title subscope dictionary completeness (configured covers observed per scope)',
-      fix: `add missing observed subscopes into qaTestTitleSubscopeContract.allowedByScope.<scope> (${subscopeOverview})`,
+      fix: 'add missing observed subscopes into qaTestTitleSubscopeContract.allowedByScope.<scope>',
+      context: subscopeOverview,
       items: missingSubscopeMappings,
     }),
   )
@@ -170,7 +173,8 @@ test('[App][config-quality] QA test title subscope contract is enforced across q
     missingItemsMessage({
       scope: 'App',
       rule: 'QA title subscope dictionary exactness (no extra configured subscope per scope)',
-      fix: `remove configured subscopes not observed in qa-current/qa-docs tests (${subscopeOverview})`,
+      fix: 'remove configured subscopes not observed in qa-current/qa-docs tests',
+      context: subscopeOverview,
       items: extraSubscopeMappings,
     }),
   )

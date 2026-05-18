@@ -18,9 +18,10 @@ export function resolveLimitForScope(scope) {
   return contractMessageLimits.default
 }
 
-export function missingItemsMessage({ scope, rule, fix, items, limit }) {
+export function missingItemsMessage({ scope, rule, fix, items, limit, context = '' }) {
   const resolvedLimit = limit ?? resolveLimitForScope(scope)
-  return `${contractMessage({ scope, rule, expected: 'no missing items', fix })}\n${summarizeItems(items, resolvedLimit)}`
+  const contextBlock = context ? `\ncontext: ${context}` : ''
+  return `${contractMessage({ scope, rule, expected: 'no missing items', fix })}${contextBlock}\n${summarizeItems(items, resolvedLimit)}`
 }
 
 export function configuredObservedOverview(configured, observed, { locale = 'en' } = {}) {
