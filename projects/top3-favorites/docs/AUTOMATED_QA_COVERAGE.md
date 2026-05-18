@@ -96,6 +96,9 @@
 - `tests/qa-coverage-doc.test.mjs`
   - `tests/*.e2e.spec.ts` がこの文書に全件記載されていることを検証する。
   - E2Eを増やしたのにカバレッジ表を更新しない drift を防ぐ。
+- `tests/concept-copy-contract.test.mjs`
+  - README導入案が現行の `/api/items` 永続化と構造化フォームUIに一致していることを検証する。
+  - localStorage/自然文パース前提のLP・紹介コピーが再混入する drift を防ぐ。
 
 ## 手動に残す項目
 
