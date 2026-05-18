@@ -43,6 +43,7 @@ test('import preview exposes a consistent summary JSON for QA assertions', async
     excluded: number
     tags: string[]
     excludedNames: string[]
+    excludedNameLabels: string[]
   }
 
   // schema contract guard: required keys must exist for version 1
@@ -58,6 +59,7 @@ test('import preview exposes a consistent summary JSON for QA assertions', async
     'excluded',
     'tags',
     'excludedNames',
+    'excludedNameLabels',
   ] as const
   for (const key of requiredKeys) {
     expect(summary).toHaveProperty(key)
@@ -74,6 +76,7 @@ test('import preview exposes a consistent summary JSON for QA assertions', async
   expect(typeof summary.excluded).toBe('number')
   expect(Array.isArray(summary.tags)).toBe(true)
   expect(Array.isArray(summary.excludedNames)).toBe(true)
+  expect(Array.isArray(summary.excludedNameLabels)).toBe(true)
   expect(summary.before).toBe(3)
   expect(summary.after).toBe(4)
   expect(summary.normalizationBefore).toBe(5)
@@ -82,6 +85,7 @@ test('import preview exposes a consistent summary JSON for QA assertions', async
   expect(summary.before - summary.removed).toBe(summary.kept)
   expect(summary.excluded).toBe(1)
   expect(summary.excludedNames).toEqual(['New 3'])
+  expect(summary.excludedNameLabels).toEqual(['New 3'])
   expect(summary.tags).toEqual(['カフェラテ', 'つけ麺', 'プリン'].sort((a, b) => a.localeCompare(b, 'ja')))
 
   await expect(page.getByTestId('import-preview-excluded-names')).toContainText('除外予定の店舗: New 3')

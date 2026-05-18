@@ -17,10 +17,10 @@ import {
   scopeLimitRules,
 } from './qa-current-contract.config.mjs'
 import {
-  collectBracketScopesFromTestTitles,
   collectFiles,
   collectSpecUrlsByNamePredicate,
   findBeforeEachOffenders,
+  findScopeRuleOverlaps,
 } from './qa-current-contract.utils.mjs'
 import { contractMessage, missingItemsMessage } from './qa-contract-message.mjs'
 
@@ -45,29 +45,16 @@ test('[App] current implementation uses API-backed structured form, not legacy l
 })
 
 test('[App] scopeLimitRules do not produce overlapping matches across QA contract test suites', async () => {
-  const scopes = new Set()
-  for (const path of contractTestPaths) {
-    for (const scope of await collectBracketScopesFromTestTitles(path)) {
-      scopes.add(scope)
-    }
-  }
-
-  const overlaps = []
-  for (const scope of Array.from(scopes)) {
-    const matched = scopeLimitRules.filter(({ pattern }) => pattern.test(scope))
-    if (matched.length > 1) {
-      overlaps.push(`${scope} -> ${matched.map(({ pattern }) => pattern).join(', ')}`)
-    }
-  }
+  const overlaps = await findScopeRuleOverlaps(contractTestPaths, scopeLimitRules)
 
   assert.deepEqual(
-    overlaps.sort((a, b) => a.localeCompare(b, 'en')),
+    overlaps,
     [],
-    contractMessage({
+    missingItemsMessage({
       scope: 'App',
       rule: 'scopeLimitRules overlap check',
-      expected: 'each discovered [Scope] title across qa-current + qa-docs matches at most one scopeLimitRules pattern',
       fix: 'tighten regex patterns in scopeLimitRules to avoid multi-match collisions',
+      items: overlaps,
     }),
   )
 })

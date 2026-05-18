@@ -3,7 +3,7 @@ import { readdir, readFile, stat } from 'node:fs/promises'
 import test from 'node:test'
 import { contractMessage, missingItemsMessage } from './qa-contract-message.mjs'
 import { scopeLimitRules } from './qa-current-contract.config.mjs'
-import { collectBracketScopesFromTestTitles } from './qa-current-contract.utils.mjs'
+import { findScopeRuleOverlaps } from './qa-current-contract.utils.mjs'
 
 const coverageDocPath = new URL('../docs/AUTOMATED_QA_COVERAGE.md', import.meta.url)
 const testsDir = new URL('./', import.meta.url)
@@ -47,24 +47,10 @@ test('[Docs-Scope] scopeLimitRules do not overlap for qa-docs + qa-current disco
     new URL('tests/qa-coverage-doc.test.mjs', `${here}/`),
     new URL('tests/qa-current-contract.test.mjs', `${here}/`),
   ]
-
-  const scopes = new Set()
-  for (const path of contractTestPaths) {
-    for (const scope of await collectBracketScopesFromTestTitles(path)) {
-      scopes.add(scope)
-    }
-  }
-
-  const overlaps = []
-  for (const scope of Array.from(scopes)) {
-    const matched = scopeLimitRules.filter(({ pattern }) => pattern.test(scope))
-    if (matched.length > 1) {
-      overlaps.push(`${scope} -> ${matched.map(({ pattern }) => pattern).join(', ')}`)
-    }
-  }
+  const overlaps = await findScopeRuleOverlaps(contractTestPaths, scopeLimitRules)
 
   assert.deepEqual(
-    overlaps.sort((a, b) => a.localeCompare(b, 'en')),
+    overlaps,
     [],
     missingItemsMessage({
       scope: 'Docs-Scope',

@@ -44,6 +44,7 @@ type PendingImport = {
   filename: string
   originalCount: number
   excludedNames: string[]
+  excludedNameLabels: string[]
   excludedDetails: ImportExcludedDetail[]
 }
 
@@ -183,6 +184,24 @@ function analyzeImportedTop3(items: FavoriteItem[]): { items: FavoriteItem[]; ex
     items: normalized,
     excludedDetails: excludedDetails.filter((detail) => detail.name),
   }
+}
+
+function buildExcludedNameLabels(details: ImportExcludedDetail[]): string[] {
+  const nameCounts = new Map<string, number>()
+  for (const detail of details) {
+    const name = detail.name.trim()
+    if (!name) continue
+    nameCounts.set(name, (nameCounts.get(name) ?? 0) + 1)
+  }
+
+  return details
+    .map((detail) => {
+      const name = detail.name.trim()
+      if (!name) return ''
+      return (nameCounts.get(name) ?? 0) > 1 ? `${detail.tag}: ${name}` : name
+    })
+    .filter(Boolean)
+    .sort((a, b) => a.localeCompare(b, 'ja'))
 }
 
 async function api<T>(path: string, options?: RequestInit): Promise<T> {
@@ -328,6 +347,7 @@ export function App() {
       excluded: pendingImportImpact.excluded,
       tags: pendingImportImpact.tags,
       excludedNames: pendingImport.excludedNames,
+      excludedNameLabels: pendingImport.excludedNameLabels,
       excludedDetails: pendingImport.excludedDetails,
     }
   }, [items.length, pendingImport, pendingImportImpact])
@@ -342,9 +362,9 @@ export function App() {
 
   const excludedNamesPreview = useMemo(() => {
     if (!pendingImport) return { visible: [] as string[], hiddenCount: 0 }
-    if (isExcludedNamesExpanded) return { visible: pendingImport.excludedNames, hiddenCount: 0 }
-    const visible = pendingImport.excludedNames.slice(0, 3)
-    const hiddenCount = Math.max(0, pendingImport.excludedNames.length - visible.length)
+    if (isExcludedNamesExpanded) return { visible: pendingImport.excludedNameLabels, hiddenCount: 0 }
+    const visible = pendingImport.excludedNameLabels.slice(0, 3)
+    const hiddenCount = Math.max(0, pendingImport.excludedNameLabels.length - visible.length)
     return { visible, hiddenCount }
   }, [isExcludedNamesExpanded, pendingImport])
 
@@ -527,11 +547,13 @@ export function App() {
         .map((item) => item.name.trim())
         .filter(Boolean)
         .sort((a, b) => a.localeCompare(b, 'ja'))
+      const excludedNameLabels = buildExcludedNameLabels(analyzed.excludedDetails)
       setPendingImport({
         items: normalized,
         filename: file.name,
         originalCount: normalizedInput.length,
         excludedNames,
+        excludedNameLabels,
         excludedDetails: analyzed.excludedDetails,
       })
       setIsExcludedNamesExpanded(false)
@@ -765,6 +787,7 @@ export function App() {
                       className="hint compact"
                       data-testid="import-preview-excluded-names"
                       data-excluded-name-count={pendingImport.excludedNames.length}
+                      data-excluded-name-labels={pendingImport.excludedNameLabels.join('|')}
                     >
                       除外予定の店舗: {excludedNamesPreview.visible.join(', ')}
                       {excludedNamesPreview.hiddenCount > 0 ? `（ほか${excludedNamesPreview.hiddenCount}件）` : ''}
