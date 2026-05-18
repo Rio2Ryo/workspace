@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict'
-import { readFile } from 'node:fs/promises'
+import { readdir, readFile } from 'node:fs/promises'
 import test from 'node:test'
 import {
   appForbiddenPatterns,
@@ -46,6 +46,44 @@ const contractTestPaths = [
   new URL('tests/qa-current-contract.test.mjs', `${root}/`),
   new URL('tests/qa-coverage-doc.test.mjs', `${root}/`),
 ]
+
+function parseNonNegativeIntegerOrDefault(value, fallback) {
+  if (typeof value !== 'string' || value.trim() === '') return fallback
+  const n = Number(value)
+  if (Number.isInteger(n) && n >= 0) return n
+  return fallback
+}
+
+async function collectDirectoryNames(dirUrl, predicate) {
+  const entries = await readdir(dirUrl, { withFileTypes: true })
+  const matches = []
+
+  for (const entry of entries) {
+    if (!entry.isDirectory()) continue
+    const childUrl = new URL(`${entry.name}/`, dirUrl)
+    if (predicate(entry.name)) {
+      matches.push(childUrl.pathname.replace(root.pathname, ''))
+    }
+    matches.push(...await collectDirectoryNames(childUrl, predicate))
+  }
+
+  return matches.sort((a, b) => a.localeCompare(b, 'en'))
+}
+
+test('[App][config-quality] QA runs do not leave local state directories in the repo', async () => {
+  const stateDirs = await collectDirectoryNames(root, (name) => name === '.qa-state')
+
+  assert.deepEqual(
+    stateDirs,
+    [],
+    missingItemsMessage({
+      scope: 'App',
+      rule: 'no local QA state directories in repository tree',
+      fix: 'delete .qa-state directories and keep QA contract tests deterministic/read-only',
+      items: stateDirs,
+    }),
+  )
+})
 
 test('[App][config-quality] QA test title subscope contract is enforced across qa-current + qa-docs', async () => {
   const pairs = [
@@ -475,7 +513,9 @@ test('[App][config-quality] missingItemsMessage context key dictionary and usage
     }),
   )
   const legacyContextUsageCount = legacyContextKeysUsed.length
-  const zeroRunCount = legacyContextUsageCount === 0 ? 1 : 0
+  const envZeroRunRaw = process.env[legacyPromotionRemovalContract.observedZeroRunCountEnv]
+  const observedZeroRunCount = parseNonNegativeIntegerOrDefault(envZeroRunRaw, 0)
+  const zeroRunCount = legacyContextUsageCount === 0 ? Math.max(1, observedZeroRunCount) : 0
   const shouldPromoteLegacyRemoval =
     legacyContextUsageCount <= legacyPromotionRemovalContract.promoteWhenLegacyContextUsageCountLte &&
     zeroRunCount >= legacyPromotionRemovalContract.consecutiveZeroRunsToEnforce
@@ -494,6 +534,7 @@ test('[App][config-quality] missingItemsMessage context key dictionary and usage
           promoteWhenLegacyContextUsageCountLte: String(
             legacyPromotionRemovalContract.promoteWhenLegacyContextUsageCountLte,
           ),
+          observedZeroRunCount: String(observedZeroRunCount),
           zeroRunCount: String(zeroRunCount),
           consecutiveZeroRunsToEnforce: String(legacyPromotionRemovalContract.consecutiveZeroRunsToEnforce),
         },
@@ -514,6 +555,7 @@ test('[App][config-quality] missingItemsMessage context key dictionary and usage
           promoteWhenLegacyContextUsageCountLte: String(
             legacyPromotionRemovalContract.promoteWhenLegacyContextUsageCountLte,
           ),
+          observedZeroRunCount: String(observedZeroRunCount),
           zeroRunCount: String(zeroRunCount),
           consecutiveZeroRunsToEnforce: String(legacyPromotionRemovalContract.consecutiveZeroRunsToEnforce),
         },
@@ -657,6 +699,26 @@ test('[App][config-quality] missingItemsMessage context key dictionary and usage
       rule: 'legacyPromotionRemovalContract.consecutiveZeroRunsToEnforce minimum policy',
       expected: '>= 1',
       fix: 'set consecutiveZeroRunsToEnforce to 1 or more',
+    }),
+  )
+  assert.equal(
+    typeof legacyPromotionRemovalContract.observedZeroRunCountEnv,
+    'string',
+    contractMessage({
+      scope: 'App',
+      rule: 'legacyPromotionRemovalContract.observedZeroRunCountEnv type guard',
+      expected: 'string env var name',
+      fix: 'set observedZeroRunCountEnv to a non-empty environment variable name',
+    }),
+  )
+  assert.equal(
+    legacyPromotionRemovalContract.observedZeroRunCountEnv.trim().length > 0,
+    true,
+    contractMessage({
+      scope: 'App',
+      rule: 'legacyPromotionRemovalContract.observedZeroRunCountEnv non-empty policy',
+      expected: 'non-empty env var name',
+      fix: 'set observedZeroRunCountEnv to a non-empty environment variable name',
     }),
   )
 

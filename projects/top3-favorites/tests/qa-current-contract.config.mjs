@@ -372,6 +372,7 @@ const rawMissingItemsContextKeyContract = {
     'listed',
     'missingOnDisk',
     'observed',
+    'observedZeroRunCount',
     'promoteWhenLegacyContextUsageCountLte',
     'promotionModeDeadAllowedKeys',
     'promotionModeDeadScopePriority',
@@ -416,6 +417,7 @@ const rawLegacyPromotionRemovalContract = {
   enforceRemoval: true,
   promoteWhenLegacyContextUsageCountLte: 0,
   consecutiveZeroRunsToEnforce: 1,
+  observedZeroRunCountEnv: 'QA_LEGACY_ZERO_RUN_COUNT',
 }
 Object.freeze(rawLegacyPromotionRemovalContract)
 export const legacyPromotionRemovalContract = rawLegacyPromotionRemovalContract
