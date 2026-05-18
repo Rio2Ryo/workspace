@@ -150,7 +150,7 @@ function normalizeImportItem(value: FavoriteItem): FavoriteItem {
   return { ...normalized, mapsUrl: buildMapsUrl(normalized) }
 }
 
-function duplicateImportIdError(items: FavoriteItem[]): string | null {
+function duplicateImportIdError(items: FavoriteItem[], filename: string): string | null {
   const firstById = new Map<string, { item: FavoriteItem; index: number }>()
   for (const [index, item] of items.entries()) {
     const id = item.id.trim()
@@ -158,7 +158,7 @@ function duplicateImportIdError(items: FavoriteItem[]): string | null {
     if (first) {
       const firstName = first.item.name.trim() || '店舗名なし'
       const duplicateName = item.name.trim() || '店舗名なし'
-      return `ID「${id}」が${first.index + 1}件目「${firstName}」と${index + 1}件目「${duplicateName}」で重複しています。`
+      return `ファイル「${filename}」のID「${id}」が${first.index + 1}件目「${firstName}」と${index + 1}件目「${duplicateName}」で重複しています。`
     }
     firstById.set(id, { item, index })
   }
@@ -547,7 +547,7 @@ export function App() {
         setPendingImport(null)
         return
       }
-      const duplicateImportError = duplicateImportIdError(parsed as FavoriteItem[])
+      const duplicateImportError = duplicateImportIdError(parsed as FavoriteItem[], file.name)
       if (duplicateImportError) {
         setError(`インポート失敗: ${duplicateImportError}既存データは保持しました。`)
         setNotice('')

@@ -78,7 +78,7 @@ test('import rejects duplicate ids with a clear message and keeps existing data'
   })
 
   await expect(page.getByRole('alert')).toContainText(
-    'インポート失敗: ID「dup-ui-1」が1件目「Duplicate Pudding A」と2件目「Duplicate Pudding B」で重複しています。既存データは保持しました。',
+    'インポート失敗: ファイル「duplicate-ids.json」のID「dup-ui-1」が1件目「Duplicate Pudding A」と2件目「Duplicate Pudding B」で重複しています。既存データは保持しました。',
   )
   await expect(page.getByText('1位: Solito MAGO')).toBeVisible()
   await expect(page.getByText(/1位: Duplicate Pudding A/)).not.toBeVisible()
