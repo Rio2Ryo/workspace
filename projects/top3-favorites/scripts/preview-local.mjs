@@ -40,6 +40,10 @@ function hasInvalidMutationRank(payload) {
   return Object.prototype.hasOwnProperty.call(payload, 'rank') && parseMutationRank(payload.rank) === null
 }
 
+function mutationRankValidationError(action) {
+  return `API ${action} / フィールド: rank / 修正: 順位は1〜3で入力してください。`
+}
+
 function parseImportRank(value) {
   if (value === 1 || value === '1') return 1
   if (value === 2 || value === '2') return 2
@@ -256,7 +260,7 @@ async function handleApi(req, res, url) {
       return sendJson(res, 200, { items })
     }
 
-    if (hasInvalidMutationRank(payload)) return sendJson(res, 400, { error: 'rank must be 1, 2, or 3' })
+    if (hasInvalidMutationRank(payload)) return sendJson(res, 400, { error: mutationRankValidationError('create') })
     return withDataMutation(async (data) => {
       const item = makeItem(payload)
       if (!item.tag || !item.name) return sendJson(res, 400, { error: 'tag and name are required' })
@@ -267,7 +271,7 @@ async function handleApi(req, res, url) {
   }
   if (req.method === 'PUT') {
     const payload = await readJsonBody(req)
-    if (hasInvalidMutationRank(payload)) return sendJson(res, 400, { error: 'rank must be 1, 2, or 3' })
+    if (hasInvalidMutationRank(payload)) return sendJson(res, 400, { error: mutationRankValidationError('edit') })
     return withDataMutation(async (data) => {
       const existing = data.items.find((item) => item.id === normalizeText(payload.id))
       if (!existing) return sendJson(res, 404, { error: 'item not found' })

@@ -41,6 +41,10 @@ function hasInvalidMutationRank(payload: Record<string, unknown>): boolean {
   return Object.prototype.hasOwnProperty.call(payload, 'rank') && parseMutationRank(payload.rank) === null
 }
 
+function mutationRankValidationError(action: 'create' | 'edit'): string {
+  return `API ${action} / フィールド: rank / 修正: 順位は1〜3で入力してください。`
+}
+
 function parseImportRank(value: unknown): Rank | null {
   if (value === 1 || value === '1') return 1
   if (value === 2 || value === '2') return 2
@@ -276,7 +280,7 @@ export default async function handler(req: any, res: any) {
       }
 
       const item = makeItem(payload)
-      if (hasInvalidMutationRank(payload)) return send(res, 400, { error: 'rank must be 1, 2, or 3' })
+      if (hasInvalidMutationRank(payload)) return send(res, 400, { error: mutationRankValidationError('create') })
       if (!item.tag || !item.name) return send(res, 400, { error: 'tag and name are required' })
       const items = rebalance(data.items, item)
       await writeData({ items })
@@ -290,7 +294,7 @@ export default async function handler(req: any, res: any) {
       if (!existing) return send(res, 404, { error: 'item not found' })
       const base = data.items.filter((item) => item.id !== id)
       const edited = makeItem(payload, existing)
-      if (hasInvalidMutationRank(payload)) return send(res, 400, { error: 'rank must be 1, 2, or 3' })
+      if (hasInvalidMutationRank(payload)) return send(res, 400, { error: mutationRankValidationError('edit') })
       if (!edited.tag || !edited.name) return send(res, 400, { error: 'tag and name are required' })
       const items = rebalance(base, edited)
       await writeData({ items })
