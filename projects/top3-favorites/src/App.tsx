@@ -214,6 +214,10 @@ export function App() {
     void loadItems()
   }, [])
 
+  useEffect(() => {
+    if (selectedTag && draft.tag !== selectedTag) setSelectedTag('')
+  }, [draft.tag, selectedTag])
+
   const currentTag = normalizeTag(draft.tag)
   const currentTop3 = useMemo(
     () => rankItems(items.filter((item) => item.tag === currentTag)),
@@ -275,6 +279,11 @@ export function App() {
 
   const updateDraft = (patch: Partial<Draft>) => setDraft((prev) => ({ ...prev, ...patch }))
   const updateEditingDraft = (patch: Partial<Draft>) => setEditingDraft((prev) => ({ ...prev, ...patch }))
+
+  const updateDraftTag = (tag: string) => {
+    setDraft((prev) => ({ ...prev, tag }))
+    setSelectedTag((prev) => (prev && prev !== tag ? '' : prev))
+  }
 
   const selectTag = (tag: string) => {
     setSelectedTag(tag)
@@ -507,11 +516,16 @@ export function App() {
         </div>
 
         <TagPicker tags={tags} activeTag={draft.tag} selectedTag={selectedTag} onSelect={selectTag} onClear={clearSelectedTag} />
+        {selectedTag && (
+          <p className="hint compact" data-testid="tag-sync-status">
+            検索タグ「{selectedTag}」と登録タグを連動中
+          </p>
+        )}
 
         <div className="form-grid">
           <label>
             <span>タグ</span>
-            <input value={draft.tag} onChange={(e) => updateDraft({ tag: e.target.value })} placeholder="例: カフェラテ" list="tag-options" />
+            <input value={draft.tag} onChange={(e) => updateDraftTag(e.target.value)} placeholder="例: カフェラテ" list="tag-options" />
             <datalist id="tag-options">{tags.map((tag) => <option key={tag} value={tag} />)}</datalist>
           </label>
           <label>
