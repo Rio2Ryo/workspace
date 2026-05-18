@@ -148,8 +148,19 @@ function normalizeImportItem(value: FavoriteItem): FavoriteItem {
   return { ...normalized, mapsUrl: buildMapsUrl(normalized) }
 }
 
-function hasDuplicateImportIds(items: FavoriteItem[]): boolean {
-  return new Set(items.map((item) => item.id.trim())).size !== items.length
+function duplicateImportIdError(items: FavoriteItem[]): string | null {
+  const firstById = new Map<string, { item: FavoriteItem; index: number }>()
+  for (const [index, item] of items.entries()) {
+    const id = item.id.trim()
+    const first = firstById.get(id)
+    if (first) {
+      const firstName = first.item.name.trim() || '店舗名なし'
+      const duplicateName = item.name.trim() || '店舗名なし'
+      return `ID「${id}」が${first.index + 1}件目「${firstName}」と${index + 1}件目「${duplicateName}」で重複しています。`
+    }
+    firstById.set(id, { item, index })
+  }
+  return null
 }
 
 function themeKey(item: Pick<FavoriteItem, 'tag'>): string {
@@ -534,8 +545,9 @@ export function App() {
         setPendingImport(null)
         return
       }
-      if (hasDuplicateImportIds(parsed)) {
-        setError('インポート失敗: IDが重複しています。既存データは保持しました。')
+      const duplicateImportError = duplicateImportIdError(parsed as FavoriteItem[])
+      if (duplicateImportError) {
+        setError(`インポート失敗: ${duplicateImportError}既存データは保持しました。`)
         setNotice('')
         setPendingImport(null)
         return

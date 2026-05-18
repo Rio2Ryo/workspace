@@ -35,7 +35,7 @@ test('import fail-closed matrix: all invalid inputs keep existing data and clear
         { id: 'dup', tag: 'プリン', location: '浅草', name: 'A', rank: 1, memo: '', mapsUrl: '', placeId: '', createdAt: now, updatedAt: now },
         { id: 'dup', tag: 'プリン', location: '浅草', name: 'B', rank: 2, memo: '', mapsUrl: '', placeId: '', createdAt: now, updatedAt: now },
       ],
-      expected: /IDが重複しています/,
+      expected: /ID「dup」が1件目「A」と2件目「B」で重複しています/,
     },
     {
       name: 'broken-json.json',
