@@ -21,8 +21,10 @@ from sync import (  # noqa: E402
     build_commit_message,
     build_git_add_args,
     build_git_commit_args,
+    build_git_diff_cached_snapshot_args,
     build_git_last_commit_ts_args,
     build_git_push_args,
+    build_git_staged_other_paths_args,
     get_max_post_id,
     parse_args,
     read_cursor,
@@ -104,9 +106,39 @@ def test_git_add_args_uses_dash_dash_separator(tmp_path):
     assert args.index("--") < args.index("projects/threads-watcher/state.json")
 
 
-def test_git_commit_args_uses_dash_m_with_inline_message(tmp_path):
-    args = build_git_commit_args(tmp_path, "chore: x")
-    assert args == ["git", "-C", str(tmp_path), "commit", "-m", "chore: x"]
+def test_git_commit_args_scopes_to_snapshot_path(tmp_path):
+    # The commit must include `-- <relpath>` so any other staged changes
+    # in the workspace (an Ao WIP partially staged, a sibling project's
+    # bug-fix) are NOT swept into the snapshot commit.
+    args = build_git_commit_args(tmp_path, "chore: x", "projects/threads-watcher/state.json")
+    assert args == [
+        "git", "-C", str(tmp_path),
+        "commit", "-m", "chore: x",
+        "--", "projects/threads-watcher/state.json",
+    ]
+
+
+def test_git_diff_cached_snapshot_args_is_path_scoped(tmp_path):
+    # The diff probe used to decide "already matches the index" must be
+    # path-scoped — a bare `git diff --cached --quiet` would mis-fire on
+    # any unrelated staged change and trigger an erroneous commit.
+    args = build_git_diff_cached_snapshot_args(tmp_path, "x/y.json")
+    assert args == [
+        "git", "-C", str(tmp_path),
+        "diff", "--cached", "--quiet", "--", "x/y.json",
+    ]
+
+
+def test_git_staged_other_paths_args_excludes_snapshot(tmp_path):
+    # Magic exclusion pathspec: `:!<relpath>` tells git to list every
+    # staged path *except* the snapshot. Used as a pre-commit footgun
+    # check; if anything else is in there, we abort.
+    args = build_git_staged_other_paths_args(tmp_path, "x/y.json")
+    assert args == [
+        "git", "-C", str(tmp_path),
+        "diff", "--cached", "--name-only",
+        "--", ".", ":!x/y.json",
+    ]
 
 
 def test_git_push_args_specifies_origin_and_branch(tmp_path):

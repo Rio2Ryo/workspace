@@ -82,8 +82,17 @@ def build_git_add_args(workspace: Path, relpath: str) -> list[str]:
     return ["git", "-C", str(workspace), "add", "--", relpath]
 
 
-def build_git_commit_args(workspace: Path, message: str) -> list[str]:
-    return ["git", "-C", str(workspace), "commit", "-m", message]
+def build_git_commit_args(workspace: Path, message: str, relpath: str) -> list[str]:
+    """Commit ONLY the snapshot path.
+
+    A bare `git commit -m ...` sweeps every staged change into the
+    snapshot commit. With the workspace also hosting unrelated WIP, that
+    means an accidental `git add -A` elsewhere — or a partially-staged
+    bug-fix — could ride along on the next sync. Scoping with `-- relpath`
+    forces git to commit only what matches the pathspec, leaving any
+    other staged changes still staged and untouched.
+    """
+    return ["git", "-C", str(workspace), "commit", "-m", message, "--", relpath]
 
 
 def build_git_push_args(workspace: Path, branch: str) -> list[str]:
@@ -94,6 +103,27 @@ def build_git_last_commit_ts_args(workspace: Path, relpath: str) -> list[str]:
     return [
         "git", "-C", str(workspace),
         "log", "-1", "--format=%ct", "--", relpath,
+    ]
+
+
+def build_git_staged_other_paths_args(workspace: Path, relpath: str) -> list[str]:
+    """List staged paths *other than* the snapshot.
+
+    Used as a pre-commit safety net: if anything unrelated is already
+    staged, we refuse to commit instead of silently bundling it.
+    """
+    return [
+        "git", "-C", str(workspace),
+        "diff", "--cached", "--name-only",
+        "--", ".", f":!{relpath}",
+    ]
+
+
+def build_git_diff_cached_snapshot_args(workspace: Path, relpath: str) -> list[str]:
+    """Detect whether the snapshot itself has any staged changes."""
+    return [
+        "git", "-C", str(workspace),
+        "diff", "--cached", "--quiet", "--", relpath,
     ]
 
 
@@ -244,24 +274,40 @@ def _do_commit_and_maybe_push(
     current_max: int,
     decision: SyncDecision,
 ) -> int:
+    # Pre-commit safety: if anything *other than* the snapshot is already
+    # staged (e.g., a half-prepared bug-fix in some other project, or
+    # something an `git add -A` swept up), refuse rather than letting the
+    # snapshot commit silently include unrelated WIP. The path-scoped
+    # commit below would already skip those changes, but the workspace
+    # staying dirty after we run is itself a footgun — we surface it.
+    other = run_cmd(build_git_staged_other_paths_args(args.workspace, args.snapshot_rel))
+    if other.returncode != 0:
+        log.log(f"ERROR: git diff --cached probe failed: {other.stderr}")
+        return 1
+    if other.stdout:
+        log.log(
+            "ABORT: unrelated files are already staged in the workspace; "
+            "refusing to commit to avoid bundling WIP into the snapshot commit. "
+            f"staged-others: {other.stdout.replace(chr(10), ', ')}"
+        )
+        return 1
+
     add_res = run_cmd(build_git_add_args(args.workspace, args.snapshot_rel))
     if add_res.returncode != 0:
         log.log(f"ERROR: git add failed: {add_res.stderr}")
         return 1
 
-    # If staged diff is empty, the in-DB snapshot already matches what
-    # git has — bump the cursor anyway so we don't keep re-checking,
-    # but skip the commit (mirrors sync.sh §5).
-    diff_check = run_cmd(
-        ["git", "-C", str(args.workspace), "diff", "--cached", "--quiet"]
-    )
+    # If staged diff is empty for *just the snapshot*, the in-DB snapshot
+    # already matches what git has — bump the cursor anyway so we don't
+    # keep re-checking, but skip the commit (mirrors sync.sh §5).
+    diff_check = run_cmd(build_git_diff_cached_snapshot_args(args.workspace, args.snapshot_rel))
     if diff_check.returncode == 0:
         log.log("snapshot already matches git index; no commit needed")
         write_cursor(args.cursor, current_max)
         return 0
 
     message = build_commit_message(now_iso(), decision.delta)
-    commit_res = run_cmd(build_git_commit_args(args.workspace, message))
+    commit_res = run_cmd(build_git_commit_args(args.workspace, message, args.snapshot_rel))
     if commit_res.returncode != 0:
         log.log(f"ERROR: git commit failed: {commit_res.stderr}")
         return 1
