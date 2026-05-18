@@ -111,22 +111,22 @@ function rankItems(items: FavoriteItem[], target?: FavoriteItem): FavoriteItem[]
     .slice(0, 3)
 }
 
-function isValidImportItem(value: unknown): value is FavoriteItem {
-  if (!value || typeof value !== 'object') return false
+function importItemValidationError(value: unknown, index: number): string | null {
+  const row = `${index + 1}件目`
+  if (!value || typeof value !== 'object') return `${row}がオブジェクト形式ではありません。`
   const o = value as Record<string, unknown>
 
   const id = typeof o.id === 'string' ? o.id.trim() : ''
   const tag = typeof o.tag === 'string' ? o.tag.trim() : ''
   const name = typeof o.name === 'string' ? o.name.trim() : ''
 
-  return (
-    id.length > 0 &&
-    tag.length > 0 &&
-    typeof o.location === 'string' &&
-    name.length > 0 &&
-    (o.rank === 1 || o.rank === 2 || o.rank === 3 || o.rank === '1' || o.rank === '2' || o.rank === '3') &&
-    typeof o.memo === 'string'
-  )
+  if (id.length === 0) return `${row}のIDが空です。`
+  if (tag.length === 0) return `${row}のタグが空です。`
+  if (typeof o.location !== 'string') return `${row}の場所が文字列ではありません。`
+  if (name.length === 0) return `${row}の店舗名が空です。`
+  if (!(o.rank === 1 || o.rank === 2 || o.rank === 3 || o.rank === '1' || o.rank === '2' || o.rank === '3')) return `${row}の順位が1〜3ではありません。`
+  if (typeof o.memo !== 'string') return `${row}のメモが文字列ではありません。`
+  return null
 }
 
 function normalizeImportItem(value: FavoriteItem): FavoriteItem {
@@ -525,8 +525,11 @@ export function App() {
         setPendingImport(null)
         return
       }
-      if (parsed.some((v) => !isValidImportItem(v))) {
-        setError('インポート失敗: 不正な要素が含まれています。既存データは保持しました。')
+      const importValidationError = parsed
+        .map((item, index) => importItemValidationError(item, index))
+        .find((message): message is string => Boolean(message))
+      if (importValidationError) {
+        setError(`インポート失敗: ${importValidationError}既存データは保持しました。`)
         setNotice('')
         setPendingImport(null)
         return
@@ -538,7 +541,7 @@ export function App() {
         return
       }
 
-      const normalizedInput = parsed.map(normalizeImportItem)
+      const normalizedInput = (parsed as FavoriteItem[]).map(normalizeImportItem)
       const analyzed = analyzeImportedTop3(normalizedInput)
       const normalized = analyzed.items
       const normalizedIds = new Set(normalized.map((item) => item.id))

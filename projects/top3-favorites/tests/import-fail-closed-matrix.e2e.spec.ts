@@ -27,7 +27,7 @@ test('import fail-closed matrix: all invalid inputs keep existing data and clear
     {
       name: 'invalid-shape.json',
       body: [{ id: 'x1', tag: '', name: '', rank: 9 }],
-      expected: /不正な要素が含まれています/,
+      expected: /1件目のタグが空です/,
     },
     {
       name: 'duplicate-id.json',
