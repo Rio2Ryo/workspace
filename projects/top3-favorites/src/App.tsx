@@ -628,7 +628,8 @@ export function App() {
       const nextTags = Array.from(new Set(data.items.map((item) => item.tag))).sort((a, b) => a.localeCompare(b, 'ja'))
       setTags(nextTags)
       setSelectedTag((prev) => {
-        const next = prev && !nextTags.includes(prev) ? '' : prev
+        const selectedTagStillExists = prev ? data.items.some((nextItem) => nextItem.tag === prev) : true
+        const next = prev && !selectedTagStillExists ? '' : prev
         if (next === '') setDraft((draftPrev) => ({ ...draftPrev, tag: '' }))
         return next
       })

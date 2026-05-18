@@ -15,6 +15,7 @@
   - 必須入力バリデーション: OK（タグ・店舗名の空入力を拒否）
   - サンプルデータ投入: OK（`addSamples` が `/api/items` にPOST）
   - `/api/items` 永続化: OK（初回取得・追加・編集・削除・置換インポートがAPI経由）
+  - `/api/items` 取得失敗耐性: E2EでOK（初回503、再読み込み、復旧表示を `tests/api-load-retry.e2e.spec.ts` で確認）
   - タグ一覧重複除去: OK（API返却後に `Set` で一意化）
 
 ---
@@ -22,8 +23,8 @@
 ## チェックリスト結果
 
 ### 0. 事前準備
-- アプリ起動確認: ブラウザ未実施
-- Consoleエラー確認: ブラウザ未実施
+- アプリ起動確認: E2Eで継続確認（`tests/startup-console-health.e2e.spec.ts`）
+- Consoleエラー確認: E2Eで継続確認（初期表示時の `console.error` / `pageerror` 不在）
 - APIデータ初期化確認: ブラウザ未実施
 
 ### 1. 構造化フォーム入力
@@ -44,6 +45,7 @@
 
 ### 4. `/api/items` 保存 / サンプルデータ投入
 - 初回読み込み: OK（`loadItems` が `/api/items` をGET）
+- API取得失敗→再読み込み復旧: E2Eで継続確認（`tests/api-load-retry.e2e.spec.ts`）
 - 追加保存: OK（`saveNew` が `/api/items` にPOST）
 - 編集保存: OK（`saveEdit` が `/api/items` にPUT）
 - 削除: OK（`removeItem` が `/api/items?id=...` にDELETE）
@@ -101,8 +103,8 @@
 
 ## 残課題（今回未実施）
 
-- 実ブラウザでの画面/導線確認（UI表示、クリック遷移、再読み込み反映）
-- `/api/items` 取得失敗時の体感確認
+- 実機ブラウザでの画面/導線確認（UI表示、クリック遷移、再読み込み反映）
+- DevTools固有表示・ブラウザ拡張起因の警告など、Playwright 監視では拾えない実機差分
 
 ---
 

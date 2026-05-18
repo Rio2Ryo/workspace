@@ -12,6 +12,7 @@
 
 ### 起動・基本保存・検索・Top3順位繰り下げ
 
+- `tests/startup-console-health.e2e.spec.ts`
 - `tests/create-persists-after-reload-and-api.e2e.spec.ts`
 - `tests/rank-selection-preserved.e2e.spec.ts`
 - `tests/rebalance-persists-after-reload-and-api.e2e.spec.ts`
@@ -151,7 +152,7 @@
 ## 手動に残す項目
 
 - 実機ブラウザでの見た目崩れ、タップしやすさ、スクリーンショット取得
-- API停止やネットワーク障害など、ローカルpreviewでは再現しにくい障害注入
+- DevTools固有表示・ブラウザ拡張起因の警告など、Playwright の `console.error` / `pageerror` 監視では拾えない実機差分
 - LP/紹介資料の文体・名称採用判断
 
 ## 実行コマンド

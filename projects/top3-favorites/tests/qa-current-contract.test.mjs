@@ -1,88 +1,43 @@
 import assert from 'node:assert/strict'
-import { readdir, readFile } from 'node:fs/promises'
+import { readFile } from 'node:fs/promises'
 import test from 'node:test'
+import {
+  appForbiddenPatterns,
+  appRequiredPatterns,
+  docs,
+  forbiddenDocPatterns,
+  helperContractCases,
+  importPreviewManualHeadings,
+  manualAutomatedLinkContracts,
+  readmeCommandContractGroups,
+  readmeLinkContracts,
+  requiredDocPatterns,
+  importPreviewContractCases,
+} from './qa-current-contract.config.mjs'
+import {
+  collectFiles,
+  collectSpecUrlsByNamePredicate,
+  findBeforeEachOffenders,
+} from './qa-current-contract.utils.mjs'
+import { contractMessage, missingItemsMessage } from './qa-contract-message.mjs'
 
 const root = new URL('..', import.meta.url)
 const appPath = new URL('src/App.tsx', `${root}/`)
 const importPreviewTestsPath = new URL('tests/import-preview/', `${root}/`)
-const docs = [
-  'docs/QA.md',
-  'docs/QA_RESULT.md',
-  'docs/MANUAL_TEST_CHECKLIST.md',
-]
 
-const requiredDocPatterns = [
-  {
-    pattern: /\/api\/items/,
-    message: 'should name the current API persistence path',
-  },
-  {
-    pattern: /構造化フォーム|個別フォーム|タグ.+順位.+店舗名.+メモ/s,
-    message: 'should describe the structured form UI',
-  },
-]
-
-const forbiddenDocPatterns = [
-  {
-    pattern: /localStorage|top3-favorites-items/i,
-    message: 'QA docs must not describe the removed localStorage persistence path',
-  },
-  {
-    pattern: /自然文|parseNaturalInput|parseQuickInput|parseSlashInput/,
-    message: 'QA docs must not describe unsupported natural-language or legacy slash parsing',
-  },
-]
-
-async function collectFiles(dirUrl, predicate) {
-  const entries = await readdir(dirUrl, { withFileTypes: true })
-  const files = []
-
-  for (const entry of entries) {
-    const childUrl = new URL(entry.name, dirUrl)
-    if (entry.isDirectory()) {
-      files.push(...await collectFiles(new URL(`${entry.name}/`, dirUrl), predicate))
-      continue
-    }
-    if (predicate(entry.name)) {
-      files.push(childUrl)
-    }
-  }
-
-  return files
-}
-
-async function collectSpecUrlsByNamePredicate(namePredicate) {
-  return collectFiles(new URL('tests/', `${root}/`), (name) => namePredicate(name) && name.endsWith('.e2e.spec.ts'))
-}
-
-async function findBeforeEachOffenders(specUrls, blockPattern) {
-  const offenders = []
-
-  for (const specUrl of specUrls) {
-    const source = await readFile(specUrl, 'utf8')
-    const beforeEachBlocks = source.match(/test\.beforeEach\([\s\S]*?\n\}\)/g) ?? []
-
-    for (const block of beforeEachBlocks) {
-      if (blockPattern.test(block)) {
-        offenders.push(specUrl.pathname.replace(root.pathname, ''))
-        break
-      }
-    }
-  }
-
-  return offenders.sort()
-}
-
-test('current implementation uses API-backed structured form, not legacy localStorage or natural parsing', async () => {
+test('[App] current implementation uses API-backed structured form, not legacy localStorage or natural parsing', async () => {
   const appSource = await readFile(appPath, 'utf8')
 
-  assert.match(appSource, /api<[^>]+>\('\/api\/items'/, 'App should load items from /api/items')
-  assert.match(appSource, /JSON\.stringify\(draft\)/, 'App should save the structured draft form')
-  assert.doesNotMatch(appSource, /localStorage\.(getItem|setItem)/, 'App should not persist through localStorage')
-  assert.doesNotMatch(appSource, /parseNaturalInput|parseQuickInput|parseSlashInput/, 'App should not advertise legacy free-form parsers')
+  for (const { pattern, message } of appRequiredPatterns) {
+    assert.match(appSource, pattern, message)
+  }
+
+  for (const { pattern, message } of appForbiddenPatterns) {
+    assert.doesNotMatch(appSource, pattern, message)
+  }
 })
 
-test('QA manuals and QA result docs match the current implementation contract', async () => {
+test('[Docs] QA manuals and QA result docs match the current implementation contract', async () => {
   for (const relativePath of docs) {
     const markdown = await readFile(new URL(relativePath, `${root}/`), 'utf8')
 
@@ -96,82 +51,87 @@ test('QA manuals and QA result docs match the current implementation contract', 
   }
 })
 
-test('manual checklist includes import preview categories aligned with automated QA structure', async () => {
+test('[Docs] QA coverage docs do not leave API load failure recovery as manual-only when E2E covers it', async () => {
+  const apiLoadRetrySpec = await readFile(new URL('tests/api-load-retry.e2e.spec.ts', `${root}/`), 'utf8')
+  const coverage = await readFile(new URL('docs/AUTOMATED_QA_COVERAGE.md', `${root}/`), 'utf8')
+  const qaResult = await readFile(new URL('docs/QA_RESULT.md', `${root}/`), 'utf8')
+
+  assert.match(apiLoadRetrySpec, /status:\s*503/, contractMessage({ scope: 'Docs', rule: 'api-load-retry failure injection', expected: 'spec injects initial 503 failure', fix: 'ensure tests/api-load-retry.e2e.spec.ts stubs status: 503 once' }))
+  assert.match(apiLoadRetrySpec, /データを再読み込み/, contractMessage({ scope: 'Docs', rule: 'api-load-retry recovery assertion', expected: 'spec verifies データを再読み込み flow', fix: 'assert retry UI text and recovery path in tests/api-load-retry.e2e.spec.ts' }))
+  assert.match(coverage, /tests\/api-load-retry\.e2e\.spec\.ts/, contractMessage({ scope: 'Docs', rule: 'coverage listing for api-load-retry', expected: 'docs/AUTOMATED_QA_COVERAGE.md includes tests/api-load-retry.e2e.spec.ts', fix: 'add missing spec path to coverage doc' }))
+  assert.doesNotMatch(
+    coverage,
+    /API停止やネットワーク障害など、ローカルpreviewでは再現しにくい障害注入/,
+    contractMessage({ scope: 'Docs', rule: 'no manual-only fallback for api-load-retry', expected: 'coverage doc does not mark API failure recovery as manual-only', fix: 'remove outdated manual-only note once E2E exists' }),
+  )
+  assert.doesNotMatch(
+    qaResult,
+    /`\/api\/items` 取得失敗時の体感確認/,
+    contractMessage({ scope: 'Docs', rule: 'qa result reflects automated API failure recovery', expected: 'QA_RESULT has no unresolved manual residual for /api/items load failure', fix: 'update QA_RESULT to reflect api-load-retry coverage' }),
+  )
+})
+
+test('[Manual] manual checklist includes import preview categories aligned with automated QA structure', async () => {
   const markdown = await readFile(new URL('docs/MANUAL_TEST_CHECKLIST.md', `${root}/`), 'utf8')
 
-  const headings = [
-    '#### 4.2.1 direction（追加/保持/削除予定）',
-    '#### 4.2.2 live（読み上げ要約）',
-    '#### 4.2.3 tags（影響タグ）',
-    '#### 4.2.4 terms（差分用語説明）',
-    '#### 4.2.5 naming（a11y命名）',
-    '#### 4.2.6 summary（件数サマリ）',
-  ]
-
-  for (const heading of headings) {
-    assert.ok(markdown.includes(heading), `manual checklist missing heading: ${heading}`)
+  for (const heading of importPreviewManualHeadings) {
+    assert.ok(markdown.includes(heading), contractMessage({ scope: 'Manual', rule: 'import preview category heading exists', expected: heading, fix: 'add missing heading under 4.2 import preview section in docs/MANUAL_TEST_CHECKLIST.md' }))
   }
 })
 
-test('manual checklist uses the current import preview toggle aria-label namespace', async () => {
+test('[Manual] manual checklist uses the current import preview toggle aria-label namespace', async () => {
   const appSource = await readFile(appPath, 'utf8')
   const markdown = await readFile(new URL('docs/MANUAL_TEST_CHECKLIST.md', `${root}/`), 'utf8')
 
   assert.match(
     appSource,
     /aria-label={`インポート詳細:/,
-    'App import preview toggles should use the collision-free インポート詳細 namespace',
+    contractMessage({ scope: 'App', rule: 'import preview aria-label namespace', expected: 'aria-label starts with インポート詳細:', fix: 'prefix toggle aria-label values with インポート詳細:' }),
   )
   assert.match(
     markdown,
     /`aria-label` は `インポート詳細:`/,
-    'manual checklist should tell QA to verify the current インポート詳細 toggle prefix',
+    contractMessage({ scope: 'Manual', rule: 'manual checklist reflects current aria-label prefix', expected: 'manual checklist references インポート詳細: prefix', fix: 'update naming section in docs/MANUAL_TEST_CHECKLIST.md' }),
   )
   assert.doesNotMatch(
     markdown,
     /トグルの `aria-label` は `インポート確認:`/,
-    'manual checklist must not tell QA to expect the old panel-colliding インポート確認 toggle prefix',
+    contractMessage({ scope: 'Manual', rule: 'manual checklist avoids deprecated aria-label prefix', expected: 'no インポート確認: expectation for toggle prefix', fix: 'remove outdated prefix instruction from docs/MANUAL_TEST_CHECKLIST.md' }),
   )
 })
 
-test('README links QA docs with import preview six-category guidance', async () => {
-  const readme = await readFile(new URL('README.md', `${root}/`), 'utf8')
+test('[Manual] manual checklist marks browser-console and API-failure checks as automated where possible', async () => {
+  const markdown = await readFile(new URL('docs/MANUAL_TEST_CHECKLIST.md', `${root}/`), 'utf8')
+  const coverageDoc = await readFile(new URL('docs/AUTOMATED_QA_COVERAGE.md', `${root}/`), 'utf8')
 
-  assert.match(
-    readme,
-    /import preview.*direction\s*\/\s*live\s*\/\s*tags\s*\/\s*terms\s*\/\s*naming\s*\/\s*summary/s,
-    'README should explicitly mention import preview six-category guidance',
-  )
-  assert.match(readme, /docs\/MANUAL_TEST_CHECKLIST\.md/, 'README should link MANUAL_TEST_CHECKLIST')
-  assert.match(readme, /docs\/AUTOMATED_QA_COVERAGE\.md/, 'README should link AUTOMATED_QA_COVERAGE')
-})
+  for (const { pattern, message } of manualAutomatedLinkContracts.manualChecklistChecks) {
+    assert.match(markdown, pattern, message)
+  }
 
-test('README provides staged verification commands (quick/docs-only/import-preview-only/full)', async () => {
-  const readme = await readFile(new URL('README.md', `${root}/`), 'utf8')
-
-  assert.match(readme, /pnpm test:quick/, 'README should include quick verification command')
-  assert.match(readme, /pnpm test:docs-only/, 'README should include docs-only verification command')
-  assert.match(readme, /pnpm test:import-preview-only/, 'README should include import-preview-only verification command')
-  assert.match(readme, /pnpm test:full/, 'README should include full verification command')
-})
-
-test('README includes import preview category-level quick regression commands', async () => {
-  const readme = await readFile(new URL('README.md', `${root}/`), 'utf8')
-  const commands = [
-    'pnpm test:import-preview-direction',
-    'pnpm test:import-preview-live',
-    'pnpm test:import-preview-tags',
-    'pnpm test:import-preview-terms',
-    'pnpm test:import-preview-naming',
-    'pnpm test:import-preview-summary',
-  ]
-
-  for (const command of commands) {
-    assert.ok(readme.includes(command), `README should include command: ${command}`)
+  for (const { pattern, message } of manualAutomatedLinkContracts.coverageChecks) {
+    assert.match(coverageDoc, pattern, message)
   }
 })
 
-test('import preview specs use shared reset helpers in beforeEach hooks', async () => {
+test(`[README] ${readmeLinkContracts.title}`, async () => {
+  const readme = await readFile(new URL('README.md', `${root}/`), 'utf8')
+
+  for (const { pattern, message } of readmeLinkContracts.checks) {
+    assert.match(readme, pattern, message)
+  }
+})
+
+for (const { title, commands } of readmeCommandContractGroups) {
+  test(`[README] ${title}`, async () => {
+    const readme = await readFile(new URL('README.md', `${root}/`), 'utf8')
+
+    for (const command of commands) {
+      assert.ok(readme.includes(command), contractMessage({ scope: 'README', rule: 'staged verification command is documented', expected: command, fix: 'add command to README verification section' }))
+    }
+  })
+}
+
+test('[E2E-Helper] import preview specs use shared reset helpers in beforeEach hooks', async () => {
   const specs = await collectFiles(importPreviewTestsPath, (name) => name.endsWith('.e2e.spec.ts'))
   const offenders = []
 
@@ -180,89 +140,57 @@ test('import preview specs use shared reset helpers in beforeEach hooks', async 
     const beforeEachBlocks = source.match(/test\.beforeEach\([\s\S]*?\n\}\)/g) ?? []
 
     for (const block of beforeEachBlocks) {
-      if (/\/api\/items\?mode=replace/.test(block) || /request\.delete\(`\/api\/items/.test(block)) {
+      if (importPreviewContractCases.inlineResetChecks.some(({ pattern }) => pattern.test(block))) {
         offenders.push(specUrl.pathname.replace(root.pathname, ''))
         break
       }
     }
   }
 
-  assert.deepEqual(
-    offenders.sort(),
-    [],
-    `import preview beforeEach hooks should call resetItemsByReplace/resetItemsByDelete helpers instead of inline API reset: ${offenders.join(', ')}`,
-  )
+  const message = importPreviewContractCases.inlineResetChecks[0].message
+  assert.deepEqual(offenders.sort(), [], missingItemsMessage({ scope: 'E2E-Helper', rule: message, fix: 'replace inline reset with shared helper', items: offenders }))
 })
 
-test('import preview specs import reset helpers directly from tests/e2e-helpers.ts', async () => {
+test('[E2E-Helper] import preview specs import reset helpers directly from tests/e2e-helpers.ts', async () => {
   const specs = await collectFiles(importPreviewTestsPath, (name) => name.endsWith('.e2e.spec.ts'))
   const offenders = []
 
   for (const specUrl of specs) {
     const source = await readFile(specUrl, 'utf8')
-    if (source.includes("from '../helpers'") || !source.includes("from '../../e2e-helpers'")) {
+    const { forbiddenPattern, requiredPattern } = importPreviewContractCases.helperImportChecks
+    if (source.includes(forbiddenPattern) || !source.includes(requiredPattern)) {
       offenders.push(specUrl.pathname.replace(root.pathname, ''))
     }
   }
 
-  assert.deepEqual(
-    offenders.sort(),
-    [],
-    `import preview specs should import reset helpers directly from ../../e2e-helpers: ${offenders.join(', ')}`,
+  const { message } = importPreviewContractCases.helperImportChecks
+  assert.deepEqual(offenders.sort(), [], contractMessage({ scope: 'E2E-Helper', rule: message, expected: 'no offenders', fix: `replace inline reset with shared helper in: ${offenders.join(', ') || '(none)'}` }))
+})
+
+test('[E2E-Helper] resetItemsByDelete is an asserted atomic reset alias, not a per-row delete loop', async () => {
+  const helperSource = await readFile(new URL('tests/e2e-helpers.ts', `${root}/`), 'utf8')
+
+  assert.match(
+    helperSource,
+    /export async function resetItemsByDelete[\s\S]*resetItemsByReplace\(request\)/,
+    'delete-named reset helper should delegate to the asserted atomic replace reset to avoid full-suite dirty-state flake',
+  )
+  assert.doesNotMatch(
+    helperSource,
+    /for \(const item of data\.items\)[\s\S]*request\.delete/,
+    'reset helper must not perform unasserted per-row DELETE loops',
   )
 })
 
-test('search specs use shared resetItemsByReplace helper in beforeEach hooks', async () => {
-  const specs = await collectSpecUrlsByNamePredicate((name) => name.startsWith('search-'))
-  const offenders = await findBeforeEachOffenders(specs, /\/api\/items\?mode=replace/)
+for (const { title, predicate, blockPattern, messagePrefix } of helperContractCases) {
+  test(`[E2E-Helper] ${title}`, async () => {
+    const specs = await collectSpecUrlsByNamePredicate(root, predicate)
+    const offenders = await findBeforeEachOffenders(root, specs, blockPattern)
 
-  assert.deepEqual(
-    offenders,
-    [],
-    `search beforeEach hooks should call resetItemsByReplace helper instead of inline mode=replace reset: ${offenders.join(', ')}`,
-  )
-})
-
-test('tag-sync specs use shared resetItemsByReplace helper in beforeEach hooks', async () => {
-  const specs = await collectSpecUrlsByNamePredicate((name) => name.startsWith('tag-sync'))
-  const offenders = await findBeforeEachOffenders(specs, /\/api\/items\?mode=replace/)
-
-  assert.deepEqual(
-    offenders,
-    [],
-    `tag-sync beforeEach hooks should call resetItemsByReplace helper instead of inline mode=replace reset: ${offenders.join(', ')}`,
-  )
-})
-
-test('edit/delete specs use shared resetItemsByReplace helper in beforeEach hooks', async () => {
-  const specs = await collectSpecUrlsByNamePredicate((name) => name.startsWith('edit') || name.startsWith('delete'))
-  const offenders = await findBeforeEachOffenders(specs, /\/api\/items\?mode=replace/)
-
-  assert.deepEqual(
-    offenders,
-    [],
-    `edit/delete beforeEach hooks should call resetItemsByReplace helper instead of inline mode=replace reset: ${offenders.join(', ')}`,
-  )
-})
-
-test('import specs (outside import-preview) use shared resetItemsByReplace helper for mode=replace resets', async () => {
-  const specs = await collectSpecUrlsByNamePredicate((name) => name.startsWith('import-'))
-  const offenders = await findBeforeEachOffenders(specs, /\/api\/items\?mode=replace/)
-
-  assert.deepEqual(
-    offenders,
-    [],
-    `import beforeEach hooks should call resetItemsByReplace helper instead of inline mode=replace reset: ${offenders.join(', ')}`,
-  )
-})
-
-test('import specs (outside import-preview) use shared resetItemsByDelete helper for delete-based resets', async () => {
-  const specs = await collectSpecUrlsByNamePredicate((name) => name.startsWith('import-'))
-  const offenders = await findBeforeEachOffenders(specs, /request\.delete\(`\/api\/items\?id=/)
-
-  assert.deepEqual(
-    offenders,
-    [],
-    `import beforeEach hooks should call resetItemsByDelete helper instead of inline delete reset: ${offenders.join(', ')}`,
-  )
-})
+    assert.deepEqual(
+      offenders,
+      [],
+      missingItemsMessage({ scope: 'E2E-Helper', rule: messagePrefix, fix: 'replace inline reset with shared helper in beforeEach', items: offenders }),
+    )
+  })
+}
