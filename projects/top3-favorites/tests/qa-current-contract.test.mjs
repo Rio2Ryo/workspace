@@ -13,6 +13,7 @@ import {
   readmeLinkContracts,
   requiredDocPatterns,
   importPreviewContractCases,
+  contractMessageLimits,
 } from './qa-current-contract.config.mjs'
 import {
   collectFiles,
@@ -148,7 +149,7 @@ test('[E2E-Helper] import preview specs use shared reset helpers in beforeEach h
   }
 
   const message = importPreviewContractCases.inlineResetChecks[0].message
-  assert.deepEqual(offenders.sort(), [], missingItemsMessage({ scope: 'E2E-Helper', rule: message, fix: 'replace inline reset with shared helper', items: offenders }))
+  assert.deepEqual(offenders.sort(), [], missingItemsMessage({ scope: 'E2E-Helper', rule: message, fix: 'replace inline reset with shared helper', items: offenders, limit: contractMessageLimits.e2eHelper }))
 })
 
 test('[E2E-Helper] import preview specs import reset helpers directly from tests/e2e-helpers.ts', async () => {
@@ -164,7 +165,17 @@ test('[E2E-Helper] import preview specs import reset helpers directly from tests
   }
 
   const { message } = importPreviewContractCases.helperImportChecks
-  assert.deepEqual(offenders.sort(), [], contractMessage({ scope: 'E2E-Helper', rule: message, expected: 'no offenders', fix: `replace inline reset with shared helper in: ${offenders.join(', ') || '(none)'}` }))
+  assert.deepEqual(
+    offenders.sort(),
+    [],
+    missingItemsMessage({
+      scope: 'E2E-Helper',
+      rule: message,
+      fix: 'import reset helpers directly from ../../e2e-helpers',
+      items: offenders,
+      limit: contractMessageLimits.e2eHelper,
+    }),
+  )
 })
 
 test('[E2E-Helper] resetItemsByDelete is an asserted atomic reset alias, not a per-row delete loop', async () => {
@@ -190,7 +201,7 @@ for (const { title, predicate, blockPattern, messagePrefix } of helperContractCa
     assert.deepEqual(
       offenders,
       [],
-      missingItemsMessage({ scope: 'E2E-Helper', rule: messagePrefix, fix: 'replace inline reset with shared helper in beforeEach', items: offenders }),
+      missingItemsMessage({ scope: 'E2E-Helper', rule: messagePrefix, fix: 'replace inline reset with shared helper in beforeEach', items: offenders, limit: contractMessageLimits.e2eHelper }),
     )
   })
 }

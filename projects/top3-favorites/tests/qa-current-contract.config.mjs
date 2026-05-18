@@ -150,6 +150,12 @@ export const manualAutomatedLinkContracts = {
   ],
 }
 
+export const contractMessageLimits = {
+  default: 5,
+  e2eHelper: 5,
+  docsPaths: 8,
+}
+
 export const importPreviewContractCases = {
   inlineResetChecks: [
     {
