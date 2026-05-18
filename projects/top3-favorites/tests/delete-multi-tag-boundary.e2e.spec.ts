@@ -53,8 +53,8 @@ test('delete removes only the confirmed target item when multiple tags exist', a
   // Target should be deleted
   await expect(page.getByText('削除対象A')).not.toBeVisible()
 
-  // Clear search tag filter to verify other tags are still present
-  await searchSection.getByRole('button', { name: 'タグ解除' }).click()
+  // Filter should auto-clear when the selected tag disappears
+  await expect(searchSection.getByRole('button', { name: 'タグ解除' })).not.toBeVisible()
 
   // Other-tag items must remain
   await expect(searchSection.getByText(/\d位: 残すB/)).toBeVisible()

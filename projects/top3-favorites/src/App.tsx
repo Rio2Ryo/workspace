@@ -69,10 +69,19 @@ function draftToPreview(draft: Draft): FavoriteItem {
   }
 }
 
+function compareTop3Items(a: FavoriteItem, b: FavoriteItem): number {
+  return (
+    a.rank - b.rank ||
+    b.updatedAt.localeCompare(a.updatedAt) ||
+    a.name.localeCompare(b.name, 'ja') ||
+    a.id.localeCompare(b.id)
+  )
+}
+
 function rankItems(items: FavoriteItem[], target?: FavoriteItem): FavoriteItem[] {
   const source = target ? [...items.filter((item) => item.id !== target.id), target] : items
   return source
-    .sort((a, b) => a.rank - b.rank || b.updatedAt.localeCompare(a.updatedAt))
+    .sort(compareTop3Items)
     .reduce<FavoriteItem[]>((acc, item) => {
       if (target && item.id === target.id) {
         acc.splice(target.rank - 1, 0, item)
@@ -135,7 +144,7 @@ function normalizeImportedTop3(items: FavoriteItem[]): FavoriteItem[] {
   const normalized: FavoriteItem[] = []
   for (const list of byTheme.values()) {
     const top3 = [...list]
-      .sort((a, b) => a.rank - b.rank || b.updatedAt.localeCompare(a.updatedAt))
+      .sort(compareTop3Items)
       .slice(0, 3)
       .map((item, index) => ({ ...item, rank: (index + 1) as Rank }))
     normalized.push(...top3)
@@ -228,7 +237,7 @@ export function App() {
     const tagSet = new Set<string>()
     for (const item of items) tagSet.add(item.tag)
     for (const item of pendingImport.items) tagSet.add(item.tag)
-    return { added, kept, removed, excluded, tags: Array.from(tagSet).filter(Boolean) }
+    return { added, kept, removed, excluded, tags: Array.from(tagSet).filter(Boolean).sort((a, b) => a.localeCompare(b, 'ja')) }
   }, [items, pendingImport])
 
   const updateDraft = (patch: Partial<Draft>) => setDraft((prev) => ({ ...prev, ...patch }))
@@ -336,6 +345,7 @@ export function App() {
         .filter((item) => !normalizedIds.has(item.id))
         .map((item) => item.name.trim())
         .filter(Boolean)
+        .sort((a, b) => a.localeCompare(b, 'ja'))
       setPendingImport({ items: normalized, filename: file.name, originalCount: normalizedInput.length, excludedNames })
       setError('')
       setNotice(`インポート確認: ${normalized.length}件。内容を確認してから反映してください。`)
@@ -400,7 +410,13 @@ export function App() {
         body: JSON.stringify({ id: editingId, ...editingDraft }),
       })
       setItems(data.items)
-      setTags(Array.from(new Set(data.items.map((item) => item.tag))).sort((a, b) => a.localeCompare(b, 'ja')))
+      const nextTags = Array.from(new Set(data.items.map((item) => item.tag))).sort((a, b) => a.localeCompare(b, 'ja'))
+      setTags(nextTags)
+      setSelectedTag((prev) => {
+        const next = prev && !nextTags.includes(prev) ? '' : prev
+        if (next === '') setDraft((draftPrev) => ({ ...draftPrev, tag: '' }))
+        return next
+      })
       setEditingId(null)
       setNotice('編集を保存しました。')
       setError('')
@@ -419,7 +435,13 @@ export function App() {
     try {
       const data = await api<{ items: FavoriteItem[] }>(`/api/items?id=${encodeURIComponent(item.id)}`, { method: 'DELETE' })
       setItems(data.items)
-      setTags(Array.from(new Set(data.items.map((item) => item.tag))).sort((a, b) => a.localeCompare(b, 'ja')))
+      const nextTags = Array.from(new Set(data.items.map((item) => item.tag))).sort((a, b) => a.localeCompare(b, 'ja'))
+      setTags(nextTags)
+      setSelectedTag((prev) => {
+        const next = prev && !nextTags.includes(prev) ? '' : prev
+        if (next === '') setDraft((draftPrev) => ({ ...draftPrev, tag: '' }))
+        return next
+      })
       setNotice('削除しました。')
       setError('')
     } catch (e) {

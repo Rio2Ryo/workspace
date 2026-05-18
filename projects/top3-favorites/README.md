@@ -32,6 +32,7 @@ vercel dev
 ## 検証
 
 ```bash
+pnpm test:e2e
 pnpm build
 ```
 
@@ -48,6 +49,8 @@ pnpm build
   - 名前案、タグライン、オンボーディング文言、README/LP向けコピー、将来機能案
 - `docs/MANUAL_TEST_CHECKLIST.md`
   - 実ブラウザで確認する手動QA観点
+- `docs/AUTOMATED_QA_COVERAGE.md`
+  - E2Eで自動確認済みのQA観点と手動に残す項目
 - `docs/QA_RESULT.md`
   - コード読解ベースの静的QA結果
 - `docs/VERIFICATION_HANDOFF.md`
