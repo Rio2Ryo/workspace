@@ -281,8 +281,13 @@ export function App() {
   const updateEditingDraft = (patch: Partial<Draft>) => setEditingDraft((prev) => ({ ...prev, ...patch }))
 
   const updateDraftTag = (tag: string) => {
+    const shouldClearSync = !!selectedTag && selectedTag !== tag
     setDraft((prev) => ({ ...prev, tag }))
-    setSelectedTag((prev) => (prev && prev !== tag ? '' : prev))
+    if (shouldClearSync) {
+      setSelectedTag('')
+      setNotice('手入力によりタグ連動を解除しました。')
+      setError('')
+    }
   }
 
   const selectTag = (tag: string) => {
