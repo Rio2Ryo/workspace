@@ -172,8 +172,8 @@ export const contractMessageLimits = {
 }
 
 export const scopeLimitRules = [
-  { id: 'e2e-helper', pattern: /^E2E-Helper$/, limit: contractMessageLimits.e2eHelper },
-  { id: 'docs-family', pattern: /^Docs/, limit: contractMessageLimits.docsPaths },
+  { id: 'scope-e2e-helper', pattern: /^E2E-Helper$/, limit: contractMessageLimits.e2eHelper },
+  { id: 'scope-docs-family', pattern: /^Docs/, limit: contractMessageLimits.docsPaths },
 ]
 
 export const importPreviewContractCases = {

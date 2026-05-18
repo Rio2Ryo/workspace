@@ -59,6 +59,50 @@ test('[App] scopeLimitRules do not produce overlapping matches across QA contrac
   )
 })
 
+test('[App] scopeLimitRules ids follow naming contract (scope- prefix, kebab-case, unique)', async () => {
+  const idPattern = /^scope-[a-z0-9]+(?:-[a-z0-9]+)*$/
+  const ids = scopeLimitRules.map((rule) => rule.id)
+  const missing = ids.filter((id) => typeof id !== 'string' || id.length === 0)
+  const malformed = ids.filter((id) => typeof id === 'string' && !idPattern.test(id))
+  const seen = new Set()
+  const duplicated = []
+  for (const id of ids) {
+    if (seen.has(id)) duplicated.push(id)
+    seen.add(id)
+  }
+
+  assert.deepEqual(
+    missing,
+    [],
+    missingItemsMessage({
+      scope: 'App',
+      rule: 'scopeLimitRules id existence',
+      fix: 'add non-empty string id to every scopeLimitRules entry',
+      items: missing,
+    }),
+  )
+  assert.deepEqual(
+    malformed,
+    [],
+    missingItemsMessage({
+      scope: 'App',
+      rule: 'scopeLimitRules id naming format',
+      fix: 'rename ids to scope-<kebab-case> format',
+      items: malformed,
+    }),
+  )
+  assert.deepEqual(
+    duplicated,
+    [],
+    missingItemsMessage({
+      scope: 'App',
+      rule: 'scopeLimitRules id uniqueness',
+      fix: 'ensure each scopeLimitRules id is unique',
+      items: duplicated,
+    }),
+  )
+})
+
 test('[Docs] QA manuals and QA result docs match the current implementation contract', async () => {
   for (const relativePath of docs) {
     const markdown = await readFile(new URL(relativePath, `${root}/`), 'utf8')
