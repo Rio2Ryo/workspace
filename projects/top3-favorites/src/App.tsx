@@ -245,6 +245,22 @@ export function App() {
     return { added, kept, removed, excluded, tags: Array.from(tagSet).filter(Boolean).sort((a, b) => a.localeCompare(b, 'ja')) }
   }, [items, pendingImport])
 
+  const pendingImportSummary = useMemo(() => {
+    if (!pendingImport || !pendingImportImpact) return null
+    return {
+      before: items.length,
+      after: pendingImport.items.length,
+      normalizationBefore: pendingImport.originalCount,
+      normalizationAfter: pendingImport.items.length,
+      added: pendingImportImpact.added,
+      kept: pendingImportImpact.kept,
+      removed: pendingImportImpact.removed,
+      excluded: pendingImportImpact.excluded,
+      tags: pendingImportImpact.tags,
+      excludedNames: pendingImport.excludedNames,
+    }
+  }, [items.length, pendingImport, pendingImportImpact])
+
   const updateDraft = (patch: Partial<Draft>) => setDraft((prev) => ({ ...prev, ...patch }))
   const updateEditingDraft = (patch: Partial<Draft>) => setEditingDraft((prev) => ({ ...prev, ...patch }))
 
@@ -543,7 +559,7 @@ export function App() {
         </div>
         <p className="hint">インポートは全件バリデーション成功時のみ反映。失敗時は既存データ保持（fail-closed）。</p>
         {pendingImport && (
-          <div className="preview-panel" aria-label="インポート確認">
+          <div className="preview-panel" aria-label="インポート確認" data-testid="import-preview-summary" data-summary-json={pendingImportSummary ? JSON.stringify(pendingImportSummary) : ''}>
             <div className="row between no-margin">
               <div>
                 <strong>インポート確認</strong>
