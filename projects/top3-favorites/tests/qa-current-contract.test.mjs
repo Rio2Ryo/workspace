@@ -55,7 +55,13 @@ function parseNonNegativeIntegerOrDefault(value, fallback) {
 }
 
 async function collectDirectoryNames(dirUrl, predicate) {
-  const entries = await readdir(dirUrl, { withFileTypes: true })
+  let entries
+  try {
+    entries = await readdir(dirUrl, { withFileTypes: true })
+  } catch (error) {
+    if (error && error.code === 'ENOENT') return []
+    throw error
+  }
   const matches = []
 
   for (const entry of entries) {
