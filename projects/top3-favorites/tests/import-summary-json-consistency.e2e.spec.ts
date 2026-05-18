@@ -32,6 +32,7 @@ test('import preview exposes a consistent summary JSON for QA assertions', async
   expect(summaryAttr).toBeTruthy()
 
   const summary = JSON.parse(summaryAttr as string) as {
+    schema: string
     version: number
     before: number
     after: number
@@ -48,6 +49,7 @@ test('import preview exposes a consistent summary JSON for QA assertions', async
 
   // schema contract guard: required keys must exist for version 1
   const requiredKeys = [
+    'schema',
     'version',
     'before',
     'after',
@@ -65,6 +67,7 @@ test('import preview exposes a consistent summary JSON for QA assertions', async
     expect(summary).toHaveProperty(key)
   }
 
+  expect(summary.schema).toBe('top3-import-preview-summary')
   expect(summary.version).toBe(1)
   expect(typeof summary.before).toBe('number')
   expect(typeof summary.after).toBe('number')

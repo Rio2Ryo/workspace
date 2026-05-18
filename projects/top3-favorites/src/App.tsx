@@ -393,6 +393,7 @@ export function App() {
     const excludedDetailsWithLabels = buildExcludedDetailsWithLabels(pendingImport.excludedDetails)
     const normalizedExcludedNameGroups = buildNormalizedExcludedNameGroups(pendingImport.excludedDetails)
     return {
+      schema: 'top3-import-preview-summary',
       version: 1,
       before: items.length,
       after: pendingImport.items.length,
