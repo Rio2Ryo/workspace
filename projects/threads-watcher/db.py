@@ -33,6 +33,8 @@ CREATE TABLE IF NOT EXISTS posts (
   screenshot_width INTEGER,
   screenshot_height INTEGER,
   local_path TEXT,
+  post_text TEXT,
+  posted_at TEXT,
   UNIQUE(handle, post_id)
 );
 
@@ -69,8 +71,17 @@ def connect(db_path: str | Path = DEFAULT_DB_FILE) -> sqlite3.Connection:
     return conn
 
 
+def _ensure_column(conn: sqlite3.Connection, table: str, column: str, ddl: str) -> None:
+    cols = {str(row["name"]) for row in conn.execute(f"PRAGMA table_info({table})").fetchall()}
+    if column not in cols:
+        conn.execute(f"ALTER TABLE {table} ADD COLUMN {ddl}")
+
+
 def init_db(conn: sqlite3.Connection) -> None:
     conn.executescript(SCHEMA_SQL)
+    # Lightweight forward migrations for already-running Mac mini DBs.
+    _ensure_column(conn, "posts", "post_text", "post_text TEXT")
+    _ensure_column(conn, "posts", "posted_at", "posted_at TEXT")
     conn.commit()
 
 
@@ -94,6 +105,8 @@ def save_post_screenshot(
     width: int | None = None,
     height: int | None = None,
     local_path: str | None = None,
+    post_text: str | None = None,
+    posted_at: str | None = None,
 ) -> bool:
     """Persist a screenshot BLOB. Returns True when inserted, False if duplicate."""
     cur = conn.execute(
@@ -109,8 +122,10 @@ def save_post_screenshot(
           screenshot_size_bytes,
           screenshot_width,
           screenshot_height,
-          local_path
-        ) VALUES (?, ?, ?, ?, ?, ?, 'image/png', ?, ?, ?, ?)
+          local_path,
+          post_text,
+          posted_at
+        ) VALUES (?, ?, ?, ?, ?, ?, 'image/png', ?, ?, ?, ?, ?, ?)
         """,
         (
             handle,
@@ -123,6 +138,8 @@ def save_post_screenshot(
             width,
             height,
             local_path,
+            post_text,
+            posted_at,
         ),
     )
     conn.commit()
@@ -140,6 +157,8 @@ def update_post_screenshot(
     width: int | None = None,
     height: int | None = None,
     local_path: str | None = None,
+    post_text: str | None = None,
+    posted_at: str | None = None,
 ) -> bool:
     """Replace the screenshot for an already-known post.
 
@@ -155,7 +174,9 @@ def update_post_screenshot(
             screenshot_size_bytes = ?,
             screenshot_width = ?,
             screenshot_height = ?,
-            local_path = ?
+            local_path = ?,
+            post_text = COALESCE(?, post_text),
+            posted_at = COALESCE(?, posted_at)
         WHERE handle = ? AND post_id = ?
         """,
         (
@@ -165,6 +186,8 @@ def update_post_screenshot(
             width,
             height,
             local_path,
+            post_text,
+            posted_at,
             handle,
             post_id,
         ),
@@ -323,7 +346,8 @@ def latest_snapshot(conn: sqlite3.Connection, handle: str) -> dict[str, Any]:
     post_rows = conn.execute(
         """
         SELECT handle, post_id, post_url, first_seen_at, captured_at,
-               screenshot_size_bytes, screenshot_width, screenshot_height
+               screenshot_size_bytes, screenshot_width, screenshot_height,
+               post_text, posted_at
         FROM posts
         WHERE handle = ?
         ORDER BY captured_at DESC

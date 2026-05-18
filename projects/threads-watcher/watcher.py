@@ -188,6 +188,50 @@ def _dismiss_threads_overlays(page: Page) -> None:
         """
     )
 
+
+def _extract_post_metadata(page: Page, handle: str) -> dict[str, str | None]:
+    """Extract target post text and posted timestamp from a hydrated Threads post page."""
+    meta = page.evaluate(
+        """
+        (handle) => {
+          const handleNoAt = String(handle || '').replace(/^@/, '');
+          const times = Array.from(document.querySelectorAll('time')).map((t) => ({
+            text: (t.innerText || '').trim(),
+            datetime: t.getAttribute('datetime'),
+          }));
+          const bodyText = (document.body.innerText || '').split('\\n').map(s => s.trim()).filter(Boolean);
+          const title = (document.title || '').trim();
+          let text = title && title !== 'Threads' ? title : null;
+
+          if (!text) {
+            const idx = bodyText.findIndex((line) => line === handleNoAt || line === '@' + handleNoAt);
+            if (idx >= 0) {
+              // Typical post page: スレッド / 表示N回 / handle / relative-time / post text / counts...
+              for (let i = idx + 2; i < Math.min(bodyText.length, idx + 8); i++) {
+                const candidate = bodyText[i];
+                if (!candidate || candidate === '·' || /^\\d+$/.test(candidate)) continue;
+                if (candidate === '投稿者' || candidate === '関連するスレッド') continue;
+                text = candidate;
+                break;
+              }
+            }
+          }
+
+          return {
+            post_text: text,
+            posted_at: times[0]?.datetime || null,
+            posted_at_label: times[0]?.text || null,
+          };
+        }
+        """,
+        handle,
+    )
+    return {
+        "post_text": meta.get("post_text") if isinstance(meta, dict) else None,
+        "posted_at": meta.get("posted_at") if isinstance(meta, dict) else None,
+        "posted_at_label": meta.get("posted_at_label") if isinstance(meta, dict) else None,
+    }
+
 def _screenshot_post(
     browser: Browser,
     handle: str,
@@ -208,6 +252,7 @@ def _screenshot_post(
         page.wait_for_timeout(1_500)
         _dismiss_threads_overlays(page)
         page.wait_for_timeout(500)
+        metadata = _extract_post_metadata(page, handle)
         out_dir.mkdir(parents=True, exist_ok=True)
         out_path = out_dir / f"{post_id}__{_now_compact()}.png"
         screenshot_png = page.screenshot(path=str(out_path), full_page=True)
@@ -218,6 +263,9 @@ def _screenshot_post(
             "path": out_path,
             "width": int(dimensions.get("width")) if dimensions.get("width") else None,
             "height": int(dimensions.get("height")) if dimensions.get("height") else None,
+            "post_text": metadata.get("post_text"),
+            "posted_at": metadata.get("posted_at"),
+            "posted_at_label": metadata.get("posted_at_label"),
         }
     finally:
         context.close()
@@ -459,6 +507,8 @@ def recapture_existing(handle: str, *, limit: int | None = None) -> int:
                     width=captured["width"],
                     height=captured["height"],
                     local_path=local_rel_path,
+                    post_text=captured.get("post_text"),
+                    posted_at=captured.get("posted_at"),
                 ):
                     updated += 1
                     print(f"[recaptured] {pid} bytes={len(captured['png'])} local={local_rel_path}")

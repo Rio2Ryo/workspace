@@ -44,20 +44,47 @@
     .row + .row { border-top: 1px solid var(--border); }
     .label { color: var(--muted); }
     ul { list-style: none; padding: 0; margin: 8px 0 0; }
-    li { padding: 10px 0; border-top: 1px solid var(--border); font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 12px; }
+    li { padding: 8px 0; border-top: 1px solid var(--border); font-size: 12px; }
     li:first-child { border-top: 0; }
     a { color: inherit; }
-    .post-link { display: inline-block; margin-bottom: 8px; }
-    .thumb-link { display: block; }
+    .post-row {
+      display: grid;
+      grid-template-columns: minmax(128px, 168px) minmax(0, 1fr) auto auto;
+      gap: 10px;
+      align-items: center;
+      min-width: 0;
+    }
+    .post-time { color: var(--muted); font-family: ui-monospace, SFMono-Regular, Menlo, monospace; white-space: nowrap; }
+    .post-text { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .post-link { white-space: nowrap; }
+    .show-shot {
+      border: 1px solid var(--border);
+      border-radius: 999px;
+      padding: 3px 10px;
+      background: var(--card);
+      color: var(--fg);
+      cursor: pointer;
+      font: inherit;
+      font-size: 12px;
+      white-space: nowrap;
+    }
+    .shot-panel { display: none; margin-top: 8px; }
+    .shot-panel.open { display: block; }
+    .thumb-link { display: inline-block; }
     .thumb {
       display: block;
       width: 100%;
-      max-width: 360px;
-      max-height: 420px;
+      max-width: 520px;
+      max-height: 520px;
       object-fit: contain;
       border: 1px solid var(--border);
       border-radius: 8px;
       background: #fff;
+    }
+    @media (max-width: 640px) {
+      .post-row { grid-template-columns: 1fr auto; }
+      .post-time { grid-column: 1 / -1; }
+      .post-link { display: none; }
     }
     .err { color: #c33; }
     .pill {
@@ -130,7 +157,7 @@
     </section>
 
     <section class="card">
-      <div class="label" style="margin-bottom:8px">recent saved screenshots (newest first)</div>
+      <div class="label" style="margin-bottom:8px">recent posts (newest first)</div>
       <ul id="posts"><li class="muted">loading…</li></ul>
     </section>
 
@@ -216,19 +243,51 @@
           return;
         }
         const handle = (data.handle || '').replace(/^@/, '');
+        const fmtTime = (iso) => {
+          if (!iso) return '投稿時間不明';
+          const d = new Date(iso);
+          if (Number.isNaN(d.getTime())) return iso;
+          return new Intl.DateTimeFormat('ja-JP', {
+            timeZone: 'Asia/Tokyo',
+            month: '2-digit', day: '2-digit',
+            hour: '2-digit', minute: '2-digit',
+          }).format(d);
+        };
         for (const post of posts) {
           const pid = post.post_id;
           const li = document.createElement('li');
+          const row = document.createElement('div');
+          row.className = 'post-row';
+
+          const time = document.createElement('span');
+          time.className = 'post-time';
+          time.textContent = fmtTime(post.posted_at || post.captured_at);
+          row.appendChild(time);
+
+          const text = document.createElement('span');
+          text.className = 'post-text';
+          text.title = post.post_text || pid;
+          text.textContent = post.post_text || '(本文取得なし)';
+          row.appendChild(text);
+
           const a = document.createElement('a');
-          a.href = 'https://www.threads.com/@' + handle + '/post/' + pid;
+          a.href = post.post_url || ('https://www.threads.com/@' + handle + '/post/' + pid);
           a.rel = 'noopener noreferrer';
           a.target = '_blank';
-          const size = post.screenshot_size_bytes ? ` / ${(post.screenshot_size_bytes / 1024).toFixed(0)}KB` : '';
-          const captured = post.captured_at ? ` / ${post.captured_at}` : '';
           a.className = 'post-link';
-          a.textContent = `${pid}${size}${captured}`;
-          li.appendChild(a);
+          a.textContent = '投稿URL';
+          row.appendChild(a);
 
+          const button = document.createElement('button');
+          button.type = 'button';
+          button.className = 'show-shot';
+          button.textContent = post.screenshot_path ? '表示' : '未保存';
+          button.disabled = !post.screenshot_path;
+          row.appendChild(button);
+          li.appendChild(row);
+
+          const panel = document.createElement('div');
+          panel.className = 'shot-panel';
           if (post.screenshot_path) {
             const imgLink = document.createElement('a');
             imgLink.href = post.screenshot_path;
@@ -238,16 +297,17 @@
             const img = document.createElement('img');
             img.className = 'thumb';
             img.loading = 'lazy';
-            img.src = post.screenshot_path;
+            img.dataset.src = post.screenshot_path;
             img.alt = `${pid} screenshot`;
             imgLink.appendChild(img);
-            li.appendChild(imgLink);
-          } else {
-            const noImg = document.createElement('div');
-            noImg.className = 'muted';
-            noImg.textContent = 'screenshot asset not exported yet';
-            li.appendChild(noImg);
+            panel.appendChild(imgLink);
+            button.addEventListener('click', () => {
+              const open = panel.classList.toggle('open');
+              button.textContent = open ? '閉じる' : '表示';
+              if (open && !img.src) img.src = img.dataset.src;
+            });
           }
+          li.appendChild(panel);
           ul.appendChild(li);
         }
       } catch (e) {

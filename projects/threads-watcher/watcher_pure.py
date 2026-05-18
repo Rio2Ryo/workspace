@@ -276,6 +276,8 @@ def process_post_capture(
             width=captured["width"],
             height=captured["height"],
             local_path=local_rel_path,
+            post_text=captured.get("post_text"),
+            posted_at=captured.get("posted_at"),
         )
     except Exception as e:  # noqa: BLE001 — must catch sqlite errors
         return CaptureOutcome(
