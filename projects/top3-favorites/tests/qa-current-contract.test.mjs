@@ -460,6 +460,47 @@ test('[App][config-quality] missingItemsMessage context key dictionary and usage
     }),
   )
 
+  assert.equal(
+    typeof missingItemsContextKeyContract.enforceDeadScopePriority,
+    'boolean',
+    contractMessage({
+      scope: 'App',
+      rule: 'missingItemsContextKeyContract.enforceDeadScopePriority type guard',
+      expected: 'boolean flag',
+      fix: 'set enforceDeadScopePriority to true/false boolean in tests/qa-current-contract.config.mjs',
+    }),
+  )
+  assert.equal(
+    typeof missingItemsContextKeyContract.promoteWhenDeadScopeCountLte,
+    'number',
+    contractMessage({
+      scope: 'App',
+      rule: 'missingItemsContextKeyContract.promoteWhenDeadScopeCountLte type guard',
+      expected: 'number threshold',
+      fix: 'set promoteWhenDeadScopeCountLte to a non-negative number in tests/qa-current-contract.config.mjs',
+    }),
+  )
+  assert.equal(
+    Number.isInteger(missingItemsContextKeyContract.promoteWhenDeadScopeCountLte),
+    true,
+    contractMessage({
+      scope: 'App',
+      rule: 'missingItemsContextKeyContract.promoteWhenDeadScopeCountLte integer policy',
+      expected: 'integer threshold',
+      fix: 'set promoteWhenDeadScopeCountLte to an integer (e.g., 0)',
+    }),
+  )
+  assert.equal(
+    missingItemsContextKeyContract.promoteWhenDeadScopeCountLte >= 0,
+    true,
+    contractMessage({
+      scope: 'App',
+      rule: 'missingItemsContextKeyContract.promoteWhenDeadScopeCountLte non-negative policy',
+      expected: '>= 0',
+      fix: 'set promoteWhenDeadScopeCountLte to a non-negative integer',
+    }),
+  )
+
   const scopePriority = [...missingItemsContextKeyContract.scopePriority]
   const expectedScopePriority = ['App', 'Docs', 'Manual', 'README', 'E2E-Helper']
   const { duplicates: duplicatedScopePriority } = analyzeEnumList(scopePriority, { locale: 'en' })
@@ -515,6 +556,8 @@ test('[App][config-quality] missingItemsMessage context key dictionary and usage
       items: [],
     }),
   )
+  const shouldPromoteDeadScope = deadScopePriority.length <= missingItemsContextKeyContract.promoteWhenDeadScopeCountLte
+
   if (missingItemsContextKeyContract.enforceDeadScopePriority) {
     assert.deepEqual(
       deadScopePriority,
@@ -527,6 +570,23 @@ test('[App][config-quality] missingItemsMessage context key dictionary and usage
           usedScopes: Array.from(new Set(Array.from(usageByScope.values()).flatMap((v) => Array.from(v)))).sort((a, b) =>
             a.localeCompare(b, 'en'),
           ),
+        },
+        items: deadScopePriority,
+      }),
+    )
+  } else {
+    assert.equal(
+      shouldPromoteDeadScope,
+      false,
+      missingItemsMessage({
+        scope: 'App',
+        rule: 'missingItemsContextKeyContract.scopePriority promotion trigger',
+        fix: 'set enforceDeadScopePriority=true when dead scope count is at or below the promotion threshold',
+        context: {
+          enforceDeadScopePriority: String(missingItemsContextKeyContract.enforceDeadScopePriority),
+          deadScopeCount: String(deadScopePriority.length),
+          promoteWhenDeadScopeCountLte: String(missingItemsContextKeyContract.promoteWhenDeadScopeCountLte),
+          deadScopes: deadScopePriority,
         },
         items: deadScopePriority,
       }),

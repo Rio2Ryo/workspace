@@ -101,27 +101,33 @@
 #### 4.2.1 direction（追加/保持/削除予定）
 - [ ] `+追加 / ±保持 / -削除予定` の方向メトリクスが表示される
 - [ ] 値が `0` のメトリクスは弱調表示（通常項目より目立たない）になる
+  - 自動確認: `tests/import-preview/direction/import-preview-direction-metrics.e2e.spec.ts`、`tests/import-preview/direction/import-preview-direction-a11y-labels.e2e.spec.ts`、`tests/import-preview/summary/import-preview-zero-metrics-muted.e2e.spec.ts` が方向メトリクス・読み上げ名・0件弱調を検証する
 
 #### 4.2.2 live（読み上げ要約）
 - [ ] `aria-live="polite"` の更新領域で、差分要約が更新される
 - [ ] 差分なし時は `差分なし。インポート後N件。` が読める
 - [ ] 正規化除外がある時は `正規化除外N件（例: 店名）` を含む
+  - 自動確認: `tests/import-preview/live/import-preview-live-region-updates.e2e.spec.ts`、`tests/import-preview/live/import-preview-live-summary-concise.e2e.spec.ts`、`tests/import-preview/live/import-preview-live-summary-includes-excluded-name.e2e.spec.ts` がlive region更新・差分なし要約・除外名入り要約を検証する
 
 #### 4.2.3 tags（影響タグ）
 - [ ] 影響タグが多い場合、先頭表示 + `ほかN件` で折りたたまれる
 - [ ] `影響タグを全件表示` / `影響タグを折りたたむ` で開閉できる
+  - 自動確認: `tests/import-preview/tags/import-preview-tags-collapsed.e2e.spec.ts`、`tests/import-preview/tags/import-preview-tags-expand-toggle.e2e.spec.ts`、`tests/import-preview/tags/import-preview-tags-deterministic-order.e2e.spec.ts` が影響タグの折りたたみ・開閉・安定順序を検証する
 
 #### 4.2.4 terms（差分用語説明）
 - [ ] 初期状態では差分用語説明は非表示
 - [ ] `差分用語の詳細説明を表示` で開き、`削除予定` と `正規化除外` の意味差が読める
+  - 自動確認: `tests/import-preview/terms/import-preview-terms-helper-toggle.e2e.spec.ts`、`tests/import-preview/terms/import-preview-terms-helper-text.e2e.spec.ts`、`tests/import-preview/terms/import-preview-terms-helper-toggle-a11y.e2e.spec.ts` が用語説明の初期非表示・説明文・a11yトグルを検証する
 
 #### 4.2.5 naming（a11y命名）
 - [ ] import preview 内トグルの `aria-label` は `インポート詳細:` プレフィックスで統一され、パネル本体の `インポート確認` ラベルと衝突しない
 - [ ] トグルは `aria-expanded` が開閉に応じて更新される
+  - 自動確認: `tests/import-preview/naming/import-preview-toggle-aria-label-consistency.e2e.spec.ts`、`tests/import-preview/naming/import-preview-toggle-testid-contract.e2e.spec.ts`、`tests/import-preview/summary/import-preview-expand-toggles-a11y.e2e.spec.ts` がトグル命名・testid・aria-expandedを検証する
 
 #### 4.2.6 summary（件数サマリ）
 - [ ] `現在N件 → インポート後M件` と影響サマリ（追加/保持/削除予定/正規化除外）が表示される
 - [ ] 同一JSON再インポート時に `差分なし（このインポートでデータ変更はありません）` が表示される
+  - 自動確認: `tests/import-preview/summary/import-preview-summary.e2e.spec.ts`、`tests/import-preview/summary/import-preview-math-consistency.e2e.spec.ts`、`tests/import-preview/summary/import-preview-excluded-names-tag-context.e2e.spec.ts` が件数サマリ・数式整合・除外名/タグ文脈を検証する
 
 ---
 

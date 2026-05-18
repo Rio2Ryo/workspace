@@ -276,6 +276,30 @@ const rawManualAutomatedLinkContracts = {
       message: 'manual checklist should connect broken JSON import failure to automated parse-error specs',
     },
     {
+      pattern: /direction（追加\/保持\/削除予定）[\s\S]*`\+追加 \/ ±保持 \/ -削除予定` の方向メトリクスが表示される[\s\S]*値が `0` のメトリクスは弱調表示[\s\S]*自動確認: `tests\/import-preview\/direction\/import-preview-direction-metrics\.e2e\.spec\.ts`、`tests\/import-preview\/direction\/import-preview-direction-a11y-labels\.e2e\.spec\.ts`、`tests\/import-preview\/summary\/import-preview-zero-metrics-muted\.e2e\.spec\.ts`/,
+      message: 'manual checklist should connect import preview direction metrics and muted-zero behavior to automated specs',
+    },
+    {
+      pattern: /live（読み上げ要約）[\s\S]*aria-live="polite"[\s\S]*差分なし時は `差分なし。インポート後N件。`[\s\S]*正規化除外がある時は `正規化除外N件（例: 店名）`[\s\S]*自動確認: `tests\/import-preview\/live\/import-preview-live-region-updates\.e2e\.spec\.ts`、`tests\/import-preview\/live\/import-preview-live-summary-concise\.e2e\.spec\.ts`、`tests\/import-preview\/live\/import-preview-live-summary-includes-excluded-name\.e2e\.spec\.ts`/,
+      message: 'manual checklist should connect import preview live summary behavior to automated specs',
+    },
+    {
+      pattern: /tags（影響タグ）[\s\S]*影響タグが多い場合、先頭表示 \+ `ほかN件`[\s\S]*`影響タグを全件表示` \/ `影響タグを折りたたむ`[\s\S]*自動確認: `tests\/import-preview\/tags\/import-preview-tags-collapsed\.e2e\.spec\.ts`、`tests\/import-preview\/tags\/import-preview-tags-expand-toggle\.e2e\.spec\.ts`、`tests\/import-preview\/tags\/import-preview-tags-deterministic-order\.e2e\.spec\.ts`/,
+      message: 'manual checklist should connect import preview impacted-tag collapse/expand behavior to automated specs',
+    },
+    {
+      pattern: /terms（差分用語説明）[\s\S]*初期状態では差分用語説明は非表示[\s\S]*`差分用語の詳細説明を表示`[\s\S]*自動確認: `tests\/import-preview\/terms\/import-preview-terms-helper-toggle\.e2e\.spec\.ts`、`tests\/import-preview\/terms\/import-preview-terms-helper-text\.e2e\.spec\.ts`、`tests\/import-preview\/terms\/import-preview-terms-helper-toggle-a11y\.e2e\.spec\.ts`/,
+      message: 'manual checklist should connect import preview terms helper behavior to automated specs',
+    },
+    {
+      pattern: /naming（a11y命名）[\s\S]*aria-label` は `インポート詳細:`[\s\S]*aria-expanded` が開閉に応じて更新される[\s\S]*自動確認: `tests\/import-preview\/naming\/import-preview-toggle-aria-label-consistency\.e2e\.spec\.ts`、`tests\/import-preview\/naming\/import-preview-toggle-testid-contract\.e2e\.spec\.ts`、`tests\/import-preview\/summary\/import-preview-expand-toggles-a11y\.e2e\.spec\.ts`/,
+      message: 'manual checklist should connect import preview toggle naming/a11y behavior to automated specs',
+    },
+    {
+      pattern: /summary（件数サマリ）[\s\S]*`現在N件 → インポート後M件`[\s\S]*差分なし（このインポートでデータ変更はありません）[\s\S]*自動確認: `tests\/import-preview\/summary\/import-preview-summary\.e2e\.spec\.ts`、`tests\/import-preview\/summary\/import-preview-math-consistency\.e2e\.spec\.ts`、`tests\/import-preview\/summary\/import-preview-excluded-names-tag-context\.e2e\.spec\.ts`/,
+      message: 'manual checklist should connect import preview summary/no-change/excluded-name behavior to automated specs',
+    },
+    {
       pattern: /編集ボタンで既存値が編集フォームに入る[\s\S]*編集保存で一覧表示が更新される[\s\S]*自動確認: `tests\/edit-form-accessibility\.e2e\.spec\.ts`/,
       message: 'manual checklist should connect edit form prefill/save behavior to the automated edit form spec',
     },
@@ -333,10 +357,11 @@ Object.freeze(rawDeepFreezeSkipTypeRules)
 export const deepFreezeSkipTypeRules = rawDeepFreezeSkipTypeRules
 
 const rawMissingItemsContextKeyContract = {
-  allowed: ['configured', 'discovered', 'documentedMatches', 'expected', 'listed', 'missingOnDisk', 'observed', 'scopePriorityDeadScopes', 'usedScopes'],
+  allowed: ['configured', 'deadScopeCount', 'deadScopes', 'discovered', 'documentedMatches', 'enforceDeadScopePriority', 'expected', 'listed', 'missingOnDisk', 'observed', 'promoteWhenDeadScopeCountLte', 'scopePriorityDeadScopes', 'usedScopes'],
   allowedContextSortModes: ['key', 'valueCountDesc'],
   scopePriority: ['App', 'Docs', 'Manual', 'README', 'E2E-Helper'],
   enforceDeadScopePriority: false,
+  promoteWhenDeadScopeCountLte: 0,
 }
 Object.freeze(rawMissingItemsContextKeyContract.allowed)
 Object.freeze(rawMissingItemsContextKeyContract.allowedContextSortModes)
