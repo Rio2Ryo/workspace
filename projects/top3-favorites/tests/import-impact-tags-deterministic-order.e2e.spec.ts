@@ -23,5 +23,7 @@ test('import preview shows impacted tags in deterministic sorted order', async (
     buffer: Buffer.from(JSON.stringify(payload), 'utf-8'),
   })
 
-  await expect(page.getByTestId('import-preview-impact-tags')).toHaveText('影響タグ: カフェラテ, つけ麺, プリン')
+  const tags = page.getByTestId('import-preview-impact-tags')
+  await expect(tags).toHaveAttribute('data-impact-tag-count', '3')
+  await expect(tags).toHaveAttribute('data-impact-tags', 'カフェラテ|つけ麺|プリン')
 })

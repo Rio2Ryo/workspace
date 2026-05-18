@@ -115,7 +115,8 @@ function isValidImportItem(value: unknown): value is FavoriteItem {
 function normalizeImportItem(value: FavoriteItem): FavoriteItem {
   const rankNum = Number(value.rank)
   const rank = (rankNum === 2 || rankNum === 3 ? rankNum : 1) as Rank
-  return {
+  const now = new Date().toISOString()
+  const normalized = {
     ...value,
     id: value.id.trim(),
     tag: value.tag.trim(),
@@ -123,7 +124,11 @@ function normalizeImportItem(value: FavoriteItem): FavoriteItem {
     name: value.name.trim(),
     memo: value.memo.trim(),
     rank,
+    placeId: typeof value.placeId === 'string' ? value.placeId.trim() : '',
+    createdAt: typeof value.createdAt === 'string' && value.createdAt.trim() ? value.createdAt.trim() : now,
+    updatedAt: typeof value.updatedAt === 'string' && value.updatedAt.trim() ? value.updatedAt.trim() : now,
   }
+  return { ...normalized, mapsUrl: buildMapsUrl(normalized) }
 }
 
 function hasDuplicateImportIds(items: FavoriteItem[]): boolean {
@@ -545,7 +550,14 @@ export function App() {
                 <p className="hint compact">{pendingImport.filename}</p>
                 <p className="hint compact" data-testid="import-preview-counts" data-before-count={items.length} data-after-count={pendingImport.items.length}>現在{items.length}件 → インポート後{pendingImport.items.length}件</p>
                 {pendingImport.originalCount !== pendingImport.items.length && (
-                  <p className="hint compact" data-testid="import-preview-normalization">同一タグはTop3に正規化: {pendingImport.originalCount}件中{pendingImport.items.length}件を反映予定</p>
+                  <p
+                    className="hint compact"
+                    data-testid="import-preview-normalization"
+                    data-normalization-before-count={pendingImport.originalCount}
+                    data-normalization-after-count={pendingImport.items.length}
+                  >
+                    同一タグはTop3に正規化: {pendingImport.originalCount}件中{pendingImport.items.length}件を反映予定
+                  </p>
                 )}
                 {pendingImport.excludedNames.length > 0 && (
                   <p className="hint compact" data-testid="import-preview-excluded-names">除外予定の店舗: {pendingImport.excludedNames.join(', ')}</p>
@@ -563,7 +575,14 @@ export function App() {
                       追加{pendingImportImpact.added}件 / 更新・保持{pendingImportImpact.kept}件 / 削除予定{pendingImportImpact.removed}件
                       {pendingImportImpact.excluded > 0 ? ` / 正規化で除外予定${pendingImportImpact.excluded}件` : ''}
                     </p>
-                    <p className="hint compact" data-testid="import-preview-impact-tags">影響タグ: {pendingImportImpact.tags.length ? pendingImportImpact.tags.join(', ') : 'なし'}</p>
+                    <p
+                      className="hint compact"
+                      data-testid="import-preview-impact-tags"
+                      data-impact-tag-count={pendingImportImpact.tags.length}
+                      data-impact-tags={pendingImportImpact.tags.join('|')}
+                    >
+                      影響タグ: {pendingImportImpact.tags.length ? pendingImportImpact.tags.join(', ') : 'なし'}
+                    </p>
                   </>
                 )}
               </div>
