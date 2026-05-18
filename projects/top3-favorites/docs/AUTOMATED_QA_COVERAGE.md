@@ -66,6 +66,7 @@
 - `tests/import-invalid-after-valid-clears-preview.e2e.spec.ts`
 - `tests/import-minimal-shape-defaults.e2e.spec.ts`
 - `tests/import-no-change-badge.e2e.spec.ts`
+- `tests/import-preview-expand-toggles-a11y.e2e.spec.ts`
 - `tests/import-preview-live-region-updates.e2e.spec.ts`
 - `tests/import-preview-live-summary-concise.e2e.spec.ts`
 - `tests/import-preview-live-summary-excluded-lead-consistency.e2e.spec.ts`
