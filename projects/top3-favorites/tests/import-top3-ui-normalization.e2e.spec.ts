@@ -35,6 +35,12 @@ test('UI shows only Top3 after importing 4 items of same tag', async ({ page }) 
   const group = page.locator('.group').filter({ has: page.getByRole('heading', { name: 'カフェラテ' }) })
   await expect(group.getByText(/位:/)).toHaveCount(3)
 
+  // UI list must be normalized to Top3 only
+  await expect(group.getByText(/位: A/)).toBeVisible()
+  await expect(group.getByText(/位: B/)).toBeVisible()
+  await expect(group.getByText(/位: C/)).toBeVisible()
+  await expect(group.getByText(/位: D/)).toHaveCount(0)
+
   const listText = await group.textContent()
   expect(listText ?? '').not.toContain('4位')
 })

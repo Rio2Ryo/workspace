@@ -23,6 +23,8 @@ type Draft = {
   memo: string
 }
 
+const SYNC_BREAK_NOTICE = '手入力によりタグ連動を解除しました。'
+
 type PendingImport = {
   items: FavoriteItem[]
   filename: string
@@ -215,8 +217,16 @@ export function App() {
   }, [])
 
   useEffect(() => {
-    if (selectedTag && draft.tag !== selectedTag) setSelectedTag('')
+    if (selectedTag && draft.tag.trim() !== selectedTag.trim()) setSelectedTag('')
   }, [draft.tag, selectedTag])
+
+  useEffect(() => {
+    if (notice !== SYNC_BREAK_NOTICE) return
+    const id = window.setTimeout(() => {
+      setNotice((prev) => (prev === SYNC_BREAK_NOTICE ? '' : prev))
+    }, 3000)
+    return () => window.clearTimeout(id)
+  }, [notice])
 
   const currentTag = normalizeTag(draft.tag)
   const currentTop3 = useMemo(
@@ -281,11 +291,13 @@ export function App() {
   const updateEditingDraft = (patch: Partial<Draft>) => setEditingDraft((prev) => ({ ...prev, ...patch }))
 
   const updateDraftTag = (tag: string) => {
-    const shouldClearSync = !!selectedTag && selectedTag !== tag
+    const normalizedSelected = (selectedTag ?? '').trim()
+    const normalizedInput = tag.trim()
+    const shouldClearSync = !!normalizedSelected && normalizedSelected !== normalizedInput
     setDraft((prev) => ({ ...prev, tag }))
     if (shouldClearSync) {
       setSelectedTag('')
-      setNotice('手入力によりタグ連動を解除しました。')
+      setNotice(SYNC_BREAK_NOTICE)
       setError('')
     }
   }
@@ -293,6 +305,9 @@ export function App() {
   const selectTag = (tag: string) => {
     setSelectedTag(tag)
     setDraft((prev) => ({ ...prev, tag }))
+    if (notice === SYNC_BREAK_NOTICE) {
+      setNotice('')
+    }
   }
 
   const clearSelectedTag = () => {
