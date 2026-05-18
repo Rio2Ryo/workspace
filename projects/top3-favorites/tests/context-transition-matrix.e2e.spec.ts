@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test'
-import { itemEditButton, editSaveButton, clearSearchTagFilter, uploadJsonImportFile, resetItemsByReplace } from './e2e-helpers'
+import { itemEditButton, editSaveButton, clearSearchTagFilter, uploadJsonImportFile, resetItemsByReplace , jsonImportButton} from './e2e-helpers'
 
 test.beforeEach(async ({ request }) => {
   await resetItemsByReplace(request)
@@ -42,6 +42,6 @@ test('context transition matrix keeps only one active workflow context', async (
   await expect(editSaveButton(page)).toBeVisible()
 
   // starting import should close edit context
-  await page.getByRole('button', { name: 'JSONインポート' }).click()
+  await jsonImportButton(page).click()
   await expect(editSaveButton(page)).toHaveCount(0)
 })
