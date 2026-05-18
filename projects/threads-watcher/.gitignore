@@ -1,6 +1,16 @@
 venv/
+.venv/
 __pycache__/
 *.pyc
 /state.json
+threads_watcher.db*
 screenshots/*
 !screenshots/.gitkeep
+
+logs/
+
+# Runtime cursor for sync.py — local-only state, not source.
+.sync_cursor
+
+# One-off QA artifact dumps (screenshots, reports, zips).
+artifacts/
