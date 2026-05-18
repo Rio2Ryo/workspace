@@ -64,8 +64,22 @@
   <key>RunAtLoad</key>
   <false/>
 
-  <key>StandardOutPath</key>
-  <string>/Users/umi/.openclaw/workspace/projects/threads-watcher/logs/sync.out.log</string>
+  <!-- StandardOutPath DELIBERATELY OMITTED.
+       sync.py writes nothing to stdout — all logging flows through
+       TeeLogger (sync.py:177-188) which writes to BOTH sys.stderr
+       (captured below into sync.err.log) AND the file at
+       --log (default logs/sync.log). The previous
+       StandardOutPath kept logs/sync.out.log at 0 bytes for the
+       whole install lifetime — pure noise. When the key is absent
+       launchd inherits /dev/null which is exactly what we want.
+       Regression-guarded by tests/test_plist_log_routing.py so a
+       future agent re-adding it surfaces immediately.
+
+       sibling: com.shiro.threads-watcher-auto-restart.plist DOES
+       set StandardOutPath because auto-restart-if-stale.sh's
+       ts_log() writes via printf to stdout (auto-restart.out.log
+       is ~11KB on a running install). Don't generalise this
+       deletion. -->
   <key>StandardErrorPath</key>
   <string>/Users/umi/.openclaw/workspace/projects/threads-watcher/logs/sync.err.log</string>
 
