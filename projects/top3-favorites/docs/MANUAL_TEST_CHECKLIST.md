@@ -37,6 +37,7 @@
 ## 2. タグ絞り込み
 
 - [ ] 検索欄で `店名/タグ/場所/メモ` それぞれ部分一致検索が効く
+  - 自動確認: `tests/top3.e2e.spec.ts` と `tests/search-memo-contains.e2e.spec.ts` が店名・メモ検索を含む検索導線を検証する
 - [ ] タグチップ押下で該当データのみ表示される
 - [ ] `クリア` で全件表示に戻る
 
@@ -45,6 +46,7 @@
 ## 3. Google Mapsリンク
 
 - [ ] 各アイテムの `Maps` を押すと新規タブでGoogle Maps検索が開く
+  - 自動確認: `tests/maps-link-new-tab-contract.e2e.spec.ts` と `tests/maps-link-query.e2e.spec.ts` が新規タブ属性と検索URL構成を検証する
 - [ ] URLクエリに `店名 + 場所 + タグ` が含まれる
 
 ---

@@ -300,8 +300,22 @@ test('[App][config-quality] missingItemsMessage context key dictionary and usage
   const emptyAllowed = allowedList.filter((k) => k.trim().length === 0)
   const nonAsciiAllowed = allowedList.filter((k) => /[^\x20-\x7E]/.test(k))
 
+  const allowedSortModes = [...missingItemsContextKeyContract.allowedContextSortModes]
+  const allowedSortModeSet = new Set(allowedSortModes)
+  const { duplicates: duplicatedSortModes, unsorted: unsortedSortModes } = analyzeEnumList(allowedSortModes, { locale: 'en' })
+  const emptySortModes = allowedSortModes.filter((k) => k.trim().length === 0)
+  const nonAsciiSortModes = allowedSortModes.filter((k) => /[^\x20-\x7E]/.test(k))
+  const invalidSortModes = allowedSortModes.filter((m) => !['key', 'valueCountDesc'].includes(m))
+
   const qaCurrentSource = await readFile(new URL('tests/qa-current-contract.test.mjs', `${root}/`), 'utf8')
   const qaDocsSource = await readFile(new URL('tests/qa-coverage-doc.test.mjs', `${root}/`), 'utf8')
+
+  const usedSortModes = Array.from(new Set([
+    ...Array.from(qaCurrentSource.matchAll(/contextSortMode\s*:\s*['"]([^'"]+)['"]/g)).map((m) => m[1]),
+    ...Array.from(qaDocsSource.matchAll(/contextSortMode\s*:\s*['"]([^'"]+)['"]/g)).map((m) => m[1]),
+    'key',
+  ])).sort((a, b) => a.localeCompare(b, 'en'))
+  const deadSortModes = allowedSortModes.filter((m) => !usedSortModes.includes(m)).sort((a, b) => a.localeCompare(b, 'en'))
   const usageByScope = new Map()
   const mergeUsage = (incoming) => {
     for (const [key, scopes] of incoming.entries()) {
@@ -364,6 +378,68 @@ test('[App][config-quality] missingItemsMessage context key dictionary and usage
   )
 
   assert.deepEqual(
+    emptySortModes,
+    [],
+    missingItemsMessage({
+      scope: 'App',
+      rule: 'missingItemsContextKeyContract.allowedContextSortModes non-empty entries',
+      fix: 'remove empty entries from missingItemsContextKeyContract.allowedContextSortModes',
+      items: emptySortModes,
+    }),
+  )
+  assert.deepEqual(
+    duplicatedSortModes,
+    [],
+    missingItemsMessage({
+      scope: 'App',
+      rule: 'missingItemsContextKeyContract.allowedContextSortModes uniqueness',
+      fix: 'remove duplicate entries from missingItemsContextKeyContract.allowedContextSortModes',
+      items: duplicatedSortModes,
+    }),
+  )
+  assert.deepEqual(
+    unsortedSortModes,
+    [],
+    missingItemsMessage({
+      scope: 'App',
+      rule: 'missingItemsContextKeyContract.allowedContextSortModes sorted order',
+      fix: 'sort missingItemsContextKeyContract.allowedContextSortModes in ascending en locale order',
+      items: unsortedSortModes,
+    }),
+  )
+  assert.deepEqual(
+    nonAsciiSortModes,
+    [],
+    missingItemsMessage({
+      scope: 'App',
+      rule: 'missingItemsContextKeyContract.allowedContextSortModes ASCII policy',
+      fix: 'keep missingItemsContextKeyContract.allowedContextSortModes ASCII-only',
+      items: nonAsciiSortModes,
+    }),
+  )
+  assert.deepEqual(
+    invalidSortModes,
+    [],
+    missingItemsMessage({
+      scope: 'App',
+      rule: 'missingItemsContextKeyContract.allowedContextSortModes allowed values',
+      fix: 'keep context sort mode values within [key, valueCountDesc]',
+      items: invalidSortModes,
+    }),
+  )
+  assert.deepEqual(
+    deadSortModes,
+    [],
+    missingItemsMessage({
+      scope: 'App',
+      rule: 'missingItemsContextKeyContract.allowedContextSortModes dead modes',
+      fix: 'remove unused sort modes from allowedContextSortModes or add matching usage in tests',
+      context: { usedSortModes },
+      items: deadSortModes,
+    }),
+  )
+
+  assert.deepEqual(
     malformed,
     [],
     missingItemsMessage({
@@ -397,6 +473,7 @@ test('[App][config-quality] missingItemsMessage context key dictionary and usage
       rule: 'missingItemsContextKeyContract.allowed dead keys',
       fix: 'remove unused keys from missingItemsContextKeyContract.allowed or add matching context usage',
       context: usageSummary,
+      contextSortMode: 'valueCountDesc',
       items: deadAllowedKeys,
     }),
   )

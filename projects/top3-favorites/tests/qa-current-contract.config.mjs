@@ -236,6 +236,14 @@ const rawManualAutomatedLinkContracts = {
       message: 'manual checklist should connect API failure resilience to the automated retry spec',
     },
     {
+      pattern: /検索欄で `店名\/タグ\/場所\/メモ` それぞれ部分一致検索が効く[\s\S]*自動確認: `tests\/top3\.e2e\.spec\.ts` と `tests\/search-memo-contains\.e2e\.spec\.ts`/,
+      message: 'manual checklist should connect multi-field partial search to automated search specs',
+    },
+    {
+      pattern: /各アイテムの `Maps` を押すと新規タブでGoogle Maps検索が開く[\s\S]*自動確認: `tests\/maps-link-new-tab-contract\.e2e\.spec\.ts` と `tests\/maps-link-query\.e2e\.spec\.ts`/,
+      message: 'manual checklist should connect Google Maps tab/query behavior to automated maps specs',
+    },
+    {
       pattern: /JSONエクスポート成功[\s\S]*自動確認: `tests\/import-export\.e2e\.spec\.ts`/,
       message: 'manual checklist should connect JSON export success to the automated import/export roundtrip spec',
     },
@@ -282,8 +290,10 @@ export const deepFreezeSkipTypeRules = rawDeepFreezeSkipTypeRules
 
 const rawMissingItemsContextKeyContract = {
   allowed: ['configured', 'discovered', 'documentedMatches', 'listed', 'missingOnDisk', 'observed'],
+  allowedContextSortModes: ['key', 'valueCountDesc'],
 }
 Object.freeze(rawMissingItemsContextKeyContract.allowed)
+Object.freeze(rawMissingItemsContextKeyContract.allowedContextSortModes)
 Object.freeze(rawMissingItemsContextKeyContract)
 export const missingItemsContextKeyContract = rawMissingItemsContextKeyContract
 

@@ -18,19 +18,34 @@ export function resolveLimitForScope(scope) {
   return contractMessageLimits.default
 }
 
-export function formatContextPairs(context, { locale = 'en' } = {}) {
+export function formatContextPairs(context, { locale = 'en', sortMode = 'key' } = {}) {
   if (!context) return ''
   if (typeof context === 'string') return context
-  const entries = Object.entries(context)
-    .map(([k, v]) => [k, Array.isArray(v) ? v.join(', ') : String(v)])
-    .sort((a, b) => a[0].localeCompare(b[0], locale))
+
+  const entries = Object.entries(context).map(([k, v]) => {
+    const rawValues = Array.isArray(v) ? v.map(String) : [String(v)]
+    return {
+      key: k,
+      values: rawValues,
+      rendered: rawValues.join(', '),
+      valueCount: Array.isArray(v) ? v.length : 1,
+    }
+  })
+
+  entries.sort((a, b) => {
+    if (sortMode === 'valueCountDesc' && a.valueCount !== b.valueCount) {
+      return b.valueCount - a.valueCount
+    }
+    return a.key.localeCompare(b.key, locale)
+  })
+
   if (entries.length === 0) return ''
-  return entries.map(([k, v]) => `${k}=${v}`).join(' | ')
+  return entries.map(({ key, rendered }) => `${key}=${rendered}`).join(' | ')
 }
 
-export function missingItemsMessage({ scope, rule, fix, items, limit, context = '' }) {
+export function missingItemsMessage({ scope, rule, fix, items, limit, context = '', contextSortMode = 'key' }) {
   const resolvedLimit = limit ?? resolveLimitForScope(scope)
-  const renderedContext = formatContextPairs(context)
+  const renderedContext = formatContextPairs(context, { sortMode: contextSortMode })
   const contextBlock = renderedContext ? `\ncontext: ${renderedContext}` : ''
   return `${contractMessage({ scope, rule, expected: 'no missing items', fix })}${contextBlock}\n${summarizeItems(items, resolvedLimit)}`
 }
