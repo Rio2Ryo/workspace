@@ -1,4 +1,5 @@
 import { expect, test } from '@playwright/test'
+import { validateImportPreviewSummary } from '../src/shared/import-preview-summary-contract.mjs'
 import { resetItemsByReplace } from './e2e-helpers'
 
 test.beforeEach(async ({ request }) => {
@@ -30,18 +31,12 @@ test('summary json transitions correctly across valid -> invalid -> valid import
   const summaryNode = page.getByTestId('import-preview-summary')
   await expect(summaryNode).toBeVisible()
   const summary1 = JSON.parse((await summaryNode.getAttribute('data-summary-json')) || '{}') as {
-    version: number
     before: number
     after: number
-    normalizationBefore: number
-    normalizationAfter: number
     added: number
     kept: number
-    removed: number
-    excluded: number
-    tags: string[]
   }
-  expect(summary1.version).toBe(1)
+  expect(validateImportPreviewSummary(summary1)).toBeNull()
   expect(summary1.before).toBe(1)
   expect(summary1.after).toBe(2)
   expect(summary1.added + summary1.kept).toBe(summary1.after)
@@ -65,22 +60,16 @@ test('summary json transitions correctly across valid -> invalid -> valid import
   const summaryNode2 = page.getByTestId('import-preview-summary')
   await expect(summaryNode2).toBeVisible()
   const summary2 = JSON.parse((await summaryNode2.getAttribute('data-summary-json')) || '{}') as {
-    version: number
     before: number
     after: number
-    normalizationBefore: number
-    normalizationAfter: number
     added: number
     kept: number
     removed: number
-    excluded: number
-    tags: string[]
   }
 
-  expect(summary2.version).toBe(1)
+  expect(validateImportPreviewSummary(summary2)).toBeNull()
   expect(summary2.before).toBe(1)
   expect(summary2.after).toBe(2)
   expect(summary2.added + summary2.kept).toBe(summary2.after)
   expect(summary2.before - summary2.removed).toBe(summary2.kept)
-  expect(Array.isArray(summary2.tags)).toBe(true)
 })

@@ -59,3 +59,24 @@ test('[App][import-preview-summary] App uses the shared schema constant instead 
   assert.match(appSource, /schema:\s*IMPORT_PREVIEW_SUMMARY_SCHEMA/)
   assert.match(appSource, /version:\s*IMPORT_PREVIEW_SUMMARY_VERSION/)
 })
+
+test('[App][import-preview-summary] summary E2E assertions use the shared validator', async () => {
+  const summarySpecs = [
+    '../tests/import-summary-json-consistency.e2e.spec.ts',
+    '../tests/import-summary-json-recovery-transition.e2e.spec.ts',
+  ]
+
+  for (const specPath of summarySpecs) {
+    const specSource = await readFile(new URL(specPath, import.meta.url), 'utf8')
+    assert.match(
+      specSource,
+      /validateImportPreviewSummary/,
+      `${specPath} should call validateImportPreviewSummary so E2E shape checks cannot drift from the shared summary contract`,
+    )
+    assert.doesNotMatch(
+      specSource,
+      /expect\(summary[\w.]*\.version\)\.toBe\(1\)|expect\(summary[\w.]*\.schema\)\.toBe\('top3-import-preview-summary'\)/,
+      `${specPath} should not duplicate schema/version literals after importing the shared validator`,
+    )
+  }
+})

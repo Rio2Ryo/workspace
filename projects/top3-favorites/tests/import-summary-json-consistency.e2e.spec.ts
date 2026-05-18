@@ -1,4 +1,5 @@
 import { expect, test } from '@playwright/test'
+import { validateImportPreviewSummary } from '../src/shared/import-preview-summary-contract.mjs'
 import { resetItemsByReplace } from './e2e-helpers'
 
 test.beforeEach(async ({ request }) => {
@@ -32,8 +33,6 @@ test('import preview exposes a consistent summary JSON for QA assertions', async
   expect(summaryAttr).toBeTruthy()
 
   const summary = JSON.parse(summaryAttr as string) as {
-    schema: string
-    version: number
     before: number
     after: number
     normalizationBefore: number
@@ -46,40 +45,8 @@ test('import preview exposes a consistent summary JSON for QA assertions', async
     excludedNames: string[]
     excludedNameLabels: string[]
   }
+  expect(validateImportPreviewSummary(summary)).toBeNull()
 
-  // schema contract guard: required keys must exist for version 1
-  const requiredKeys = [
-    'schema',
-    'version',
-    'before',
-    'after',
-    'normalizationBefore',
-    'normalizationAfter',
-    'added',
-    'kept',
-    'removed',
-    'excluded',
-    'tags',
-    'excludedNames',
-    'excludedNameLabels',
-  ] as const
-  for (const key of requiredKeys) {
-    expect(summary).toHaveProperty(key)
-  }
-
-  expect(summary.schema).toBe('top3-import-preview-summary')
-  expect(summary.version).toBe(1)
-  expect(typeof summary.before).toBe('number')
-  expect(typeof summary.after).toBe('number')
-  expect(typeof summary.normalizationBefore).toBe('number')
-  expect(typeof summary.normalizationAfter).toBe('number')
-  expect(typeof summary.added).toBe('number')
-  expect(typeof summary.kept).toBe('number')
-  expect(typeof summary.removed).toBe('number')
-  expect(typeof summary.excluded).toBe('number')
-  expect(Array.isArray(summary.tags)).toBe(true)
-  expect(Array.isArray(summary.excludedNames)).toBe(true)
-  expect(Array.isArray(summary.excludedNameLabels)).toBe(true)
   expect(summary.before).toBe(3)
   expect(summary.after).toBe(4)
   expect(summary.normalizationBefore).toBe(5)
