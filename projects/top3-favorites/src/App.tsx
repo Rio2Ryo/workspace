@@ -517,7 +517,7 @@ export function App() {
   }
 
   const triggerImport = () => {
-    clearFeedback({ pendingImport: true })
+    clearFeedback()
     setEditingId(null)
     fileRef.current?.click()
   }
@@ -571,8 +571,10 @@ export function App() {
         excludedNameLabels,
         excludedDetails: analyzed.excludedDetails,
       })
+      setIsImpactTagsExpanded(false)
       setIsExcludedNamesExpanded(false)
       setIsExcludedDetailsExpanded(false)
+      setIsImpactTermsHelperExpanded(false)
       setError('')
       setNotice(`インポート確認: ${normalized.length}件。内容を確認してから反映してください。`)
     } catch {

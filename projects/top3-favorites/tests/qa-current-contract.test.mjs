@@ -32,7 +32,7 @@ import {
   findBeforeEachOffenders,
   findScopeRuleOverlaps,
 } from './qa-current-contract.utils.mjs'
-import { contractMessage, missingItemsMessage } from './qa-contract-message.mjs'
+import { configuredObservedOverview, contractMessage, missingItemsMessage } from './qa-contract-message.mjs'
 
 const root = new URL('..', import.meta.url)
 const appPath = new URL('src/App.tsx', `${root}/`)
@@ -82,18 +82,37 @@ test('[App][config-quality] QA test title subscope contract is enforced across q
 
   const missingScopeMappings = observedScopes.filter((scope) => !configuredScopes.includes(scope))
   const extraScopeMappings = configuredScopes.filter((scope) => !observedScopes.includes(scope))
+  const scopeOverview = configuredObservedOverview(configuredScopes, observedScopes)
 
   const deadSubscope = []
   const deadScope = []
+  const missingSubscopeMappings = []
+  const extraSubscopeMappings = []
+  const subscopeOverviewByScope = []
   for (const [scope, allowed] of Object.entries(allowedByScope)) {
     const used = usedByScope.get(scope) ?? new Set()
     if (used.size === 0) deadScope.push(scope)
+    subscopeOverviewByScope.push(`${scope}{${configuredObservedOverview(allowed, Array.from(used))}}`)
     for (const name of allowed) {
       if (!used.has(name)) deadSubscope.push(`${scope}::${name}`)
+    }
+    for (const observed of used) {
+      if (!allowed.includes(observed)) {
+        missingSubscopeMappings.push(`${scope}::${observed}`)
+      }
+    }
+    for (const configured of allowed) {
+      if (!used.has(configured)) {
+        extraSubscopeMappings.push(`${scope}::${configured}`)
+      }
     }
   }
   deadScope.sort((a, b) => a.localeCompare(b, 'en'))
   deadSubscope.sort((a, b) => a.localeCompare(b, 'en'))
+  missingSubscopeMappings.sort((a, b) => a.localeCompare(b, 'en'))
+  extraSubscopeMappings.sort((a, b) => a.localeCompare(b, 'en'))
+  subscopeOverviewByScope.sort((a, b) => a.localeCompare(b, 'en'))
+  const subscopeOverview = subscopeOverviewByScope.join(' | ')
 
   assert.deepEqual(
     unknownScope,
@@ -111,7 +130,7 @@ test('[App][config-quality] QA test title subscope contract is enforced across q
     missingItemsMessage({
       scope: 'App',
       rule: 'QA title scope dictionary completeness (configured covers observed)',
-      fix: 'add missing observed scope keys to qaTestTitleSubscopeContract.allowedByScope',
+      fix: `add missing observed scope keys to qaTestTitleSubscopeContract.allowedByScope (${scopeOverview})`,
       items: missingScopeMappings,
     }),
   )
@@ -121,7 +140,7 @@ test('[App][config-quality] QA test title subscope contract is enforced across q
     missingItemsMessage({
       scope: 'App',
       rule: 'QA title scope dictionary exactness (no extra configured scopes)',
-      fix: 'remove configured scope keys that are not observed in qa-current/qa-docs tests',
+      fix: `remove configured scope keys that are not observed in qa-current/qa-docs tests (${scopeOverview})`,
       items: extraScopeMappings,
     }),
   )
@@ -133,6 +152,26 @@ test('[App][config-quality] QA test title subscope contract is enforced across q
       rule: 'QA title subscope contract (allowed values per scope)',
       fix: 'rename test subscopes or extend qaTestTitleSubscopeContract.allowedByScope',
       items: invalidSubscope,
+    }),
+  )
+  assert.deepEqual(
+    missingSubscopeMappings,
+    [],
+    missingItemsMessage({
+      scope: 'App',
+      rule: 'QA title subscope dictionary completeness (configured covers observed per scope)',
+      fix: `add missing observed subscopes into qaTestTitleSubscopeContract.allowedByScope.<scope> (${subscopeOverview})`,
+      items: missingSubscopeMappings,
+    }),
+  )
+  assert.deepEqual(
+    extraSubscopeMappings,
+    [],
+    missingItemsMessage({
+      scope: 'App',
+      rule: 'QA title subscope dictionary exactness (no extra configured subscope per scope)',
+      fix: `remove configured subscopes not observed in qa-current/qa-docs tests (${subscopeOverview})`,
+      items: extraSubscopeMappings,
     }),
   )
   assert.deepEqual(

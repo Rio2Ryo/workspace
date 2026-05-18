@@ -22,3 +22,9 @@ export function missingItemsMessage({ scope, rule, fix, items, limit }) {
   const resolvedLimit = limit ?? resolveLimitForScope(scope)
   return `${contractMessage({ scope, rule, expected: 'no missing items', fix })}\n${summarizeItems(items, resolvedLimit)}`
 }
+
+export function configuredObservedOverview(configured, observed, { locale = 'en' } = {}) {
+  const cfg = [...configured].sort((a, b) => a.localeCompare(b, locale)).join(', ')
+  const obs = [...observed].sort((a, b) => a.localeCompare(b, locale)).join(', ')
+  return `configured=[${cfg}] observed=[${obs}]`
+}
