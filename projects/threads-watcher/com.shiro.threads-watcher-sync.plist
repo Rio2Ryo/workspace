@@ -1,0 +1,75 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  launchd entry for sync.py — Threads-watcher snapshot sync.
+  ACTIVATED IN DRY-RUN MODE (no --confirm, no --enable-push).
+
+  Why this is safe to activate without explicit approval:
+    - Default behaviour writes ONLY to logs/sync.{out,err}.log.
+    - No git commits, no pushes, no DB writes.
+    - sync.py's own guard layer (--confirm gates commits, --enable-push
+      gates pushes) is the source of truth — this plist just runs the
+      script periodically with no write flags.
+
+  Operator promotion to real syncing (after dry-run logs look healthy):
+    Edit the ProgramArguments array below to uncomment --confirm
+    (commits enabled) and optionally --enable-push (pushes enabled).
+    Then `launchctl unload -w && launchctl load -w`.
+
+  Install location:
+    ~/Library/LaunchAgents/com.shiro.threads-watcher-sync.plist
+
+  Activate:
+    launchctl load -w ~/Library/LaunchAgents/com.shiro.threads-watcher-sync.plist
+
+  Disable (rollback):
+    launchctl unload -w ~/Library/LaunchAgents/com.shiro.threads-watcher-sync.plist
+
+  Status:
+    launchctl list | grep threads-watcher-sync
+    tail -f logs/sync.out.log
+
+  Defaults:
+    - 30-minute StartInterval
+    - RunAtLoad=false (no immediate fire at install)
+    - logs to logs/sync.{out,err}.log (no rotation)
+
+  Supersedes com.shiro.threads-watcher-sync.plist.example. The .example
+  is kept for reference; this file is the live, agent-activatable
+  version (DRY-RUN only).
+-->
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+  <key>Label</key>
+  <string>com.shiro.threads-watcher-sync</string>
+
+  <key>ProgramArguments</key>
+  <array>
+    <string>/opt/homebrew/bin/python3</string>
+    <string>/Users/umi/.openclaw/workspace/projects/threads-watcher/sync.py</string>
+    <!-- DRY-RUN. Uncomment these to promote to live commits / pushes:   -->
+    <!-- <string>--confirm</string>     -->
+    <!-- <string>--enable-push</string> -->
+  </array>
+
+  <key>EnvironmentVariables</key>
+  <dict>
+    <key>PATH</key>
+    <string>/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin</string>
+  </dict>
+
+  <key>StartInterval</key>
+  <integer>1800</integer>
+
+  <key>RunAtLoad</key>
+  <false/>
+
+  <key>StandardOutPath</key>
+  <string>/Users/umi/.openclaw/workspace/projects/threads-watcher/logs/sync.out.log</string>
+  <key>StandardErrorPath</key>
+  <string>/Users/umi/.openclaw/workspace/projects/threads-watcher/logs/sync.err.log</string>
+
+  <key>WorkingDirectory</key>
+  <string>/Users/umi/.openclaw/workspace/projects/threads-watcher</string>
+</dict>
+</plist>
