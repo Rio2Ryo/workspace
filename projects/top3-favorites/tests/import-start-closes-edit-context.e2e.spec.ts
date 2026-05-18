@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test'
-import { resetItemsByReplace } from './e2e-helpers'
+import { editSaveButton, resetItemsByReplace } from './e2e-helpers'
 
 test.beforeEach(async ({ request }) => {
   await resetItemsByReplace(request)
@@ -15,8 +15,8 @@ test('starting JSON import closes edit context to avoid mixed workflows', async 
 
   await page.getByText('1位: Edit Target').click()
   await page.getByRole('button', { name: 'Edit Targetを編集' }).click()
-  await expect(page.getByRole('button', { name: '編集を保存' })).toBeVisible()
+  await expect(editSaveButton(page)).toBeVisible()
 
   await page.getByRole('button', { name: 'JSONインポート' }).click()
-  await expect(page.getByRole('button', { name: '編集を保存' })).toHaveCount(0)
+  await expect(editSaveButton(page)).toHaveCount(0)
 })

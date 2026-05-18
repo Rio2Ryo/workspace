@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test'
-import { resetItemsByReplace } from './e2e-helpers'
+import { editSaveButton, resetItemsByReplace } from './e2e-helpers'
 
 test.beforeEach(async ({ request }) => {
   await resetItemsByReplace(request)
@@ -20,7 +20,7 @@ test('editing item tag move keeps registration tag in sync with active search ta
   await searchSection.getByRole('button', { name: 'Move Meを編集' }).click()
 
   await page.getByRole('combobox', { name: '編集 タグ' }).fill('移動先タグ')
-  await page.getByRole('button', { name: '編集を保存' }).click()
+  await editSaveButton(page).click()
   await expect(page.getByRole('status')).toContainText('編集を保存しました。')
 
   // Search filter is auto-cleared by current behavior; registration tag should also reflect active state

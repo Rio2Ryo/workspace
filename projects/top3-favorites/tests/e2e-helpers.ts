@@ -27,6 +27,10 @@ export async function clearSearchTagFilter(searchSection: Locator): Promise<void
   await clearButton.click()
 }
 
+export function editSaveButton(page: Page): Locator {
+  return page.getByRole('button', { name: '編集を保存' })
+}
+
 export async function uploadJsonImportFile(page: Page, name: string, body: string | unknown): Promise<void> {
   const buffer = Buffer.from(typeof body === 'string' ? body : JSON.stringify(body), 'utf-8')
   await page.locator('input[type="file"][accept*="json"]').setInputFiles({

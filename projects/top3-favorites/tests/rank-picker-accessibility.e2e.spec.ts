@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test'
-import { resetItemsByReplace, saveSampleItems } from './e2e-helpers'
+import { editSaveButton, resetItemsByReplace, saveSampleItems } from './e2e-helpers'
 
 test.beforeEach(async ({ request }) => {
   await resetItemsByReplace(request)
@@ -19,7 +19,7 @@ test('new and edit rank pickers have context-specific accessible names', async (
   const editThird = page.getByRole('button', { name: '編集 3位に変更' })
   await expect(editThird).toBeVisible()
   await editThird.click()
-  await page.getByRole('button', { name: '編集を保存' }).click()
+  await editSaveButton(page).click()
 
   await expect(page.getByRole('status')).toContainText('編集を保存しました。')
   await expect(page.getByText('3位: Solito MAGO')).toBeVisible()
