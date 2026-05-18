@@ -32,7 +32,7 @@ function sourceImportsItemEditHelper(source) {
 }
 
 function sourceUsesDirectItemEditButton(source) {
-  return /getByRole\(['"]button['"],\s*\{\s*name:\s*(?:`[^`]*を編集`|['"][^'"]*を編集['"]|\/[^/]*編集[^/]*\/)\s*\}\)/.test(source)
+  return /getByRole\(['"]button['"],\s*\{\s*name:\s*(?:`[^`]*を編集`|['"][^'"]*を編集['"]|['"]編集['"]|\/[^/]*編集[^/]*\/)\s*\}\)/.test(source)
 }
 
 test('[E2E-Helper][item-edit-action] E2E specs use shared item edit action locator', async () => {
