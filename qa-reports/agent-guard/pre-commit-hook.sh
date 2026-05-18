@@ -84,6 +84,81 @@ while IFS= read -r f; do
   fi
 done < <(git diff --cached --name-only)
 
+# ── submodule-mixin gate ─────────────────────────────────────────────
+# Detect the workspace-side recurrence of the 2f8861b pattern: a
+# "chore(submodule): bump X to <SHA>" commit that accidentally swept in
+# a sibling agent's staged WIP. The per-file budget loop above can't
+# catch it because each swept file is individually small.
+#
+# Rule: if any submodule (gitlink, mode 160000) is staged, only
+# submodule entries may be staged. A submodule-bump commit must touch
+# exactly the submodule pointer(s) and nothing else.
+#
+# Override (rare legitimate cases like "bump + 1 ops doc"):
+#   ALLOW_MIXED_SUBMODULE_COMMIT=1 git commit ...
+#
+# Caught on 2026-05-18 when commit 497aad5 (workspace) bundled 96
+# hermes-jp top3-favorites files into a "chore(submodule): bump
+# second-brain" commit.
+if [ "${ALLOW_MIXED_SUBMODULE_COMMIT:-0}" != "1" ]; then
+  # git diff --cached --raw: 6th field is the path, src/dst modes are
+  # fields 1-2 (prefixed with `:`). Mode 160000 = gitlink (submodule).
+  staged_submodules=""
+  staged_non_submodules=""
+  while IFS= read -r line; do
+    [ -z "$line" ] && continue
+    # Format: :<src_mode> <dst_mode> <src_sha> <dst_sha> <status>\t<path>
+    src_mode=$(printf '%s' "$line" | awk '{print $1}' | sed 's/^://')
+    dst_mode=$(printf '%s' "$line" | awk '{print $2}')
+    path=$(printf '%s' "$line" | awk -F'\t' '{print $2}')
+    [ -z "$path" ] && continue
+    if [ "$src_mode" = "160000" ] || [ "$dst_mode" = "160000" ]; then
+      staged_submodules+="  - $path"$'\n'
+    else
+      staged_non_submodules+="  - $path"$'\n'
+    fi
+  done < <(git diff --cached --raw)
+
+  if [ -n "$staged_submodules" ] && [ -n "$staged_non_submodules" ]; then
+    {
+      echo
+      echo "ABORT: submodule-mixin pre-commit hook refused this commit."
+      echo
+      echo "Submodule pointer change staged:"
+      printf '%s' "$staged_submodules"
+      echo
+      echo "But these non-submodule files are ALSO staged (likely sibling-agent WIP):"
+      printf '%s' "$staged_non_submodules" | head -20
+      total_non=$(printf '%s' "$staged_non_submodules" | grep -c '^' || true)
+      if [ "$total_non" -gt 20 ]; then
+        echo "  ... ($((total_non - 20)) more)"
+      fi
+      cat <<'EOF'
+
+Submodule pointer bumps must be ONE-FILE commits. The non-submodule
+files above were probably staged by a sibling agent before your
+session and got swept in by `git add <submodule>` + `git commit`.
+
+Fix:
+  - Reset the index to only the submodule:
+      git reset HEAD                     # un-stage everything
+      git add <submodule-path>           # re-stage only the bump
+      git commit -m "chore(submodule): bump ..."
+  - The sibling agent's WIP stays in the working tree, where they can
+    commit it themselves under their own message.
+
+Override (rare legitimate "bump + ops doc" cases):
+  ALLOW_MIXED_SUBMODULE_COMMIT=1 git commit ...
+
+This rule was added after commit 497aad5 (workspace) bundled 96
+top3-favorites files into a "chore(submodule): bump second-brain"
+commit on 2026-05-18.
+EOF
+    } >&2
+    exit 1
+  fi
+fi
+
 if [ "$violations" -gt 0 ]; then
   {
     echo
