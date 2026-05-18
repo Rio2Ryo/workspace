@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict'
-import { readFile } from 'node:fs/promises'
+import { readdir, readFile } from 'node:fs/promises'
 import test from 'node:test'
 
 import {
@@ -60,23 +60,44 @@ test('[App][import-preview-summary] App uses the shared schema constant instead 
   assert.match(appSource, /version:\s*IMPORT_PREVIEW_SUMMARY_VERSION/)
 })
 
-test('[App][import-preview-summary] summary E2E assertions use the shared validator', async () => {
-  const summarySpecs = [
-    '../tests/import-summary-json-consistency.e2e.spec.ts',
-    '../tests/import-summary-json-recovery-transition.e2e.spec.ts',
-  ]
+async function listE2eSpecs(dirUrl) {
+  const entries = await readdir(dirUrl, { withFileTypes: true })
+  const paths = []
+  for (const entry of entries) {
+    const entryUrl = new URL(`${entry.name}${entry.isDirectory() ? '/' : ''}`, dirUrl)
+    if (entry.isDirectory()) {
+      paths.push(...await listE2eSpecs(entryUrl))
+    } else if (entry.name.endsWith('.e2e.spec.ts')) {
+      paths.push(entryUrl)
+    }
+  }
+  return paths
+}
 
-  for (const specPath of summarySpecs) {
-    const specSource = await readFile(new URL(specPath, import.meta.url), 'utf8')
+test('[App][import-preview-summary] summary E2E assertions use the shared validator helper', async () => {
+  const specUrls = await listE2eSpecs(new URL('../tests/', import.meta.url))
+  const summarySpecs = []
+
+  for (const specUrl of specUrls) {
+    const specSource = await readFile(specUrl, 'utf8')
+    if (specSource.includes('data-summary-json') || specSource.includes('parseImportPreviewSummary')) {
+      summarySpecs.push({ specUrl, specSource })
+    }
+  }
+
+  assert.ok(summarySpecs.length > 0, 'summary JSON specs should be discovered')
+
+  for (const { specUrl, specSource } of summarySpecs) {
+    const specPath = specUrl.pathname
     assert.match(
       specSource,
-      /validateImportPreviewSummary/,
-      `${specPath} should call validateImportPreviewSummary so E2E shape checks cannot drift from the shared summary contract`,
+      /parseImportPreviewSummary/,
+      `${specPath} should call parseImportPreviewSummary so parsing and shared contract validation stay centralized`,
     )
     assert.doesNotMatch(
       specSource,
-      /expect\(summary[\w.]*\.version\)\.toBe\(1\)|expect\(summary[\w.]*\.schema\)\.toBe\('top3-import-preview-summary'\)/,
-      `${specPath} should not duplicate schema/version literals after importing the shared validator`,
+      /validateImportPreviewSummary|JSON\.parse\([^\n]*(?:summaryJson|summaryAttr|getAttribute\('data-summary-json'\))/,
+      `${specPath} should not duplicate summary JSON parsing or validator calls outside the shared E2E helper`,
     )
   }
 })

@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test'
-import { resetItemsByReplace } from '../../e2e-helpers'
+import { parseImportPreviewSummary, resetItemsByReplace } from '../../e2e-helpers'
 
 test.beforeEach(async ({ request }) => {
   await resetItemsByReplace(request)
@@ -35,8 +35,10 @@ test('excluded store names add tag context for visually equivalent full-width an
   await expect(variants).toHaveText('表記ゆれ候補: カフェラテ: Cafe K / プリン: Ｃａｆｅ　Ｋ')
   await expect(variants).toHaveAttribute('data-normalized-excluded-name-groups', 'cafe k=カフェラテ: Cafe K/プリン: Ｃａｆｅ　Ｋ')
 
-  const summaryJson = await page.getByTestId('import-preview-summary').getAttribute('data-summary-json')
-  const summary = JSON.parse(summaryJson ?? '{}')
+  const summary = await parseImportPreviewSummary<{
+    excludedDetailLabels: string[]
+    normalizedExcludedNameGroups: Array<{ key: string; names: string[]; labels: string[] }>
+  }>(page.getByTestId('import-preview-summary'))
   expect(summary.excludedDetailLabels).toEqual([
     'カフェラテ: Cafe K',
     'プリン: Ｃａｆｅ　Ｋ',

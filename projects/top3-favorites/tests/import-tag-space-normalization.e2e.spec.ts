@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test'
-import { resetItemsByReplace } from './e2e-helpers'
+import { parseImportPreviewSummary, resetItemsByReplace } from './e2e-helpers'
 
 test.beforeEach(async ({ request }) => {
   await resetItemsByReplace(request)
@@ -26,7 +26,7 @@ test('import normalizes visually equivalent tag spaces before Top3 truncation', 
   await expect(page.getByTestId('import-preview-normalization')).toHaveText('同一タグはTop3に正規化: 4件中3件を反映予定')
   await expect(page.getByTestId('import-preview-excluded-names')).toHaveText('除外予定の店舗: D')
 
-  const summary = JSON.parse((await page.getByTestId('import-preview-summary').getAttribute('data-summary-json')) ?? '{}')
+  const summary = await parseImportPreviewSummary<{ tags: string[]; excludedNames: string[] }>(page.getByTestId('import-preview-summary'))
   expect(summary.tags).toEqual(['カフェ ラテ'])
   expect(summary.excludedNames).toEqual(['D'])
 

@@ -1,6 +1,5 @@
 import { expect, test } from '@playwright/test'
-import { validateImportPreviewSummary } from '../src/shared/import-preview-summary-contract.mjs'
-import { resetItemsByReplace } from './e2e-helpers'
+import { parseImportPreviewSummary, resetItemsByReplace } from './e2e-helpers'
 
 test.beforeEach(async ({ request }) => {
   await resetItemsByReplace(request)
@@ -29,10 +28,7 @@ test('import preview exposes a consistent summary JSON for QA assertions', async
     buffer: Buffer.from(JSON.stringify(payload), 'utf-8'),
   })
 
-  const summaryAttr = await page.getByTestId('import-preview-summary').getAttribute('data-summary-json')
-  expect(summaryAttr).toBeTruthy()
-
-  const summary = JSON.parse(summaryAttr as string) as {
+  const summary = await parseImportPreviewSummary<{
     before: number
     after: number
     normalizationBefore: number
@@ -44,8 +40,7 @@ test('import preview exposes a consistent summary JSON for QA assertions', async
     tags: string[]
     excludedNames: string[]
     excludedNameLabels: string[]
-  }
-  expect(validateImportPreviewSummary(summary)).toBeNull()
+  }>(page.getByTestId('import-preview-summary'))
 
   expect(summary.before).toBe(3)
   expect(summary.after).toBe(4)
