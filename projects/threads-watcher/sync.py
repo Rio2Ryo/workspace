@@ -45,14 +45,103 @@ DEFAULT_DB = PROJECT_ROOT / "threads_watcher.db"
 DEFAULT_SNAPSHOT = PROJECT_ROOT / "threads-watcher-status" / "state.json"
 DEFAULT_CURSOR = PROJECT_ROOT / ".sync_cursor"
 DEFAULT_LOG = PROJECT_ROOT / "logs" / "sync.log"
+DEFAULT_DRY_STATE = PROJECT_ROOT / "logs" / "dry-run-state.json"
 DEFAULT_WORKSPACE = PROJECT_ROOT.parent.parent  # .../workspace
 DEFAULT_BRANCH = "shiro/phase2-perf-metrics"
 DEFAULT_LOCKDIR = PROJECT_ROOT / ".sync.lock.d"
 
 SNAPSHOT_REL_FROM_WORKSPACE = "projects/threads-watcher/threads-watcher-status/state.json"
 
+# After this many consecutive ticks of "DRY: would commit (delta=N)" with
+# unchanged delta, emit an ALERT line so operators see the dry-run is
+# accumulating un-acted-on work. 3 ticks at 30-min cadence = ~90 minutes
+# of pending — long enough to skip flapping deltas, short enough to
+# surface in a single morning scroll of the log.
+DRY_RUN_ALERT_THRESHOLD = 3
+
 
 # ── pure helpers (unit-tested) ──────────────────────────────────────────
+
+
+# ── dry-run accumulation tracker ────────────────────────────────────────
+#
+# Each launchd tick is a fresh Python process, so "consecutive dry-run
+# decisions" can't be tracked in-memory. We persist a tiny JSON file
+# (logs/dry-run-state.json) with `{delta, count, since}` so the next
+# tick can decide whether to escalate. The pure helpers below are
+# tested without touching the filesystem; the I/O wrapper is a thin
+# read-mutate-write at the route.
+
+
+@dataclass(frozen=True)
+class DryRunState:
+    """Persisted across launchd ticks. `delta` is the pending DB delta
+    the LAST tick said it would commit; `count` is how many ticks in a
+    row that same delta has stayed pending; `since` is the wall-clock
+    timestamp of the FIRST tick in the current streak."""
+    delta: int
+    count: int
+    since: str  # ISO8601 UTC
+
+
+def update_dry_run_state(
+    prev: DryRunState | None,
+    current_delta: int,
+    now_ts_iso: str,
+) -> DryRunState:
+    """Pure: given the prior tick's state and the current tick's delta,
+    return the next state.
+
+    - Unchanged non-zero delta → bump count, keep `since`.
+    - Changed delta → reset count to 1, set `since` to now.
+    - Zero/negative delta (nothing to do) → also resets — we only care
+      about consecutive ticks of REAL pending work.
+    """
+    if current_delta <= 0:
+        return DryRunState(delta=current_delta, count=0, since=now_ts_iso)
+    if prev is None or prev.delta != current_delta:
+        return DryRunState(delta=current_delta, count=1, since=now_ts_iso)
+    return DryRunState(delta=current_delta, count=prev.count + 1, since=prev.since)
+
+
+def should_emit_dry_run_alert(state: DryRunState, threshold: int = DRY_RUN_ALERT_THRESHOLD) -> bool:
+    """Emit an ALERT only when the same delta has been pending for at
+    least `threshold` consecutive ticks. The boundary is "at least" so
+    threshold=3 emits on the 3rd, 4th, ... tick (1st + 2nd are quiet)."""
+    return state.count >= threshold and state.delta > 0
+
+
+def load_dry_run_state(path: Path) -> DryRunState | None:
+    """Read the persisted state file. Missing / corrupt → None (fresh start)."""
+    try:
+        import json
+        data = json.loads(path.read_text(encoding="utf-8"))
+        return DryRunState(
+            delta=int(data["delta"]),
+            count=int(data["count"]),
+            since=str(data["since"]),
+        )
+    except (FileNotFoundError, ValueError, KeyError, TypeError):
+        return None
+
+
+def save_dry_run_state(path: Path, state: DryRunState) -> None:
+    """Persist the state. Best-effort — failure logs but doesn't bring
+    down the sync (the worst case is the next tick starts a fresh streak,
+    so the alert will be slightly delayed)."""
+    try:
+        import json
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_text(json.dumps({
+            "delta": state.delta,
+            "count": state.count,
+            "since": state.since,
+        }), encoding="utf-8")
+    except OSError:
+        # Don't propagate — the dry-run still ran correctly, only the
+        # accumulator missed a beat. Print to stderr so an operator
+        # tailing logs sees it.
+        sys.stderr.write(f"WARN: failed to save dry-run state to {path}\n")
 
 
 def read_cursor(path: Path) -> int:
@@ -220,6 +309,17 @@ def parse_args(argv: list[str] | None) -> argparse.Namespace:
     )
     p.add_argument("--enable-push", action="store_true",
                    help="Also push after commit. Only effective with --confirm.")
+    p.add_argument(
+        "--dry-state",
+        type=Path,
+        default=DEFAULT_DRY_STATE,
+        help=(
+            "Persistent state file for the dry-run accumulator. "
+            "Tracks consecutive ticks of identical pending delta so "
+            "the next tick can emit an ALERT after threshold "
+            f"({DRY_RUN_ALERT_THRESHOLD}) ticks. Override for tests."
+        ),
+    )
     return p.parse_args(argv)
 
 
@@ -306,6 +406,23 @@ def main(argv: list[str] | None = None) -> int:
             return 0  # guard skip is healthy behavior, not a failure
 
         if not args.confirm:
+            # Dry-run accumulator: emit an ALERT when the same delta
+            # has been pending for N consecutive ticks. Operators
+            # running `launchctl list` see exit=0 (healthy) but the
+            # system is doing nothing productive — this surfaces it
+            # in the log without changing behaviour.
+            prev_state = load_dry_run_state(args.dry_state)
+            now_iso_str = now_iso()
+            next_state = update_dry_run_state(prev_state, decision.delta, now_iso_str)
+            if should_emit_dry_run_alert(next_state):
+                log.log(
+                    f"ALERT: dry-run pending for {next_state.count} ticks "
+                    f"since {next_state.since} (delta={next_state.delta}); "
+                    f"promote to live by adding --confirm to the plist's "
+                    f"ProgramArguments and launchctl unload/load"
+                )
+            save_dry_run_state(args.dry_state, next_state)
+
             log.log(
                 f"DRY: would `git add` + commit "
                 f"\"{build_commit_message(now_iso(), decision.delta)}\""
