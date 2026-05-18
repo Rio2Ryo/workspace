@@ -182,6 +182,7 @@ export function App() {
   const [isSaving, setIsSaving] = useState(false)
   const [error, setError] = useState('')
   const [notice, setNotice] = useState('')
+  const [loadError, setLoadError] = useState(false)
   const [pendingImport, setPendingImport] = useState<PendingImport | null>(null)
   const fileRef = useRef<HTMLInputElement | null>(null)
 
@@ -192,11 +193,21 @@ export function App() {
       setItems(data.items)
       setTags(data.tags)
       setError('')
+      setLoadError(false)
+      return true
     } catch (e) {
       setError(e instanceof Error ? e.message : 'データ取得に失敗しました')
+      setLoadError(true)
+      return false
     } finally {
       setIsLoading(false)
     }
+  }
+
+  const retryLoadItems = async () => {
+    setNotice('')
+    const ok = await loadItems()
+    if (ok) setNotice('データを再読み込みしました。')
   }
 
   useEffect(() => {
@@ -268,6 +279,11 @@ export function App() {
   const selectTag = (tag: string) => {
     setSelectedTag(tag)
     setDraft((prev) => ({ ...prev, tag }))
+  }
+
+  const clearSelectedTag = () => {
+    setSelectedTag('')
+    setDraft((prev) => ({ ...prev, tag: '' }))
   }
 
   const saveNew = async () => {
@@ -490,7 +506,7 @@ export function App() {
           <span className={isLoading ? 'status loading' : 'status'}>{isLoading ? 'DB読込中' : 'DB保存'}</span>
         </div>
 
-        <TagPicker tags={tags} activeTag={draft.tag} selectedTag={selectedTag} onSelect={selectTag} onClear={() => setSelectedTag('')} />
+        <TagPicker tags={tags} activeTag={draft.tag} selectedTag={selectedTag} onSelect={selectTag} onClear={clearSelectedTag} />
 
         <div className="form-grid">
           <label>
@@ -539,6 +555,7 @@ export function App() {
 
         <div className="row feedback">
           <button className="ghost" onClick={addSamples} disabled={isSaving}>サンプルをDB保存</button>
+          {loadError && <button className="ghost" onClick={retryLoadItems} disabled={isLoading}>データを再読み込み</button>}
           {error && <p className="error" role="alert">{error}</p>}
           {notice && <p className="notice" role="status" aria-live="polite">{notice}</p>}
         </div>
@@ -618,7 +635,7 @@ export function App() {
             <h2>探す</h2>
             <p className="hint">タグを選ぶか、店舗名・場所・メモで検索できます。</p>
           </div>
-          {selectedTag && <button className="ghost" onClick={() => setSelectedTag('')}>タグ解除</button>}
+          {selectedTag && <button className="ghost" onClick={clearSelectedTag}>タグ解除</button>}
         </div>
 
         <input
@@ -628,7 +645,7 @@ export function App() {
           placeholder="例: カフェラテ / 柏の葉 / Solito"
           aria-label="Top3検索"
         />
-        <TagPicker tags={tags} activeTag={selectedTag} selectedTag={selectedTag} onSelect={setSelectedTag} onClear={() => setSelectedTag('')} />
+        <TagPicker tags={tags} activeTag={selectedTag} selectedTag={selectedTag} onSelect={selectTag} onClear={clearSelectedTag} />
 
         {filteredGroups.length === 0 ? (
           <p className="hint empty">該当するTop3がありません。</p>
