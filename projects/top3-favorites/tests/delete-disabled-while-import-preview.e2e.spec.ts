@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test'
-import { uploadJsonImportFile, resetItemsByReplace } from './e2e-helpers'
+import { uploadJsonImportFile, resetItemsByReplace , itemDeleteButton} from './e2e-helpers'
 
 test.beforeEach(async ({ request }) => {
   await resetItemsByReplace(request)
@@ -21,5 +21,5 @@ test('delete action is disabled while import preview is active (preventive conte
   await expect(page.getByLabel('インポート確認')).toBeVisible()
 
   await page.getByText('1位: Delete Guard Target').click()
-  await expect(page.getByRole('button', { name: /削除/ }).first()).toBeDisabled()
+  await expect(itemDeleteButton(page, /削除/).first()).toBeDisabled()
 })

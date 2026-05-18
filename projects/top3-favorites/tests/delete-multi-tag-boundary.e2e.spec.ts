@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test'
-import { resetItemsByReplace } from './e2e-helpers'
+import { resetItemsByReplace , itemDeleteButton} from './e2e-helpers'
 
 test.beforeEach(async ({ request }) => {
   await resetItemsByReplace(request)
@@ -26,7 +26,7 @@ test('delete removes only the confirmed target item when multiple tags exist', a
     await dialog.accept()
   })
 
-  await page.getByRole('button', { name: '削除対象Aを削除' }).click()
+  await itemDeleteButton(page, '削除対象A').click()
 
   expect(sawDialog).toBe(true)
   await expect(page.getByRole('status')).toContainText('削除しました。')

@@ -36,6 +36,11 @@ export function itemEditButton(scope: Page | Locator, itemName: string | RegExp)
   return scope.getByRole('button', { name })
 }
 
+export function itemDeleteButton(scope: Page | Locator, itemName: string | RegExp): Locator {
+  const name = typeof itemName === 'string' ? `${itemName}を削除` : itemName
+  return scope.getByRole('button', { name })
+}
+
 export async function uploadJsonImportFile(page: Page, name: string, body: string | unknown): Promise<void> {
   const buffer = Buffer.from(typeof body === 'string' ? body : JSON.stringify(body), 'utf-8')
   await page.locator('input[type="file"][accept*="json"]').setInputFiles({

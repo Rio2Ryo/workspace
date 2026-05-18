@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test'
-import { resetItemsByReplace } from './e2e-helpers'
+import { resetItemsByReplace , itemDeleteButton} from './e2e-helpers'
 
 test.beforeEach(async ({ request }) => {
   await resetItemsByReplace(request)
@@ -32,7 +32,7 @@ test('deleting the last item in selected tag clears stale tag filter and keeps r
   page.once('dialog', async (dialog) => {
     await dialog.accept()
   })
-  await searchSection.getByRole('button', { name: 'Delete Meを削除' }).click()
+  await itemDeleteButton(searchSection, 'Delete Me').click()
 
   await expect(page.getByRole('status')).toContainText('削除しました。')
 

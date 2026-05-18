@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test'
-import { resetItemsByReplace, saveSampleItems } from './e2e-helpers'
+import { resetItemsByReplace, saveSampleItems , itemDeleteButton} from './e2e-helpers'
 
 test.beforeEach(async ({ request }) => {
   await resetItemsByReplace(request)
@@ -20,7 +20,7 @@ test('delete asks for confirmation and cancel keeps the item', async ({ page }) 
     expect(dialog.message()).toContain('Solito MAGO')
     await dialog.dismiss()
   })
-  await page.getByRole('button', { name: '削除' }).first().click()
+  await itemDeleteButton(page, /削除/).first().click()
 
   expect(sawDialog).toBe(true)
   await expect(page.getByText('削除しました。')).not.toBeVisible()
@@ -41,7 +41,7 @@ test('delete confirmation accept removes the item', async ({ page }) => {
     expect(dialog.message()).toContain('Solito MAGO')
     await dialog.accept()
   })
-  await page.getByRole('button', { name: '削除' }).first().click()
+  await itemDeleteButton(page, /削除/).first().click()
 
   expect(sawDialog).toBe(true)
   await expect(page.getByText('削除しました。')).toBeVisible()

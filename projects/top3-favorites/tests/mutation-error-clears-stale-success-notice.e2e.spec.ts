@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test'
-import { itemEditButton, editSaveButton, resetItemsByReplace } from './e2e-helpers'
+import { itemEditButton, editSaveButton, resetItemsByReplace , itemDeleteButton} from './e2e-helpers'
 
 test.beforeEach(async ({ request }) => {
   await resetItemsByReplace(request)
@@ -60,7 +60,7 @@ test('failed delete clears stale success notice and keeps item visible', async (
     await dialog.accept()
   })
 
-  await page.getByRole('button', { name: 'Delete Baseを削除' }).click()
+  await itemDeleteButton(page, 'Delete Base').click()
 
   await expect(page.getByRole('alert')).toContainText('削除APIが一時的に利用できません。')
   await expect(page.getByText('カフェラテ の1位に保存しました。')).toHaveCount(0)

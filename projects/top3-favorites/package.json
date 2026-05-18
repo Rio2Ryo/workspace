@@ -25,6 +25,7 @@
     "test:search-clear-helper-contract": "node --test tests/search-clear-helper-contract.test.mjs",
     "test:edit-save-helper-contract": "node --test tests/edit-save-helper-contract.test.mjs",
     "test:item-edit-action-helper-contract": "node --test tests/item-edit-action-helper-contract.test.mjs",
+    "test:item-delete-action-helper-contract": "node --test tests/item-delete-action-helper-contract.test.mjs",
     "test:quick": "pnpm test:qa-current && pnpm test:qa-docs",
     "test:docs-only": "pnpm test:qa-current && pnpm test:qa-docs && pnpm test:copy-docs",
     "test:import-preview-only": "playwright test tests/import-preview",
@@ -34,7 +35,7 @@
     "test:import-preview-terms": "playwright test tests/import-preview/terms",
     "test:import-preview-naming": "playwright test tests/import-preview/naming",
     "test:import-preview-summary": "playwright test tests/import-preview/summary",
-    "test:full": "pnpm test:docs-only && pnpm test:legacy-zero-run-script && pnpm test:legacy-zero-run-env-script && pnpm test:qa-failure-summary-script && pnpm test:tag-normalization-contract && pnpm test:import-preview-summary-contract && pnpm test:export-download-helper-contract && pnpm test:import-file-helper-contract && pnpm test:sample-data-helper-contract && pnpm test:search-clear-helper-contract && pnpm test:edit-save-helper-contract && pnpm test:item-edit-action-helper-contract && pnpm test:e2e-clean-script && pnpm test:e2e:clean && pnpm build"
+    "test:full": "pnpm test:docs-only && pnpm test:legacy-zero-run-script && pnpm test:legacy-zero-run-env-script && pnpm test:qa-failure-summary-script && pnpm test:tag-normalization-contract && pnpm test:import-preview-summary-contract && pnpm test:export-download-helper-contract && pnpm test:import-file-helper-contract && pnpm test:sample-data-helper-contract && pnpm test:search-clear-helper-contract && pnpm test:edit-save-helper-contract && pnpm test:item-edit-action-helper-contract && pnpm test:item-delete-action-helper-contract && pnpm test:e2e-clean-script && pnpm test:e2e:clean && pnpm build"
   },
   "dependencies": {
     "@vercel/blob": "^2.3.3",
