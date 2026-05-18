@@ -10,7 +10,8 @@
     "preview:local": "node scripts/preview-local.mjs",
     "test:e2e": "playwright test",
     "test:qa-docs": "node --test tests/qa-coverage-doc.test.mjs",
-    "test:copy-docs": "node --test tests/concept-copy-contract.test.mjs"
+    "test:copy-docs": "node --test tests/concept-copy-contract.test.mjs",
+    "test:qa-current": "node --test tests/qa-current-contract.test.mjs"
   },
   "dependencies": {
     "@vercel/blob": "^2.3.3",

@@ -99,6 +99,9 @@
 - `tests/concept-copy-contract.test.mjs`
   - README導入案が現行の `/api/items` 永続化と構造化フォームUIに一致していることを検証する。
   - localStorage/自然文パース前提のLP・紹介コピーが再混入する drift を防ぐ。
+- `tests/qa-current-contract.test.mjs`
+  - `docs/QA.md`, `docs/QA_RESULT.md`, `docs/MANUAL_TEST_CHECKLIST.md` が現行の `/api/items` 永続化と構造化フォームUIに一致していることを検証する。
+  - 手動QA資料・QA結果が旧入力方式や旧保存方式を合格扱いに戻す drift を防ぐ。
 
 ## 手動に残す項目
 
@@ -109,7 +112,9 @@
 ## 実行コマンド
 
 ```bash
+pnpm test:qa-current
 pnpm test:qa-docs
+pnpm test:copy-docs
 pnpm test:e2e
 pnpm build
 ```
