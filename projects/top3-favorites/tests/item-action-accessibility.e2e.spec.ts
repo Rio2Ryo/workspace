@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test'
-import { resetItemsByReplace, saveSampleItems } from './e2e-helpers'
+import { itemEditButton, resetItemsByReplace, saveSampleItems } from './e2e-helpers'
 
 test.beforeEach(async ({ request }) => {
   await resetItemsByReplace(request)
@@ -12,6 +12,6 @@ test('item edit and delete actions include the item name in their accessible lab
 
   await page.getByText('1位: Solito MAGO').click()
 
-  await expect(page.getByRole('button', { name: 'Solito MAGOを編集' })).toBeVisible()
+  await expect(itemEditButton(page, 'Solito MAGO')).toBeVisible()
   await expect(page.getByRole('button', { name: 'Solito MAGOを削除' })).toBeVisible()
 })

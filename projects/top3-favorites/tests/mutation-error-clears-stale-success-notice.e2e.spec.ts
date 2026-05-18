@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test'
-import { editSaveButton, resetItemsByReplace } from './e2e-helpers'
+import { itemEditButton, editSaveButton, resetItemsByReplace } from './e2e-helpers'
 
 test.beforeEach(async ({ request }) => {
   await resetItemsByReplace(request)
@@ -18,7 +18,7 @@ test('failed edit clears stale success notice and keeps edit draft for retry', a
   await seedOne(page, 'Edit Base')
 
   await page.getByText('1位: Edit Base').click()
-  await page.getByRole('button', { name: 'Edit Baseを編集' }).click()
+  await itemEditButton(page, 'Edit Base').click()
   await page.getByLabel('編集 店舗名').fill('Edit Retry Candidate')
 
   await page.route('**/api/items', async (route) => {

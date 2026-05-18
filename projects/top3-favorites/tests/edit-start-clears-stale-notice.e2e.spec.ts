@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test'
-import { resetItemsByReplace } from './e2e-helpers'
+import { itemEditButton, resetItemsByReplace } from './e2e-helpers'
 
 test.beforeEach(async ({ request }) => {
   await resetItemsByReplace(request)
@@ -15,6 +15,6 @@ test('starting edit clears stale success notice to match current context', async
   await expect(page.getByRole('status')).toContainText('カフェラテ の1位に保存しました。')
 
   await page.getByText('1位: Edit Start Notice').click()
-  await page.getByRole('button', { name: 'Edit Start Noticeを編集' }).click()
+  await itemEditButton(page, 'Edit Start Notice').click()
   await expect(page.getByText('カフェラテ の1位に保存しました。')).toHaveCount(0)
 })

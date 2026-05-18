@@ -31,6 +31,11 @@ export function editSaveButton(page: Page): Locator {
   return page.getByRole('button', { name: '編集を保存' })
 }
 
+export function itemEditButton(scope: Page | Locator, itemName: string | RegExp): Locator {
+  const name = typeof itemName === 'string' ? `${itemName}を編集` : itemName
+  return scope.getByRole('button', { name })
+}
+
 export async function uploadJsonImportFile(page: Page, name: string, body: string | unknown): Promise<void> {
   const buffer = Buffer.from(typeof body === 'string' ? body : JSON.stringify(body), 'utf-8')
   await page.locator('input[type="file"][accept*="json"]').setInputFiles({
