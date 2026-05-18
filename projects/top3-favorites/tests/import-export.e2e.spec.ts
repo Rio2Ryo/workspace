@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test'
-import { uploadJsonImportFile, parseDownloadedJsonFile, resetItemsByReplace } from './e2e-helpers'
+import { uploadJsonImportFile, parseDownloadedJsonFile, resetItemsByReplace, downloadJsonExport } from './e2e-helpers'
 
 test.beforeEach(async ({ request }) => {
   await resetItemsByReplace(request)
@@ -27,9 +27,7 @@ test('exported JSON can be downloaded and imported back through the confirmation
   await page.getByRole('button', { name: 'サンプルをDB保存' }).click()
   await expect(page.getByText('サンプルをDBに保存しました。')).toBeVisible()
 
-  const downloadPromise = page.waitForEvent('download')
-  await page.getByRole('button', { name: 'JSONエクスポート' }).click()
-  const download = await downloadPromise
+  const download = await downloadJsonExport(page)
   const { filename, raw: exportedText, parsed: exportedItems } = await parseDownloadedJsonFile<Array<{ name: string }>>(download)
   expect(Array.isArray(exportedItems)).toBe(true)
   expect(exportedItems).toHaveLength(3)

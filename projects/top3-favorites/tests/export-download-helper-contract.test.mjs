@@ -13,25 +13,36 @@ function relativePath(url) {
   return url.pathname.replace(root.pathname, '')
 }
 
-test('[E2E-Helper][export-artifact] export download specs parse artifacts through shared helper', async () => {
+test('[E2E-Helper][export-artifact] export download specs use shared download and parse helpers', async () => {
   const offenders = []
 
   for (const spec of exportSpecs) {
     const specUrl = new URL(spec, `${root}/`)
     const source = await readFile(specUrl, 'utf8')
-    if (!source.includes("from './e2e-helpers'") || !/parseDownloadedJsonFile[<(]/.test(source)) {
+    if (!source.includes("from './e2e-helpers'") || !/parseDownloadedJsonFile[<(]/.test(source) || !/downloadJsonExport\(/.test(source)) {
       offenders.push(relativePath(specUrl))
     }
     if (/readFile\([^\n]*(download|exported)Path/.test(source) || /JSON\.parse\([^\n]*(raw|exportedText)/.test(source)) {
       offenders.push(`${relativePath(specUrl)}: direct download parse`)
+    }
+    if (/waitForEvent\(['"]download['"]\)/.test(source) || /getByRole\(['"]button['"],\s*\{\s*name:\s*['"]JSONエクスポート['"]\s*\}\)\.click\(\)/.test(source)) {
+      offenders.push(`${relativePath(specUrl)}: direct export download mechanics`)
     }
   }
 
   assert.deepEqual(
     offenders.sort(),
     [],
-    `export download specs should use parseDownloadedJsonFile() so filename, path, read, and JSON parse assertions stay centralized: ${offenders.join(', ')}`,
+    `export download specs should use downloadJsonExport() + parseDownloadedJsonFile() so button name, event wiring, filename, path, read, and JSON parse assertions stay centralized: ${offenders.join(', ')}`,
   )
+})
+
+test('[E2E-Helper][export-artifact] helper owns export button/event download mechanics', async () => {
+  const source = await readFile(helperPath, 'utf8')
+
+  assert.match(source, /export async function downloadJsonExport/, 'tests/e2e-helpers.ts should export downloadJsonExport')
+  assert.match(source, /page\.waitForEvent\(['"]download['"]\)/, 'downloadJsonExport should wait for the Playwright download event')
+  assert.match(source, /getByRole\(['"]button['"],\s*\{\s*name:\s*['"]JSONエクスポート['"]\s*\}\)\.click\(\)/, 'downloadJsonExport should own the JSON export button accessible name')
 })
 
 test('[E2E-Helper][export-artifact] parseDownloadedJsonFile helper owns filename/path/read/parse checks', async () => {

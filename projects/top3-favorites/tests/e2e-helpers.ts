@@ -28,6 +28,12 @@ export async function parseImportPreviewSummary<T = Record<string, unknown>>(sum
   return summary
 }
 
+export async function downloadJsonExport(page: Page): Promise<Download> {
+  const downloadPromise = page.waitForEvent('download')
+  await page.getByRole('button', { name: 'JSONエクスポート' }).click()
+  return downloadPromise
+}
+
 export async function parseDownloadedJsonFile<T = unknown>(download: Download): Promise<{ filename: string; raw: string; parsed: T }> {
   const filename = download.suggestedFilename()
   expect(filename).toMatch(/^top3-favorites-\d{4}-\d{2}-\d{2}-\d{2}-\d{2}-\d{2}\.json$/)
