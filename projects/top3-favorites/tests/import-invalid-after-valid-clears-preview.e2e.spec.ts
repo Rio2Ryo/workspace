@@ -1,0 +1,49 @@
+import { expect, test } from '@playwright/test'
+
+test.beforeEach(async ({ request }) => {
+  const data = (await request.get('/api/items').then((res) => res.json())) as { items: { id: string }[] }
+  for (const item of data.items) {
+    await request.delete(`/api/items?id=${encodeURIComponent(item.id)}`)
+  }
+})
+
+test('invalid JSON after a valid import preview clears pending preview and keeps existing data', async ({ page, request }) => {
+  await page.goto('/')
+
+  // seed one existing item
+  await page.getByLabel('タグ', { exact: true }).fill('カフェラテ')
+  await page.getByLabel('場所', { exact: true }).fill('柏の葉')
+  await page.getByLabel('店舗名', { exact: true }).fill('Base Item')
+  await page.getByRole('button', { name: 'DBに保存' }).click()
+
+  const now = new Date().toISOString()
+  const validItems = [
+    { id: 'v1', tag: 'プリン', location: '浅草', name: 'P1', rank: 1, memo: '', mapsUrl: '', placeId: '', createdAt: now, updatedAt: now },
+    { id: 'v2', tag: 'プリン', location: '浅草', name: 'P2', rank: 2, memo: '', mapsUrl: '', placeId: '', createdAt: now, updatedAt: now },
+  ]
+
+  const fileInput = page.locator('input[type="file"][accept*="json"]')
+
+  // 1) valid file -> preview visible
+  await fileInput.setInputFiles({
+    name: 'valid.json',
+    mimeType: 'application/json',
+    buffer: Buffer.from(JSON.stringify(validItems), 'utf-8'),
+  })
+  await expect(page.getByLabel('インポート確認')).toBeVisible()
+
+  // 2) invalid file -> preview must be cleared (fail-closed UI)
+  await fileInput.setInputFiles({
+    name: 'broken.json',
+    mimeType: 'application/json',
+    buffer: Buffer.from('{"broken": ', 'utf-8'),
+  })
+
+  await expect(page.getByRole('alert')).toContainText('インポート失敗: JSONの読み取りに失敗しました。既存データは保持しました。')
+  await expect(page.getByLabel('インポート確認')).toHaveCount(0)
+
+  // DB should remain unchanged (still seeded 1 item)
+  const apiData = (await request.get('/api/items').then((res) => res.json())) as { items: { name: string }[] }
+  expect(apiData.items).toHaveLength(1)
+  expect(apiData.items[0]?.name).toBe('Base Item')
+})

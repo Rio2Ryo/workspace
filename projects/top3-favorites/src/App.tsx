@@ -196,6 +196,12 @@ export function App() {
   const [pendingImport, setPendingImport] = useState<PendingImport | null>(null)
   const fileRef = useRef<HTMLInputElement | null>(null)
 
+  const clearFeedback = (options?: { pendingImport?: boolean }) => {
+    setError('')
+    setNotice('')
+    if (options?.pendingImport) setPendingImport(null)
+  }
+
   const loadItems = async () => {
     setIsLoading(true)
     try {
@@ -215,7 +221,7 @@ export function App() {
   }
 
   const retryLoadItems = async () => {
-    setNotice('')
+    clearFeedback()
     const ok = await loadItems()
     if (ok) setNotice('データを再読み込みしました。')
   }
@@ -313,12 +319,14 @@ export function App() {
   const selectTag = (tag: string) => {
     setSelectedTag(tag)
     setDraft((prev) => ({ ...prev, tag }))
+    setPendingImport(null)
     if (notice === SYNC_BREAK_NOTICE) {
       setNotice('')
     }
   }
 
   const clearSelectedTag = () => {
+    setPendingImport(null)
     setSelectedTag((prevSelected) => {
       setDraft((prevDraft) => ({
         ...prevDraft,
@@ -390,6 +398,8 @@ export function App() {
   }
 
   const triggerImport = () => {
+    clearFeedback({ pendingImport: true })
+    setEditingId(null)
     fileRef.current?.click()
   }
 
@@ -470,14 +480,12 @@ export function App() {
   const startEdit = (item: FavoriteItem) => {
     setEditingId(item.id)
     setEditingDraft({ tag: item.tag, location: item.location, name: item.name, rank: item.rank, memo: item.memo })
-    setError('')
-    setNotice('')
+    clearFeedback({ pendingImport: true })
   }
 
   const cancelEdit = () => {
     setEditingId(null)
-    setError('')
-    setNotice('')
+    clearFeedback()
   }
 
   const saveEdit = async () => {
