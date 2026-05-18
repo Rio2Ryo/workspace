@@ -1,7 +1,8 @@
 import { expect, test } from '@playwright/test'
+import { resetItemsByReplace } from './e2e-helpers'
 
 test.beforeEach(async ({ request }) => {
-  await request.post('/api/items?mode=replace', { data: { items: [] } })
+  await resetItemsByReplace(request)
 })
 
 test('tag sync should not break for semantically same tag with half/full width spaces', async ({ page }) => {

@@ -1,10 +1,8 @@
 import { expect, test } from '@playwright/test'
+import { resetItemsByDelete } from '../helpers'
 
 test.beforeEach(async ({ request }) => {
-  const data = (await request.get('/api/items').then((res) => res.json())) as { items: { id: string }[] }
-  for (const item of data.items) {
-    await request.delete(`/api/items?id=${encodeURIComponent(item.id)}`)
-  }
+  await resetItemsByDelete(request)
 })
 
 test('live summary representative excluded name is consistent with excluded-details list order', async ({ page }) => {

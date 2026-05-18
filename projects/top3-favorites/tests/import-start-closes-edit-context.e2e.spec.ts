@@ -1,7 +1,8 @@
 import { expect, test } from '@playwright/test'
+import { resetItemsByReplace } from './e2e-helpers'
 
 test.beforeEach(async ({ request }) => {
-  await request.post('/api/items?mode=replace', { data: { items: [] } })
+  await resetItemsByReplace(request)
 })
 
 test('starting JSON import closes edit context to avoid mixed workflows', async ({ page }) => {

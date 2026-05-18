@@ -1,9 +1,10 @@
 import assert from 'node:assert/strict'
-import { readFile } from 'node:fs/promises'
+import { readdir, readFile } from 'node:fs/promises'
 import test from 'node:test'
 
 const root = new URL('..', import.meta.url)
 const appPath = new URL('src/App.tsx', `${root}/`)
+const importPreviewTestsPath = new URL('tests/import-preview/', `${root}/`)
 const docs = [
   'docs/QA.md',
   'docs/QA_RESULT.md',
@@ -20,6 +21,24 @@ const forbiddenDocPatterns = [
     message: 'QA docs must not describe unsupported natural-language or legacy slash parsing',
   },
 ]
+
+async function collectFiles(dirUrl, predicate) {
+  const entries = await readdir(dirUrl, { withFileTypes: true })
+  const files = []
+
+  for (const entry of entries) {
+    const childUrl = new URL(entry.name, dirUrl)
+    if (entry.isDirectory()) {
+      files.push(...await collectFiles(new URL(`${entry.name}/`, dirUrl), predicate))
+      continue
+    }
+    if (predicate(entry.name)) {
+      files.push(childUrl)
+    }
+  }
+
+  return files
+}
 
 test('current implementation uses API-backed structured form, not legacy localStorage or natural parsing', async () => {
   const appSource = await readFile(appPath, 'utf8')
@@ -95,4 +114,152 @@ test('README includes import preview category-level quick regression commands', 
   for (const command of commands) {
     assert.ok(readme.includes(command), `README should include command: ${command}`)
   }
+})
+
+test('import preview specs use shared reset helpers in beforeEach hooks', async () => {
+  const specs = await collectFiles(importPreviewTestsPath, (name) => name.endsWith('.e2e.spec.ts'))
+  const offenders = []
+
+  for (const specUrl of specs) {
+    const source = await readFile(specUrl, 'utf8')
+    const beforeEachBlocks = source.match(/test\.beforeEach\([\s\S]*?\n\}\)/g) ?? []
+
+    for (const block of beforeEachBlocks) {
+      if (/\/api\/items\?mode=replace/.test(block) || /request\.delete\(`\/api\/items/.test(block)) {
+        offenders.push(specUrl.pathname.replace(root.pathname, ''))
+        break
+      }
+    }
+  }
+
+  assert.deepEqual(
+    offenders.sort(),
+    [],
+    `import preview beforeEach hooks should call resetItemsByReplace/resetItemsByDelete helpers instead of inline API reset: ${offenders.join(', ')}`,
+  )
+})
+
+test('search specs use shared resetItemsByReplace helper in beforeEach hooks', async () => {
+  const specs = await collectFiles(new URL('tests/', `${root}/`), (name) =>
+    name.startsWith('search-') && name.endsWith('.e2e.spec.ts'),
+  )
+  const offenders = []
+
+  for (const specUrl of specs) {
+    const source = await readFile(specUrl, 'utf8')
+    const beforeEachBlocks = source.match(/test\.beforeEach\([\s\S]*?\n\}\)/g) ?? []
+
+    for (const block of beforeEachBlocks) {
+      if (/\/api\/items\?mode=replace/.test(block)) {
+        offenders.push(specUrl.pathname.replace(root.pathname, ''))
+        break
+      }
+    }
+  }
+
+  assert.deepEqual(
+    offenders.sort(),
+    [],
+    `search beforeEach hooks should call resetItemsByReplace helper instead of inline mode=replace reset: ${offenders.join(', ')}`,
+  )
+})
+
+test('tag-sync specs use shared resetItemsByReplace helper in beforeEach hooks', async () => {
+  const specs = await collectFiles(new URL('tests/', `${root}/`), (name) =>
+    name.startsWith('tag-sync') && name.endsWith('.e2e.spec.ts'),
+  )
+  const offenders = []
+
+  for (const specUrl of specs) {
+    const source = await readFile(specUrl, 'utf8')
+    const beforeEachBlocks = source.match(/test\.beforeEach\([\s\S]*?\n\}\)/g) ?? []
+
+    for (const block of beforeEachBlocks) {
+      if (/\/api\/items\?mode=replace/.test(block)) {
+        offenders.push(specUrl.pathname.replace(root.pathname, ''))
+        break
+      }
+    }
+  }
+
+  assert.deepEqual(
+    offenders.sort(),
+    [],
+    `tag-sync beforeEach hooks should call resetItemsByReplace helper instead of inline mode=replace reset: ${offenders.join(', ')}`,
+  )
+})
+
+test('edit/delete specs use shared resetItemsByReplace helper in beforeEach hooks', async () => {
+  const specs = await collectFiles(new URL('tests/', `${root}/`), (name) =>
+    (name.startsWith('edit') || name.startsWith('delete')) && name.endsWith('.e2e.spec.ts'),
+  )
+  const offenders = []
+
+  for (const specUrl of specs) {
+    const source = await readFile(specUrl, 'utf8')
+    const beforeEachBlocks = source.match(/test\.beforeEach\([\s\S]*?\n\}\)/g) ?? []
+
+    for (const block of beforeEachBlocks) {
+      if (/\/api\/items\?mode=replace/.test(block)) {
+        offenders.push(specUrl.pathname.replace(root.pathname, ''))
+        break
+      }
+    }
+  }
+
+  assert.deepEqual(
+    offenders.sort(),
+    [],
+    `edit/delete beforeEach hooks should call resetItemsByReplace helper instead of inline mode=replace reset: ${offenders.join(', ')}`,
+  )
+})
+
+test('import specs (outside import-preview) use shared resetItemsByReplace helper for mode=replace resets', async () => {
+  const specs = await collectFiles(new URL('tests/', `${root}/`), (name) =>
+    name.startsWith('import-') && name.endsWith('.e2e.spec.ts'),
+  )
+  const offenders = []
+
+  for (const specUrl of specs) {
+    const source = await readFile(specUrl, 'utf8')
+    const beforeEachBlocks = source.match(/test\.beforeEach\([\s\S]*?\n\}\)/g) ?? []
+
+    for (const block of beforeEachBlocks) {
+      if (/\/api\/items\?mode=replace/.test(block)) {
+        offenders.push(specUrl.pathname.replace(root.pathname, ''))
+        break
+      }
+    }
+  }
+
+  assert.deepEqual(
+    offenders.sort(),
+    [],
+    `import beforeEach hooks should call resetItemsByReplace helper instead of inline mode=replace reset: ${offenders.join(', ')}`,
+  )
+})
+
+test('import specs (outside import-preview) use shared resetItemsByDelete helper for delete-based resets', async () => {
+  const specs = await collectFiles(new URL('tests/', `${root}/`), (name) =>
+    name.startsWith('import-') && name.endsWith('.e2e.spec.ts'),
+  )
+  const offenders = []
+
+  for (const specUrl of specs) {
+    const source = await readFile(specUrl, 'utf8')
+    const beforeEachBlocks = source.match(/test\.beforeEach\([\s\S]*?\n\}\)/g) ?? []
+
+    for (const block of beforeEachBlocks) {
+      if (/request\.delete\(`\/api\/items\?id=/.test(block)) {
+        offenders.push(specUrl.pathname.replace(root.pathname, ''))
+        break
+      }
+    }
+  }
+
+  assert.deepEqual(
+    offenders.sort(),
+    [],
+    `import beforeEach hooks should call resetItemsByDelete helper instead of inline delete reset: ${offenders.join(', ')}`,
+  )
 })

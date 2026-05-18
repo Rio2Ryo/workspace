@@ -213,6 +213,7 @@ export function App() {
   const [loadError, setLoadError] = useState(false)
   const [pendingImport, setPendingImport] = useState<PendingImport | null>(null)
   const [isImpactTagsExpanded, setIsImpactTagsExpanded] = useState(false)
+  const [isExcludedNamesExpanded, setIsExcludedNamesExpanded] = useState(false)
   const [isExcludedDetailsExpanded, setIsExcludedDetailsExpanded] = useState(false)
   const [isImpactTermsHelperExpanded, setIsImpactTermsHelperExpanded] = useState(false)
   const fileRef = useRef<HTMLInputElement | null>(null)
@@ -223,6 +224,7 @@ export function App() {
     if (options?.pendingImport) {
       setPendingImport(null)
       setIsImpactTagsExpanded(false)
+      setIsExcludedNamesExpanded(false)
       setIsExcludedDetailsExpanded(false)
       setIsImpactTermsHelperExpanded(false)
     }
@@ -337,6 +339,14 @@ export function App() {
     const hiddenCount = Math.max(0, pendingImportImpact.tags.length - visible.length)
     return { visible, hiddenCount }
   }, [isImpactTagsExpanded, pendingImportImpact])
+
+  const excludedNamesPreview = useMemo(() => {
+    if (!pendingImport) return { visible: [] as string[], hiddenCount: 0 }
+    if (isExcludedNamesExpanded) return { visible: pendingImport.excludedNames, hiddenCount: 0 }
+    const visible = pendingImport.excludedNames.slice(0, 3)
+    const hiddenCount = Math.max(0, pendingImport.excludedNames.length - visible.length)
+    return { visible, hiddenCount }
+  }, [isExcludedNamesExpanded, pendingImport])
 
   const importPreviewLiveSummary = useMemo(() => {
     if (!pendingImport || !pendingImportImpact) return ''
@@ -524,6 +534,8 @@ export function App() {
         excludedNames,
         excludedDetails: analyzed.excludedDetails,
       })
+      setIsExcludedNamesExpanded(false)
+      setIsExcludedDetailsExpanded(false)
       setError('')
       setNotice(`インポート確認: ${normalized.length}件。内容を確認してから反映してください。`)
     } catch {
@@ -746,7 +758,29 @@ export function App() {
                   </p>
                 )}
                 {pendingImport.excludedNames.length > 0 && (
-                  <p className="hint compact" data-testid="import-preview-excluded-names">除外予定の店舗: {pendingImport.excludedNames.join(', ')}</p>
+                  <>
+                    <p
+                      id="import-preview-excluded-names"
+                      className="hint compact"
+                      data-testid="import-preview-excluded-names"
+                      data-excluded-name-count={pendingImport.excludedNames.length}
+                    >
+                      除外予定の店舗: {excludedNamesPreview.visible.join(', ')}
+                      {excludedNamesPreview.hiddenCount > 0 ? `（ほか${excludedNamesPreview.hiddenCount}件）` : ''}
+                    </p>
+                    {pendingImport.excludedNames.length > 3 && (
+                      <button
+                        className="ghost small"
+                        onClick={() => setIsExcludedNamesExpanded((prev) => !prev)}
+                        data-testid="import-preview-toggle-excluded-names"
+                        aria-controls="import-preview-excluded-names"
+                        aria-expanded={isExcludedNamesExpanded}
+                        aria-label={`インポート詳細: ${isExcludedNamesExpanded ? '除外店舗名を折りたたむ' : '除外店舗名を全件表示'}`}
+                      >
+                        {isExcludedNamesExpanded ? '除外店舗名を折りたたむ' : '除外店舗名を全件表示'}
+                      </button>
+                    )}
+                  </>
                 )}
                 {pendingImport.excludedDetails.length > 0 && (
                   <>

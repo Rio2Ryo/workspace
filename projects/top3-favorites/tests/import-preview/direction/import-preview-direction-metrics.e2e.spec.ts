@@ -1,7 +1,8 @@
 import { expect, test } from '@playwright/test'
+import { resetItemsByReplace } from '../helpers'
 
 test.beforeEach(async ({ request }) => {
-  await request.post('/api/items?mode=replace', { data: { items: [] } })
+  await resetItemsByReplace(request)
 })
 
 test('import impact metrics show directional signs (+ / ± / -)', async ({ page, request }) => {

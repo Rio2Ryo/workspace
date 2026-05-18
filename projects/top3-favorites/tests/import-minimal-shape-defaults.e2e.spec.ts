@@ -1,7 +1,8 @@
 import { expect, test } from '@playwright/test'
+import { resetItemsByReplace } from './e2e-helpers'
 
 test.beforeEach(async ({ request }) => {
-  await request.post('/api/items?mode=replace', { data: { items: [] } })
+  await resetItemsByReplace(request)
 })
 
 test('UI import accepts minimal valid items and fills generated fields before API replace', async ({ page, request }) => {

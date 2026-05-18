@@ -92,6 +92,7 @@
 - `tests/import-preview/naming/import-preview-testid-naming-consistency.e2e.spec.ts`
 
 #### import preview / summary
+- `tests/import-preview/summary/import-preview-excluded-names-collapsed.e2e.spec.ts`
 - `tests/import-preview/summary/import-preview-math-consistency.e2e.spec.ts`
 - `tests/import-preview/summary/import-preview-summary.e2e.spec.ts`
 - `tests/import-preview/summary/import-preview-zero-metrics-muted.e2e.spec.ts`
