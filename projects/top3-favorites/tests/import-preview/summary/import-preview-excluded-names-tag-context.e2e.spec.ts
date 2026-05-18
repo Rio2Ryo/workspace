@@ -34,4 +34,10 @@ test('excluded store names preview includes tag context when multiple themes exc
   await expect(page.getByTestId('import-preview-excluded-details')).toHaveText(
     '除外理由: ・カフェラテ: 同名店（カフェラテでTop3外: 4位相当） / ・つけ麺: 同名店（つけ麺でTop3外: 4位相当）',
   )
+
+  const summaryJson = await page.getByTestId('import-preview-summary').getAttribute('data-summary-json')
+  expect(JSON.parse(summaryJson ?? '{}').excludedDetailLabels).toEqual([
+    'カフェラテ: 同名店',
+    'つけ麺: 同名店',
+  ])
 })

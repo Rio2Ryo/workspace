@@ -224,10 +224,17 @@ function buildExcludedNameLabels(details: ImportExcludedDetail[]): string[] {
     .sort((a, b) => a.localeCompare(b, 'ja'))
 }
 
-function buildExcludedLeadLabel(details: ImportExcludedDetail[]): string {
+function buildExcludedDetailsWithLabels(details: ImportExcludedDetail[]): Array<ImportExcludedDetail & { label: string }> {
   const nameCounts = countExcludedNames(details)
-  const firstDetail = details.find((detail) => detail.name.trim())
-  return firstDetail ? buildExcludedNameLabel(firstDetail, nameCounts) : ''
+  return details.map((detail) => ({
+    ...detail,
+    label: buildExcludedNameLabel(detail, nameCounts),
+  }))
+}
+
+function buildExcludedLeadLabel(details: ImportExcludedDetail[]): string {
+  const firstDetail = buildExcludedDetailsWithLabels(details).find((detail) => detail.label)
+  return firstDetail?.label ?? ''
 }
 
 async function api<T>(path: string, options?: RequestInit): Promise<T> {
@@ -361,6 +368,7 @@ export function App() {
 
   const pendingImportSummary = useMemo(() => {
     if (!pendingImport || !pendingImportImpact) return null
+    const excludedDetailsWithLabels = buildExcludedDetailsWithLabels(pendingImport.excludedDetails)
     return {
       version: 1,
       before: items.length,
@@ -374,6 +382,7 @@ export function App() {
       tags: pendingImportImpact.tags,
       excludedNames: pendingImport.excludedNames,
       excludedNameLabels: pendingImport.excludedNameLabels,
+      excludedDetailLabels: excludedDetailsWithLabels.map((detail) => detail.label).filter(Boolean),
       excludedDetails: pendingImport.excludedDetails,
     }
   }, [items.length, pendingImport, pendingImportImpact])
@@ -412,11 +421,7 @@ export function App() {
 
   const excludedDetailsPreview = useMemo(() => {
     if (!pendingImport) return { visible: [] as Array<ImportExcludedDetail & { label: string }>, hiddenCount: 0 }
-    const nameCounts = countExcludedNames(pendingImport.excludedDetails)
-    const detailsWithLabels = pendingImport.excludedDetails.map((detail) => ({
-      ...detail,
-      label: buildExcludedNameLabel(detail, nameCounts),
-    }))
+    const detailsWithLabels = buildExcludedDetailsWithLabels(pendingImport.excludedDetails)
     if (isExcludedDetailsExpanded) return { visible: detailsWithLabels, hiddenCount: 0 }
     const visible = detailsWithLabels.slice(0, 3)
     const hiddenCount = Math.max(0, detailsWithLabels.length - visible.length)
