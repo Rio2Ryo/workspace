@@ -37,9 +37,10 @@ test('pending import preview enforces operation guards across registration/searc
   await expect(page.getByRole('button', { name: '登録 2位に入れる' })).toBeDisabled()
   await expect(page.getByRole('button', { name: '登録 3位に入れる' })).toBeDisabled()
 
-  // save/sample locks
+  // save/sample/export locks
   await expect(page.getByRole('button', { name: 'DBに保存' })).toBeDisabled()
   await expect(page.getByRole('button', { name: 'サンプルをDB保存' })).toBeDisabled()
+  await expect(page.getByRole('button', { name: 'JSONエクスポート' })).toBeDisabled()
 
   // list actions lock
   await page.getByText('1位: Guard Seed').click()

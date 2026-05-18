@@ -40,7 +40,7 @@ const contractTestPaths = [
   new URL('tests/qa-coverage-doc.test.mjs', `${root}/`),
 ]
 
-test('[App] current implementation uses API-backed structured form, not legacy localStorage or natural parsing', async () => {
+test('[App][behavior] current implementation uses API-backed structured form, not legacy localStorage or natural parsing', async () => {
   const appSource = await readFile(appPath, 'utf8')
 
   for (const { pattern, message } of appRequiredPatterns) {
@@ -52,7 +52,7 @@ test('[App] current implementation uses API-backed structured form, not legacy l
   }
 })
 
-test('[App] scopeLimitRules do not produce overlapping matches across QA contract test suites', async () => {
+test('[App][config-quality] scopeLimitRules do not produce overlapping matches across QA contract test suites', async () => {
   const overlaps = await findScopeRuleOverlaps(contractTestPaths, scopeLimitRules)
 
   assert.deepEqual(
@@ -67,7 +67,7 @@ test('[App] scopeLimitRules do not produce overlapping matches across QA contrac
   )
 })
 
-test('[App] contract configs are deeply frozen (recursive guard against nested drift)', async () => {
+test('[App][config-quality] contract configs are deeply frozen (recursive guard against nested drift)', async () => {
   const skipByType = (value) => {
     if (deepFreezeSkipTypeRules.includes('function') && typeof value === 'function') return true
     if (deepFreezeSkipTypeRules.includes('RegExp') && value instanceof RegExp) return true
@@ -137,7 +137,7 @@ test('[App] contract configs are deeply frozen (recursive guard against nested d
 })
 
 
-test('[App] deepFreezeSkipTypeRules follows allowed-value contract (allowed-only, unique, sorted)', async () => {
+test('[App][config-quality] deepFreezeSkipTypeRules follows allowed-value contract (allowed-only, unique, sorted)', async () => {
   const allowed = new Set(['function', 'RegExp'])
   const { invalid, duplicates, unsorted } = analyzeEnumList(deepFreezeSkipTypeRules, {
     allowed,
@@ -176,7 +176,7 @@ test('[App] deepFreezeSkipTypeRules follows allowed-value contract (allowed-only
   )
 })
 
-test('[App] scopeLimitRules IDs follow naming and uniqueness contract', async () => {
+test('[App][config-quality] scopeLimitRules IDs follow naming and uniqueness contract', async () => {
   const idPattern = /^scope-[a-z0-9]+(?:-[a-z0-9]+)*$/
   const ids = scopeLimitRules.map((rule) => rule.id)
   const missing = ids.filter((id) => typeof id !== 'string' || id.length === 0)
@@ -215,7 +215,7 @@ test('[App] scopeLimitRules IDs follow naming and uniqueness contract', async ()
   )
 })
 
-test('[App] scopeLimitRules descriptions follow style, shape, length, and language policy', async () => {
+test('[App][config-quality] scopeLimitRules descriptions follow style, shape, length, and language policy', async () => {
   const missingDescription = scopeLimitRules
     .filter(({ description }) => typeof description !== 'string' || description.trim().length === 0)
     .map(({ id }) => id ?? '(missing-id)')
@@ -284,7 +284,7 @@ test('[App] scopeLimitRules descriptions follow style, shape, length, and langua
   )
 })
 
-test('[App] scopeDescriptionContract vocabulary lists are unique and sorted', async () => {
+test('[App][config-quality] scopeDescriptionContract vocabulary lists are unique and sorted', async () => {
   const targetTerms = [...scopeDescriptionContract.allowedTargets]
   const purposeTerms = [...scopeDescriptionContract.allowedPurposes]
   const {
@@ -338,7 +338,7 @@ test('[App] scopeDescriptionContract vocabulary lists are unique and sorted', as
   )
 })
 
-test('[App] scopeLimitRules descriptions use allowed vocabulary and avoid dead vocabulary', async () => {
+test('[App][config-quality] scopeLimitRules descriptions use allowed vocabulary and avoid dead vocabulary', async () => {
   const targetTerms = [...scopeDescriptionContract.allowedTargets]
   const purposeTerms = [...scopeDescriptionContract.allowedPurposes]
   const allowedTargets = new Set(targetTerms)
@@ -400,7 +400,7 @@ test('[App] scopeLimitRules descriptions use allowed vocabulary and avoid dead v
   )
 })
 
-test('[Docs] QA manuals and QA result docs match the current implementation contract', async () => {
+test('[Docs][consistency] QA manuals and QA result docs match the current implementation contract', async () => {
   for (const relativePath of docs) {
     const markdown = await readFile(new URL(relativePath, `${root}/`), 'utf8')
 
@@ -414,7 +414,7 @@ test('[Docs] QA manuals and QA result docs match the current implementation cont
   }
 })
 
-test('[Docs] QA coverage docs do not leave API load failure recovery as manual-only when E2E covers it', async () => {
+test('[Docs][coverage-link] QA coverage docs do not leave API load failure recovery as manual-only when E2E covers it', async () => {
   const apiLoadRetrySpec = await readFile(new URL('tests/api-load-retry.e2e.spec.ts', `${root}/`), 'utf8')
   const coverage = await readFile(new URL('docs/AUTOMATED_QA_COVERAGE.md', `${root}/`), 'utf8')
   const qaResult = await readFile(new URL('docs/QA_RESULT.md', `${root}/`), 'utf8')
@@ -434,7 +434,7 @@ test('[Docs] QA coverage docs do not leave API load failure recovery as manual-o
   )
 })
 
-test('[Manual] manual checklist includes import preview categories aligned with automated QA structure', async () => {
+test('[Manual][structure] manual checklist includes import preview categories aligned with automated QA structure', async () => {
   const markdown = await readFile(new URL('docs/MANUAL_TEST_CHECKLIST.md', `${root}/`), 'utf8')
 
   for (const heading of importPreviewManualHeadings) {
@@ -442,7 +442,7 @@ test('[Manual] manual checklist includes import preview categories aligned with 
   }
 })
 
-test('[Manual] manual checklist uses the current import preview toggle aria-label namespace', async () => {
+test('[Manual][a11y] manual checklist uses the current import preview toggle aria-label namespace', async () => {
   const appSource = await readFile(appPath, 'utf8')
   const markdown = await readFile(new URL('docs/MANUAL_TEST_CHECKLIST.md', `${root}/`), 'utf8')
 
@@ -463,7 +463,7 @@ test('[Manual] manual checklist uses the current import preview toggle aria-labe
   )
 })
 
-test('[Manual] manual checklist marks browser-console and API-failure checks as automated where possible', async () => {
+test('[Manual][automation-link] manual checklist marks browser-console and API-failure checks as automated where possible', async () => {
   const markdown = await readFile(new URL('docs/MANUAL_TEST_CHECKLIST.md', `${root}/`), 'utf8')
   const coverageDoc = await readFile(new URL('docs/AUTOMATED_QA_COVERAGE.md', `${root}/`), 'utf8')
 
@@ -494,7 +494,7 @@ for (const { title, commands } of readmeCommandContractGroups) {
   })
 }
 
-test('[E2E-Helper] allowed category dictionary is unique, sorted, and kebab-case', async () => {
+test('[E2E-Helper][config-quality] allowed category dictionary is unique, sorted, and kebab-case', async () => {
   const kebab = /^[a-z0-9]+(?:-[a-z0-9]+)*$/
   const allowedList = [...e2eHelperCategoryContract.allowed]
   const { duplicates, unsorted } = analyzeEnumList(allowedList, { locale: 'en' })
@@ -543,7 +543,7 @@ test('[E2E-Helper] allowed category dictionary is unique, sorted, and kebab-case
   )
 })
 
-test('[E2E-Helper] contract case categories follow naming contract (allowed, non-empty, kebab-case)', async () => {
+test('[E2E-Helper][config-quality] contract case categories follow naming contract (allowed, non-empty, kebab-case)', async () => {
   const kebab = /^[a-z0-9]+(?:-[a-z0-9]+)*$/
   const allowed = new Set(e2eHelperCategoryContract.allowed)
   const categories = [
@@ -646,7 +646,7 @@ test(`[E2E-Helper][${importPreviewContractCases.helperImportCategory}] import pr
   )
 })
 
-test('[E2E-Helper] resetItemsByDelete is an asserted atomic reset alias, not a per-row delete loop', async () => {
+test('[E2E-Helper][behavior] resetItemsByDelete is an asserted atomic reset alias, not a per-row delete loop', async () => {
   const helperSource = await readFile(new URL('tests/e2e-helpers.ts', `${root}/`), 'utf8')
 
   assert.match(
@@ -797,7 +797,7 @@ test('[E2E-Helper][config-quality] e2eHelperMessagePrefixContract dictionaries a
   )
 })
 
-test('[E2E-Helper] messagePrefix strings follow contract (non-empty, max-length, required phrases)', async () => {
+test('[E2E-Helper][message-quality] messagePrefix strings follow contract (non-empty, max-length, required phrases)', async () => {
   const allCases = [...helperContractCases, ...directMutationContractCases]
   const prefixes = allCases.map(({ messagePrefix }) => String(messagePrefix ?? ''))
 

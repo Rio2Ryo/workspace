@@ -763,7 +763,7 @@ export function App() {
         <h2>データ管理</h2>
         <p className="hint">DBデータをJSONでエクスポート/インポートできます。</p>
         <div className="row">
-          <button onClick={exportJson} disabled={items.length === 0}>JSONエクスポート</button>
+          <button onClick={exportJson} disabled={items.length === 0 || !!pendingImport}>JSONエクスポート</button>
           <button className="ghost" onClick={triggerImport}>JSONインポート</button>
           <input
             ref={fileRef}
