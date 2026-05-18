@@ -241,6 +241,23 @@ function buildExcludedDetailsWithLabels(details: ImportExcludedDetail[]): Array<
   }))
 }
 
+function buildNormalizedExcludedNameGroups(details: ImportExcludedDetail[]): Array<{ key: string; names: string[] }> {
+  const groups = new Map<string, string[]>()
+  for (const detail of details) {
+    const name = detail.name.trim()
+    const key = normalizeExcludedNameKey(name)
+    if (!key || !name) continue
+    const names = groups.get(key) ?? []
+    if (!names.includes(name)) names.push(name)
+    groups.set(key, names)
+  }
+
+  return Array.from(groups.entries())
+    .filter(([, names]) => names.length > 1)
+    .map(([key, names]) => ({ key, names }))
+    .sort((a, b) => a.key.localeCompare(b.key, 'ja'))
+}
+
 function buildExcludedLeadLabel(details: ImportExcludedDetail[]): string {
   const firstDetail = buildExcludedDetailsWithLabels(details).find((detail) => detail.label)
   return firstDetail?.label ?? ''
@@ -378,6 +395,7 @@ export function App() {
   const pendingImportSummary = useMemo(() => {
     if (!pendingImport || !pendingImportImpact) return null
     const excludedDetailsWithLabels = buildExcludedDetailsWithLabels(pendingImport.excludedDetails)
+    const normalizedExcludedNameGroups = buildNormalizedExcludedNameGroups(pendingImport.excludedDetails)
     return {
       version: 1,
       before: items.length,
@@ -392,6 +410,7 @@ export function App() {
       excludedNames: pendingImport.excludedNames,
       excludedNameLabels: pendingImport.excludedNameLabels,
       excludedDetailLabels: excludedDetailsWithLabels.map((detail) => detail.label).filter(Boolean),
+      normalizedExcludedNameGroups,
       excludedDetails: pendingImport.excludedDetails,
     }
   }, [items.length, pendingImport, pendingImportImpact])
@@ -411,6 +430,19 @@ export function App() {
     const hiddenCount = Math.max(0, pendingImport.excludedNameLabels.length - visible.length)
     return { visible, hiddenCount }
   }, [isExcludedNamesExpanded, pendingImport])
+
+  const normalizedExcludedNameGroups = useMemo(
+    () => (pendingImport ? buildNormalizedExcludedNameGroups(pendingImport.excludedDetails) : []),
+    [pendingImport],
+  )
+
+  const normalizedExcludedNameGroupLabel = normalizedExcludedNameGroups
+    .map((group) => group.names.join(' / '))
+    .join(', ')
+
+  const normalizedExcludedNameGroupData = normalizedExcludedNameGroups
+    .map((group) => `${group.key}=${group.names.join('/')}`)
+    .join('|')
 
   const importPreviewLiveSummary = useMemo(() => {
     if (!pendingImport || !pendingImportImpact) return ''
@@ -850,6 +882,15 @@ export function App() {
                       除外予定の店舗: {excludedNamesPreview.visible.join(', ')}
                       {excludedNamesPreview.hiddenCount > 0 ? `（ほか${excludedNamesPreview.hiddenCount}件）` : ''}
                     </p>
+                    {normalizedExcludedNameGroups.length > 0 && (
+                      <p
+                        className="hint compact"
+                        data-testid="import-preview-excluded-name-variants"
+                        data-normalized-excluded-name-groups={normalizedExcludedNameGroupData}
+                      >
+                        表記ゆれ候補: {normalizedExcludedNameGroupLabel}
+                      </p>
+                    )}
                     {pendingImport.excludedNames.length > 3 && (
                       <button
                         className="ghost small"
