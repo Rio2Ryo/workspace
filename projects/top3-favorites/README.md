@@ -48,6 +48,10 @@ pnpm test:docs-only
 ```bash
 pnpm test:legacy-zero-run-script
 pnpm test:legacy-zero-run-env-script
+
+# CI向け env 生成（例）
+node scripts/derive-legacy-zero-run-env.mjs --previous-zero-run-count=2 --last-legacy-context-usage-count=0 --format=export
+# => QA_LEGACY_ZERO_RUN_COUNT=3
 ```
 
 ### import preview 回帰のみ

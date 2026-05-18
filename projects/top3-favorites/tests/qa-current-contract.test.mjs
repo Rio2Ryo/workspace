@@ -1409,6 +1409,54 @@ test('[App][config-quality] full verification script includes lightweight QA aut
   )
 })
 
+test('[App][config-quality] GitHub Actions wires derive-legacy-zero-run output to QA_LEGACY_ZERO_RUN_COUNT', async () => {
+  const workflow = await readFile(new URL('.github/workflows/qa-current.yml', `${root}/`), 'utf8')
+
+  assert.match(
+    workflow,
+    /jobs:\n\s+derive-legacy-zero-run:/,
+    contractMessage({
+      scope: 'App',
+      rule: 'qa-current workflow has derive job',
+      expected: 'derive-legacy-zero-run job exists',
+      fix: 'add derive-legacy-zero-run job in .github/workflows/qa-current.yml',
+    }),
+  )
+
+  assert.match(
+    workflow,
+    /node scripts\/derive-legacy-zero-run-env\.mjs --format=github-output/,
+    contractMessage({
+      scope: 'App',
+      rule: 'qa-current workflow derives legacy zero-run via script',
+      expected: 'derive script runs with --format=github-output',
+      fix: 'run scripts/derive-legacy-zero-run-env.mjs --format=github-output in derive job',
+    }),
+  )
+
+  assert.match(
+    workflow,
+    /outputs:\n\s+legacy_zero_run_count:\s+\$\{\{ steps\.derive\.outputs\.legacy_zero_run_count \}\}/,
+    contractMessage({
+      scope: 'App',
+      rule: 'derive job exports legacy_zero_run_count output',
+      expected: 'derive job output is wired from steps.derive.outputs.legacy_zero_run_count',
+      fix: 'add derive job outputs.legacy_zero_run_count mapping',
+    }),
+  )
+
+  assert.match(
+    workflow,
+    /env:\n\s+QA_LEGACY_ZERO_RUN_COUNT:\s+\$\{\{ needs\.derive-legacy-zero-run\.outputs\.legacy_zero_run_count \}\}/,
+    contractMessage({
+      scope: 'App',
+      rule: 'qa-current job receives QA_LEGACY_ZERO_RUN_COUNT from derive output',
+      expected: 'QA_LEGACY_ZERO_RUN_COUNT is mapped from needs.derive-legacy-zero-run.outputs.legacy_zero_run_count',
+      fix: 'set qa-current job env.QA_LEGACY_ZERO_RUN_COUNT from derive output',
+    }),
+  )
+})
+
 test('[E2E-Helper][config-quality] allowed category dictionary is unique, sorted, and kebab-case', async () => {
   const kebab = /^[a-z0-9]+(?:-[a-z0-9]+)*$/
   const allowedList = [...e2eHelperCategoryContract.allowed]

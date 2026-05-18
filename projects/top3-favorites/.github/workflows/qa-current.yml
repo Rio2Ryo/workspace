@@ -1,0 +1,44 @@
+name: qa-current
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+
+jobs:
+  derive-legacy-zero-run:
+    runs-on: ubuntu-latest
+    outputs:
+      legacy_zero_run_count: ${{ steps.derive.outputs.legacy_zero_run_count }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 9
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - id: derive
+        run: |
+          echo "$(node scripts/derive-legacy-zero-run-env.mjs --format=github-output)" >> "$GITHUB_OUTPUT"
+
+  qa-current:
+    needs: derive-legacy-zero-run
+    runs-on: ubuntu-latest
+    env:
+      QA_LEGACY_ZERO_RUN_COUNT: ${{ needs.derive-legacy-zero-run.outputs.legacy_zero_run_count }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 9
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm test:qa-current
+      - run: pnpm run test:qa-docs
+      - run: pnpm build
