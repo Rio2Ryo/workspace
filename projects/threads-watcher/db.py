@@ -129,6 +129,49 @@ def save_post_screenshot(
     return cur.rowcount == 1
 
 
+
+def update_post_screenshot(
+    conn: sqlite3.Connection,
+    *,
+    handle: str,
+    post_id: str,
+    captured_at: str,
+    screenshot_png: bytes,
+    width: int | None = None,
+    height: int | None = None,
+    local_path: str | None = None,
+) -> bool:
+    """Replace the screenshot for an already-known post.
+
+    Used when capture quality improves (for example hiding Threads login/app
+    popups before taking the screenshot). Keeps first_seen_at/post_url stable.
+    """
+    cur = conn.execute(
+        """
+        UPDATE posts
+        SET captured_at = ?,
+            screenshot_png = ?,
+            screenshot_content_type = 'image/png',
+            screenshot_size_bytes = ?,
+            screenshot_width = ?,
+            screenshot_height = ?,
+            local_path = ?
+        WHERE handle = ? AND post_id = ?
+        """,
+        (
+            captured_at,
+            sqlite3.Binary(screenshot_png),
+            len(screenshot_png),
+            width,
+            height,
+            local_path,
+            handle,
+            post_id,
+        ),
+    )
+    conn.commit()
+    return cur.rowcount == 1
+
 def record_check(
     conn: sqlite3.Connection,
     *,

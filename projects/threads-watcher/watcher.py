@@ -16,7 +16,7 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
 
-from db import connect, export_status_screenshots, get_seen_post_ids, init_db, latest_snapshot, record_check, save_post_screenshot
+from db import connect, export_status_screenshots, get_seen_post_ids, init_db, latest_snapshot, record_check, save_post_screenshot, update_post_screenshot
 from health import (
     check_dom_regression,
     check_process_staleness,
@@ -103,6 +103,91 @@ _collect_post_ids_until_stable = collect_post_ids_until_stable
 _combine_error_messages = combine_error_messages
 
 
+
+def _dismiss_threads_overlays(page: Page) -> None:
+    """Best-effort removal of Threads login/app/cookie overlays before capture.
+
+    Public Threads pages often hydrate a login/app-install prompt over the post.
+    For watcher screenshots the post itself is the artifact, so close obvious
+    buttons first, then remove modal/backdrop containers that are not article
+    content. This runs inside the per-post context only.
+    """
+    close_selectors = [
+        "button[aria-label='Close']",
+        "button[aria-label='閉じる']",
+        "div[role='dialog'] button[aria-label='Close']",
+        "div[role='dialog'] button[aria-label='閉じる']",
+        "text=後で",
+        "text=あとで",
+        "text=Not now",
+        "text=Continue as guest",
+        "text=ゲストとして続行",
+    ]
+    for selector in close_selectors:
+        try:
+            locator = page.locator(selector).first
+            if locator.count() > 0 and locator.is_visible(timeout=500):
+                locator.click(timeout=1_000)
+                page.wait_for_timeout(300)
+        except Exception:
+            pass
+
+    page.evaluate(
+        """
+        () => {
+          const remove = (el) => { try { el.remove(); } catch (_) {} };
+          const loginText = /(Threadsでもっと発信しよう|Threadsにログインするかサインアップ|Instagramでログイン|代わりにユーザーネームでログイン|次に進むことで|ログインして他の返信|log in|login|sign up|continue as)/i;
+
+          // Remove semantic dialogs and their modal containers. Climb to the
+          // highest non-article ancestor so the dimming wrapper disappears too.
+          for (const el of Array.from(document.querySelectorAll('[role="dialog"], [aria-modal="true"]'))) {
+            let target = el;
+            while (target.parentElement && target.parentElement !== document.body && !target.parentElement.querySelector('article')) {
+              target = target.parentElement;
+            }
+            if (!target.querySelector('article')) remove(target);
+            else remove(el);
+          }
+
+          // Remove login/app sidebars, bottom terms banners, and reply-login
+          // prompts by text, while preserving any container that actually holds
+          // the post article.
+          for (const el of Array.from(document.querySelectorAll('body *'))) {
+            const text = (el.innerText || '').trim();
+            if (!text || !loginText.test(text) || el.querySelector('article')) continue;
+            const rect = el.getBoundingClientRect();
+            const style = getComputedStyle(el);
+            const isUiChrome =
+              rect.x > window.innerWidth * 0.55 ||
+              rect.y > window.innerHeight * 0.78 ||
+              (style.position === 'sticky' && rect.x > window.innerWidth * 0.5) ||
+              (style.position === 'fixed' && rect.y > window.innerHeight * 0.7);
+            if (isUiChrome) remove(el);
+          }
+
+          // Remove common full-screen/backdrop layers that block or dim the
+          // post but do not carry semantic roles. Keep article containers.
+          for (const el of Array.from(document.querySelectorAll('body *'))) {
+            const style = getComputedStyle(el);
+            const rect = el.getBoundingClientRect();
+            const text = (el.innerText || '').trim();
+            const isBackdrop = style.position === 'fixed' &&
+              rect.width >= window.innerWidth * 0.9 &&
+              rect.height >= window.innerHeight * 0.9 &&
+              !el.querySelector('article') &&
+              text.length < 20;
+            const isBottomNotice = style.position === 'fixed' &&
+              rect.y >= window.innerHeight * 0.65 &&
+              rect.width >= window.innerWidth * 0.5 &&
+              !el.querySelector('article');
+            if (isBackdrop || isBottomNotice) remove(el);
+          }
+          document.documentElement.style.overflow = 'auto';
+          document.body.style.overflow = 'auto';
+        }
+        """
+    )
+
 def _screenshot_post(
     browser: Browser,
     handle: str,
@@ -121,6 +206,8 @@ def _screenshot_post(
         except PlaywrightTimeoutError:
             pass
         page.wait_for_timeout(1_500)
+        _dismiss_threads_overlays(page)
+        page.wait_for_timeout(500)
         out_dir.mkdir(parents=True, exist_ok=True)
         out_path = out_dir / f"{post_id}__{_now_compact()}.png"
         screenshot_png = page.screenshot(path=str(out_path), full_page=True)
@@ -338,6 +425,51 @@ def run_health_check(handle: str, threshold: int = 3) -> int:
     return exit_code
 
 
+
+def recapture_existing(handle: str, *, limit: int | None = None) -> int:
+    """Re-shoot already-known posts, replacing DB screenshots in-place."""
+    handle = _normalize_handle(handle)
+    conn = connect(DB_FILE)
+    init_db(conn)
+    rows = conn.execute(
+        """
+        SELECT post_id FROM posts
+        WHERE handle = ?
+        ORDER BY captured_at DESC
+        """,
+        (handle,),
+    ).fetchall()
+    if limit is not None:
+        rows = rows[:limit]
+
+    updated = 0
+    with sync_playwright() as p:
+        browser = p.chromium.launch(headless=True)
+        try:
+            for row in rows:
+                pid = str(row["post_id"])
+                captured = _screenshot_post(browser, handle, pid, SCREENSHOTS_DIR / handle.lstrip("@"))
+                local_rel_path = str(Path(captured["path"]).relative_to(PROJECT_ROOT))
+                if update_post_screenshot(
+                    conn,
+                    handle=handle,
+                    post_id=pid,
+                    captured_at=_now_iso(),
+                    screenshot_png=captured["png"],
+                    width=captured["width"],
+                    height=captured["height"],
+                    local_path=local_rel_path,
+                ):
+                    updated += 1
+                    print(f"[recaptured] {pid} bytes={len(captured['png'])} local={local_rel_path}")
+        finally:
+            browser.close()
+
+    _write_web_snapshot_from_db(conn, handle)
+    conn.close()
+    print(f"[recapture-done] {handle} updated={updated}")
+    return updated
+
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description="Threads public-profile new-post watcher")
     parser.add_argument("--handle", default=DEFAULT_HANDLE, help="Target handle, with or without leading @")
@@ -345,8 +477,10 @@ def main(argv: list[str] | None = None) -> int:
     mode.add_argument("--once", action="store_true", help="Run a single check and exit (default)")
     mode.add_argument("--watch", action="store_true", help="Loop forever at --interval seconds")
     mode.add_argument("--health-check", action="store_true", help="Audit-log-only health check (no network)")
+    mode.add_argument("--recapture-existing", action="store_true", help="Re-shoot already-known posts and replace DB screenshots")
     parser.add_argument("--interval", type=int, default=600, help="Polling interval in seconds when --watch (min 60)")
     parser.add_argument("--threshold", type=int, default=3, help="Consecutive-failure threshold for --health-check")
+    parser.add_argument("--limit", type=int, default=None, help="Limit rows for --recapture-existing")
     parser.add_argument(
         "--baseline-lookback-days",
         type=int,
@@ -364,6 +498,9 @@ def main(argv: list[str] | None = None) -> int:
     handle = _normalize_handle(args.handle)
     if args.health_check:
         return run_health_check(handle, threshold=args.threshold)
+    if args.recapture_existing:
+        recapture_existing(handle, limit=args.limit)
+        return 0
     if args.watch:
         run_watch(handle, args.interval, baseline_lookback_days=args.baseline_lookback_days)
         return 0
