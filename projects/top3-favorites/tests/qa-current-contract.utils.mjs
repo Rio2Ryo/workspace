@@ -12,6 +12,18 @@ export async function collectBracketScopesFromTestTitles(fileUrl) {
   return Array.from(scopes).sort((a, b) => a.localeCompare(b, 'en'))
 }
 
+export async function collectBracketScopeAndSubscopePairs(fileUrl) {
+  const source = await readFile(fileUrl, 'utf8')
+  const pairs = new Set()
+  const titleRegex = /test\(\s*(["'`])\[(.+?)\]\[(.+?)\]/g
+  let m
+  while ((m = titleRegex.exec(source)) !== null) {
+    if (m[2].includes('${') || m[3].includes('${')) continue
+    pairs.add(`${m[2]}::${m[3]}`)
+  }
+  return Array.from(pairs).sort((a, b) => a.localeCompare(b, 'en'))
+}
+
 export async function collectFiles(dirUrl, predicate) {
   const entries = await readdir(dirUrl, { withFileTypes: true })
   const files = []

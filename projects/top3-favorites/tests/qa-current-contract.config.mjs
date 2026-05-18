@@ -268,6 +268,21 @@ const rawDeepFreezeSkipTypeRules = ['function', 'RegExp']
 Object.freeze(rawDeepFreezeSkipTypeRules)
 export const deepFreezeSkipTypeRules = rawDeepFreezeSkipTypeRules
 
+const rawQaTestTitleSubscopeContract = {
+  allowedByScope: {
+    App: ['behavior', 'config-quality'],
+    Docs: ['completeness', 'consistency', 'coverage-link', 'integrity', 'scope', 'structure'],
+    Manual: ['a11y', 'automation-link', 'structure'],
+    'E2E-Helper': ['api-delete', 'before-each-reset', 'behavior', 'config-quality', 'import-path', 'message-quality'],
+  },
+}
+for (const arr of Object.values(rawQaTestTitleSubscopeContract.allowedByScope)) {
+  Object.freeze(arr)
+}
+Object.freeze(rawQaTestTitleSubscopeContract.allowedByScope)
+Object.freeze(rawQaTestTitleSubscopeContract)
+export const qaTestTitleSubscopeContract = rawQaTestTitleSubscopeContract
+
 const rawScopeDescriptionContract = {
   allowedTargets: ['offender-list density'],
   allowedPurposes: [

@@ -20,11 +20,13 @@ import {
   deepFreezeSkipTypeRules,
   scopeDescriptionContract,
   scopeLimitRules,
+  qaTestTitleSubscopeContract,
 } from './qa-current-contract.config.mjs'
 import {
   analyzeDuplicates,
   analyzeEnumList,
   assertDeepFrozen,
+  collectBracketScopeAndSubscopePairs,
   collectFiles,
   collectSpecUrlsByNamePredicate,
   findBeforeEachOffenders,
@@ -39,6 +41,115 @@ const contractTestPaths = [
   new URL('tests/qa-current-contract.test.mjs', `${root}/`),
   new URL('tests/qa-coverage-doc.test.mjs', `${root}/`),
 ]
+
+test('[App][config-quality] QA test title subscope contract is enforced across qa-current + qa-docs', async () => {
+  const pairs = [
+    ...(await collectBracketScopeAndSubscopePairs(new URL('tests/qa-current-contract.test.mjs', `${root}/`))),
+    ...(await collectBracketScopeAndSubscopePairs(new URL('tests/qa-coverage-doc.test.mjs', `${root}/`))),
+  ]
+
+  const allowedByScope = qaTestTitleSubscopeContract.allowedByScope
+  const unknownScope = []
+  const invalidSubscope = []
+
+  for (const pair of pairs) {
+    const [scope, subscope] = pair.split('::')
+    const allowed = allowedByScope[scope]
+    if (!allowed) {
+      unknownScope.push(pair)
+      continue
+    }
+    if (!allowed.includes(subscope)) {
+      invalidSubscope.push(pair)
+    }
+  }
+
+  assert.deepEqual(
+    unknownScope,
+    [],
+    missingItemsMessage({
+      scope: 'App',
+      rule: 'QA title scope contract (known scopes)',
+      fix: 'add missing scope mapping to qaTestTitleSubscopeContract.allowedByScope',
+      items: unknownScope,
+    }),
+  )
+  assert.deepEqual(
+    invalidSubscope,
+    [],
+    missingItemsMessage({
+      scope: 'App',
+      rule: 'QA title subscope contract (allowed values per scope)',
+      fix: 'rename test subscopes or extend qaTestTitleSubscopeContract.allowedByScope',
+      items: invalidSubscope,
+    }),
+  )
+})
+
+test('[App][config-quality] QA title subscope dictionaries are non-empty, unique, sorted, and kebab-case', async () => {
+  const kebab = /^[a-z0-9]+(?:-[a-z0-9]+)*$/
+  const scopeEntries = Object.entries(qaTestTitleSubscopeContract.allowedByScope)
+  const emptyScopes = scopeEntries.filter(([scope]) => String(scope).trim().length === 0).map(([scope]) => scope)
+
+  assert.deepEqual(
+    emptyScopes,
+    [],
+    missingItemsMessage({
+      scope: 'App',
+      rule: 'QA title subscope dictionary scope keys are non-empty',
+      fix: 'remove empty scope keys from qaTestTitleSubscopeContract.allowedByScope',
+      items: emptyScopes,
+    }),
+  )
+
+  for (const [scope, list] of scopeEntries) {
+    const items = [...list]
+    const empty = items.filter((v) => v.trim().length === 0)
+    const malformed = items.filter((v) => !kebab.test(v))
+    const { duplicates, unsorted } = analyzeEnumList(items, { locale: 'en' })
+
+    assert.deepEqual(
+      empty,
+      [],
+      missingItemsMessage({
+        scope: 'App',
+        rule: `QA title subscope dictionary non-empty (${scope})`,
+        fix: `remove empty subscopes in qaTestTitleSubscopeContract.allowedByScope.${scope}`,
+        items: empty,
+      }),
+    )
+    assert.deepEqual(
+      malformed,
+      [],
+      missingItemsMessage({
+        scope: 'App',
+        rule: `QA title subscope dictionary kebab-case (${scope})`,
+        fix: `rename subscopes to kebab-case in qaTestTitleSubscopeContract.allowedByScope.${scope}`,
+        items: malformed,
+      }),
+    )
+    assert.deepEqual(
+      duplicates,
+      [],
+      missingItemsMessage({
+        scope: 'App',
+        rule: `QA title subscope dictionary uniqueness (${scope})`,
+        fix: `deduplicate subscopes in qaTestTitleSubscopeContract.allowedByScope.${scope}`,
+        items: duplicates,
+      }),
+    )
+    assert.deepEqual(
+      unsorted,
+      [],
+      missingItemsMessage({
+        scope: 'App',
+        rule: `QA title subscope dictionary sorted order (${scope})`,
+        fix: `sort subscopes in qaTestTitleSubscopeContract.allowedByScope.${scope} with en locale order`,
+        items: unsorted,
+      }),
+    )
+  }
+})
 
 test('[App][behavior] current implementation uses API-backed structured form, not legacy localStorage or natural parsing', async () => {
   const appSource = await readFile(appPath, 'utf8')
