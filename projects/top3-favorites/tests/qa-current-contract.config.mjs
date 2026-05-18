@@ -190,7 +190,7 @@ Object.freeze(rawHelperContractCases)
 export const helperContractCases = rawHelperContractCases
 
 const rawE2EHelperCategoryContract = {
-  allowed: ['api-delete', 'before-each-reset'],
+  allowed: ['api-delete', 'before-each-reset', 'import-path'],
 }
 Object.freeze(rawE2EHelperCategoryContract.allowed)
 Object.freeze(rawE2EHelperCategoryContract)
@@ -212,6 +212,18 @@ for (const rule of rawDirectMutationContractCases) {
 Object.freeze(rawDirectMutationContractCases)
 
 export const directMutationContractCases = rawDirectMutationContractCases
+
+const rawE2EHelperMessagePrefixContract = {
+  maxLength: 120,
+  requiredIncludes: [' should '],
+  allowedVerbs: ['call', 'import', 'use'],
+  allowedNouns: ['beforeEach hooks', 'specs'],
+}
+Object.freeze(rawE2EHelperMessagePrefixContract.requiredIncludes)
+Object.freeze(rawE2EHelperMessagePrefixContract.allowedVerbs)
+Object.freeze(rawE2EHelperMessagePrefixContract.allowedNouns)
+Object.freeze(rawE2EHelperMessagePrefixContract)
+export const e2eHelperMessagePrefixContract = rawE2EHelperMessagePrefixContract
 
 const rawManualAutomatedLinkContracts = {
   manualChecklistChecks: [
@@ -293,6 +305,8 @@ Object.freeze(rawScopeLimitRules)
 export const scopeLimitRules = rawScopeLimitRules
 
 const rawImportPreviewContractCases = {
+  inlineResetCategory: 'before-each-reset',
+  helperImportCategory: 'import-path',
   inlineResetChecks: [
     {
       pattern: /\/api\/items\?mode=replace/,

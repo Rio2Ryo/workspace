@@ -13,6 +13,7 @@ import {
   readmeCommandContractGroups,
   readmeLinkContracts,
   e2eHelperCategoryContract,
+  e2eHelperMessagePrefixContract,
   requiredDocPatterns,
   importPreviewContractCases,
   contractMessageLimits,
@@ -548,11 +549,15 @@ test('[E2E-Helper] contract case categories follow naming contract (allowed, non
   const categories = [
     ...helperContractCases.map(({ category }) => String(category ?? '')),
     ...directMutationContractCases.map(({ category }) => String(category ?? '')),
+    String(importPreviewContractCases.inlineResetCategory ?? ''),
+    String(importPreviewContractCases.helperImportCategory ?? ''),
   ]
 
   const empty = categories.filter((v) => v.trim().length === 0)
   const invalidAllowed = categories.filter((v) => !allowed.has(v))
   const malformed = categories.filter((v) => !kebab.test(v))
+  const usedCategories = new Set(categories)
+  const deadCategories = [...allowed].filter((category) => !usedCategories.has(category)).sort((a, b) => a.localeCompare(b, 'en'))
 
   assert.deepEqual(
     empty,
@@ -570,7 +575,7 @@ test('[E2E-Helper] contract case categories follow naming contract (allowed, non
     missingItemsMessage({
       scope: 'E2E-Helper',
       rule: 'contract case category allowed set',
-      fix: 'use only allowed categories: api-delete, before-each-reset',
+      fix: `use only allowed categories: ${e2eHelperCategoryContract.allowed.join(', ')}`,
       items: invalidAllowed,
     }),
   )
@@ -584,9 +589,19 @@ test('[E2E-Helper] contract case categories follow naming contract (allowed, non
       items: malformed,
     }),
   )
+  assert.deepEqual(
+    deadCategories,
+    [],
+    missingItemsMessage({
+      scope: 'E2E-Helper',
+      rule: 'e2eHelperCategoryContract.allowed dead categories',
+      fix: 'remove unused categories from allowed set or add matching contract cases',
+      items: deadCategories,
+    }),
+  )
 })
 
-test('[E2E-Helper][beforeEach-reset] import preview specs use shared reset helpers in beforeEach hooks', async () => {
+test(`[E2E-Helper][${importPreviewContractCases.inlineResetCategory}] import preview specs use shared reset helpers in beforeEach hooks`, async () => {
   const specs = await collectFiles(importPreviewTestsPath, (name) => name.endsWith('.e2e.spec.ts'))
   const offenders = []
 
@@ -606,7 +621,7 @@ test('[E2E-Helper][beforeEach-reset] import preview specs use shared reset helpe
   assert.deepEqual(offenders.sort(), [], missingItemsMessage({ scope: 'E2E-Helper', rule: message, fix: 'replace inline reset with shared helper', items: offenders }))
 })
 
-test('[E2E-Helper][import-path] import preview specs import reset helpers directly from tests/e2e-helpers.ts', async () => {
+test(`[E2E-Helper][${importPreviewContractCases.helperImportCategory}] import preview specs import reset helpers directly from tests/e2e-helpers.ts`, async () => {
   const specs = await collectFiles(importPreviewTestsPath, (name) => name.endsWith('.e2e.spec.ts'))
   const offenders = []
 
@@ -643,6 +658,65 @@ test('[E2E-Helper] resetItemsByDelete is an asserted atomic reset alias, not a p
     helperSource,
     /for \(const item of data\.items\)[\s\S]*request\.delete/,
     'reset helper must not perform unasserted per-row DELETE loops',
+  )
+})
+
+test('[E2E-Helper] messagePrefix strings follow contract (non-empty, max-length, required phrases)', async () => {
+  const allCases = [...helperContractCases, ...directMutationContractCases]
+  const prefixes = allCases.map(({ messagePrefix }) => String(messagePrefix ?? ''))
+
+  const empty = prefixes.filter((v) => v.trim().length === 0)
+  const overlong = prefixes
+    .filter((v) => v.length > e2eHelperMessagePrefixContract.maxLength)
+    .map((v) => `${v.slice(0, 40)}... (${v.length} chars)`)
+  const missingRequired = prefixes.filter(
+    (v) => !e2eHelperMessagePrefixContract.requiredIncludes.every((needle) => v.includes(needle)),
+  )
+  const disallowedVerbOrNoun = prefixes.filter((v) => {
+    const hasAllowedVerb = e2eHelperMessagePrefixContract.allowedVerbs.some((verb) => v.includes(` ${verb} `))
+    const hasAllowedNoun = e2eHelperMessagePrefixContract.allowedNouns.some((noun) => v.includes(` ${noun} `))
+    return !hasAllowedVerb || !hasAllowedNoun
+  })
+
+  assert.deepEqual(
+    empty,
+    [],
+    missingItemsMessage({
+      scope: 'E2E-Helper',
+      rule: 'messagePrefix presence',
+      fix: 'set non-empty messagePrefix on every helper/direct-mutation contract case',
+      items: empty,
+    }),
+  )
+  assert.deepEqual(
+    overlong,
+    [],
+    missingItemsMessage({
+      scope: 'E2E-Helper',
+      rule: 'messagePrefix max length',
+      fix: `keep messagePrefix length <= ${e2eHelperMessagePrefixContract.maxLength}`,
+      items: overlong,
+    }),
+  )
+  assert.deepEqual(
+    missingRequired,
+    [],
+    missingItemsMessage({
+      scope: 'E2E-Helper',
+      rule: 'messagePrefix required includes',
+      fix: `include required phrases: ${e2eHelperMessagePrefixContract.requiredIncludes.join(', ')}`,
+      items: missingRequired,
+    }),
+  )
+  assert.deepEqual(
+    disallowedVerbOrNoun,
+    [],
+    missingItemsMessage({
+      scope: 'E2E-Helper',
+      rule: 'messagePrefix allowed vocabulary',
+      fix: `use allowed verbs (${e2eHelperMessagePrefixContract.allowedVerbs.join(', ')}) and nouns (${e2eHelperMessagePrefixContract.allowedNouns.join(', ')})`,
+      items: disallowedVerbOrNoun,
+    }),
   )
 })
 
