@@ -15,7 +15,7 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
-from watcher import combine_error_messages  # noqa: E402
+from watcher_pure import combine_error_messages  # noqa: E402
 
 
 def test_no_base_and_no_capture_errors_returns_none():

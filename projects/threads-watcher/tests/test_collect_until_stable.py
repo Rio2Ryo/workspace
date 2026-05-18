@@ -17,7 +17,7 @@ import pytest
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
-from watcher import collect_post_ids_until_stable  # noqa: E402
+from watcher_pure import collect_post_ids_until_stable  # noqa: E402
 
 
 HANDLE = "@hal.lifedesign"

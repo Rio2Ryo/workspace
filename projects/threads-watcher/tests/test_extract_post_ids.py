@@ -11,7 +11,7 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
-from watcher import extract_post_ids_from_hrefs  # noqa: E402
+from watcher_pure import extract_post_ids_from_hrefs  # noqa: E402
 
 
 HANDLE = "@hal.lifedesign"
