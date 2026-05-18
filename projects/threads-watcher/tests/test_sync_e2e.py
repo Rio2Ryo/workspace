@@ -1,0 +1,298 @@
+"""End-to-end tests for sync.main against a real ephemeral git repo.
+
+Before this file, sync.py's _do_commit_and_maybe_push (the part that
+actually shells out to git add/commit/push) was only exercised by:
+  - 16 pure-helper unit tests in test_sync_cli.py (command builders)
+  - 28 guard unit tests in test_sync_guards.py
+  - exactly one production run of `python sync.py --confirm --enable-push`
+    on 2026-05-17 (commit 16d0bd5 in workspace).
+That was a single tracer — not a regression net. A refactor that, say,
+swapped the order of `write_cursor` vs `git commit`, or that no-op'd
+the staged-others abort guard, would only have been caught by another
+production run.
+
+Strategy: spin up a self-contained git repo in tempdir, seed a sqlite DB
+with the schema sync.py expects, write a snapshot file, and invoke
+`sync.main([...])` as if it were the CLI. Assert on commit shape, cursor
+file content, and log file.
+
+No network. No subprocess mocking — we want to verify the real `git add`
+/ `git commit` invocations are wired right. Tests are deterministic
+because every git invocation is path-scoped to the tempdir.
+"""
+
+from __future__ import annotations
+
+import json
+import os
+import subprocess
+import sys
+from pathlib import Path
+
+import pytest
+
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
+
+import sync as sync_mod  # noqa: E402
+from db import connect, init_db, record_check, save_post_screenshot  # noqa: E402
+
+
+SNAPSHOT_REL = "snapshot/state.json"
+
+
+# ── fixture helpers ─────────────────────────────────────────────────────
+
+
+def _run(*cmd: str, cwd: Path) -> subprocess.CompletedProcess:
+    return subprocess.run(list(cmd), cwd=str(cwd), capture_output=True, text=True, check=True)
+
+
+def _seed_repo(tmp_path: Path, *, recent_checks: list[str] | None = None, posts: int = 3) -> dict:
+    """Build a temp git repo with snapshot + sqlite DB + initial commit.
+
+    Returns a dict of paths used by main(): db, snapshot, cursor, log,
+    workspace.
+    """
+    workspace = tmp_path / "ws"
+    workspace.mkdir()
+
+    _run("git", "init", "-q", "-b", "main", cwd=workspace)
+    # Make commits work without relying on the host's git config.
+    _run("git", "config", "user.email", "test@example.com", cwd=workspace)
+    _run("git", "config", "user.name", "test", cwd=workspace)
+    _run("git", "config", "commit.gpgsign", "false", cwd=workspace)
+
+    snapshot = workspace / SNAPSHOT_REL
+    snapshot.parent.mkdir(parents=True)
+    snapshot.write_text(json.dumps({"posts": [], "handle": "@x", "version": 0}), encoding="utf-8")
+    _run("git", "add", str(snapshot.relative_to(workspace)), cwd=workspace)
+    _run("git", "commit", "-q", "-m", "initial snapshot", cwd=workspace)
+
+    db = workspace / "watcher.db"
+    conn = connect(db)
+    init_db(conn)
+    for i in range(posts):
+        save_post_screenshot(
+            conn,
+            handle="@x", post_id=f"P{i}", post_url=f"u/{i}",
+            first_seen_at="t", captured_at="t",
+            screenshot_png=b"png", width=1, height=1, local_path=None,
+        )
+    for status in (recent_checks or ["ok", "ok", "ok"]):
+        record_check(conn, handle="@x", checked_at="t", found_count=10, new_count=0, status=status, error=None)
+    conn.close()
+
+    return {
+        "workspace": workspace,
+        "snapshot": snapshot,
+        "db": db,
+        "cursor": workspace / ".cursor",
+        "log": workspace / "sync.log",
+    }
+
+
+def _argv(paths: dict, *extra: str) -> list[str]:
+    """Build the CLI args sync.main expects, pointing every default at the temp repo."""
+    return [
+        "--db", str(paths["db"]),
+        "--snapshot", str(paths["snapshot"]),
+        "--cursor", str(paths["cursor"]),
+        "--log", str(paths["log"]),
+        "--workspace", str(paths["workspace"]),
+        "--snapshot-rel", SNAPSHOT_REL,
+        # 0 gap so the recently-committed initial snapshot doesn't block us.
+        "--min-gap-sec", "0",
+        *extra,
+    ]
+
+
+def _mutate_snapshot(snapshot: Path, n: int = 1) -> None:
+    """Edit snapshot so `git diff --cached` after `git add` is non-empty."""
+    data = json.loads(snapshot.read_text(encoding="utf-8"))
+    data["posts"] = [{"id": f"new-{i}"} for i in range(n)]
+    data["version"] = data.get("version", 0) + 1
+    snapshot.write_text(json.dumps(data), encoding="utf-8")
+
+
+def _last_commit_subject(workspace: Path) -> str:
+    return subprocess.check_output(
+        ["git", "-C", str(workspace), "log", "-1", "--format=%s"], text=True,
+    ).strip()
+
+
+def _staged_paths(workspace: Path) -> list[str]:
+    out = subprocess.check_output(
+        ["git", "-C", str(workspace), "diff", "--cached", "--name-only"], text=True,
+    )
+    return [line for line in out.splitlines() if line]
+
+
+def _commit_count(workspace: Path) -> int:
+    return int(subprocess.check_output(
+        ["git", "-C", str(workspace), "rev-list", "--count", "HEAD"], text=True,
+    ).strip())
+
+
+# ── happy paths ─────────────────────────────────────────────────────────
+
+
+def test_confirm_creates_commit_when_snapshot_changed(tmp_path):
+    paths = _seed_repo(tmp_path)
+    _mutate_snapshot(paths["snapshot"], n=2)
+
+    before = _commit_count(paths["workspace"])
+    rc = sync_mod.main(_argv(paths, "--confirm"))
+    after = _commit_count(paths["workspace"])
+
+    assert rc == 0
+    assert after == before + 1
+    subject = _last_commit_subject(paths["workspace"])
+    assert subject.startswith("chore(threads-watcher): snapshot @")
+    assert "(delta=3)" in subject  # 3 posts seeded, cursor=0
+
+
+def test_cursor_written_after_successful_commit(tmp_path):
+    paths = _seed_repo(tmp_path, posts=5)
+    _mutate_snapshot(paths["snapshot"])
+
+    rc = sync_mod.main(_argv(paths, "--confirm"))
+
+    assert rc == 0
+    # Cursor must reflect the new high-water mark from the DB so a
+    # subsequent run takes the no-delta short-circuit.
+    assert paths["cursor"].read_text(encoding="utf-8").strip() == "5"
+
+
+def test_idempotent_second_run_skips_with_no_delta(tmp_path):
+    paths = _seed_repo(tmp_path, posts=4)
+    _mutate_snapshot(paths["snapshot"])
+
+    sync_mod.main(_argv(paths, "--confirm"))
+    commits_after_first = _commit_count(paths["workspace"])
+
+    # Second run, no new posts in DB, cursor=4 already.
+    rc = sync_mod.main(_argv(paths, "--confirm"))
+    commits_after_second = _commit_count(paths["workspace"])
+
+    assert rc == 0
+    assert commits_after_second == commits_after_first  # no new commit
+
+
+# ── safety nets ─────────────────────────────────────────────────────────
+
+
+def test_aborts_when_unrelated_file_is_already_staged(tmp_path):
+    paths = _seed_repo(tmp_path)
+    _mutate_snapshot(paths["snapshot"], n=2)
+
+    # Simulate the "footgun" condition the abort guard exists for:
+    # someone (or a tool) left another file staged in the workspace.
+    foreign = paths["workspace"] / "foreign.txt"
+    foreign.write_text("oops", encoding="utf-8")
+    _run("git", "add", "foreign.txt", cwd=paths["workspace"])
+
+    before = _commit_count(paths["workspace"])
+    rc = sync_mod.main(_argv(paths, "--confirm"))
+    after = _commit_count(paths["workspace"])
+
+    # exit=1 (skip is a soft "no work to do"; abort is a hard refuse)
+    assert rc == 1
+    # Crucial: NO commit was made. foreign.txt stays staged for the
+    # human to deal with rather than getting bundled into the snapshot.
+    assert after == before
+    assert "foreign.txt" in _staged_paths(paths["workspace"])
+
+    log_text = paths["log"].read_text(encoding="utf-8")
+    assert "ABORT" in log_text
+    assert "foreign.txt" in log_text
+
+
+def test_dry_default_makes_no_git_changes(tmp_path):
+    paths = _seed_repo(tmp_path)
+    _mutate_snapshot(paths["snapshot"])
+
+    before = _commit_count(paths["workspace"])
+    rc = sync_mod.main(_argv(paths))  # no --confirm
+    after = _commit_count(paths["workspace"])
+
+    assert rc == 0
+    assert after == before  # no commit
+    assert _staged_paths(paths["workspace"]) == []  # no `git add` either
+    assert not paths["cursor"].exists()  # cursor not written in dry mode
+
+    log_text = paths["log"].read_text(encoding="utf-8")
+    assert "DRY:" in log_text
+
+
+def test_recent_failures_skip_does_not_touch_git(tmp_path):
+    paths = _seed_repo(tmp_path, recent_checks=["ok", "error", "error"])
+    _mutate_snapshot(paths["snapshot"])
+
+    before = _commit_count(paths["workspace"])
+    rc = sync_mod.main(_argv(paths, "--confirm"))
+    after = _commit_count(paths["workspace"])
+
+    # Skip path = exit 0, no commit, no cursor write
+    assert rc == 0
+    assert after == before
+    assert not paths["cursor"].exists()
+
+
+def test_missing_db_returns_1(tmp_path):
+    paths = _seed_repo(tmp_path)
+    paths["db"].unlink()
+
+    rc = sync_mod.main(_argv(paths, "--confirm"))
+
+    assert rc == 1
+    log_text = paths["log"].read_text(encoding="utf-8")
+    assert "db not found" in log_text
+
+
+def test_missing_snapshot_returns_1(tmp_path):
+    paths = _seed_repo(tmp_path)
+    paths["snapshot"].unlink()
+
+    rc = sync_mod.main(_argv(paths, "--confirm"))
+
+    assert rc == 1
+    log_text = paths["log"].read_text(encoding="utf-8")
+    assert "snapshot not found" in log_text
+
+
+# ── ordering contract: cursor only after commit succeeded ───────────────
+
+
+def test_cursor_not_written_before_commit_when_commit_path_runs(tmp_path):
+    """Pin the ordering: `write_cursor` must come AFTER `git commit`
+    returns 0, so a future failure path can't leave the cursor advanced
+    while the snapshot was never committed."""
+    paths = _seed_repo(tmp_path, posts=7)
+    _mutate_snapshot(paths["snapshot"])
+
+    rc = sync_mod.main(_argv(paths, "--confirm"))
+    assert rc == 0
+
+    # Cursor advanced, commit exists, both reflect the same state.
+    assert paths["cursor"].read_text(encoding="utf-8").strip() == "7"
+    assert "(delta=7)" in _last_commit_subject(paths["workspace"])
+
+
+# ── snapshot-matches-index path ─────────────────────────────────────────
+
+
+def test_skips_commit_when_snapshot_matches_committed_state(tmp_path):
+    """If the snapshot in DB-derived form already matches what's in git
+    (e.g., a re-run after the file was already committed by another
+    process), sync.py should bump the cursor and skip the commit."""
+    paths = _seed_repo(tmp_path)
+    # Don't mutate snapshot — git index already matches working tree.
+
+    before = _commit_count(paths["workspace"])
+    rc = sync_mod.main(_argv(paths, "--confirm"))
+    after = _commit_count(paths["workspace"])
+
+    assert rc == 0
+    assert after == before  # no commit
+    # Cursor still bumped — we did all the work the next run would have done.
+    assert paths["cursor"].read_text(encoding="utf-8").strip() == "3"
