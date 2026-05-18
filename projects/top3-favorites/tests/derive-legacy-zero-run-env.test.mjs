@@ -34,3 +34,21 @@ test('[Script] derive-legacy-zero-run-env validates non-negative integers', () =
   assert.equal(r.status, 1)
   assert.match(r.stderr, /must be a non-negative integer/)
 })
+
+test('[Script] derive-legacy-zero-run-env supports plain format', () => {
+  const r = run(['--previous-zero-run-count=2', '--last-legacy-context-usage-count=0', '--format=plain'])
+  assert.equal(r.status, 0)
+  assert.equal(r.stdout.trim(), '3')
+})
+
+test('[Script] derive-legacy-zero-run-env supports github-output format', () => {
+  const r = run(['--previous-zero-run-count=2', '--last-legacy-context-usage-count=0', '--format=github-output'])
+  assert.equal(r.status, 0)
+  assert.equal(r.stdout.trim(), 'legacy_zero_run_count=3')
+})
+
+test('[Script] derive-legacy-zero-run-env rejects unknown format', () => {
+  const r = run(['--format=unknown'])
+  assert.equal(r.status, 1)
+  assert.match(r.stderr, /format must be one of/)
+})
