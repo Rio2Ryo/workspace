@@ -936,6 +936,11 @@ export function App() {
         />
         <TagPicker label="検索タグ選択" tags={tags} activeTag={selectedTag} selectedTag={selectedTag} onSelect={selectTag} onClear={clearSelectedTag} showClearButton={false} />
 
+        {pendingImport && filteredGroups.length > 0 && (
+          <p className="hint compact" data-testid="import-list-action-lock-hint">
+            インポート確認中のため、既存Top3の編集・削除は一時停止中です。
+          </p>
+        )}
         {filteredGroups.length === 0 ? (
           <p className="hint empty">該当するTop3がありません。</p>
         ) : (

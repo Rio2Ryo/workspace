@@ -19,6 +19,8 @@ import {
   contractMessageLimits,
   deepFreezeSkipTypeRules,
   missingItemsContextKeyContract,
+  legacyPromotionKeys,
+  legacyPromotionRemovalContract,
   scopeDescriptionContract,
   scopeLimitRules,
   qaTestTitleSubscopeContract,
@@ -334,6 +336,9 @@ test('[App][config-quality] missingItemsMessage context key dictionary and usage
   const uniqueKeys = Array.from(new Set(keys)).sort((a, b) => a.localeCompare(b, 'en'))
   const malformed = uniqueKeys.filter((k) => !lowerCamel.test(k))
   const unknown = uniqueKeys.filter((k) => !allowed.has(k))
+  const legacyContextKeysUsed = uniqueKeys
+    .filter((k) => legacyPromotionKeys.includes(k))
+    .sort((a, b) => a.localeCompare(b, 'en'))
   const deadAllowedKeys = allowedList.filter((k) => !uniqueKeys.includes(k)).sort((a, b) => a.localeCompare(b, 'en'))
 
   assert.deepEqual(
@@ -427,17 +432,27 @@ test('[App][config-quality] missingItemsMessage context key dictionary and usage
       items: invalidSortModes,
     }),
   )
-  assert.deepEqual(
-    deadSortModes,
-    [],
-    missingItemsMessage({
-      scope: 'App',
-      rule: 'missingItemsContextKeyContract.allowedContextSortModes dead modes',
-      fix: 'remove unused sort modes from allowedContextSortModes or add matching usage in tests',
-      context: { usedSortModes },
-      items: deadSortModes,
-    }),
-  )
+  const deadSortModesThreshold = missingItemsContextKeyContract.promotionThresholds.deadSortModes
+  const deadSortModesMode = missingItemsContextKeyContract.promotionModes.deadSortModes
+  const shouldPromoteDeadSortModes = deadSortModes.length <= deadSortModesThreshold
+  if (deadSortModesMode === 'enforce') {
+    assert.deepEqual(
+      deadSortModes,
+      [],
+      missingItemsMessage({
+        scope: 'App',
+        rule: 'missingItemsContextKeyContract.allowedContextSortModes dead modes',
+        fix: 'remove unused sort modes from allowedContextSortModes or add matching usage in tests',
+        context: {
+          deadSortModeCount: String(deadSortModes.length),
+          promotionModeDeadSortModes: deadSortModesMode,
+          promotionThresholdDeadSortModes: String(deadSortModesThreshold),
+          usedSortModes,
+        },
+        items: deadSortModes,
+      }),
+    )
+  }
 
   assert.deepEqual(
     malformed,
@@ -459,6 +474,47 @@ test('[App][config-quality] missingItemsMessage context key dictionary and usage
       items: unknown,
     }),
   )
+  const legacyContextUsageCount = legacyContextKeysUsed.length
+  const shouldPromoteLegacyRemoval =
+    legacyContextUsageCount <= legacyPromotionRemovalContract.promoteWhenLegacyContextUsageCountLte
+
+  if (legacyPromotionRemovalContract.enforceRemoval) {
+    assert.deepEqual(
+      legacyContextKeysUsed,
+      [],
+      missingItemsMessage({
+        scope: 'App',
+        rule: 'legacy promotion context keys must not be used',
+        fix: 'replace legacy context keys with promotionMode*/promotionThreshold* keys',
+        context: {
+          enforceRemoval: String(legacyPromotionRemovalContract.enforceRemoval),
+          legacyContextUsageCount: String(legacyContextUsageCount),
+          promoteWhenLegacyContextUsageCountLte: String(
+            legacyPromotionRemovalContract.promoteWhenLegacyContextUsageCountLte,
+          ),
+        },
+        items: legacyContextKeysUsed,
+      }),
+    )
+  } else {
+    assert.equal(
+      shouldPromoteLegacyRemoval,
+      false,
+      missingItemsMessage({
+        scope: 'App',
+        rule: 'legacy promotion keys removal promotion trigger',
+        fix: 'set legacyPromotionRemovalContract.enforceRemoval=true when legacy context usage count is at or below threshold',
+        context: {
+          enforceRemoval: String(legacyPromotionRemovalContract.enforceRemoval),
+          legacyContextUsageCount: String(legacyContextUsageCount),
+          promoteWhenLegacyContextUsageCountLte: String(
+            legacyPromotionRemovalContract.promoteWhenLegacyContextUsageCountLte,
+          ),
+        },
+        items: legacyContextKeysUsed,
+      }),
+    )
+  }
 
   assert.equal(
     typeof missingItemsContextKeyContract.enforceDeadScopePriority,
@@ -519,6 +575,62 @@ test('[App][config-quality] missingItemsMessage context key dictionary and usage
       rule: 'missingItemsContextKeyContract.promotionModes type guard',
       expected: 'object map',
       fix: 'set promotionModes to an object in tests/qa-current-contract.config.mjs',
+    }),
+  )
+
+  assert.deepEqual(
+    [...legacyPromotionKeys],
+    ['enforceDeadScopePriority', 'promoteWhenDeadScopeCountLte'],
+    missingItemsMessage({
+      scope: 'App',
+      rule: 'legacyPromotionKeys contract',
+      fix: 'keep legacyPromotionKeys stable while migration to promotionModes/promotionThresholds is in progress',
+      items: [...legacyPromotionKeys],
+    }),
+  )
+
+  const legacyInAllowed = legacyPromotionKeys.filter((k) => allowedList.includes(k)).sort((a, b) =>
+    a.localeCompare(b, 'en'),
+  )
+  assert.deepEqual(
+    legacyInAllowed,
+    [],
+    missingItemsMessage({
+      scope: 'App',
+      rule: 'legacy promotion keys must not appear in allowed context dictionary',
+      fix: 'remove legacy keys from missingItemsContextKeyContract.allowed to avoid new context usage',
+      items: legacyInAllowed,
+    }),
+  )
+
+  assert.equal(
+    typeof legacyPromotionRemovalContract.enforceRemoval,
+    'boolean',
+    contractMessage({
+      scope: 'App',
+      rule: 'legacyPromotionRemovalContract.enforceRemoval type guard',
+      expected: 'boolean flag',
+      fix: 'set legacyPromotionRemovalContract.enforceRemoval to true/false boolean',
+    }),
+  )
+  assert.equal(
+    Number.isInteger(legacyPromotionRemovalContract.promoteWhenLegacyContextUsageCountLte),
+    true,
+    contractMessage({
+      scope: 'App',
+      rule: 'legacyPromotionRemovalContract.promoteWhenLegacyContextUsageCountLte integer policy',
+      expected: 'integer threshold',
+      fix: 'set promoteWhenLegacyContextUsageCountLte to an integer (e.g., 0)',
+    }),
+  )
+  assert.equal(
+    legacyPromotionRemovalContract.promoteWhenLegacyContextUsageCountLte >= 0,
+    true,
+    contractMessage({
+      scope: 'App',
+      rule: 'legacyPromotionRemovalContract.promoteWhenLegacyContextUsageCountLte non-negative policy',
+      expected: '>= 0',
+      fix: 'set promoteWhenLegacyContextUsageCountLte to a non-negative integer',
     }),
   )
 
@@ -688,21 +800,45 @@ test('[App][config-quality] missingItemsMessage context key dictionary and usage
       }),
   )
 
-  assert.deepEqual(
-    deadAllowedKeys,
-    [],
-    missingItemsMessage({
-      scope: 'App',
-      rule: 'missingItemsContextKeyContract.allowed dead keys',
-      fix: 'remove unused keys from missingItemsContextKeyContract.allowed or add matching context usage',
-      context: {
-        ...usageSummary,
-        scopePriorityDeadScopes: deadScopePriority.join(', '),
-      },
-      contextSortMode: 'valueCountDesc',
-      items: deadAllowedKeys,
-    }),
-  )
+  const deadAllowedKeysThreshold = missingItemsContextKeyContract.promotionThresholds.deadAllowedKeys
+  const deadAllowedKeysMode = missingItemsContextKeyContract.promotionModes.deadAllowedKeys
+  const shouldPromoteDeadAllowedKeys = deadAllowedKeys.length <= deadAllowedKeysThreshold
+  if (deadAllowedKeysMode === 'enforce') {
+    assert.deepEqual(
+      deadAllowedKeys,
+      [],
+      missingItemsMessage({
+        scope: 'App',
+        rule: 'missingItemsContextKeyContract.allowed dead keys',
+        fix: 'remove unused keys from missingItemsContextKeyContract.allowed or add matching context usage',
+        context: {
+          ...usageSummary,
+          deadAllowedKeyCount: String(deadAllowedKeys.length),
+          promotionModeDeadAllowedKeys: deadAllowedKeysMode,
+          promotionThresholdDeadAllowedKeys: String(deadAllowedKeysThreshold),
+          scopePriorityDeadScopes: deadScopePriority.join(', '),
+        },
+        contextSortMode: 'valueCountDesc',
+        items: deadAllowedKeys,
+      }),
+    )
+  } else {
+    assert.equal(
+      shouldPromoteDeadAllowedKeys,
+      false,
+      missingItemsMessage({
+        scope: 'App',
+        rule: 'missingItemsContextKeyContract.allowed dead keys promotion trigger',
+        fix: 'set promotionModes.deadAllowedKeys=enforce when dead key count is at or below the promotion threshold',
+        context: {
+          deadAllowedKeyCount: String(deadAllowedKeys.length),
+          promotionModeDeadAllowedKeys: deadAllowedKeysMode,
+          promotionThresholdDeadAllowedKeys: String(deadAllowedKeysThreshold),
+        },
+        items: deadAllowedKeys,
+      }),
+    )
+  }
 })
 
 test('[App][behavior] current implementation uses API-backed structured form, not legacy localStorage or natural parsing', async () => {

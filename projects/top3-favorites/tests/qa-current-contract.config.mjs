@@ -359,16 +359,25 @@ export const deepFreezeSkipTypeRules = rawDeepFreezeSkipTypeRules
 const rawMissingItemsContextKeyContract = {
   allowed: [
     'configured',
+    'deadAllowedKeyCount',
     'deadScopeCount',
     'deadScopes',
+    'deadSortModeCount',
     'discovered',
     'documentedMatches',
+    'enforceRemoval',
     'expected',
+    'legacyContextUsageCount',
     'listed',
     'missingOnDisk',
     'observed',
+    'promoteWhenLegacyContextUsageCountLte',
+    'promotionModeDeadAllowedKeys',
     'promotionModeDeadScopePriority',
+    'promotionModeDeadSortModes',
+    'promotionThresholdDeadAllowedKeys',
     'promotionThresholdDeadScopePriority',
+    'promotionThresholdDeadSortModes',
     'scopePriorityDeadScopes',
     'usedScopes',
   ],
@@ -380,9 +389,13 @@ const rawMissingItemsContextKeyContract = {
   // generic promotion controls (new)
   promotionThresholds: {
     deadScopePriority: 0,
+    deadSortModes: 0,
+    deadAllowedKeys: 0,
   },
   promotionModes: {
     deadScopePriority: 'observe',
+    deadSortModes: 'observe',
+    deadAllowedKeys: 'enforce',
   },
 }
 Object.freeze(rawMissingItemsContextKeyContract.allowed)
@@ -392,6 +405,17 @@ Object.freeze(rawMissingItemsContextKeyContract.promotionThresholds)
 Object.freeze(rawMissingItemsContextKeyContract.promotionModes)
 Object.freeze(rawMissingItemsContextKeyContract)
 export const missingItemsContextKeyContract = rawMissingItemsContextKeyContract
+
+const rawLegacyPromotionKeys = ['enforceDeadScopePriority', 'promoteWhenDeadScopeCountLte']
+Object.freeze(rawLegacyPromotionKeys)
+export const legacyPromotionKeys = rawLegacyPromotionKeys
+
+const rawLegacyPromotionRemovalContract = {
+  enforceRemoval: true,
+  promoteWhenLegacyContextUsageCountLte: 0,
+}
+Object.freeze(rawLegacyPromotionRemovalContract)
+export const legacyPromotionRemovalContract = rawLegacyPromotionRemovalContract
 
 const rawQaTestTitleSubscopeContract = {
   allowedByScope: {
