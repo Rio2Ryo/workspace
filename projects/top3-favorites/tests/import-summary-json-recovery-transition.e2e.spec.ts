@@ -52,7 +52,7 @@ test('summary json transitions correctly across valid -> invalid -> valid import
     mimeType: 'application/json',
     buffer: Buffer.from('{"broken": ', 'utf-8'),
   })
-  await expect(page.getByRole('alert')).toContainText('インポート失敗: JSONの読み取りに失敗しました。既存データは保持しました。')
+  await expect(page.getByRole('alert')).toContainText('インポート失敗: ファイル「broken.json」のJSON構文を解析できません。既存データは保持しました。')
   await expect(page.getByTestId('import-preview-summary')).toHaveCount(0)
 
   // valid again: summary should be rebuilt coherently

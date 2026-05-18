@@ -16,7 +16,7 @@ test('importing broken JSON shows parse error and keeps existing data (fail-clos
     buffer: Buffer.from('{"items":[', 'utf-8'),
   })
 
-  await expect(page.getByRole('alert')).toContainText('インポート失敗: JSONの読み取りに失敗しました。既存データは保持しました。')
+  await expect(page.getByRole('alert')).toContainText('インポート失敗: ファイル「broken.json」のJSON構文を解析できません。既存データは保持しました。')
 
   const searchSection = page.locator('section.card').filter({ has: page.getByRole('heading', { name: '探す' }) })
   await expect(searchSection.getByText('1位: Solito MAGO')).toBeVisible()

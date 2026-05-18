@@ -40,7 +40,7 @@ test('import fail-closed matrix: all invalid inputs keep existing data and clear
     {
       name: 'broken-json.json',
       body: '{"broken": ',
-      expected: /JSONの読み取りに失敗しました/,
+      expected: /ファイル「broken-json\.json」のJSON構文を解析できません/,
     },
   ]
 
@@ -74,7 +74,7 @@ test('import fail-closed matrix: all invalid inputs keep existing data and clear
     mimeType: 'application/json',
     buffer: Buffer.from('{"broken": ', 'utf-8'),
   })
-  await expect(page.getByRole('alert')).toContainText(/JSONの読み取りに失敗しました/)
+  await expect(page.getByRole('alert')).toContainText(/ファイル「invalid-middle\.json」のJSON構文を解析できません/)
   await expect(page.getByLabel('インポート確認')).toHaveCount(0)
 
   await fileInput.setInputFiles({

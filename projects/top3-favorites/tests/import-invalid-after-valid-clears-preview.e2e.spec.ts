@@ -37,7 +37,7 @@ test('invalid JSON after a valid import preview clears pending preview and keeps
     buffer: Buffer.from('{"broken": ', 'utf-8'),
   })
 
-  await expect(page.getByRole('alert')).toContainText('インポート失敗: JSONの読み取りに失敗しました。既存データは保持しました。')
+  await expect(page.getByRole('alert')).toContainText('インポート失敗: ファイル「broken.json」のJSON構文を解析できません。既存データは保持しました。')
   await expect(page.getByLabel('インポート確認')).toHaveCount(0)
 
   // DB should remain unchanged (still seeded 1 item)

@@ -577,8 +577,12 @@ export function App() {
       setIsImpactTermsHelperExpanded(false)
       setError('')
       setNotice(`インポート確認: ${normalized.length}件。内容を確認してから反映してください。`)
-    } catch {
-      setError('インポート失敗: JSONの読み取りに失敗しました。既存データは保持しました。')
+    } catch (error) {
+      if (error instanceof SyntaxError) {
+        setError(`インポート失敗: ファイル「${file.name}」のJSON構文を解析できません。既存データは保持しました。`)
+      } else {
+        setError('インポート失敗: JSONの読み取りに失敗しました。既存データは保持しました。')
+      }
       setNotice('')
       setPendingImport(null)
     }
