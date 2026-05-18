@@ -11,6 +11,17 @@ const docs = [
   'docs/MANUAL_TEST_CHECKLIST.md',
 ]
 
+const requiredDocPatterns = [
+  {
+    pattern: /\/api\/items/,
+    message: 'should name the current API persistence path',
+  },
+  {
+    pattern: /構造化フォーム|個別フォーム|タグ.+順位.+店舗名.+メモ/s,
+    message: 'should describe the structured form UI',
+  },
+]
+
 const forbiddenDocPatterns = [
   {
     pattern: /localStorage|top3-favorites-items/i,
@@ -75,8 +86,9 @@ test('QA manuals and QA result docs match the current implementation contract', 
   for (const relativePath of docs) {
     const markdown = await readFile(new URL(relativePath, `${root}/`), 'utf8')
 
-    assert.match(markdown, /\/api\/items/, `${relativePath} should name the current API persistence path`)
-    assert.match(markdown, /構造化フォーム|個別フォーム|タグ.+順位.+店舗名.+メモ/s, `${relativePath} should describe the structured form UI`)
+    for (const { pattern, message } of requiredDocPatterns) {
+      assert.match(markdown, pattern, `${relativePath} ${message}`)
+    }
 
     for (const { pattern, message } of forbiddenDocPatterns) {
       assert.doesNotMatch(markdown, pattern, `${relativePath}: ${message}`)
@@ -99,6 +111,27 @@ test('manual checklist includes import preview categories aligned with automated
   for (const heading of headings) {
     assert.ok(markdown.includes(heading), `manual checklist missing heading: ${heading}`)
   }
+})
+
+test('manual checklist uses the current import preview toggle aria-label namespace', async () => {
+  const appSource = await readFile(appPath, 'utf8')
+  const markdown = await readFile(new URL('docs/MANUAL_TEST_CHECKLIST.md', `${root}/`), 'utf8')
+
+  assert.match(
+    appSource,
+    /aria-label={`インポート詳細:/,
+    'App import preview toggles should use the collision-free インポート詳細 namespace',
+  )
+  assert.match(
+    markdown,
+    /`aria-label` は `インポート詳細:`/,
+    'manual checklist should tell QA to verify the current インポート詳細 toggle prefix',
+  )
+  assert.doesNotMatch(
+    markdown,
+    /トグルの `aria-label` は `インポート確認:`/,
+    'manual checklist must not tell QA to expect the old panel-colliding インポート確認 toggle prefix',
+  )
 })
 
 test('README links QA docs with import preview six-category guidance', async () => {
