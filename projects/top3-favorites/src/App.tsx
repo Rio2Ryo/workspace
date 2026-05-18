@@ -804,6 +804,7 @@ export function App() {
                       id="import-preview-excluded-names"
                       className="hint compact"
                       data-testid="import-preview-excluded-names"
+                      aria-label="Top3外で除外予定の店舗名プレビュー"
                       data-excluded-name-count={pendingImport.excludedNames.length}
                       data-excluded-name-labels={pendingImport.excludedNameLabels.join('|')}
                     >
