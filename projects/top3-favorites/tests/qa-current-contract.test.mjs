@@ -82,18 +82,28 @@ test('[App] scopeLimitRules ids follow naming contract (scope- prefix, kebab-cas
     .map(({ id, description }) => `${id ?? '(missing-id)'} -> ${description ?? '(missing-description)'}`)
   const allowedTargets = new Set(scopeDescriptionContract.allowedTargets)
   const allowedPurposes = new Set(scopeDescriptionContract.allowedPurposes)
+  const usedTargets = new Set()
+  const usedPurposes = new Set()
   const disallowedVocabulary = scopeLimitRules
     .map(({ id, description }) => ({ id, description: String(description ?? '') }))
     .map(({ id, description }) => {
       const m = /^Controls\s(.+)\sfor\s(.+)$/.exec(description.trim())
       if (!m) return `${id ?? '(missing-id)'} -> ${description}`
       const [, target, purpose] = m
+      usedTargets.add(target)
+      usedPurposes.add(purpose)
       if (!allowedTargets.has(target) || !allowedPurposes.has(purpose)) {
         return `${id ?? '(missing-id)'} -> target:${target} | purpose:${purpose}`
       }
       return null
     })
     .filter(Boolean)
+  const unusedAllowedTargets = Array.from(allowedTargets)
+    .filter((target) => !usedTargets.has(target))
+    .sort((a, b) => a.localeCompare(b, 'en'))
+  const unusedAllowedPurposes = Array.from(allowedPurposes)
+    .filter((purpose) => !usedPurposes.has(purpose))
+    .sort((a, b) => a.localeCompare(b, 'en'))
   const seen = new Set()
   const duplicated = []
   for (const id of ids) {
@@ -189,6 +199,26 @@ test('[App] scopeLimitRules ids follow naming contract (scope- prefix, kebab-cas
       rule: 'scopeLimitRules description allowed vocabulary',
       fix: 'use only allowed target/purpose terms from scopeDescriptionContract',
       items: disallowedVocabulary,
+    }),
+  )
+  assert.deepEqual(
+    unusedAllowedTargets,
+    [],
+    missingItemsMessage({
+      scope: 'App',
+      rule: 'scopeDescriptionContract allowedTargets dead vocabulary',
+      fix: 'remove unused target terms or use them in scopeLimitRules descriptions',
+      items: unusedAllowedTargets,
+    }),
+  )
+  assert.deepEqual(
+    unusedAllowedPurposes,
+    [],
+    missingItemsMessage({
+      scope: 'App',
+      rule: 'scopeDescriptionContract allowedPurposes dead vocabulary',
+      fix: 'remove unused purpose terms or use them in scopeLimitRules descriptions',
+      items: unusedAllowedPurposes,
     }),
   )
 })
