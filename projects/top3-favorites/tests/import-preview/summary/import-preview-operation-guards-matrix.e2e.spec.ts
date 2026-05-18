@@ -41,6 +41,7 @@ test('pending import preview enforces operation guards across registration/searc
   await expect(page.getByRole('button', { name: 'DBに保存' })).toBeDisabled()
   await expect(page.getByRole('button', { name: 'サンプルをDB保存' })).toBeDisabled()
   await expect(page.getByRole('button', { name: 'JSONエクスポート' })).toBeDisabled()
+  await expect(page.getByTestId('import-export-lock-hint')).toHaveText('インポート確認中のため、現在DBのJSONエクスポートは一時停止中です。')
 
   // list actions lock
   await page.getByText('1位: Guard Seed').click()

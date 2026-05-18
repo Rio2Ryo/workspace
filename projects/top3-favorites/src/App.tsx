@@ -776,6 +776,7 @@ export function App() {
           />
         </div>
         <p className="hint">インポートは全件バリデーション成功時のみ反映。失敗時は既存データ保持（fail-closed）。</p>
+        {pendingImport && <p className="hint compact" data-testid="import-export-lock-hint">インポート確認中のため、現在DBのJSONエクスポートは一時停止中です。</p>}
         {items.length === 0 && <p className="hint compact">エクスポート対象データがありません。まず1件以上保存してください。</p>}
         {pendingImport && (
           <div className="preview-panel" aria-label="インポート確認" data-testid="import-preview-summary" data-summary-json={pendingImportSummary ? JSON.stringify(pendingImportSummary) : ''}>
