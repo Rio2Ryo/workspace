@@ -44,6 +44,12 @@ function mutationRankValidationError(action) {
   return `API ${action} / フィールド: rank / 修正: 順位は1〜3で入力してください。`
 }
 
+function mutationRequiredFieldValidationError(action, item) {
+  if (!item.tag) return `API ${action} / フィールド: tag / 修正: タグを入力してください。`
+  if (!item.name) return `API ${action} / フィールド: name / 修正: 店舗名を入力してください。`
+  return null
+}
+
 function parseImportRank(value) {
   if (value === 1 || value === '1') return 1
   if (value === 2 || value === '2') return 2
@@ -263,7 +269,8 @@ async function handleApi(req, res, url) {
     if (hasInvalidMutationRank(payload)) return sendJson(res, 400, { error: mutationRankValidationError('create') })
     return withDataMutation(async (data) => {
       const item = makeItem(payload)
-      if (!item.tag || !item.name) return sendJson(res, 400, { error: 'tag and name are required' })
+      const requiredFieldError = mutationRequiredFieldValidationError('create', item)
+      if (requiredFieldError) return sendJson(res, 400, { error: requiredFieldError })
       const items = rebalance(data.items, item)
       await writeData({ items })
       return sendJson(res, 200, { items, item })
@@ -276,7 +283,8 @@ async function handleApi(req, res, url) {
       const existing = data.items.find((item) => item.id === normalizeText(payload.id))
       if (!existing) return sendJson(res, 404, { error: 'item not found' })
       const edited = makeItem(payload, existing)
-      if (!edited.tag || !edited.name) return sendJson(res, 400, { error: 'tag and name are required' })
+      const requiredFieldError = mutationRequiredFieldValidationError('edit', edited)
+      if (requiredFieldError) return sendJson(res, 400, { error: requiredFieldError })
       const items = rebalance(data.items.filter((item) => item.id !== existing.id), edited)
       await writeData({ items })
       return sendJson(res, 200, { items, item: edited })
