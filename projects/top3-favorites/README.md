@@ -48,6 +48,7 @@ pnpm test:docs-only
 ```bash
 pnpm test:legacy-zero-run-script
 pnpm test:legacy-zero-run-env-script
+pnpm test:qa-failure-summary-script
 
 # CI向け env 生成（例）
 node scripts/derive-legacy-zero-run-env.mjs --previous-zero-run-count=2 --last-legacy-context-usage-count=0 --format=export
@@ -76,6 +77,8 @@ pnpm test:import-preview-summary
 ```bash
 pnpm test:full
 ```
+
+CI では軽量契約チェック（`.github/workflows/qa-current.yml`）と、nightly フル回帰（`.github/workflows/qa-full-nightly.yml`）を分離して運用します。
 
 ## 受け入れ条件（インポート安全性）
 

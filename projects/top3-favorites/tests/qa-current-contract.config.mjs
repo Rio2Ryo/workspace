@@ -108,6 +108,7 @@ const rawReadmeCommandContractGroups = [
       'pnpm test:import-preview-only',
       'pnpm test:legacy-zero-run-script',
       'pnpm test:legacy-zero-run-env-script',
+      'pnpm test:qa-failure-summary-script',
       'pnpm test:full',
     ],
   },

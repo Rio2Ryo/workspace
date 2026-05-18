@@ -1,0 +1,65 @@
+name: qa-full-nightly
+
+on:
+  schedule:
+    - cron: '17 2 * * *'
+  workflow_dispatch:
+
+jobs:
+  derive-legacy-zero-run:
+    runs-on: ubuntu-latest
+    outputs:
+      legacy_zero_run_count: ${{ steps.derive.outputs.legacy_zero_run_count }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 9
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - id: derive
+        run: |
+          echo "$(node scripts/derive-legacy-zero-run-env.mjs --format=github-output)" >> "$GITHUB_OUTPUT"
+
+  qa-full:
+    needs: derive-legacy-zero-run
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    env:
+      QA_LEGACY_ZERO_RUN_COUNT: ${{ needs.derive-legacy-zero-run.outputs.legacy_zero_run_count }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 9
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm test:full | tee qa-full.log
+      - name: Build failure summary artifact payload
+        if: failure()
+        run: |
+          node scripts/summarize-qa-failure.mjs --log=qa-full.log --format=markdown > qa-full-failure-summary.md
+          node scripts/summarize-qa-failure.mjs --log=qa-full.log --format=json > qa-full-failure-summary.json
+          {
+            echo
+            echo "## tail(qa-full.log)"
+            tail -n 200 qa-full.log || true
+          } >> qa-full-failure-summary.md
+      - name: Append failure summary to job summary
+        if: failure()
+        run: cat qa-full-failure-summary.md >> "$GITHUB_STEP_SUMMARY"
+      - name: Upload nightly failure artifact
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: qa-full-nightly-failure-summary
+          path: |
+            qa-full.log
+            qa-full-failure-summary.md
+            qa-full-failure-summary.json

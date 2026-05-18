@@ -1391,7 +1391,7 @@ test('[App][config-quality] full verification script includes lightweight QA aut
     .flatMap(({ commands }) => commands)
     .filter((command) => {
       const scriptName = command.replace(/^pnpm\s+/, '')
-      return scriptName.startsWith('test:legacy-')
+      return scriptName.startsWith('test:legacy-') || scriptName === 'test:qa-failure-summary-script'
     })
 
   const missingFromFull = documentedLightweightQaCommands.filter((command) => !fullScript.includes(command))
@@ -1453,6 +1453,112 @@ test('[App][config-quality] GitHub Actions wires derive-legacy-zero-run output t
       rule: 'qa-current job receives QA_LEGACY_ZERO_RUN_COUNT from derive output',
       expected: 'QA_LEGACY_ZERO_RUN_COUNT is mapped from needs.derive-legacy-zero-run.outputs.legacy_zero_run_count',
       fix: 'set qa-current job env.QA_LEGACY_ZERO_RUN_COUNT from derive output',
+    }),
+  )
+})
+
+test('[App][config-quality] GitHub Actions nightly workflow runs test:full, receives derived env, and uploads failure artifacts', async () => {
+  const workflow = await readFile(new URL('.github/workflows/qa-full-nightly.yml', `${root}/`), 'utf8')
+
+  assert.match(
+    workflow,
+    /on:\n\s+schedule:/,
+    contractMessage({
+      scope: 'App',
+      rule: 'qa-full-nightly workflow has schedule trigger',
+      expected: 'schedule trigger exists',
+      fix: 'add schedule trigger to .github/workflows/qa-full-nightly.yml',
+    }),
+  )
+
+  assert.match(
+    workflow,
+    /- run: pnpm test:full/,
+    contractMessage({
+      scope: 'App',
+      rule: 'qa-full-nightly executes full regression suite',
+      expected: 'pnpm test:full run step exists',
+      fix: 'add pnpm test:full step in qa-full-nightly workflow',
+    }),
+  )
+
+  assert.match(
+    workflow,
+    /env:\n\s+QA_LEGACY_ZERO_RUN_COUNT:\s+\$\{\{ needs\.derive-legacy-zero-run\.outputs\.legacy_zero_run_count \}\}/,
+    contractMessage({
+      scope: 'App',
+      rule: 'qa-full-nightly receives QA_LEGACY_ZERO_RUN_COUNT from derive output',
+      expected: 'env wiring from derive job output',
+      fix: 'set QA_LEGACY_ZERO_RUN_COUNT from needs.derive-legacy-zero-run.outputs.legacy_zero_run_count',
+    }),
+  )
+
+  const qaFullJobStart = workflow.indexOf('  qa-full:')
+  const qaFullJob = qaFullJobStart >= 0 ? workflow.slice(qaFullJobStart) : ''
+
+  assert.match(
+    qaFullJob,
+    /\n\s+timeout-minutes:\s+15\n/,
+    contractMessage({
+      scope: 'App',
+      rule: 'qa-full-nightly full regression job has bounded runtime',
+      expected: 'qa-full job has timeout-minutes: 15',
+      fix: 'add timeout-minutes: 15 to the qa-full job so hung E2E does not require manual triage',
+    }),
+  )
+
+  assert.match(
+    workflow,
+    /- run: pnpm test:full \| tee qa-full\.log/,
+    contractMessage({
+      scope: 'App',
+      rule: 'qa-full-nightly captures full run log',
+      expected: 'pnpm test:full uses tee qa-full.log',
+      fix: 'pipe full test run to qa-full.log for failure artifact generation',
+    }),
+  )
+
+  assert.match(
+    workflow,
+    /uses:\s+actions\/upload-artifact@v4[\s\S]*name:\s+qa-full-nightly-failure-summary/,
+    contractMessage({
+      scope: 'App',
+      rule: 'qa-full-nightly uploads failure summary artifact',
+      expected: 'upload-artifact step named qa-full-nightly-failure-summary exists',
+      fix: 'add failure-only artifact upload for qa-full.log and qa-full-failure-summary.md',
+    }),
+  )
+
+  assert.match(
+    workflow,
+    /node scripts\/summarize-qa-failure\.mjs --log=qa-full\.log --format=markdown/,
+    contractMessage({
+      scope: 'App',
+      rule: 'qa-full-nightly builds markdown failure summary via script',
+      expected: 'summarize-qa-failure markdown invocation exists',
+      fix: 'add script invocation to generate qa-full-failure-summary.md',
+    }),
+  )
+
+  assert.match(
+    workflow,
+    /node scripts\/summarize-qa-failure\.mjs --log=qa-full\.log --format=json/,
+    contractMessage({
+      scope: 'App',
+      rule: 'qa-full-nightly builds json failure summary via script',
+      expected: 'summarize-qa-failure json invocation exists',
+      fix: 'add script invocation to generate qa-full-failure-summary.json',
+    }),
+  )
+
+  assert.match(
+    workflow,
+    /cat qa-full-failure-summary\.md >> "\$GITHUB_STEP_SUMMARY"/,
+    contractMessage({
+      scope: 'App',
+      rule: 'qa-full-nightly appends failure summary to job summary',
+      expected: 'job summary append step exists',
+      fix: 'append qa-full-failure-summary.md to $GITHUB_STEP_SUMMARY on failure',
     }),
   )
 })
