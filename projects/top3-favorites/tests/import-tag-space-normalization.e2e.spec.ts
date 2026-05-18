@@ -1,0 +1,40 @@
+import { expect, test } from '@playwright/test'
+import { resetItemsByReplace } from './e2e-helpers'
+
+test.beforeEach(async ({ request }) => {
+  await resetItemsByReplace(request)
+})
+
+test('import normalizes visually equivalent tag spaces before Top3 truncation', async ({ page, request }) => {
+  await page.goto('/')
+
+  const now = new Date().toISOString()
+  const items = [
+    { id: 'tag-space-1', tag: 'カフェ ラテ', location: '柏の葉', name: 'A', rank: 1, memo: '', mapsUrl: '', placeId: '', createdAt: now, updatedAt: now },
+    { id: 'tag-space-2', tag: 'カフェ　ラテ', location: '柏の葉', name: 'B', rank: 2, memo: '', mapsUrl: '', placeId: '', createdAt: now, updatedAt: now },
+    { id: 'tag-space-3', tag: 'カフェ ラテ', location: '柏の葉', name: 'C', rank: 3, memo: '', mapsUrl: '', placeId: '', createdAt: now, updatedAt: now },
+    { id: 'tag-space-4', tag: 'カフェ　ラテ', location: '柏の葉', name: 'D', rank: 3, memo: '', mapsUrl: '', placeId: '', createdAt: now, updatedAt: '2000-01-01T00:00:00.000Z' },
+  ]
+
+  await page.locator('input[type="file"][accept*="json"]').setInputFiles({
+    name: 'tag-space-normalization.json',
+    mimeType: 'application/json',
+    buffer: Buffer.from(JSON.stringify(items), 'utf-8'),
+  })
+
+  await expect(page.getByTestId('import-preview-counts')).toHaveText('現在0件 → インポート後3件')
+  await expect(page.getByTestId('import-preview-normalization')).toHaveText('同一タグはTop3に正規化: 4件中3件を反映予定')
+  await expect(page.getByTestId('import-preview-excluded-names')).toHaveText('除外予定の店舗: D')
+
+  const summary = JSON.parse((await page.getByTestId('import-preview-summary').getAttribute('data-summary-json')) ?? '{}')
+  expect(summary.tags).toEqual(['カフェ ラテ'])
+  expect(summary.excludedNames).toEqual(['D'])
+
+  await page.getByRole('button', { name: 'この内容でインポート' }).click()
+  await expect(page.getByRole('status')).toContainText('インポート成功')
+
+  const data = (await request.get('/api/items').then((res) => res.json())) as { items: Array<{ tag: string; name: string; rank: number }> }
+  expect(data.items.map((item) => item.name).sort()).toEqual(['A', 'B', 'C'])
+  expect(Array.from(new Set(data.items.map((item) => item.tag)))).toEqual(['カフェ ラテ'])
+  expect(data.items.map((item) => item.rank).sort()).toEqual([1, 2, 3])
+})

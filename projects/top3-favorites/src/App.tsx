@@ -31,12 +31,15 @@ type ImportExcludedDetail = {
 
 const SYNC_BREAK_NOTICE = '手入力によりタグ連動を解除しました。'
 
-function normalizeTagForSync(value: string): string {
+function normalizeTagText(value: string): string {
   return value
-    .replace(/\u3000/g, ' ')
+    .normalize('NFKC')
     .replace(/\s+/g, ' ')
     .trim()
-    .toLowerCase()
+}
+
+function normalizeTagForSync(value: string): string {
+  return normalizeTagText(value).toLocaleLowerCase('ja')
 }
 
 type PendingImport = {
@@ -63,7 +66,7 @@ const sampleItems: Draft[] = [
 ]
 
 function normalizeTag(tag: string): string {
-  return tag.trim()
+  return normalizeTagText(tag)
 }
 
 function buildMapsUrl(input: Pick<FavoriteItem, 'name' | 'tag' | 'location'> | Draft): string {
@@ -138,7 +141,7 @@ function normalizeImportItem(value: FavoriteItem): FavoriteItem {
   const normalized = {
     ...value,
     id: value.id.trim(),
-    tag: value.tag.trim(),
+    tag: normalizeTagText(value.tag),
     location: value.location.trim(),
     name: value.name.trim(),
     memo: value.memo.trim(),
@@ -166,7 +169,7 @@ function duplicateImportIdError(items: FavoriteItem[], filename: string): string
 }
 
 function themeKey(item: Pick<FavoriteItem, 'tag'>): string {
-  return item.tag.trim().toLowerCase()
+  return normalizeTagForSync(item.tag)
 }
 
 function analyzeImportedTop3(items: FavoriteItem[]): { items: FavoriteItem[]; excludedDetails: ImportExcludedDetail[] } {

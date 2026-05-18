@@ -24,6 +24,10 @@ function normalizeText(value) {
   return typeof value === 'string' ? value.trim() : ''
 }
 
+function normalizeTagText(value) {
+  return typeof value === 'string' ? value.normalize('NFKC').replace(/\s+/g, ' ').trim() : ''
+}
+
 function normalizeRank(value) {
   const n = Number(value)
   return n === 2 || n === 3 ? n : 1
@@ -96,7 +100,7 @@ function importItemValidationError(value, index, source = 'API replace import') 
 function toValidItem(value) {
   if (!value || typeof value !== 'object') return null
   const id = normalizeText(value.id)
-  const tag = normalizeText(value.tag)
+  const tag = normalizeTagText(value.tag)
   const location = normalizeText(value.location)
   const name = normalizeText(value.name)
   const rank = parseImportRank(value.rank)
@@ -138,7 +142,7 @@ async function withDataMutation(mutator) {
 }
 
 function themeKey(item) {
-  return item.tag.trim().toLowerCase()
+  return normalizeTagText(item.tag).toLocaleLowerCase('ja')
 }
 
 function compareTop3Items(a, b) {
@@ -211,7 +215,7 @@ function makeItem(payload, existing) {
     id: existing?.id ?? randomUUID(),
     createdAt: existing?.createdAt ?? now,
     updatedAt: now,
-    tag: normalizeText(payload.tag ?? existing?.tag),
+    tag: normalizeTagText(payload.tag ?? existing?.tag),
     location: normalizeText(payload.location ?? existing?.location),
     name: normalizeText(payload.name ?? existing?.name),
     rank: normalizeRank(payload.rank ?? existing?.rank),

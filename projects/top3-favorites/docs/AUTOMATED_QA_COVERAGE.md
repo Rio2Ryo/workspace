@@ -63,6 +63,7 @@
 - `tests/import-start-closes-edit-context.e2e.spec.ts`
 - `tests/import-summary-json-consistency.e2e.spec.ts`
 - `tests/import-summary-json-recovery-transition.e2e.spec.ts`
+- `tests/import-tag-space-normalization.e2e.spec.ts`
 - `tests/import-top3-ui-normalization.e2e.spec.ts`
 - `tests/import-terminology-normalization-exclusion-consistency.e2e.spec.ts`
 - `tests/import-validation-error-details.e2e.spec.ts`

@@ -25,6 +25,10 @@ function normalizeText(value: unknown): string {
   return typeof value === 'string' ? value.trim() : ''
 }
 
+function normalizeTagText(value: unknown): string {
+  return typeof value === 'string' ? value.normalize('NFKC').replace(/\s+/g, ' ').trim() : ''
+}
+
 function normalizeRank(value: unknown): Rank {
   const n = Number(value)
   return n === 2 || n === 3 ? n : 1
@@ -103,7 +107,7 @@ function toValidItem(value: unknown): FavoriteItem | null {
   const o = value as Record<string, unknown>
 
   const id = normalizeText(o.id)
-  const tag = normalizeText(o.tag)
+  const tag = normalizeTagText(o.tag)
   const location = normalizeText(o.location)
   const name = normalizeText(o.name)
   const rank = parseImportRank(o.rank)
@@ -172,7 +176,7 @@ async function writeData(data: DataFile): Promise<void> {
 }
 
 function themeKey(item: Pick<FavoriteItem, 'tag'>): string {
-  return item.tag.trim().toLowerCase()
+  return normalizeTagText(item.tag).toLocaleLowerCase('ja')
 }
 
 function compareTop3Items(a: FavoriteItem, b: FavoriteItem): number {
@@ -232,7 +236,7 @@ function makeItem(payload: Record<string, unknown>, existing?: FavoriteItem): Fa
     id: existing?.id ?? crypto.randomUUID(),
     createdAt: existing?.createdAt ?? now,
     updatedAt: now,
-    tag: normalizeText(payload.tag ?? existing?.tag),
+    tag: normalizeTagText(payload.tag ?? existing?.tag),
     location: normalizeText(payload.location ?? existing?.location),
     name: normalizeText(payload.name ?? existing?.name),
     rank: normalizeRank(payload.rank ?? existing?.rank),
