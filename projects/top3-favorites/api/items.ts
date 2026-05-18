@@ -253,7 +253,7 @@ export default async function handler(req: any, res: any) {
         const arr = Array.isArray((payload as Record<string, unknown>)?.items)
           ? ((payload as Record<string, unknown>).items as unknown[])
           : null
-        if (!arr) return send(res, 400, { error: 'items array is required' })
+        if (!arr) return send(res, 400, { error: 'API replace import / フィールド: items / 修正: items配列を指定してください。' })
 
         const validationError = arr.map((v, index) => importItemValidationError(v, index)).find(Boolean)
         if (validationError) {

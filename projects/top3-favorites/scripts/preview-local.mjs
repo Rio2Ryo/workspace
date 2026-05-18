@@ -231,7 +231,7 @@ async function handleApi(req, res, url) {
 
     if (url.searchParams.get('mode') === 'replace') {
       const arr = Array.isArray(payload?.items) ? payload.items : null
-      if (!arr) return sendJson(res, 400, { error: 'items array is required' })
+      if (!arr) return sendJson(res, 400, { error: 'API replace import / フィールド: items / 修正: items配列を指定してください。' })
 
       const validationError = arr.map((item, index) => importItemValidationError(item, index)).find(Boolean)
       if (validationError) {

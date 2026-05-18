@@ -14,6 +14,14 @@ const validItem = (patch: Record<string, unknown> = {}) => ({
   ...patch,
 })
 
+test('API replace import rejects missing items array with a localized recovery hint', async ({ request }) => {
+  const res = await request.post('/api/items?mode=replace', { data: { itemz: [] } })
+  expect(res.status()).toBe(400)
+
+  const json = await res.json()
+  expect(json.error).toBe('API replace import / フィールド: items / 修正: items配列を指定してください。')
+})
+
 test('API replace import rejects invalid rank (server-side validation)', async ({ request }) => {
   const payload = {
     items: [validItem({ id: 'api-bad-rank-1', name: 'Invalid API Rank', rank: 4, memo: 'should be rejected' })],
