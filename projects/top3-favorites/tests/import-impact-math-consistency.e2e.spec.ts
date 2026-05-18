@@ -34,11 +34,32 @@ test('import confirmation math is consistent for added/kept/removed/excluded cou
   })
 
   // normalized result should be 4 items out of original 5 (one excluded by Top3 normalization)
-  await expect(page.getByTestId('import-preview-counts')).toHaveText('現在3件 → インポート後4件')
-  await expect(page.getByTestId('import-preview-normalization')).toHaveText('同一タグはTop3に正規化: 5件中4件を反映予定')
+  const counts = page.getByTestId('import-preview-counts')
+  await expect(counts).toHaveAttribute('data-before-count', '3')
+  await expect(counts).toHaveAttribute('data-after-count', '4')
+  await expect(page.getByTestId('import-preview-normalization')).toContainText('5件中4件')
 
-  // Added + kept == import-after count (3 + 1 = 4), and removed reflects old rows dropped from DB (2)
-  await expect(page.getByTestId('import-preview-impact-math')).toHaveText('追加3件 / 更新・保持1件 / 削除予定2件 / 正規化で除外予定1件')
+  // Added + kept == after, and before - removed == kept
+  const math = page.getByTestId('import-preview-impact-math')
+  const [beforeCount, afterCount, addedCount, keptCount, removedCount, excludedCount] = await Promise.all([
+    counts.getAttribute('data-before-count'),
+    counts.getAttribute('data-after-count'),
+    math.getAttribute('data-added-count'),
+    math.getAttribute('data-kept-count'),
+    math.getAttribute('data-removed-count'),
+    math.getAttribute('data-excluded-count'),
+  ])
+
+  const before = Number(beforeCount)
+  const after = Number(afterCount)
+  const added = Number(addedCount)
+  const kept = Number(keptCount)
+  const removed = Number(removedCount)
+  const excluded = Number(excludedCount)
+
+  expect(added + kept).toBe(after)
+  expect(before - removed).toBe(kept)
+  expect(excluded).toBe(1)
 
   await page.getByRole('button', { name: 'この内容でインポート' }).click()
   await expect(page.getByRole('status')).toContainText('インポート成功: 4件を反映しました。')

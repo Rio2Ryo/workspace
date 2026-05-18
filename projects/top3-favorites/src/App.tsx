@@ -543,7 +543,7 @@ export function App() {
               <div>
                 <strong>インポート確認</strong>
                 <p className="hint compact">{pendingImport.filename}</p>
-                <p className="hint compact" data-testid="import-preview-counts">現在{items.length}件 → インポート後{pendingImport.items.length}件</p>
+                <p className="hint compact" data-testid="import-preview-counts" data-before-count={items.length} data-after-count={pendingImport.items.length}>現在{items.length}件 → インポート後{pendingImport.items.length}件</p>
                 {pendingImport.originalCount !== pendingImport.items.length && (
                   <p className="hint compact" data-testid="import-preview-normalization">同一タグはTop3に正規化: {pendingImport.originalCount}件中{pendingImport.items.length}件を反映予定</p>
                 )}
@@ -552,7 +552,14 @@ export function App() {
                 )}
                 {pendingImportImpact && (
                   <>
-                    <p className="hint compact" data-testid="import-preview-impact-math">
+                    <p
+                      className="hint compact"
+                      data-testid="import-preview-impact-math"
+                      data-added-count={pendingImportImpact.added}
+                      data-kept-count={pendingImportImpact.kept}
+                      data-removed-count={pendingImportImpact.removed}
+                      data-excluded-count={pendingImportImpact.excluded}
+                    >
                       追加{pendingImportImpact.added}件 / 更新・保持{pendingImportImpact.kept}件 / 削除予定{pendingImportImpact.removed}件
                       {pendingImportImpact.excluded > 0 ? ` / 正規化で除外予定${pendingImportImpact.excluded}件` : ''}
                     </p>
