@@ -109,6 +109,33 @@ def commit_gap_guard(
 FORBIDDEN_POST_KEYS = frozenset({"screenshot_png", "local_path"})
 
 
+def _find_forbidden_key(node: object, trail: str) -> tuple[str, str] | None:
+    """Walk dict/list trees, returning (forbidden_key, path) on first hit.
+
+    Only DICT KEYS trip the guard — string values containing the literal
+    text 'local_path' are legitimate (e.g., human-readable error
+    messages) and must not false-positive.
+
+    Returns None when nothing forbidden is present.
+    """
+    if isinstance(node, dict):
+        for key, value in node.items():
+            if key in FORBIDDEN_POST_KEYS:
+                here = f"{trail}.{key}" if trail else key
+                return key, here
+            child_trail = f"{trail}.{key}" if trail else key
+            found = _find_forbidden_key(value, child_trail)
+            if found is not None:
+                return found
+    elif isinstance(node, list):
+        for idx, item in enumerate(node):
+            child_trail = f"{trail}[{idx}]"
+            found = _find_forbidden_key(item, child_trail)
+            if found is not None:
+                return found
+    return None
+
+
 def snapshot_sanity_check(snapshot_path: Path) -> GuardDecision:
     """Skip when the public snapshot has leaked private fields.
 
@@ -116,6 +143,13 @@ def snapshot_sanity_check(snapshot_path: Path) -> GuardDecision:
     screenshot bytes (privacy/size) nor the local filesystem path
     (information disclosure). The shell does the same check via embedded
     Python; this is the canonical Python version.
+
+    Walks the FULL snapshot tree (dicts + lists, all depths). Catches
+    leaks not just in posts[i] but also in last_check, recent_stats,
+    sync_state, and any future top-level field. Pre-rewrite the guard
+    only inspected `posts[i].keys()`, so a `last_check.error.local_path`
+    or a top-level `local_path` would have shipped to the public web UI
+    without the guard noticing.
     """
     try:
         data = json.loads(snapshot_path.read_text(encoding="utf-8"))
@@ -124,15 +158,31 @@ def snapshot_sanity_check(snapshot_path: Path) -> GuardDecision:
     except json.JSONDecodeError as exc:
         return GuardDecision(False, f"snapshot is not valid JSON: {exc}")
 
+    # Posts list must contain dicts only (per-element type pin).
     posts = data.get("posts") or []
     for idx, post in enumerate(posts):
         if not isinstance(post, dict):
             return GuardDecision(False, f"post[{idx}] is not an object")
-        leaked = FORBIDDEN_POST_KEYS & set(post.keys())
-        if leaked:
+
+    # Deep walk over the whole payload (root included).
+    found = _find_forbidden_key(data, trail="")
+    if found is not None:
+        key, where = found
+        # Format the location nicely for the historic `post[i] leaked...`
+        # reason format used pre-rewrite tests, otherwise show the path
+        # we found (e.g., `last_check.error.local_path`).
+        if where.startswith("posts[") and where.count(".") == 1:
+            # e.g. posts[1].screenshot_png → "post[1] leaked..." (preserve
+            # the legacy phrasing exercised by existing tests).
+            idx_part = where.split(".", 1)[0]  # 'posts[1]'
+            idx = idx_part[len("posts["):-1]
             return GuardDecision(
-                False, f"post[{idx}] leaked forbidden keys: {sorted(leaked)}"
+                False, f"post[{idx}] leaked forbidden keys: ['{key}']"
             )
+        return GuardDecision(
+            False, f"leaked forbidden key at {where}: '{key}'"
+        )
+
     return GuardDecision(True, f"snapshot ok ({len(posts)} posts checked)")
 
 

@@ -238,6 +238,95 @@ def test_sanity_check_passes_when_posts_key_missing(tmp_path):
     assert d.proceed
 
 
+# Deep recursion — defense in depth for forbidden keys in non-`posts`
+# regions of the snapshot. Today's payload is built from explicit DB
+# columns so the leak surface is small, but the guard's job is to stop
+# the next mistake (a refactor exposing `last_check.error` raw text with
+# a path, or a future top-level field added without sanitising it). All
+# three tests below FAIL before the deep-walk rewrite and pass after.
+
+
+def test_sanity_check_blocks_local_path_nested_in_last_check(tmp_path):
+    # `last_check` is whatever sqlite3.Row → dict produces; if a future
+    # column or richer error dict carries an absolute path, the public
+    # snapshot would leak it. The guard must inspect it.
+    snapshot = tmp_path / "state.json"
+    snapshot.write_text(
+        json.dumps({
+            "handle": "@x",
+            "posts": [{"post_id": "a"}],
+            "last_check": {
+                "checked_at": "2026-05-18T13:03:03Z",
+                "status": "error",
+                "error": {"detail": "fopen failed", "local_path": "/Users/umi/.config/secret"},
+            },
+        }),
+        encoding="utf-8",
+    )
+    d = snapshot_sanity_check(snapshot)
+    assert not d.proceed, "guard must reject local_path nested inside last_check.error"
+    assert "local_path" in d.reason
+
+
+def test_sanity_check_blocks_screenshot_png_nested_in_post_meta(tmp_path):
+    # If a future schema attaches per-post metadata (thumbnail blob,
+    # extracted EXIF, OCR text + raw bytes), a flat-keys check misses
+    # forbidden keys hidden one level down.
+    snapshot = tmp_path / "state.json"
+    snapshot.write_text(
+        json.dumps({
+            "handle": "@x",
+            "posts": [
+                {"post_id": "a"},
+                {"post_id": "b", "meta": {"thumbnail": {"screenshot_png": "AAAA"}}},
+            ],
+        }),
+        encoding="utf-8",
+    )
+    d = snapshot_sanity_check(snapshot)
+    assert not d.proceed, "guard must reject screenshot_png nested inside post[].meta.thumbnail"
+    assert "screenshot_png" in d.reason
+
+
+def test_sanity_check_blocks_forbidden_key_at_top_level(tmp_path):
+    # A new top-level field that accidentally proxies a forbidden key
+    # name (e.g., debug dump from watcher.run_once). The current guard
+    # never looks at top-level keys outside of `posts`.
+    snapshot = tmp_path / "state.json"
+    snapshot.write_text(
+        json.dumps({
+            "handle": "@x",
+            "posts": [],
+            "local_path": "/Users/umi/screens/dump.png",  # blatant top-level leak
+        }),
+        encoding="utf-8",
+    )
+    d = snapshot_sanity_check(snapshot)
+    assert not d.proceed, "guard must reject local_path at top-level of snapshot"
+    assert "local_path" in d.reason
+
+
+def test_sanity_check_passes_when_forbidden_key_appears_only_in_string_value(tmp_path):
+    # A description / message string that happens to mention the
+    # literal word "local_path" must NOT trigger the guard — only
+    # forbidden KEYS in dict objects do. Prevents false-positives on
+    # legitimate error text.
+    snapshot = tmp_path / "state.json"
+    snapshot.write_text(
+        json.dumps({
+            "handle": "@x",
+            "posts": [{"post_id": "a"}],
+            "last_check": {
+                "status": "ok",
+                "error": "warning: previous run had local_path None",
+            },
+        }),
+        encoding="utf-8",
+    )
+    d = snapshot_sanity_check(snapshot)
+    assert d.proceed, "string values mentioning forbidden key names must not trip the guard"
+
+
 # ── evaluate_all (composite, short-circuit) ──────────────────────────────
 
 
