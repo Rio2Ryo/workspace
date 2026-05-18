@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test'
-import { resetItemsByReplace, saveSampleItems , itemDeleteButton} from './e2e-helpers'
+import { dismissNextDeleteDialog, acceptNextDeleteDialog, resetItemsByReplace, saveSampleItems, itemDeleteButton } from './e2e-helpers'
 
 test.beforeEach(async ({ request }) => {
   await resetItemsByReplace(request)
@@ -14,15 +14,9 @@ test('delete asks for confirmation and cancel keeps the item', async ({ page }) 
   await expect(target).toBeVisible()
   await target.click()
 
-  let sawDialog = false
-  page.once('dialog', async (dialog) => {
-    sawDialog = true
-    expect(dialog.message()).toContain('Solito MAGO')
-    await dialog.dismiss()
-  })
+  const dialogPromise = dismissNextDeleteDialog(page, 'Solito MAGO')
   await itemDeleteButton(page, /削除/).first().click()
-
-  expect(sawDialog).toBe(true)
+  await dialogPromise
   await expect(page.getByText('削除しました。')).not.toBeVisible()
   await expect(page.getByText('1位: Solito MAGO')).toBeVisible()
 })
@@ -35,15 +29,9 @@ test('delete confirmation accept removes the item', async ({ page }) => {
   const target = page.getByText('1位: Solito MAGO')
   await target.click()
 
-  let sawDialog = false
-  page.once('dialog', async (dialog) => {
-    sawDialog = true
-    expect(dialog.message()).toContain('Solito MAGO')
-    await dialog.accept()
-  })
+  const dialogPromise = acceptNextDeleteDialog(page, 'Solito MAGO')
   await itemDeleteButton(page, /削除/).first().click()
-
-  expect(sawDialog).toBe(true)
+  await dialogPromise
   await expect(page.getByText('削除しました。')).toBeVisible()
 
   const apiData = (await page.request.get('/api/items').then((res) => res.json())) as { items: Array<{ name: string }> }

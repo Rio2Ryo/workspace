@@ -1,5 +1,5 @@
 import { readFile } from 'node:fs/promises'
-import { expect, type APIRequestContext, type Download, type Locator, type Page } from '@playwright/test'
+import { expect, type APIRequestContext, type Dialog, type Download, type Locator, type Page } from '@playwright/test'
 import { validateImportPreviewSummary } from '../src/shared/import-preview-summary-contract.mjs'
 
 export async function resetItemsByReplace(request: APIRequestContext, items: unknown[] = []) {
@@ -47,6 +47,35 @@ export function itemEditButton(scope: Page | Locator, itemName: string | RegExp)
 export function itemDeleteButton(scope: Page | Locator, itemName: string | RegExp): Locator {
   const name = typeof itemName === 'string' ? `${itemName}を削除` : itemName
   return scope.getByRole('button', { name })
+}
+
+async function handleNextDeleteDialog(page: Page, action: 'accept' | 'dismiss', expectedMessage?: string | RegExp): Promise<void> {
+  const dialog = await page.waitForEvent('dialog')
+  assertDeleteDialogMessage(dialog, expectedMessage)
+  if (action === 'accept') {
+    await dialog.accept()
+    return
+  }
+  await dialog.dismiss()
+}
+
+function assertDeleteDialogMessage(dialog: Dialog, expectedMessage?: string | RegExp): void {
+  const message = dialog.message()
+  if (expectedMessage instanceof RegExp) {
+    expect(message).toMatch(expectedMessage)
+    return
+  }
+  if (expectedMessage) {
+    expect(message).toContain(expectedMessage)
+  }
+}
+
+export function acceptNextDeleteDialog(page: Page, expectedMessage?: string | RegExp): Promise<void> {
+  return handleNextDeleteDialog(page, 'accept', expectedMessage)
+}
+
+export function dismissNextDeleteDialog(page: Page, expectedMessage?: string | RegExp): Promise<void> {
+  return handleNextDeleteDialog(page, 'dismiss', expectedMessage)
 }
 
 export function jsonImportButton(page: Page): Locator {

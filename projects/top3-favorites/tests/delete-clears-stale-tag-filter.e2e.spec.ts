@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test'
-import { resetItemsByReplace, itemDeleteButton, registrationSaveButton } from './e2e-helpers'
+import { acceptNextDeleteDialog, resetItemsByReplace, itemDeleteButton, registrationSaveButton } from './e2e-helpers'
 
 test.beforeEach(async ({ request }) => {
   await resetItemsByReplace(request)
@@ -29,10 +29,9 @@ test('deleting the last item in selected tag clears stale tag filter and keeps r
 
   // Delete the only item in that selected tag
   await searchSection.getByText(/\d位: Delete Me/).click()
-  page.once('dialog', async (dialog) => {
-    await dialog.accept()
-  })
+  const dialogPromise = acceptNextDeleteDialog(page, 'Delete Me')
   await itemDeleteButton(searchSection, 'Delete Me').click()
+  await dialogPromise
 
   await expect(page.getByRole('status')).toContainText('削除しました。')
 
