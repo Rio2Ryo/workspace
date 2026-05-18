@@ -143,6 +143,49 @@ def record_check(
     conn.commit()
 
 
+def recent_stats(
+    conn: sqlite3.Connection,
+    handle: str,
+    *,
+    window_hours: int = 24,
+) -> dict[str, Any]:
+    """Aggregate the last `window_hours` of checks for a handle.
+
+    Surfaces operator-visible health signals that the single-row
+    `last_check` field can't: how often the watcher hit partial_error
+    vs ok over a meaningful window, error breakdown, and the
+    success rate used by sync.py's recent-failures gate to gauge
+    whether the handle is in a transient blip or sustained issue.
+
+    Returns a dict with keys:
+        window_hours, total, ok, partial_error, error, other,
+        success_rate (float in [0, 1] — total `ok` / total).
+    `other` catches future status strings so the schema is
+    forward-compatible. `total == 0` returns `success_rate=None`.
+    """
+    rows = conn.execute(
+        "SELECT status FROM checks "
+        "WHERE handle = ? "
+        "AND checked_at > strftime('%Y-%m-%dT%H:%M:%SZ', datetime('now', ? || ' hours'))",
+        (handle, f"-{int(window_hours)}"),
+    ).fetchall()
+    statuses = [str(r[0]) for r in rows]
+    ok_count = sum(1 for s in statuses if s == "ok")
+    partial_count = sum(1 for s in statuses if s == "partial_error")
+    error_count = sum(1 for s in statuses if s == "error")
+    other_count = len(statuses) - ok_count - partial_count - error_count
+    total = len(statuses)
+    return {
+        "window_hours": window_hours,
+        "total": total,
+        "ok": ok_count,
+        "partial_error": partial_count,
+        "error": error_count,
+        "other": other_count,
+        "success_rate": (ok_count / total) if total > 0 else None,
+    }
+
+
 def latest_snapshot(conn: sqlite3.Connection, handle: str) -> dict[str, Any]:
     post_rows = conn.execute(
         """
@@ -169,4 +212,5 @@ def latest_snapshot(conn: sqlite3.Connection, handle: str) -> dict[str, Any]:
         "last_check": dict(check_row) if check_row else None,
         "saved_count": len(post_rows),
         "posts": [dict(row) for row in post_rows],
+        "recent_stats": recent_stats(conn, handle, window_hours=24),
     }

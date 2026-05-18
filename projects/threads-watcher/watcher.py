@@ -73,6 +73,10 @@ def _write_web_snapshot_from_db(snapshot: dict[str, Any]) -> None:
         "last_check": snapshot["last_check"],
         "saved_count": snapshot["saved_count"],
         "posts": snapshot["posts"],
+        # recent_stats (24h aggregate) added 2026-05-18 so operators see
+        # partial_error frequency at a glance, not just "current run ok"
+        # which hides the ~8% blip rate observed on @hal.lifedesign.
+        "recent_stats": snapshot.get("recent_stats"),
         "snapshot_generated_at": _now_iso(),
     }
     WEB_SNAPSHOT_FILE.write_text(json.dumps(payload, ensure_ascii=False, indent=2), encoding="utf-8")

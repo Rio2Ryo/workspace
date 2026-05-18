@@ -57,22 +57,32 @@
 <body>
   <main>
     <h1>threads-watcher <span class="pill">status</span></h1>
-    <div class="muted">公開 Threads アカウントの新規投稿観測ステータス。スクリーンショット本体は配信しません。</div>
+    <div class="muted">公開 Threads アカウントの新規投稿観測ステータス。スクリーンショット本体はDB保存し、このページでは配信しません。</div>
 
     <section class="card" id="summary">
       <div class="row"><span class="label">handle</span><span id="handle">—</span></div>
       <div class="row"><span class="label">last checked (UTC)</span><span id="last">—</span></div>
-      <div class="row"><span class="label">seen posts</span><span id="count">—</span></div>
+      <div class="row"><span class="label">saved screenshots in DB</span><span id="count">—</span></div>
+      <div class="row"><span class="label">last run status</span><span id="status">—</span></div>
       <div class="row"><span class="label">snapshot generated (UTC)</span><span id="generated">—</span></div>
     </section>
 
+    <section class="card" id="recent-stats">
+      <div class="label" style="margin-bottom:8px">last 24h (rolling window)</div>
+      <div class="row"><span class="label">total checks</span><span id="rs-total">—</span></div>
+      <div class="row"><span class="label">success rate</span><span id="rs-rate">—</span></div>
+      <div class="row"><span class="label">ok</span><span id="rs-ok">—</span></div>
+      <div class="row"><span class="label">partial_error</span><span id="rs-partial">—</span></div>
+      <div class="row"><span class="label">error</span><span id="rs-error">—</span></div>
+    </section>
+
     <section class="card">
-      <div class="label" style="margin-bottom:8px">recent post ids (newest first)</div>
+      <div class="label" style="margin-bottom:8px">recent saved screenshots (newest first)</div>
       <ul id="posts"><li class="muted">loading…</li></ul>
     </section>
 
     <p class="muted" style="margin-top:24px">
-      このページは静的スナップショットです。データはローカル watcher が手動コミットされた時点のものです。
+      このページは静的スナップショットです。正本は watcher の SQLite DB です。
     </p>
   </main>
 
@@ -83,24 +93,48 @@
         if (!res.ok) throw new Error('HTTP ' + res.status);
         const data = await res.json();
         document.getElementById('handle').textContent = data.handle || '—';
-        document.getElementById('last').textContent = data.last_checked_at || '—';
-        document.getElementById('count').textContent = (data.post_ids || []).length;
+        document.getElementById('last').textContent = (data.last_check && data.last_check.checked_at) || data.last_checked_at || '—';
+        document.getElementById('count').textContent = data.saved_count ?? (data.post_ids || []).length;
+        document.getElementById('status').textContent = data.last_check ? `${data.last_check.status} / found ${data.last_check.found_count} / new ${data.last_check.new_count}` : '—';
         document.getElementById('generated').textContent = data.snapshot_generated_at || '—';
+
+        // Recent 24h aggregate (added 2026-05-18 — surfaces blip rate
+        // operators previously had to read sqlite for).
+        const rs = data.recent_stats;
+        if (rs && typeof rs.total === 'number') {
+          document.getElementById('rs-total').textContent = rs.total;
+          const rate = typeof rs.success_rate === 'number'
+            ? (rs.success_rate * 100).toFixed(1) + '%'
+            : 'n/a';
+          const rateEl = document.getElementById('rs-rate');
+          rateEl.textContent = rate;
+          // Visual cue: <95% is worth a glance, <80% is investigate.
+          if (typeof rs.success_rate === 'number' && rs.success_rate < 0.80) {
+            rateEl.classList.add('err');
+          }
+          document.getElementById('rs-ok').textContent = rs.ok;
+          document.getElementById('rs-partial').textContent = rs.partial_error;
+          document.getElementById('rs-error').textContent = rs.error;
+        }
+
         const ul = document.getElementById('posts');
         ul.innerHTML = '';
-        const ids = (data.post_ids || []).slice().reverse();
-        if (!ids.length) {
+        const posts = data.posts || (data.post_ids || []).slice().reverse().map((post_id) => ({ post_id }));
+        if (!posts.length) {
           ul.innerHTML = '<li class="muted">no posts recorded yet</li>';
           return;
         }
         const handle = (data.handle || '').replace(/^@/, '');
-        for (const pid of ids) {
+        for (const post of posts) {
+          const pid = post.post_id;
           const li = document.createElement('li');
           const a = document.createElement('a');
           a.href = 'https://www.threads.com/@' + handle + '/post/' + pid;
           a.rel = 'noopener noreferrer';
           a.target = '_blank';
-          a.textContent = pid;
+          const size = post.screenshot_size_bytes ? ` / ${(post.screenshot_size_bytes / 1024).toFixed(0)}KB` : '';
+          const captured = post.captured_at ? ` / ${post.captured_at}` : '';
+          a.textContent = `${pid}${size}${captured}`;
           li.appendChild(a);
           ul.appendChild(li);
         }
