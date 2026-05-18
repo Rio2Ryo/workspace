@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  launchd entry for auto-restart-if-stale.sh — the self-heal wrapper
+  that runs `watcher.py --health-check`, parses for the staleness
+  signal, and invokes `restart-watcher.sh` (with a 5-min cooldown) so
+  the live `--watch` loop stays on fresh code without manual
+  intervention.
+
+  Closes the silent-13-hour breakage class observed on 2026-05-18.
+
+  Install location:
+    ~/Library/LaunchAgents/com.shiro.threads-watcher-auto-restart.plist
+
+  Activate (no separate approval needed — local-only ops layer, not
+  external-facing):
+    launchctl load -w ~/Library/LaunchAgents/com.shiro.threads-watcher-auto-restart.plist
+
+  Disable (rollback):
+    launchctl unload -w ~/Library/LaunchAgents/com.shiro.threads-watcher-auto-restart.plist
+
+  Status:
+    launchctl list | grep auto-restart
+
+  Defaults:
+    - 5-minute interval (StartInterval 300)
+    - logs to logs/auto-restart.{out,err}.log (no rotation)
+    - RunAtLoad=false → no immediate fire at install, wait for first tick
+-->
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+  <key>Label</key>
+  <string>com.shiro.threads-watcher-auto-restart</string>
+
+  <key>ProgramArguments</key>
+  <array>
+    <string>/Users/umi/.openclaw/workspace/projects/threads-watcher/auto-restart-if-stale.sh</string>
+  </array>
+
+  <key>EnvironmentVariables</key>
+  <dict>
+    <key>PATH</key>
+    <string>/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin</string>
+  </dict>
+
+  <key>StartInterval</key>
+  <integer>300</integer>
+
+  <key>RunAtLoad</key>
+  <false/>
+
+  <key>StandardOutPath</key>
+  <string>/Users/umi/.openclaw/workspace/projects/threads-watcher/logs/auto-restart.out.log</string>
+  <key>StandardErrorPath</key>
+  <string>/Users/umi/.openclaw/workspace/projects/threads-watcher/logs/auto-restart.err.log</string>
+
+  <key>WorkingDirectory</key>
+  <string>/Users/umi/.openclaw/workspace/projects/threads-watcher</string>
+</dict>
+</plist>
