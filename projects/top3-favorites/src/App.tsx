@@ -411,10 +411,15 @@ export function App() {
   }, [pendingImport, pendingImportImpact])
 
   const excludedDetailsPreview = useMemo(() => {
-    if (!pendingImport) return { visible: [] as PendingImport['excludedDetails'], hiddenCount: 0 }
-    if (isExcludedDetailsExpanded) return { visible: pendingImport.excludedDetails, hiddenCount: 0 }
-    const visible = pendingImport.excludedDetails.slice(0, 3)
-    const hiddenCount = Math.max(0, pendingImport.excludedDetails.length - visible.length)
+    if (!pendingImport) return { visible: [] as Array<ImportExcludedDetail & { label: string }>, hiddenCount: 0 }
+    const nameCounts = countExcludedNames(pendingImport.excludedDetails)
+    const detailsWithLabels = pendingImport.excludedDetails.map((detail) => ({
+      ...detail,
+      label: buildExcludedNameLabel(detail, nameCounts),
+    }))
+    if (isExcludedDetailsExpanded) return { visible: detailsWithLabels, hiddenCount: 0 }
+    const visible = detailsWithLabels.slice(0, 3)
+    const hiddenCount = Math.max(0, detailsWithLabels.length - visible.length)
     return { visible, hiddenCount }
   }, [isExcludedDetailsExpanded, pendingImport])
 
@@ -848,7 +853,7 @@ export function App() {
                 {pendingImport.excludedDetails.length > 0 && (
                   <>
                     <p id="import-preview-excluded-details" className="hint compact" data-testid="import-preview-excluded-details">
-                      除外理由: {excludedDetailsPreview.visible.map((detail) => `・${detail.name}（${detail.reason}）`).join(' / ')}
+                      除外理由: {excludedDetailsPreview.visible.map((detail) => `・${detail.label}（${detail.reason}）`).join(' / ')}
                       {excludedDetailsPreview.hiddenCount > 0 ? `（ほか${excludedDetailsPreview.hiddenCount}件）` : ''}
                     </p>
                     {pendingImport.excludedDetails.length > 3 && (
