@@ -27,7 +27,10 @@ import { contractMessage, missingItemsMessage } from './qa-contract-message.mjs'
 const root = new URL('..', import.meta.url)
 const appPath = new URL('src/App.tsx', `${root}/`)
 const importPreviewTestsPath = new URL('tests/import-preview/', `${root}/`)
-const currentContractTestPath = new URL('tests/qa-current-contract.test.mjs', `${root}/`)
+const contractTestPaths = [
+  new URL('tests/qa-current-contract.test.mjs', `${root}/`),
+  new URL('tests/qa-coverage-doc.test.mjs', `${root}/`),
+]
 
 test('[App] current implementation uses API-backed structured form, not legacy localStorage or natural parsing', async () => {
   const appSource = await readFile(appPath, 'utf8')
@@ -41,11 +44,16 @@ test('[App] current implementation uses API-backed structured form, not legacy l
   }
 })
 
-test('[App] scopeLimitRules do not produce overlapping matches for known contract scopes', async () => {
-  const scopes = await collectBracketScopesFromTestTitles(currentContractTestPath)
-  const overlaps = []
+test('[App] scopeLimitRules do not produce overlapping matches across QA contract test suites', async () => {
+  const scopes = new Set()
+  for (const path of contractTestPaths) {
+    for (const scope of await collectBracketScopesFromTestTitles(path)) {
+      scopes.add(scope)
+    }
+  }
 
-  for (const scope of scopes) {
+  const overlaps = []
+  for (const scope of Array.from(scopes)) {
     const matched = scopeLimitRules.filter(({ pattern }) => pattern.test(scope))
     if (matched.length > 1) {
       overlaps.push(`${scope} -> ${matched.map(({ pattern }) => pattern).join(', ')}`)
@@ -53,12 +61,12 @@ test('[App] scopeLimitRules do not produce overlapping matches for known contrac
   }
 
   assert.deepEqual(
-    overlaps,
+    overlaps.sort((a, b) => a.localeCompare(b, 'en')),
     [],
     contractMessage({
       scope: 'App',
       rule: 'scopeLimitRules overlap check',
-      expected: 'each discovered [Scope] test title matches at most one scopeLimitRules pattern',
+      expected: 'each discovered [Scope] title across qa-current + qa-docs matches at most one scopeLimitRules pattern',
       fix: 'tighten regex patterns in scopeLimitRules to avoid multi-match collisions',
     }),
   )
