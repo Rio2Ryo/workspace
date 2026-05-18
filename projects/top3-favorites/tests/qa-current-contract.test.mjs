@@ -475,8 +475,10 @@ test('[App][config-quality] missingItemsMessage context key dictionary and usage
     }),
   )
   const legacyContextUsageCount = legacyContextKeysUsed.length
+  const zeroRunCount = legacyContextUsageCount === 0 ? 1 : 0
   const shouldPromoteLegacyRemoval =
-    legacyContextUsageCount <= legacyPromotionRemovalContract.promoteWhenLegacyContextUsageCountLte
+    legacyContextUsageCount <= legacyPromotionRemovalContract.promoteWhenLegacyContextUsageCountLte &&
+    zeroRunCount >= legacyPromotionRemovalContract.consecutiveZeroRunsToEnforce
 
   if (legacyPromotionRemovalContract.enforceRemoval) {
     assert.deepEqual(
@@ -492,6 +494,8 @@ test('[App][config-quality] missingItemsMessage context key dictionary and usage
           promoteWhenLegacyContextUsageCountLte: String(
             legacyPromotionRemovalContract.promoteWhenLegacyContextUsageCountLte,
           ),
+          zeroRunCount: String(zeroRunCount),
+          consecutiveZeroRunsToEnforce: String(legacyPromotionRemovalContract.consecutiveZeroRunsToEnforce),
         },
         items: legacyContextKeysUsed,
       }),
@@ -503,13 +507,15 @@ test('[App][config-quality] missingItemsMessage context key dictionary and usage
       missingItemsMessage({
         scope: 'App',
         rule: 'legacy promotion keys removal promotion trigger',
-        fix: 'set legacyPromotionRemovalContract.enforceRemoval=true when legacy context usage count is at or below threshold',
+        fix: 'set legacyPromotionRemovalContract.enforceRemoval=true when legacy context usage count is at or below threshold and zero-run requirement is satisfied',
         context: {
           enforceRemoval: String(legacyPromotionRemovalContract.enforceRemoval),
           legacyContextUsageCount: String(legacyContextUsageCount),
           promoteWhenLegacyContextUsageCountLte: String(
             legacyPromotionRemovalContract.promoteWhenLegacyContextUsageCountLte,
           ),
+          zeroRunCount: String(zeroRunCount),
+          consecutiveZeroRunsToEnforce: String(legacyPromotionRemovalContract.consecutiveZeroRunsToEnforce),
         },
         items: legacyContextKeysUsed,
       }),
@@ -631,6 +637,26 @@ test('[App][config-quality] missingItemsMessage context key dictionary and usage
       rule: 'legacyPromotionRemovalContract.promoteWhenLegacyContextUsageCountLte non-negative policy',
       expected: '>= 0',
       fix: 'set promoteWhenLegacyContextUsageCountLte to a non-negative integer',
+    }),
+  )
+  assert.equal(
+    Number.isInteger(legacyPromotionRemovalContract.consecutiveZeroRunsToEnforce),
+    true,
+    contractMessage({
+      scope: 'App',
+      rule: 'legacyPromotionRemovalContract.consecutiveZeroRunsToEnforce integer policy',
+      expected: 'integer count',
+      fix: 'set consecutiveZeroRunsToEnforce to an integer (e.g., 1)',
+    }),
+  )
+  assert.equal(
+    legacyPromotionRemovalContract.consecutiveZeroRunsToEnforce >= 1,
+    true,
+    contractMessage({
+      scope: 'App',
+      rule: 'legacyPromotionRemovalContract.consecutiveZeroRunsToEnforce minimum policy',
+      expected: '>= 1',
+      fix: 'set consecutiveZeroRunsToEnforce to 1 or more',
     }),
   )
 

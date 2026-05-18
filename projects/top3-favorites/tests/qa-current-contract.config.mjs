@@ -359,6 +359,7 @@ export const deepFreezeSkipTypeRules = rawDeepFreezeSkipTypeRules
 const rawMissingItemsContextKeyContract = {
   allowed: [
     'configured',
+    'consecutiveZeroRunsToEnforce',
     'deadAllowedKeyCount',
     'deadScopeCount',
     'deadScopes',
@@ -380,6 +381,7 @@ const rawMissingItemsContextKeyContract = {
     'promotionThresholdDeadSortModes',
     'scopePriorityDeadScopes',
     'usedScopes',
+    'zeroRunCount',
   ],
   allowedContextSortModes: ['key', 'valueCountDesc'],
   scopePriority: ['App', 'Docs', 'Manual', 'README', 'E2E-Helper'],
@@ -413,6 +415,7 @@ export const legacyPromotionKeys = rawLegacyPromotionKeys
 const rawLegacyPromotionRemovalContract = {
   enforceRemoval: true,
   promoteWhenLegacyContextUsageCountLte: 0,
+  consecutiveZeroRunsToEnforce: 1,
 }
 Object.freeze(rawLegacyPromotionRemovalContract)
 export const legacyPromotionRemovalContract = rawLegacyPromotionRemovalContract
