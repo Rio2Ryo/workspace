@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test'
-import { itemEditButton, resetItemsByReplace, registrationSaveButton } from './e2e-helpers'
+import { editCancelButton, itemEditButton, resetItemsByReplace, registrationSaveButton } from './e2e-helpers'
 
 test.beforeEach(async ({ request }) => {
   await resetItemsByReplace(request)
@@ -16,7 +16,7 @@ test('canceling edit clears stale success notice to avoid misleading feedback', 
 
   await page.getByText('1位: Before Edit').click()
   await itemEditButton(page, 'Before Edit').click()
-  await page.getByRole('button', { name: '編集をキャンセル' }).click()
+  await editCancelButton(page).click()
 
   await expect(page.getByText('カフェラテ の1位に保存しました。')).toHaveCount(0)
 })

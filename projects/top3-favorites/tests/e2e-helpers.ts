@@ -35,6 +35,10 @@ export function editSaveButton(page: Page): Locator {
   return page.getByRole('button', { name: '編集を保存' })
 }
 
+export function editCancelButton(page: Page): Locator {
+  return page.getByRole('button', { name: '編集をキャンセル' })
+}
+
 export function itemEditButton(scope: Page | Locator, itemName: string | RegExp): Locator {
   const name = typeof itemName === 'string' ? `${itemName}を編集` : itemName
   return scope.getByRole('button', { name })

@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test'
-import { editSaveButton, resetItemsByReplace, saveSampleItems } from './e2e-helpers'
+import { editCancelButton, editSaveButton, resetItemsByReplace, saveSampleItems } from './e2e-helpers'
 
 test.beforeEach(async ({ request }) => {
   await resetItemsByReplace(request)
@@ -42,7 +42,7 @@ test('edit form validates required fields before saving', async ({ page }) => {
   await expect(page.getByRole('alert')).toContainText('タグと店舗名は必須です。')
   await expect(page.getByRole('textbox', { name: '編集 店舗名' })).toBeVisible()
 
-  await page.getByRole('button', { name: '編集をキャンセル' }).click()
+  await editCancelButton(page).click()
   await expect(page.getByText(/\d位: Solito MAGO/)).toBeVisible()
   await expect(page.getByRole('alert')).not.toBeVisible()
 })
