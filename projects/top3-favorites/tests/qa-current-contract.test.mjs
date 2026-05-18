@@ -76,6 +76,9 @@ test('[App] scopeLimitRules ids follow naming contract (scope- prefix, kebab-cas
   const overlongDescription = scopeLimitRules
     .filter(({ description }) => typeof description === 'string' && description.trim().length > 90)
     .map(({ id, description }) => `${id ?? '(missing-id)'} (${description.trim().length} chars)`)
+  const nonEnglishDescription = scopeLimitRules
+    .filter(({ description }) => typeof description === 'string' && /[^\x20-\x7E]/.test(description))
+    .map(({ id, description }) => `${id ?? '(missing-id)'} -> ${description ?? '(missing-description)'}`)
   const seen = new Set()
   const duplicated = []
   for (const id of ids) {
@@ -151,6 +154,16 @@ test('[App] scopeLimitRules ids follow naming contract (scope- prefix, kebab-cas
       rule: 'scopeLimitRules description semantic shape',
       fix: 'use "Controls <target> for <purpose>" format for every scope rule description',
       items: malformedDescriptionStructure,
+    }),
+  )
+  assert.deepEqual(
+    nonEnglishDescription,
+    [],
+    missingItemsMessage({
+      scope: 'App',
+      rule: 'scopeLimitRules description language policy',
+      fix: 'keep descriptions ASCII English to avoid mixed-language overlap logs',
+      items: nonEnglishDescription,
     }),
   )
 })
