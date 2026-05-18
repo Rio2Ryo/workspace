@@ -64,6 +64,18 @@ test('[App] scopeLimitRules ids follow naming contract (scope- prefix, kebab-cas
   const ids = scopeLimitRules.map((rule) => rule.id)
   const missing = ids.filter((id) => typeof id !== 'string' || id.length === 0)
   const malformed = ids.filter((id) => typeof id === 'string' && !idPattern.test(id))
+  const missingDescription = scopeLimitRules
+    .filter(({ description }) => typeof description !== 'string' || description.trim().length === 0)
+    .map(({ id }) => id ?? '(missing-id)')
+  const malformedDescription = scopeLimitRules
+    .filter(({ description }) => typeof description === 'string' && !/^Controls\s/.test(description.trim()))
+    .map(({ id, description }) => `${id ?? '(missing-id)'} -> ${description ?? '(missing-description)'}`)
+  const malformedDescriptionStructure = scopeLimitRules
+    .filter(({ description }) => typeof description === 'string' && !/^Controls\s.+\sfor\s.+/.test(description.trim()))
+    .map(({ id, description }) => `${id ?? '(missing-id)'} -> ${description ?? '(missing-description)'}`)
+  const overlongDescription = scopeLimitRules
+    .filter(({ description }) => typeof description === 'string' && description.trim().length > 90)
+    .map(({ id, description }) => `${id ?? '(missing-id)'} (${description.trim().length} chars)`)
   const seen = new Set()
   const duplicated = []
   for (const id of ids) {
@@ -99,6 +111,46 @@ test('[App] scopeLimitRules ids follow naming contract (scope- prefix, kebab-cas
       rule: 'scopeLimitRules id uniqueness',
       fix: 'ensure each scopeLimitRules id is unique',
       items: duplicated,
+    }),
+  )
+  assert.deepEqual(
+    missingDescription,
+    [],
+    missingItemsMessage({
+      scope: 'App',
+      rule: 'scopeLimitRules description presence',
+      fix: 'add non-empty description to each scopeLimitRules entry',
+      items: missingDescription,
+    }),
+  )
+  assert.deepEqual(
+    malformedDescription,
+    [],
+    missingItemsMessage({
+      scope: 'App',
+      rule: 'scopeLimitRules description style',
+      fix: 'start each description with "Controls ..." to keep logs consistent',
+      items: malformedDescription,
+    }),
+  )
+  assert.deepEqual(
+    overlongDescription,
+    [],
+    missingItemsMessage({
+      scope: 'App',
+      rule: 'scopeLimitRules description max length',
+      fix: 'keep each description within 90 characters to avoid wrapped overlap logs',
+      items: overlongDescription,
+    }),
+  )
+  assert.deepEqual(
+    malformedDescriptionStructure,
+    [],
+    missingItemsMessage({
+      scope: 'App',
+      rule: 'scopeLimitRules description semantic shape',
+      fix: 'use "Controls <target> for <purpose>" format for every scope rule description',
+      items: malformedDescriptionStructure,
     }),
   )
 })

@@ -50,7 +50,10 @@ export async function findScopeRuleOverlaps(contractTestPaths, scopeLimitRules) 
     const matched = scopeLimitRules.filter(({ pattern }) => pattern.test(scope))
     if (matched.length > 1) {
       const ruleIds = matched
-        .map(({ id, pattern }) => (id ? `rule:${id}` : `pattern:${String(pattern)}`))
+        .map(({ id, description, pattern }) => {
+          if (!id) return `pattern:${String(pattern)}`
+          return description ? `rule:${id}(${description})` : `rule:${id}`
+        })
         .join(', ')
       overlaps.push(
         `${scope} @ ${Array.from(sources).sort((a, b) => a.localeCompare(b, 'en')).join(' + ')} -> ${ruleIds}`,

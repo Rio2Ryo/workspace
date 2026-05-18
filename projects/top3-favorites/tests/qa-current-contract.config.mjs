@@ -172,8 +172,18 @@ export const contractMessageLimits = {
 }
 
 export const scopeLimitRules = [
-  { id: 'scope-e2e-helper', pattern: /^E2E-Helper$/, limit: contractMessageLimits.e2eHelper },
-  { id: 'scope-docs-family', pattern: /^Docs/, limit: contractMessageLimits.docsPaths },
+  {
+    id: 'scope-e2e-helper',
+    description: 'Controls offender-list density for E2E-Helper reset-helper violations',
+    pattern: /^E2E-Helper$/,
+    limit: contractMessageLimits.e2eHelper,
+  },
+  {
+    id: 'scope-docs-family',
+    description: 'Controls offender-list density for Docs* coverage and path mismatches',
+    pattern: /^Docs/,
+    limit: contractMessageLimits.docsPaths,
+  },
 ]
 
 export const importPreviewContractCases = {
