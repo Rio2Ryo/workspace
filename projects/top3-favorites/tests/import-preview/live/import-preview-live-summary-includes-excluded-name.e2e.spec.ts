@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test'
-import { resetItemsByDelete } from '../../e2e-helpers'
+import { uploadJsonImportFile, resetItemsByDelete } from '../../e2e-helpers'
 
 test.beforeEach(async ({ request }) => {
   await resetItemsByDelete(request)
@@ -16,11 +16,7 @@ test('live summary mentions a representative excluded shop name when normalizati
     { id: 'd', tag: 'カフェラテ', location: '柏の葉', name: 'D店', rank: 1, memo: '', mapsUrl: '', placeId: '', createdAt: now, updatedAt: now },
   ]
 
-  await page.locator('input[type="file"][accept*="json"]').setInputFiles({
-    name: 'live-excluded-name.json',
-    mimeType: 'application/json',
-    buffer: Buffer.from(JSON.stringify(payload), 'utf-8'),
-  })
+  await uploadJsonImportFile(page, 'live-excluded-name.json', payload)
 
   const live = page.getByTestId('import-preview-live')
   await expect(live).toContainText('正規化除外1件')

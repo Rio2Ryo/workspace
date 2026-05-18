@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test'
-import { resetItemsByDelete } from '../../e2e-helpers'
+import { uploadJsonImportFile, resetItemsByDelete } from '../../e2e-helpers'
 
 test.beforeEach(async ({ request }) => {
   await resetItemsByDelete(request)
@@ -18,11 +18,7 @@ test('impact terms helper is collapsed by default and can be expanded/collapsed'
     { id: 'x4', tag: 'カフェラテ', location: '柏の葉', name: 'X4店', rank: 1, memo: '', mapsUrl: '', placeId: '', createdAt: now, updatedAt: now },
   ]
 
-  await page.locator('input[type="file"][accept*="json"]').setInputFiles({
-    name: 'terms-toggle.json',
-    mimeType: 'application/json',
-    buffer: Buffer.from(JSON.stringify(payload), 'utf-8'),
-  })
+  await uploadJsonImportFile(page, 'terms-toggle.json', payload)
 
   await expect(page.getByRole('button', { name: '差分用語の詳細説明を表示' })).toBeVisible()
   await expect(page.getByTestId('import-preview-terms-helper')).toHaveCount(0)

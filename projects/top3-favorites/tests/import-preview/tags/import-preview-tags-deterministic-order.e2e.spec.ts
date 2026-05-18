@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test'
-import { resetItemsByReplace } from '../../e2e-helpers'
+import { uploadJsonImportFile, resetItemsByReplace } from '../../e2e-helpers'
 
 test.beforeEach(async ({ request }) => {
   await resetItemsByReplace(request)
@@ -15,11 +15,7 @@ test('import preview shows impacted tags in deterministic sorted order', async (
     { id: 't3', tag: 'つけ麺', location: '松戸', name: 'T1', rank: 1, memo: '', mapsUrl: '', placeId: '', createdAt: now, updatedAt: now },
   ]
 
-  await page.locator('input[type="file"][accept*="json"]').setInputFiles({
-    name: 'impact-tags-order.json',
-    mimeType: 'application/json',
-    buffer: Buffer.from(JSON.stringify(payload), 'utf-8'),
-  })
+  await uploadJsonImportFile(page, 'impact-tags-order.json', payload)
 
   const tags = page.getByTestId('import-preview-impact-tags')
   await expect(tags).toHaveAttribute('data-impact-tag-count', '3')

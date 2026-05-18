@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test'
-import { resetItemsByReplace } from '../../e2e-helpers'
+import { uploadJsonImportFile, resetItemsByReplace } from '../../e2e-helpers'
 
 test.beforeEach(async ({ request }) => {
   await resetItemsByReplace(request)
@@ -18,11 +18,7 @@ test('impact tags are collapsed when many tags are affected', async ({ page }) =
     { id: '6', tag: 'Fタグ', location: '柏', name: 'F1', rank: 1, memo: '', mapsUrl: '', placeId: '', createdAt: now, updatedAt: now },
   ]
 
-  await page.locator('input[type="file"][accept*="json"]').setInputFiles({
-    name: 'impact-many-tags.json',
-    mimeType: 'application/json',
-    buffer: Buffer.from(JSON.stringify(payload), 'utf-8'),
-  })
+  await uploadJsonImportFile(page, 'impact-many-tags.json', payload)
 
   const tags = page.getByTestId('import-preview-impact-tags')
   await expect(tags).toContainText('影響タグ: Aタグ, Bタグ, Cタグ, Dタグ, Eタグ')

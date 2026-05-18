@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test'
-import { resetItemsByDelete } from '../../e2e-helpers'
+import { uploadJsonImportFile, resetItemsByDelete } from '../../e2e-helpers'
 
 test.beforeEach(async ({ request }) => {
   await resetItemsByDelete(request)
@@ -16,13 +16,7 @@ test('import preview exposes aria-live region and updates when file is replaced'
     { id: 'b1', tag: 'B', location: '柏', name: 'B1', rank: 1, memo: '', mapsUrl: '', placeId: '', createdAt: now, updatedAt: now },
     { id: 'b2', tag: 'B', location: '柏', name: 'B2', rank: 2, memo: '', mapsUrl: '', placeId: '', createdAt: now, updatedAt: now },
   ]
-
-  const fileInput = page.locator('input[type="file"][accept*="json"]')
-  await fileInput.setInputFiles({
-    name: 'live-a.json',
-    mimeType: 'application/json',
-    buffer: Buffer.from(JSON.stringify(payloadA), 'utf-8'),
-  })
+  await uploadJsonImportFile(page, 'live-a.json', payloadA)
 
   const live = page.getByTestId('import-preview-live')
   await expect(live).toHaveAttribute('aria-live', 'polite')
@@ -30,11 +24,7 @@ test('import preview exposes aria-live region and updates when file is replaced'
   await expect(live).toHaveText('追加1件 / 削除予定0件 / インポート後1件。')
   await expect(page.getByTestId('import-preview-counts')).toContainText('現在0件 → インポート後1件')
 
-  await fileInput.setInputFiles({
-    name: 'live-b.json',
-    mimeType: 'application/json',
-    buffer: Buffer.from(JSON.stringify(payloadB), 'utf-8'),
-  })
+  await uploadJsonImportFile(page, 'live-b.json', payloadB)
 
   await expect(live).toHaveText('追加2件 / 削除予定0件 / インポート後2件。')
   await expect(page.getByTestId('import-preview-counts')).toContainText('現在0件 → インポート後2件')

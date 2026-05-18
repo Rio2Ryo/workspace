@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test'
-import { resetItemsByDelete } from '../../e2e-helpers'
+import { uploadJsonImportFile, resetItemsByDelete } from '../../e2e-helpers'
 
 test.beforeEach(async ({ request }) => {
   await resetItemsByDelete(request)
@@ -11,11 +11,7 @@ test('import preview metrics/helpers use unified import-preview-* testid naming'
   await expect(page.getByRole('status')).toContainText('サンプルをDBに保存しました。')
 
   const current = (await request.get('/api/items').then((res) => res.json())) as { items: unknown[] }
-  await page.locator('input[type="file"][accept*="json"]').setInputFiles({
-    name: 'preview-testid-consistency.json',
-    mimeType: 'application/json',
-    buffer: Buffer.from(JSON.stringify(current.items), 'utf-8'),
-  })
+  await uploadJsonImportFile(page, 'preview-testid-consistency.json', current.items)
 
   await expect(page.getByTestId('import-preview-direction-metrics')).toBeVisible()
   await expect(page.getByTestId('import-preview-metric-added')).toBeVisible()

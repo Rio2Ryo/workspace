@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test'
-import { resetItemsByDelete } from '../../e2e-helpers'
+import { uploadJsonImportFile, resetItemsByDelete } from '../../e2e-helpers'
 
 test.beforeEach(async ({ request }) => {
   await resetItemsByDelete(request)
@@ -36,11 +36,7 @@ test('import preview toggles follow unified data-testid naming (import-preview-t
     { id: 'f4', tag: 'F', location: '柏', name: 'F4', rank: 1, memo: '', mapsUrl: '', placeId: '', createdAt: now, updatedAt: now },
   ]
 
-  await page.locator('input[type="file"][accept*="json"]').setInputFiles({
-    name: 'toggle-testid-contract.json',
-    mimeType: 'application/json',
-    buffer: Buffer.from(JSON.stringify(payload), 'utf-8'),
-  })
+  await uploadJsonImportFile(page, 'toggle-testid-contract.json', payload)
 
   await expect(page.getByTestId('import-preview-toggle-impact-tags')).toBeVisible()
   await expect(page.getByTestId('import-preview-toggle-excluded-details')).toBeVisible()

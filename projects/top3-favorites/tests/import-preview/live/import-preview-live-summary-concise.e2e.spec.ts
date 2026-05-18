@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test'
-import { resetItemsByDelete } from '../../e2e-helpers'
+import { uploadJsonImportFile, resetItemsByDelete } from '../../e2e-helpers'
 
 test.beforeEach(async ({ request }) => {
   await resetItemsByDelete(request)
@@ -9,17 +9,11 @@ test('live summary is concise and mentions only changed elements', async ({ page
   await page.goto('/')
   await page.getByRole('button', { name: 'サンプルをDB保存' }).click()
   await expect(page.getByRole('status')).toContainText('サンプルをDBに保存しました。')
-
-  const input = page.locator('input[type="file"][accept*="json"]')
   const live = page.getByTestId('import-preview-live')
 
   // No-change case: same data re-import
   const current = (await request.get('/api/items').then((res) => res.json())) as { items: unknown[] }
-  await input.setInputFiles({
-    name: 'same.json',
-    mimeType: 'application/json',
-    buffer: Buffer.from(JSON.stringify(current.items), 'utf-8'),
-  })
+  await uploadJsonImportFile(page, 'same.json', current.items)
   await expect(live).toHaveText('差分なし。インポート後3件。')
 
   // Changed case: keep 1, add 1, remove 2
@@ -30,11 +24,7 @@ test('live summary is concise and mentions only changed elements', async ({ page
     { id: keepId, tag: 'プリン', location: '浅草', name: 'Keep Existing', rank: 1, memo: '', mapsUrl: '', placeId: '', createdAt: now, updatedAt: now },
     { id: 'new-1', tag: 'カフェラテ', location: '柏の葉', name: 'New 1', rank: 1, memo: '', mapsUrl: '', placeId: '', createdAt: now, updatedAt: now },
   ]
-  await input.setInputFiles({
-    name: 'changed.json',
-    mimeType: 'application/json',
-    buffer: Buffer.from(JSON.stringify(payload), 'utf-8'),
-  })
+  await uploadJsonImportFile(page, 'changed.json', payload)
 
   await expect(live).toContainText('追加1件')
   await expect(live).toContainText('削除予定2件')

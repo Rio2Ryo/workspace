@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test'
-import { resetItemsByDelete } from '../../e2e-helpers'
+import { uploadJsonImportFile, resetItemsByDelete } from '../../e2e-helpers'
 
 test.beforeEach(async ({ request }) => {
   await resetItemsByDelete(request)
@@ -23,11 +23,7 @@ test('live summary representative excluded name is consistent with excluded-deta
     { id: 'a4', tag: 'Aタグ', location: '柏', name: 'A4店', rank: 1, memo: '', mapsUrl: '', placeId: '', createdAt: now, updatedAt: now },
   ]
 
-  await page.locator('input[type="file"][accept*="json"]').setInputFiles({
-    name: 'live-excluded-lead-consistency.json',
-    mimeType: 'application/json',
-    buffer: Buffer.from(JSON.stringify(payload), 'utf-8'),
-  })
+  await uploadJsonImportFile(page, 'live-excluded-lead-consistency.json', payload)
 
   const details = page.getByTestId('import-preview-excluded-details')
   await expect(details).toContainText('・Z3店')
