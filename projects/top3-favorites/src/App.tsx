@@ -25,6 +25,14 @@ type Draft = {
 
 const SYNC_BREAK_NOTICE = '手入力によりタグ連動を解除しました。'
 
+function normalizeTagForSync(value: string): string {
+  return value
+    .replace(/\u3000/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim()
+    .toLowerCase()
+}
+
 type PendingImport = {
   items: FavoriteItem[]
   filename: string
@@ -217,7 +225,7 @@ export function App() {
   }, [])
 
   useEffect(() => {
-    if (selectedTag && draft.tag.trim() !== selectedTag.trim()) setSelectedTag('')
+    if (selectedTag && normalizeTagForSync(draft.tag) !== normalizeTagForSync(selectedTag)) setSelectedTag('')
   }, [draft.tag, selectedTag])
 
   useEffect(() => {
@@ -291,8 +299,8 @@ export function App() {
   const updateEditingDraft = (patch: Partial<Draft>) => setEditingDraft((prev) => ({ ...prev, ...patch }))
 
   const updateDraftTag = (tag: string) => {
-    const normalizedSelected = (selectedTag ?? '').trim()
-    const normalizedInput = tag.trim()
+    const normalizedSelected = normalizeTagForSync(selectedTag ?? '')
+    const normalizedInput = normalizeTagForSync(tag)
     const shouldClearSync = !!normalizedSelected && normalizedSelected !== normalizedInput
     setDraft((prev) => ({ ...prev, tag }))
     if (shouldClearSync) {
@@ -311,8 +319,13 @@ export function App() {
   }
 
   const clearSelectedTag = () => {
-    setSelectedTag('')
-    setDraft((prev) => ({ ...prev, tag: '' }))
+    setSelectedTag((prevSelected) => {
+      setDraft((prevDraft) => ({
+        ...prevDraft,
+        tag: prevSelected && normalizeTagForSync(prevDraft.tag) === normalizeTagForSync(prevSelected) ? '' : prevDraft.tag,
+      }))
+      return ''
+    })
   }
 
   const saveNew = async () => {
@@ -335,6 +348,7 @@ export function App() {
       setNotice(`${data.item.tag} の${data.item.rank}位に保存しました。`)
     } catch (e) {
       setError(e instanceof Error ? e.message : '保存に失敗しました')
+      setNotice('')
     } finally {
       setIsSaving(false)
     }
