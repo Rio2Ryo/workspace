@@ -51,6 +51,13 @@ test('[App][config-quality] QA test title subscope contract is enforced across q
   const allowedByScope = qaTestTitleSubscopeContract.allowedByScope
   const unknownScope = []
   const invalidSubscope = []
+  const usedByScope = new Map()
+
+  const markUsed = (scope, subscope) => {
+    const used = usedByScope.get(scope) ?? new Set()
+    used.add(subscope)
+    usedByScope.set(scope, used)
+  }
 
   for (const pair of pairs) {
     const [scope, subscope] = pair.split('::')
@@ -59,10 +66,34 @@ test('[App][config-quality] QA test title subscope contract is enforced across q
       unknownScope.push(pair)
       continue
     }
+    markUsed(scope, subscope)
+
     if (!allowed.includes(subscope)) {
       invalidSubscope.push(pair)
     }
   }
+
+  for (const category of e2eHelperCategoryContract.allowed) {
+    markUsed('E2E-Helper', category)
+  }
+
+  const observedScopes = Array.from(usedByScope.keys()).sort((a, b) => a.localeCompare(b, 'en'))
+  const configuredScopes = Object.keys(allowedByScope).sort((a, b) => a.localeCompare(b, 'en'))
+
+  const missingScopeMappings = observedScopes.filter((scope) => !configuredScopes.includes(scope))
+  const extraScopeMappings = configuredScopes.filter((scope) => !observedScopes.includes(scope))
+
+  const deadSubscope = []
+  const deadScope = []
+  for (const [scope, allowed] of Object.entries(allowedByScope)) {
+    const used = usedByScope.get(scope) ?? new Set()
+    if (used.size === 0) deadScope.push(scope)
+    for (const name of allowed) {
+      if (!used.has(name)) deadSubscope.push(`${scope}::${name}`)
+    }
+  }
+  deadScope.sort((a, b) => a.localeCompare(b, 'en'))
+  deadSubscope.sort((a, b) => a.localeCompare(b, 'en'))
 
   assert.deepEqual(
     unknownScope,
@@ -75,6 +106,26 @@ test('[App][config-quality] QA test title subscope contract is enforced across q
     }),
   )
   assert.deepEqual(
+    missingScopeMappings,
+    [],
+    missingItemsMessage({
+      scope: 'App',
+      rule: 'QA title scope dictionary completeness (configured covers observed)',
+      fix: 'add missing observed scope keys to qaTestTitleSubscopeContract.allowedByScope',
+      items: missingScopeMappings,
+    }),
+  )
+  assert.deepEqual(
+    extraScopeMappings,
+    [],
+    missingItemsMessage({
+      scope: 'App',
+      rule: 'QA title scope dictionary exactness (no extra configured scopes)',
+      fix: 'remove configured scope keys that are not observed in qa-current/qa-docs tests',
+      items: extraScopeMappings,
+    }),
+  )
+  assert.deepEqual(
     invalidSubscope,
     [],
     missingItemsMessage({
@@ -82,6 +133,26 @@ test('[App][config-quality] QA test title subscope contract is enforced across q
       rule: 'QA title subscope contract (allowed values per scope)',
       fix: 'rename test subscopes or extend qaTestTitleSubscopeContract.allowedByScope',
       items: invalidSubscope,
+    }),
+  )
+  assert.deepEqual(
+    deadScope,
+    [],
+    missingItemsMessage({
+      scope: 'App',
+      rule: 'QA title scope dead dictionary entries',
+      fix: 'remove unused scope keys from qaTestTitleSubscopeContract.allowedByScope or add matching tests',
+      items: deadScope,
+    }),
+  )
+  assert.deepEqual(
+    deadSubscope,
+    [],
+    missingItemsMessage({
+      scope: 'App',
+      rule: 'QA title subscope dead dictionary entries',
+      fix: 'remove unused subscopes from qaTestTitleSubscopeContract.allowedByScope or add matching tests',
+      items: deadSubscope,
     }),
   )
 })
