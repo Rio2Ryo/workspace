@@ -1,10 +1,7 @@
 import { expect, test } from '@playwright/test'
 
 test.beforeEach(async ({ request }) => {
-  const data = (await request.get('/api/items').then((res) => res.json())) as { items: { id: string }[] }
-  for (const item of data.items) {
-    await request.delete(`/api/items?id=${encodeURIComponent(item.id)}`)
-  }
+  await request.post('/api/items?mode=replace', { data: { items: [] } })
 })
 
 test('editing item tag move keeps registration tag in sync with active search tag state', async ({ page }) => {
@@ -26,6 +23,6 @@ test('editing item tag move keeps registration tag in sync with active search ta
   await expect(page.getByRole('status')).toContainText('編集を保存しました。')
 
   // Search filter is auto-cleared by current behavior; registration tag should also reflect active state
-  await expect(searchSection.getByRole('button', { name: 'タグ解除' })).not.toBeVisible()
+  await expect(searchSection.getByRole('button', { name: 'クリア' })).not.toBeVisible()
   await expect(page.getByLabel('タグ', { exact: true })).toHaveValue('')
 })

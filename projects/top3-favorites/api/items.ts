@@ -141,18 +141,20 @@ function rebalance(items: FavoriteItem[], target: FavoriteItem): FavoriteItem[] 
     .filter((item) => themeKey(item) === key && item.id !== target.id)
     .sort(compareTop3Items)
 
-  const inserted: FavoriteItem[] = []
-  let pushed = false
-  for (const item of same) {
-    if (!pushed && inserted.length === target.rank - 1) {
-      inserted.push(target)
-      pushed = true
-    }
-    inserted.push(item)
-  }
-  if (!pushed) inserted.push(target)
+  const shifted = same
+    .map((item) => {
+      if (item.rank >= target.rank) {
+        const nextRank = item.rank + 1
+        return { ...item, rank: (nextRank <= 3 ? nextRank : 4) as Rank | 4 }
+      }
+      return item
+    })
+    .filter((item) => item.rank <= 3) as FavoriteItem[]
 
-  const normalized = inserted.slice(0, 3).map((item, index) => ({ ...item, rank: (index + 1) as Rank }))
+  const normalized = [...shifted, target]
+    .sort(compareTop3Items)
+    .slice(0, 3)
+
   const others = items.filter((item) => themeKey(item) !== key)
   return [...others, ...normalized]
 }

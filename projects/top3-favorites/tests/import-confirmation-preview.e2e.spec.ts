@@ -17,10 +17,7 @@ function item(id: string, tag: string, name: string, rank = 1) {
 }
 
 test.beforeEach(async ({ request }) => {
-  const data = (await request.get('/api/items').then((res) => res.json())) as { items: { id: string }[] }
-  for (const existing of data.items) {
-    await request.delete(`/api/items?id=${encodeURIComponent(existing.id)}`)
-  }
+  await request.post('/api/items?mode=replace', { data: { items: [] } })
 })
 
 test('import shows a confirmation preview before replacing existing data', async ({ page, request }) => {

@@ -1,0 +1,45 @@
+import { expect, test } from '@playwright/test'
+
+test.beforeEach(async ({ request }) => {
+  const data = (await request.get('/api/items').then((res) => res.json())) as { items: { id: string }[] }
+  for (const item of data.items) {
+    await request.delete(`/api/items?id=${encodeURIComponent(item.id)}`)
+  }
+})
+
+test('live summary is concise and mentions only changed elements', async ({ page, request }) => {
+  await page.goto('/')
+  await page.getByRole('button', { name: 'サンプルをDB保存' }).click()
+  await expect(page.getByRole('status')).toContainText('サンプルをDBに保存しました。')
+
+  const input = page.locator('input[type="file"][accept*="json"]')
+  const live = page.getByTestId('import-preview-live')
+
+  // No-change case: same data re-import
+  const current = (await request.get('/api/items').then((res) => res.json())) as { items: unknown[] }
+  await input.setInputFiles({
+    name: 'same.json',
+    mimeType: 'application/json',
+    buffer: Buffer.from(JSON.stringify(current.items), 'utf-8'),
+  })
+  await expect(live).toHaveText('差分なし。インポート後3件。')
+
+  // Changed case: keep 1, add 1, remove 2
+  const now = new Date().toISOString()
+  const currentTyped = (await request.get('/api/items').then((res) => res.json())) as { items: Array<{ id: string }> }
+  const keepId = currentTyped.items[0].id
+  const payload = [
+    { id: keepId, tag: 'プリン', location: '浅草', name: 'Keep Existing', rank: 1, memo: '', mapsUrl: '', placeId: '', createdAt: now, updatedAt: now },
+    { id: 'new-1', tag: 'カフェラテ', location: '柏の葉', name: 'New 1', rank: 1, memo: '', mapsUrl: '', placeId: '', createdAt: now, updatedAt: now },
+  ]
+  await input.setInputFiles({
+    name: 'changed.json',
+    mimeType: 'application/json',
+    buffer: Buffer.from(JSON.stringify(payload), 'utf-8'),
+  })
+
+  await expect(live).toContainText('追加1件')
+  await expect(live).toContainText('削除予定2件')
+  await expect(live).toContainText('インポート後2件')
+  await expect(live).not.toContainText('保持')
+})

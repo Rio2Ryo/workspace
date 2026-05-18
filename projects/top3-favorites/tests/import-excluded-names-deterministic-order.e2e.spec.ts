@@ -1,10 +1,7 @@
 import { expect, test } from '@playwright/test'
 
 test.beforeEach(async ({ request }) => {
-  const data = (await request.get('/api/items').then((res) => res.json())) as { items: { id: string }[] }
-  for (const item of data.items) {
-    await request.delete(`/api/items?id=${encodeURIComponent(item.id)}`)
-  }
+  await request.post('/api/items?mode=replace', { data: { items: [] } })
 })
 
 test('import preview shows excluded store names in deterministic sorted order', async ({ page }) => {
@@ -28,7 +25,7 @@ test('import preview shows excluded store names in deterministic sorted order', 
   const normalization = page.getByTestId('import-preview-normalization')
   await expect(normalization).toHaveAttribute('data-normalization-before-count', '5')
   await expect(normalization).toHaveAttribute('data-normalization-after-count', '3')
-  await expect(page.getByTestId('import-preview-impact-math')).toHaveText('追加3件 / 更新・保持0件 / 削除予定0件 / 正規化で除外予定2件')
+  await expect(page.getByTestId('import-preview-impact-math')).toHaveText('追加3件 / 更新・保持0件 / 削除予定0件 / 正規化除外2件')
 
   // Excluded names should be deterministic (ja locale sort), not input-order dependent
   await expect(page.getByTestId('import-preview-excluded-names')).toHaveText('除外予定の店舗: Y店, Z店')

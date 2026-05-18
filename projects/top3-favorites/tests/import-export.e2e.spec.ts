@@ -1,10 +1,7 @@
 import { expect, test } from '@playwright/test'
 
 test.beforeEach(async ({ request }) => {
-  const data = (await request.get('/api/items').then((res) => res.json())) as { items: { id: string }[] }
-  for (const item of data.items) {
-    await request.delete(`/api/items?id=${encodeURIComponent(item.id)}`)
-  }
+  await request.post('/api/items?mode=replace', { data: { items: [] } })
 })
 
 test('json import/export UI exists and invalid import keeps existing data', async ({ page }) => {
@@ -64,5 +61,5 @@ test('valid import clears stale tag filters so imported data is immediately visi
   await expect(page.getByText('インポート成功: 1件を反映しました。')).toBeVisible()
   await expect(searchSection.getByRole('heading', { name: 'スイーツ' })).toBeVisible()
   await expect(searchSection.getByText('1位: Imported Pudding')).toBeVisible()
-  await expect(searchSection.getByRole('button', { name: 'タグ解除' })).not.toBeVisible()
+  await expect(searchSection.getByRole('button', { name: 'クリア' })).not.toBeVisible()
 })

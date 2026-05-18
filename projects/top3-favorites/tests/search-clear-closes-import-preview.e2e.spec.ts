@@ -1,10 +1,7 @@
 import { expect, test } from '@playwright/test'
 
 test.beforeEach(async ({ request }) => {
-  const data = (await request.get('/api/items').then((res) => res.json())) as { items: { id: string }[] }
-  for (const item of data.items) {
-    await request.delete(`/api/items?id=${encodeURIComponent(item.id)}`)
-  }
+  await request.post('/api/items?mode=replace', { data: { items: [] } })
 })
 
 test('clearing search tag closes pending import preview to keep search context consistent', async ({ page }) => {
@@ -28,7 +25,7 @@ test('clearing search tag closes pending import preview to keep search context c
 
   const searchSection = page.locator('section.card').filter({ has: page.getByRole('heading', { name: '探す' }) })
   await searchSection.getByRole('button', { name: '#カフェラテ' }).click()
-  await searchSection.getByRole('button', { name: 'タグ解除' }).click()
+  await searchSection.getByRole('button', { name: 'クリア' }).click()
 
   await expect(page.getByLabel('インポート確認')).toHaveCount(0)
 })

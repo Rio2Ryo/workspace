@@ -1,10 +1,7 @@
 import { expect, test } from '@playwright/test'
 
 test.beforeEach(async ({ request }) => {
-  const data = (await request.get('/api/items').then((res) => res.json())) as { items: { id: string }[] }
-  for (const item of data.items) {
-    await request.delete(`/api/items?id=${encodeURIComponent(item.id)}`)
-  }
+  await request.post('/api/items?mode=replace', { data: { items: [] } })
 })
 
 test('manual tag edit breaks search-link sync and hides sync status', async ({ page }) => {
@@ -23,6 +20,6 @@ test('manual tag edit breaks search-link sync and hides sync status', async ({ p
   await page.getByLabel('タグ', { exact: true }).fill('手入力タグ')
 
   await expect(page.getByTestId('tag-sync-status')).toHaveCount(0)
-  await expect(searchSection.getByRole('button', { name: 'タグ解除' })).toHaveCount(0)
+  await expect(searchSection.getByRole('button', { name: 'クリア' })).toHaveCount(0)
   await expect(page.getByLabel('タグ', { exact: true })).toHaveValue('手入力タグ')
 })

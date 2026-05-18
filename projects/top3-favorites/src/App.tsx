@@ -108,7 +108,6 @@ function rankItems(items: FavoriteItem[], target?: FavoriteItem): FavoriteItem[]
       return acc
     }, [])
     .slice(0, 3)
-    .map((item, index) => ({ ...item, rank: (index + 1) as Rank }))
 }
 
 function isValidImportItem(value: unknown): value is FavoriteItem {
@@ -182,9 +181,7 @@ function analyzeImportedTop3(items: FavoriteItem[]): { items: FavoriteItem[]; ex
   }
   return {
     items: normalized,
-    excludedDetails: excludedDetails
-      .filter((detail) => detail.name)
-      .sort((a, b) => a.name.localeCompare(b.name, 'ja') || a.tag.localeCompare(b.tag, 'ja') || a.reason.localeCompare(b.reason, 'ja')),
+    excludedDetails: excludedDetails.filter((detail) => detail.name),
   }
 }
 
@@ -215,12 +212,20 @@ export function App() {
   const [notice, setNotice] = useState('')
   const [loadError, setLoadError] = useState(false)
   const [pendingImport, setPendingImport] = useState<PendingImport | null>(null)
+  const [isImpactTagsExpanded, setIsImpactTagsExpanded] = useState(false)
+  const [isExcludedDetailsExpanded, setIsExcludedDetailsExpanded] = useState(false)
+  const [isImpactTermsHelperExpanded, setIsImpactTermsHelperExpanded] = useState(false)
   const fileRef = useRef<HTMLInputElement | null>(null)
 
   const clearFeedback = (options?: { pendingImport?: boolean }) => {
     setError('')
     setNotice('')
-    if (options?.pendingImport) setPendingImport(null)
+    if (options?.pendingImport) {
+      setPendingImport(null)
+      setIsImpactTagsExpanded(false)
+      setIsExcludedDetailsExpanded(false)
+      setIsImpactTermsHelperExpanded(false)
+    }
   }
 
   const loadItems = async () => {
@@ -325,6 +330,38 @@ export function App() {
     }
   }, [items.length, pendingImport, pendingImportImpact])
 
+  const pendingImportImpactTagPreview = useMemo(() => {
+    if (!pendingImportImpact) return { visible: [] as string[], hiddenCount: 0 }
+    if (isImpactTagsExpanded) return { visible: pendingImportImpact.tags, hiddenCount: 0 }
+    const visible = pendingImportImpact.tags.slice(0, 5)
+    const hiddenCount = Math.max(0, pendingImportImpact.tags.length - visible.length)
+    return { visible, hiddenCount }
+  }, [isImpactTagsExpanded, pendingImportImpact])
+
+  const importPreviewLiveSummary = useMemo(() => {
+    if (!pendingImport || !pendingImportImpact) return ''
+    const noChange = pendingImportImpact.added === 0 && pendingImportImpact.removed === 0 && pendingImportImpact.excluded === 0
+    if (noChange) return `差分なし。インポート後${pendingImport.items.length}件。`
+    const excludedLead = pendingImport.excludedDetails[0]?.name?.trim() ?? ''
+    const parts = [
+      `追加${pendingImportImpact.added}件`,
+      `削除予定${pendingImportImpact.removed}件`,
+      pendingImportImpact.excluded > 0
+        ? `正規化除外${pendingImportImpact.excluded}件${excludedLead ? `（例: ${excludedLead}）` : ''}`
+        : '',
+      `インポート後${pendingImport.items.length}件。`,
+    ].filter(Boolean)
+    return parts.join(' / ')
+  }, [pendingImport, pendingImportImpact])
+
+  const excludedDetailsPreview = useMemo(() => {
+    if (!pendingImport) return { visible: [] as PendingImport['excludedDetails'], hiddenCount: 0 }
+    if (isExcludedDetailsExpanded) return { visible: pendingImport.excludedDetails, hiddenCount: 0 }
+    const visible = pendingImport.excludedDetails.slice(0, 3)
+    const hiddenCount = Math.max(0, pendingImport.excludedDetails.length - visible.length)
+    return { visible, hiddenCount }
+  }, [isExcludedDetailsExpanded, pendingImport])
+
   const updateDraft = (patch: Partial<Draft>) => setDraft((prev) => ({ ...prev, ...patch }))
   const updateEditingDraft = (patch: Partial<Draft>) => setEditingDraft((prev) => ({ ...prev, ...patch }))
 
@@ -389,11 +426,28 @@ export function App() {
   const addSamples = async () => {
     setIsSaving(true)
     try {
-      let latest: FavoriteItem[] = items
-      for (const sample of sampleItems) {
-        const data = await api<{ items: FavoriteItem[] }>('/api/items', { method: 'POST', body: JSON.stringify(sample) })
-        latest = data.items
-      }
+      const now = new Date().toISOString()
+      const sampleFavorites = sampleItems.map((sample, index): FavoriteItem => {
+        const item = {
+          id: `sample-${index}-${crypto.randomUUID()}`,
+          tag: sample.tag.trim(),
+          location: sample.location.trim(),
+          name: sample.name.trim(),
+          rank: sample.rank,
+          memo: sample.memo.trim(),
+          placeId: '',
+          createdAt: now,
+          updatedAt: now,
+          mapsUrl: '',
+        }
+        return { ...item, mapsUrl: buildMapsUrl(item) }
+      })
+      const analyzed = analyzeImportedTop3([...items, ...sampleFavorites])
+      const data = await api<{ items: FavoriteItem[] }>('/api/items?mode=replace', {
+        method: 'POST',
+        body: JSON.stringify({ items: analyzed.items }),
+      })
+      const latest = data.items
       setItems(latest)
       setTags(Array.from(new Set(latest.map((item) => item.tag))).sort((a, b) => a.localeCompare(b, 'ja')))
       setNotice('サンプルをDBに保存しました。')
@@ -659,7 +713,7 @@ export function App() {
         <h2>データ管理</h2>
         <p className="hint">DBデータをJSONでエクスポート/インポートできます。</p>
         <div className="row">
-          <button onClick={exportJson}>JSONエクスポート</button>
+          <button onClick={exportJson} disabled={items.length === 0}>JSONエクスポート</button>
           <button className="ghost" onClick={triggerImport}>JSONインポート</button>
           <input
             ref={fileRef}
@@ -670,6 +724,7 @@ export function App() {
           />
         </div>
         <p className="hint">インポートは全件バリデーション成功時のみ反映。失敗時は既存データ保持（fail-closed）。</p>
+        {items.length === 0 && <p className="hint compact">エクスポート対象データがありません。まず1件以上保存してください。</p>}
         {pendingImport && (
           <div className="preview-panel" aria-label="インポート確認" data-testid="import-preview-summary" data-summary-json={pendingImportSummary ? JSON.stringify(pendingImportSummary) : ''}>
             <div className="row between no-margin">
@@ -677,6 +732,9 @@ export function App() {
                 <strong>インポート確認</strong>
                 <p className="hint compact">{pendingImport.filename}</p>
                 <p className="hint compact" data-testid="import-preview-counts" data-before-count={items.length} data-after-count={pendingImport.items.length}>現在{items.length}件 → インポート後{pendingImport.items.length}件</p>
+                <p className="hint compact" data-testid="import-preview-live" aria-live="polite" aria-atomic="true">
+                  {importPreviewLiveSummary}
+                </p>
                 {pendingImport.originalCount !== pendingImport.items.length && (
                   <p
                     className="hint compact"
@@ -691,9 +749,21 @@ export function App() {
                   <p className="hint compact" data-testid="import-preview-excluded-names">除外予定の店舗: {pendingImport.excludedNames.join(', ')}</p>
                 )}
                 {pendingImport.excludedDetails.length > 0 && (
-                  <p className="hint compact" data-testid="import-preview-excluded-details">
-                    除外理由: {pendingImport.excludedDetails.map((detail) => `${detail.name}（${detail.reason}）`).join(', ')}
-                  </p>
+                  <>
+                    <p className="hint compact" data-testid="import-preview-excluded-details">
+                      除外理由: {excludedDetailsPreview.visible.map((detail) => `・${detail.name}（${detail.reason}）`).join(' / ')}
+                      {excludedDetailsPreview.hiddenCount > 0 ? `（ほか${excludedDetailsPreview.hiddenCount}件）` : ''}
+                    </p>
+                    {pendingImport.excludedDetails.length > 3 && (
+                      <button
+                        className="ghost small"
+                        onClick={() => setIsExcludedDetailsExpanded((prev) => !prev)}
+                        data-testid="import-excluded-details-toggle"
+                      >
+                        {isExcludedDetailsExpanded ? '除外理由を折りたたむ' : '除外理由を全件表示'}
+                      </button>
+                    )}
+                  </>
                 )}
                 {pendingImportImpact && (
                   <>
@@ -706,16 +776,48 @@ export function App() {
                       data-excluded-count={pendingImportImpact.excluded}
                     >
                       追加{pendingImportImpact.added}件 / 更新・保持{pendingImportImpact.kept}件 / 削除予定{pendingImportImpact.removed}件
-                      {pendingImportImpact.excluded > 0 ? ` / 正規化で除外予定${pendingImportImpact.excluded}件` : ''}
+                      {pendingImportImpact.excluded > 0 ? ` / 正規化除外${pendingImportImpact.excluded}件` : ''}
                     </p>
+                    <p className="hint compact" data-testid="import-impact-direction-metrics">
+                      <span className={`impact-plus${pendingImportImpact.added === 0 ? ' is-zero' : ''}`} data-testid="import-impact-added" aria-label={`追加 ${pendingImportImpact.added}件`}>+{pendingImportImpact.added} 追加</span>
+                      {' / '}
+                      <span className={`impact-neutral${pendingImportImpact.kept === 0 ? ' is-zero' : ''}`} data-testid="import-impact-kept" aria-label={`保持 ${pendingImportImpact.kept}件`}>±{pendingImportImpact.kept} 保持</span>
+                      {' / '}
+                      <span className={`impact-minus${pendingImportImpact.removed === 0 ? ' is-zero' : ''}`} data-testid="import-impact-removed" aria-label={`削除予定 ${pendingImportImpact.removed}件`}>-{pendingImportImpact.removed} 削除予定</span>
+                    </p>
+                    <button
+                      className="ghost small"
+                      onClick={() => setIsImpactTermsHelperExpanded((prev) => !prev)}
+                      data-testid="import-impact-terms-helper-toggle"
+                    >
+                      {isImpactTermsHelperExpanded ? '差分用語の詳細説明を隠す' : '差分用語の詳細説明を表示'}
+                    </button>
+                    {isImpactTermsHelperExpanded && (
+                      <p className="hint compact" data-testid="import-impact-terms-helper">
+                        削除予定: 現在DBにあるが、インポート後データに含まれない項目 / 正規化除外: インポートJSON内で同一タグTop3に収まらず取り込まれない項目
+                      </p>
+                    )}
+                    {pendingImportImpact.added === 0 && pendingImportImpact.removed === 0 && pendingImportImpact.excluded === 0 && (
+                      <p className="hint compact" data-testid="import-preview-no-change">差分なし（このインポートでデータ変更はありません）</p>
+                    )}
                     <p
                       className="hint compact"
                       data-testid="import-preview-impact-tags"
                       data-impact-tag-count={pendingImportImpact.tags.length}
                       data-impact-tags={pendingImportImpact.tags.join('|')}
                     >
-                      影響タグ: {pendingImportImpact.tags.length ? pendingImportImpact.tags.join(', ') : 'なし'}
+                      影響タグ: {pendingImportImpactTagPreview.visible.length ? pendingImportImpactTagPreview.visible.join(', ') : 'なし'}
+                      {pendingImportImpactTagPreview.hiddenCount > 0 ? `（ほか${pendingImportImpactTagPreview.hiddenCount}件）` : ''}
                     </p>
+                    {pendingImportImpact.tags.length > 5 && (
+                      <button
+                        className="ghost small"
+                        onClick={() => setIsImpactTagsExpanded((prev) => !prev)}
+                        data-testid="import-impact-tags-toggle"
+                      >
+                        {isImpactTagsExpanded ? '影響タグを折りたたむ' : '影響タグを全件表示'}
+                      </button>
+                    )}
                   </>
                 )}
               </div>
@@ -734,7 +836,7 @@ export function App() {
             <h2>探す</h2>
             <p className="hint">タグを選ぶか、店舗名・場所・メモで検索できます。</p>
           </div>
-          {selectedTag && <button className="ghost" onClick={clearSelectedTag}>タグ解除</button>}
+          {selectedTag && <button className="ghost" onClick={clearSelectedTag}>クリア</button>}
         </div>
 
         <input
@@ -744,7 +846,7 @@ export function App() {
           placeholder="例: カフェラテ / 柏の葉 / Solito"
           aria-label="Top3検索"
         />
-        <TagPicker tags={tags} activeTag={selectedTag} selectedTag={selectedTag} onSelect={selectTag} onClear={clearSelectedTag} />
+        <TagPicker tags={tags} activeTag={selectedTag} selectedTag={selectedTag} onSelect={selectTag} onClear={clearSelectedTag} showClearButton={false} />
 
         {filteredGroups.length === 0 ? (
           <p className="hint empty">該当するTop3がありません。</p>
@@ -764,7 +866,7 @@ export function App() {
                           {item.location && <span className="summary-meta">{item.location}</span>}
                         </summary>
                         <div className="details-body">
-                          {item.memo && <p className="memo">{item.memo}</p>}
+                          <p className="memo">{item.memo || '（メモなし）'}</p>
                           <div className="row no-margin">
                             <a href={buildMapsUrl(item)} target="_blank" rel="noreferrer">Mapsで開く</a>
                             <button className="ghost" onClick={() => startEdit(item)} aria-label={`${item.name}を編集`} disabled={!!pendingImport}>編集</button>
@@ -790,12 +892,14 @@ function TagPicker({
   selectedTag,
   onSelect,
   onClear,
+  showClearButton = true,
 }: {
   tags: string[]
   activeTag: string
   selectedTag: string
   onSelect: (tag: string) => void
   onClear: () => void
+  showClearButton?: boolean
 }) {
   if (tags.length === 0) return <p className="hint">登録済みタグはまだありません。</p>
   return (
@@ -805,7 +909,7 @@ function TagPicker({
           #{tag}
         </button>
       ))}
-      {selectedTag && <button className="ghost small" onClick={onClear}>すべて</button>}
+      {showClearButton && selectedTag && <button className="ghost small" onClick={onClear}>クリア</button>}
     </div>
   )
 }

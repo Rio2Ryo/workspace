@@ -94,6 +94,11 @@ details[open] summary::after { content: '閉じる'; color: #6b7280; }
 .error { color: #b91c1c; font-size: 13px; font-weight: 800; margin: 0; }
 .notice { color: #166534; font-size: 13px; font-weight: 800; margin: 0; }
 
+.impact-plus { color: #1d4ed8; font-weight: 700; }
+.impact-neutral { color: #374151; font-weight: 700; }
+.impact-minus { color: #b91c1c; font-weight: 700; }
+.is-zero { opacity: .55; }
+
 @media (max-width: 680px) {
   .container { padding: 16px; }
   .form-grid, .rank-picker { grid-template-columns: 1fr; }

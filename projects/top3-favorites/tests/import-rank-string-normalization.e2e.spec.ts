@@ -1,10 +1,7 @@
 import { expect, test } from '@playwright/test'
 
 test.beforeEach(async ({ request }) => {
-  const data = (await request.get('/api/items').then((res) => res.json())) as { items: { id: string }[] }
-  for (const item of data.items) {
-    await request.delete(`/api/items?id=${encodeURIComponent(item.id)}`)
-  }
+  await request.post('/api/items?mode=replace', { data: { items: [] } })
 })
 
 test('import preview handles string ranks and still normalizes same tag to Top3', async ({ page }) => {
@@ -26,7 +23,7 @@ test('import preview handles string ranks and still normalizes same tag to Top3'
 
   await expect(page.getByText('現在0件 → インポート後3件')).toBeVisible()
   await expect(page.getByText('同一タグはTop3に正規化: 4件中3件を反映予定')).toBeVisible()
-  await expect(page.getByText(/正規化で除外予定1件/)).toBeVisible()
+  await expect(page.getByTestId('import-preview-impact-math')).toContainText('正規化除外1件')
   await expect(page.getByText(/^除外予定の店舗:/)).toBeVisible()
 
   await page.getByRole('button', { name: 'この内容でインポート' }).click()

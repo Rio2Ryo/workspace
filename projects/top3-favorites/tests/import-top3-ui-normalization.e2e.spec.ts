@@ -1,10 +1,7 @@
 import { expect, test } from '@playwright/test'
 
 test.beforeEach(async ({ request }) => {
-  const data = (await request.get('/api/items').then((res) => res.json())) as { items: { id: string }[] }
-  for (const item of data.items) {
-    await request.delete(`/api/items?id=${encodeURIComponent(item.id)}`)
-  }
+  await request.post('/api/items?mode=replace', { data: { items: [] } })
 })
 
 test('UI shows only Top3 after importing 4 items of same tag', async ({ page }) => {
@@ -27,7 +24,7 @@ test('UI shows only Top3 after importing 4 items of same tag', async ({ page }) 
 
   await expect(page.getByText('現在0件 → インポート後3件')).toBeVisible()
   await expect(page.getByText('同一タグはTop3に正規化: 4件中3件を反映予定')).toBeVisible()
-  await expect(page.getByText('追加3件 / 更新・保持0件 / 削除予定0件 / 正規化で除外予定1件')).toBeVisible()
+  await expect(page.getByText('追加3件 / 更新・保持0件 / 削除予定0件 / 正規化除外1件')).toBeVisible()
   await expect(page.getByText(/^除外予定の店舗:/)).toBeVisible()
   await page.getByRole('button', { name: 'この内容でインポート' }).click()
   await expect(page.getByText(/インポート成功/)).toBeVisible()

@@ -12,8 +12,12 @@
 
 ### 起動・基本保存・検索・Top3順位繰り下げ
 
+- `tests/create-persists-after-reload-and-api.e2e.spec.ts`
+- `tests/rank-selection-preserved.e2e.spec.ts`
+- `tests/rebalance-persists-after-reload-and-api.e2e.spec.ts`
 - `tests/top3.e2e.spec.ts`
 - `tests/api-load-retry.e2e.spec.ts`
+- `tests/api-rank-selection-preserved.e2e.spec.ts`
 
 ### 編集/削除/ミューテーションの状態整合性
 
@@ -21,6 +25,7 @@
 - `tests/delete-confirmation.e2e.spec.ts`
 - `tests/delete-disabled-while-import-preview.e2e.spec.ts`
 - `tests/delete-multi-tag-boundary.e2e.spec.ts`
+- `tests/delete-persists-after-reload-and-api.e2e.spec.ts`
 - `tests/edit-cancel-clears-stale-notice.e2e.spec.ts`
 - `tests/edit-clears-stale-tag-filter.e2e.spec.ts`
 - `tests/edit-disabled-while-import-preview.e2e.spec.ts`
@@ -28,25 +33,42 @@
 - `tests/edit-start-clears-pending-import-preview.e2e.spec.ts`
 - `tests/edit-start-clears-stale-notice.e2e.spec.ts`
 - `tests/edit-tag-move-syncs-registration-tag.e2e.spec.ts`
+- `tests/memo-empty-fallback.e2e.spec.ts`
 - `tests/mutation-error-clears-stale-success-notice.e2e.spec.ts`
 
 ### JSON import/export/validation/Top3正規化
 
 - `tests/api-import-top3-normalization.e2e.spec.ts`
 - `tests/api-import-validation.e2e.spec.ts`
+- `tests/export-disabled-when-empty.e2e.spec.ts`
 - `tests/export-download-roundtrip.e2e.spec.ts`
 - `tests/import-broken-json.e2e.spec.ts`
 - `tests/import-confirmation-preview.e2e.spec.ts`
+- `tests/import-excluded-details-expand-toggle.e2e.spec.ts`
+- `tests/import-excluded-details-readable-format.e2e.spec.ts`
 - `tests/import-excluded-names-deterministic-order.e2e.spec.ts`
 - `tests/import-excluded-reasons-preview.e2e.spec.ts`
 - `tests/import-export-rank-validation.e2e.spec.ts`
 - `tests/import-export.e2e.spec.ts`
 - `tests/import-fail-closed-matrix.e2e.spec.ts`
+- `tests/import-impact-direction-a11y-labels.e2e.spec.ts`
+- `tests/import-impact-direction-color-classes.e2e.spec.ts`
+- `tests/import-impact-direction-metrics.e2e.spec.ts`
 - `tests/import-impact-math-consistency.e2e.spec.ts`
 - `tests/import-impact-summary.e2e.spec.ts`
+- `tests/import-impact-tags-collapsed.e2e.spec.ts`
 - `tests/import-impact-tags-deterministic-order.e2e.spec.ts`
+- `tests/import-impact-tags-expand-toggle.e2e.spec.ts`
+- `tests/import-impact-terms-helper-text.e2e.spec.ts`
+- `tests/import-impact-terms-helper-toggle.e2e.spec.ts`
+- `tests/import-impact-zero-metrics-muted.e2e.spec.ts`
 - `tests/import-invalid-after-valid-clears-preview.e2e.spec.ts`
 - `tests/import-minimal-shape-defaults.e2e.spec.ts`
+- `tests/import-no-change-badge.e2e.spec.ts`
+- `tests/import-preview-live-region-updates.e2e.spec.ts`
+- `tests/import-preview-live-summary-concise.e2e.spec.ts`
+- `tests/import-preview-live-summary-excluded-lead-consistency.e2e.spec.ts`
+- `tests/import-preview-live-summary-includes-excluded-name.e2e.spec.ts`
 - `tests/import-preview-operation-guards-matrix.e2e.spec.ts`
 - `tests/import-rank-string-normalization.e2e.spec.ts`
 - `tests/import-retry-trigger-clears-stale-error.e2e.spec.ts`
@@ -55,6 +77,7 @@
 - `tests/import-summary-json-consistency.e2e.spec.ts`
 - `tests/import-summary-json-recovery-transition.e2e.spec.ts`
 - `tests/import-top3-ui-normalization.e2e.spec.ts`
+- `tests/import-terminology-normalization-exclusion-consistency.e2e.spec.ts`
 - `tests/import-validation-trimmed-fields.e2e.spec.ts`
 
 ### コンテキスト遷移・インポート確認中の操作ガード
@@ -69,6 +92,7 @@
 - `tests/search-clear-closes-import-preview.e2e.spec.ts`
 - `tests/search-select-closes-import-preview.e2e.spec.ts`
 - `tests/search-tag-select-syncs-registration-tag.e2e.spec.ts`
+- `tests/tag-clear-label-contract.e2e.spec.ts`
 - `tests/tag-manual-edit-breaks-sync.e2e.spec.ts`
 - `tests/tag-manual-edit-shows-sync-break-notice.e2e.spec.ts`
 - `tests/tag-sync-break-notice-auto-dismiss.e2e.spec.ts`
@@ -85,11 +109,13 @@
 - `tests/feedback-accessibility.e2e.spec.ts`
 - `tests/item-action-accessibility.e2e.spec.ts`
 - `tests/maps-link-import-safety.e2e.spec.ts`
+- `tests/maps-link-new-tab-contract.e2e.spec.ts`
 - `tests/maps-link-query.e2e.spec.ts`
 - `tests/rank-picker-accessibility.e2e.spec.ts`
 - `tests/sample-error-clears-stale-success-notice.e2e.spec.ts`
 - `tests/save-error-clears-stale-success-notice.e2e.spec.ts`
 - `tests/search-accessibility.e2e.spec.ts`
+- `tests/search-memo-contains.e2e.spec.ts`
 
 ## 静的QA
 
@@ -97,7 +123,7 @@
   - `tests/*.e2e.spec.ts` がこの文書に全件記載されていることを検証する。
   - E2Eを増やしたのにカバレッジ表を更新しない drift を防ぐ。
 - `tests/concept-copy-contract.test.mjs`
-  - README導入案が現行の `/api/items` 永続化と構造化フォームUIに一致していることを検証する。
+  - README導入案・LPヒーロー案・短文コピー・オンボーディング文言が現行の `/api/items` 永続化と構造化フォームUIに一致していることを検証する。
   - localStorage/自然文パース前提のLP・紹介コピーが再混入する drift を防ぐ。
 - `tests/qa-current-contract.test.mjs`
   - `docs/QA.md`, `docs/QA_RESULT.md`, `docs/MANUAL_TEST_CHECKLIST.md` が現行の `/api/items` 永続化と構造化フォームUIに一致していることを検証する。

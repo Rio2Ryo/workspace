@@ -104,17 +104,21 @@ function rebalance(items, target) {
   const same = items
     .filter((item) => themeKey(item) === key && item.id !== target.id)
     .sort(compareTop3Items)
-  const inserted = []
-  let pushed = false
-  for (const item of same) {
-    if (!pushed && inserted.length === target.rank - 1) {
-      inserted.push(target)
-      pushed = true
-    }
-    inserted.push(item)
-  }
-  if (!pushed) inserted.push(target)
-  const normalized = inserted.slice(0, 3).map((item, index) => ({ ...item, rank: index + 1 }))
+
+  const shifted = same
+    .map((item) => {
+      if (item.rank >= target.rank) {
+        const nextRank = item.rank + 1
+        return { ...item, rank: nextRank <= 3 ? nextRank : 4 }
+      }
+      return item
+    })
+    .filter((item) => item.rank <= 3)
+
+  const normalized = [...shifted, target]
+    .sort(compareTop3Items)
+    .slice(0, 3)
+
   return [...items.filter((item) => themeKey(item) !== key), ...normalized]
 }
 

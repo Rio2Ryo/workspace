@@ -4,6 +4,7 @@ const port = Number(process.env.PORT || 4180)
 
 export default defineConfig({
   testDir: './tests',
+  testMatch: '**/*.e2e.spec.ts',
   timeout: 30_000,
   expect: { timeout: 5_000 },
   workers: 1,

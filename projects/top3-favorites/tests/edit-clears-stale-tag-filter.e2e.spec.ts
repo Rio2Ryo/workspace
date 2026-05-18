@@ -1,10 +1,7 @@
 import { expect, test } from '@playwright/test'
 
 test.beforeEach(async ({ request }) => {
-  const data = (await request.get('/api/items').then((res) => res.json())) as { items: { id: string }[] }
-  for (const item of data.items) {
-    await request.delete(`/api/items?id=${encodeURIComponent(item.id)}`)
-  }
+  await request.post('/api/items?mode=replace', { data: { items: [] } })
 })
 
 test('editing last item tag clears stale selected filter so remaining data is visible', async ({ page }) => {
@@ -36,7 +33,7 @@ test('editing last item tag clears stale selected filter so remaining data is vi
   await expect(page.getByRole('status')).toContainText('編集を保存しました。')
 
   // stale filter should be cleared because 元タグ no longer exists
-  await expect(searchSection.getByRole('button', { name: 'タグ解除' })).not.toBeVisible()
+  await expect(searchSection.getByRole('button', { name: 'クリア' })).not.toBeVisible()
   await expect(searchSection.getByRole('heading', { name: '残るタグ' })).toBeVisible()
   await expect(searchSection.getByText(/\d位: Keep Me/)).toBeVisible()
   await expect(searchSection.getByRole('heading', { name: '移動先タグ' })).toBeVisible()
