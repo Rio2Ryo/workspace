@@ -251,6 +251,26 @@ const rawManualAutomatedLinkContracts = {
       pattern: /JSONインポート成功（正常データ）[\s\S]*自動確認: `tests\/import-export\.e2e\.spec\.ts`/,
       message: 'manual checklist should connect JSON import success to the automated import/export roundtrip spec',
     },
+    {
+      pattern: /編集ボタンで既存値が編集フォームに入る[\s\S]*編集保存で一覧表示が更新される[\s\S]*自動確認: `tests\/edit-form-accessibility\.e2e\.spec\.ts`/,
+      message: 'manual checklist should connect edit form prefill/save behavior to the automated edit form spec',
+    },
+    {
+      pattern: /編集キャンセルで編集モードを抜ける[\s\S]*自動確認: `tests\/edit-form-accessibility\.e2e\.spec\.ts` と `tests\/edit-cancel-clears-stale-notice\.e2e\.spec\.ts`/,
+      message: 'manual checklist should connect edit cancel behavior to automated edit cancel specs',
+    },
+    {
+      pattern: /削除で対象のみ消える[\s\S]*削除後に再読み込みしても削除結果が維持される[\s\S]*自動確認: `tests\/delete-confirmation\.e2e\.spec\.ts` と `tests\/delete-persists-after-reload-and-api\.e2e\.spec\.ts`/,
+      message: 'manual checklist should connect delete-only-target and reload persistence to automated delete specs',
+    },
+    {
+      pattern: /順位繰り下げ（重要）[\s\S]*期待: 既存1位→2位、既存2位→3位、既存3位はTop3外になる[\s\S]*再読み込み後も順位が維持される[\s\S]*自動確認: `tests\/rebalance-persists-after-reload-and-api\.e2e\.spec\.ts`/,
+      message: 'manual checklist should connect rank rebalance and reload persistence to the automated rebalance spec',
+    },
+    {
+      pattern: /同じタグを複数件登録してもタグチップが重複表示されない[\s\S]*タグチップ押下後に新規登録フォームのタグ欄が同期する[\s\S]*自動確認: `tests\/top3\.e2e\.spec\.ts` と `tests\/search-tag-select-syncs-registration-tag\.e2e\.spec\.ts`/,
+      message: 'manual checklist should connect tag chip dedupe and registration sync to automated tag specs',
+    },
   ],
   coverageChecks: [
     {

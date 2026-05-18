@@ -123,9 +123,12 @@
 
 - [ ] 編集ボタンで既存値が編集フォームに入る
 - [ ] 編集保存で一覧表示が更新される
+  - 自動確認: `tests/edit-form-accessibility.e2e.spec.ts` が編集フォームの既存値表示・入力欄のa11y名・保存後の一覧/API反映を検証する
 - [ ] 編集キャンセルで編集モードを抜ける
+  - 自動確認: `tests/edit-form-accessibility.e2e.spec.ts` と `tests/edit-cancel-clears-stale-notice.e2e.spec.ts` がキャンセル後の一覧復帰と古い成功通知のクリアを検証する
 - [ ] 削除で対象のみ消える
 - [ ] 削除後に再読み込みしても削除結果が維持される
+  - 自動確認: `tests/delete-confirmation.e2e.spec.ts` と `tests/delete-persists-after-reload-and-api.e2e.spec.ts` が削除確認・対象削除・reload/API永続化を検証する
 
 ---
 
@@ -135,6 +138,7 @@
 - [ ] 既存 `1位` に新しい `1位` 相当データを追加（または編集）
 - [ ] 期待: 既存1位→2位、既存2位→3位、既存3位はTop3外になる
 - [ ] 再読み込み後も順位が維持される
+  - 自動確認: `tests/rebalance-persists-after-reload-and-api.e2e.spec.ts` がTop3繰り下げ・4件目除外・reload/API永続化を検証する
 
 ---
 
@@ -142,3 +146,4 @@
 
 - [ ] 同じタグを複数件登録してもタグチップが重複表示されない
 - [ ] タグチップ押下後に新規登録フォームのタグ欄が同期する
+  - 自動確認: `tests/top3.e2e.spec.ts` と `tests/search-tag-select-syncs-registration-tag.e2e.spec.ts` がタグチップ表示と選択タグの登録フォーム同期を検証する

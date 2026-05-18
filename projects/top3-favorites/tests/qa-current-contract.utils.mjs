@@ -121,7 +121,7 @@ export async function collectContextObjectKeysFromSource(source) {
   }
 
   const keys = []
-  const inlineContextBlocks = source.match(/context\s*:\s*\{[\s\S]*?\}/g) ?? []
+  const inlineContextBlocks = Array.from(source.matchAll(/context\s*:\s*\{([\s\S]*?)\}/g)).map((m) => m[1])
   for (const block of inlineContextBlocks) {
     keys.push(...collectKeys(block))
   }
