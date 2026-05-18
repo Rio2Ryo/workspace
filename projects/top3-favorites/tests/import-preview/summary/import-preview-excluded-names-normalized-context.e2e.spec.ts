@@ -32,8 +32,8 @@ test('excluded store names add tag context for visually equivalent full-width an
   await expect(names).toHaveText('除外予定の店舗: カフェラテ: Cafe K, プリン: Ｃａｆｅ　Ｋ')
 
   const variants = page.getByTestId('import-preview-excluded-name-variants')
-  await expect(variants).toHaveText('表記ゆれ候補: Cafe K / Ｃａｆｅ　Ｋ')
-  await expect(variants).toHaveAttribute('data-normalized-excluded-name-groups', 'cafe k=Cafe K/Ｃａｆｅ　Ｋ')
+  await expect(variants).toHaveText('表記ゆれ候補: カフェラテ: Cafe K / プリン: Ｃａｆｅ　Ｋ')
+  await expect(variants).toHaveAttribute('data-normalized-excluded-name-groups', 'cafe k=カフェラテ: Cafe K/プリン: Ｃａｆｅ　Ｋ')
 
   const summaryJson = await page.getByTestId('import-preview-summary').getAttribute('data-summary-json')
   const summary = JSON.parse(summaryJson ?? '{}')
@@ -42,6 +42,10 @@ test('excluded store names add tag context for visually equivalent full-width an
     'プリン: Ｃａｆｅ　Ｋ',
   ])
   expect(summary.normalizedExcludedNameGroups).toEqual([
-    { key: 'cafe k', names: ['Cafe K', 'Ｃａｆｅ　Ｋ'] },
+    {
+      key: 'cafe k',
+      names: ['Cafe K', 'Ｃａｆｅ　Ｋ'],
+      labels: ['カフェラテ: Cafe K', 'プリン: Ｃａｆｅ　Ｋ'],
+    },
   ])
 })

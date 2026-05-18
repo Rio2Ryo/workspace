@@ -234,20 +234,23 @@ function buildExcludedDetailsWithLabels(details: ImportExcludedDetail[]): Array<
   }))
 }
 
-function buildNormalizedExcludedNameGroups(details: ImportExcludedDetail[]): Array<{ key: string; names: string[] }> {
-  const groups = new Map<string, string[]>()
+function buildNormalizedExcludedNameGroups(details: ImportExcludedDetail[]): Array<{ key: string; names: string[]; labels: string[] }> {
+  const nameCounts = countExcludedNames(details)
+  const groups = new Map<string, { names: string[]; labels: string[] }>()
   for (const detail of details) {
     const name = detail.name.trim()
     const key = normalizeExcludedNameKey(name)
     if (!key || !name) continue
-    const names = groups.get(key) ?? []
-    if (!names.includes(name)) names.push(name)
-    groups.set(key, names)
+    const group = groups.get(key) ?? { names: [], labels: [] }
+    const label = buildExcludedNameLabel(detail, nameCounts)
+    if (!group.names.includes(name)) group.names.push(name)
+    if (label && !group.labels.includes(label)) group.labels.push(label)
+    groups.set(key, group)
   }
 
   return Array.from(groups.entries())
-    .filter(([, names]) => names.length > 1)
-    .map(([key, names]) => ({ key, names }))
+    .filter(([, group]) => group.names.length > 1)
+    .map(([key, group]) => ({ key, names: group.names, labels: group.labels }))
     .sort((a, b) => a.key.localeCompare(b.key, 'ja'))
 }
 
@@ -430,11 +433,11 @@ export function App() {
   )
 
   const normalizedExcludedNameGroupLabel = normalizedExcludedNameGroups
-    .map((group) => group.names.join(' / '))
+    .map((group) => group.labels.join(' / '))
     .join(', ')
 
   const normalizedExcludedNameGroupData = normalizedExcludedNameGroups
-    .map((group) => `${group.key}=${group.names.join('/')}`)
+    .map((group) => `${group.key}=${group.labels.join('/')}`)
     .join('|')
 
   const importPreviewLiveSummary = useMemo(() => {
