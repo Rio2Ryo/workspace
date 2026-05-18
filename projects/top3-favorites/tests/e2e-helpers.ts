@@ -1,4 +1,5 @@
-import { expect, type APIRequestContext, type Locator } from '@playwright/test'
+import { readFile } from 'node:fs/promises'
+import { expect, type APIRequestContext, type Download, type Locator } from '@playwright/test'
 import { validateImportPreviewSummary } from '../src/shared/import-preview-summary-contract.mjs'
 
 export async function resetItemsByReplace(request: APIRequestContext, items: unknown[] = []) {
@@ -16,4 +17,16 @@ export async function parseImportPreviewSummary<T = Record<string, unknown>>(sum
   const summary = JSON.parse(summaryJson as string) as T
   expect(validateImportPreviewSummary(summary), 'import preview summary should match the shared contract').toBeNull()
   return summary
+}
+
+export async function parseDownloadedJsonFile<T = unknown>(download: Download): Promise<{ filename: string; raw: string; parsed: T }> {
+  const filename = download.suggestedFilename()
+  expect(filename).toMatch(/^top3-favorites-\d{4}-\d{2}-\d{2}-\d{2}-\d{2}-\d{2}\.json$/)
+
+  const artifactPath = await download.path()
+  expect(artifactPath, 'export download should produce a readable local artifact path').toBeTruthy()
+
+  const raw = await readFile(artifactPath as string, 'utf-8')
+  const parsed = JSON.parse(raw) as T
+  return { filename, raw, parsed }
 }

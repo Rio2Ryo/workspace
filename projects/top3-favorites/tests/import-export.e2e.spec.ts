@@ -1,6 +1,5 @@
-import { readFile } from 'node:fs/promises'
 import { expect, test } from '@playwright/test'
-import { resetItemsByReplace } from './e2e-helpers'
+import { parseDownloadedJsonFile, resetItemsByReplace } from './e2e-helpers'
 
 test.beforeEach(async ({ request }) => {
   await resetItemsByReplace(request)
@@ -36,15 +35,10 @@ test('exported JSON can be downloaded and imported back through the confirmation
   const downloadPromise = page.waitForEvent('download')
   await page.getByRole('button', { name: 'JSONエクスポート' }).click()
   const download = await downloadPromise
-  expect(download.suggestedFilename()).toMatch(/^top3-favorites-\d{4}-\d{2}-\d{2}-\d{2}-\d{2}-\d{2}\.json$/)
-
-  const downloadPath = await download.path()
-  expect(downloadPath).toBeTruthy()
-  const exportedText = await readFile(downloadPath!, 'utf8')
-  const exportedItems = JSON.parse(exportedText)
+  const { filename, raw: exportedText, parsed: exportedItems } = await parseDownloadedJsonFile<Array<{ name: string }>>(download)
   expect(Array.isArray(exportedItems)).toBe(true)
   expect(exportedItems).toHaveLength(3)
-  expect(exportedItems.map((item: { name: string }) => item.name)).toContain('Solito MAGO')
+  expect(exportedItems.map((item) => item.name)).toContain('Solito MAGO')
 
   await resetItemsByReplace(request, [])
   await page.reload()
@@ -52,7 +46,7 @@ test('exported JSON can be downloaded and imported back through the confirmation
   await expect(page.getByText('該当するTop3がありません。')).toBeVisible()
 
   await page.locator('input[type="file"][accept*="json"]').setInputFiles({
-    name: download.suggestedFilename(),
+    name: filename,
     mimeType: 'application/json',
     buffer: Buffer.from(exportedText, 'utf-8'),
   })

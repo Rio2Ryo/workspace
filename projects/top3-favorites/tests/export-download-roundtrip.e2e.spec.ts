@@ -1,6 +1,5 @@
 import { expect, test } from '@playwright/test'
-import { readFile } from 'node:fs/promises'
-import { resetItemsByReplace } from './e2e-helpers'
+import { parseDownloadedJsonFile, resetItemsByReplace } from './e2e-helpers'
 
 const requiredStringFields = ['id', 'tag', 'location', 'name', 'memo', 'mapsUrl', 'placeId', 'createdAt', 'updatedAt'] as const
 
@@ -18,14 +17,7 @@ test('exported JSON file has valid item shape and can be imported back through t
   const downloadPromise = page.waitForEvent('download')
   await page.getByRole('button', { name: 'JSONエクスポート' }).click()
   const download = await downloadPromise
-
-  expect(download.suggestedFilename()).toMatch(/^top3-favorites-\d{4}-\d{2}-\d{2}-\d{2}-\d{2}-\d{2}\.json$/)
-
-  const exportedPath = await download.path()
-  expect(exportedPath).not.toBeNull()
-
-  const raw = await readFile(exportedPath as string, 'utf-8')
-  const parsed = JSON.parse(raw) as unknown
+  const { filename, raw, parsed } = await parseDownloadedJsonFile<unknown>(download)
   expect(Array.isArray(parsed)).toBe(true)
 
   const exportedItems = parsed as ExportedItem[]
@@ -46,7 +38,7 @@ test('exported JSON file has valid item shape and can be imported back through t
   await expect(page.getByText('該当するTop3がありません。')).toBeVisible()
 
   await page.locator('input[type="file"][accept*="json"]').setInputFiles({
-    name: download.suggestedFilename(),
+    name: filename,
     mimeType: 'application/json',
     buffer: Buffer.from(raw, 'utf-8'),
   })
