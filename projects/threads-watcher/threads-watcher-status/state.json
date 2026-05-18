@@ -1,14 +1,25 @@
 {
   "handle": "@hal.lifedesign",
   "last_check": {
-    "checked_at": "2026-05-18T15:01:32Z",
-    "found_count": 4,
+    "checked_at": "2026-05-18T23:27:55Z",
+    "found_count": 15,
     "new_count": 0,
-    "status": "partial_error",
-    "error": "profile extraction returned partial result: found=4 previous_max=15"
+    "status": "ok",
+    "error": null
   },
-  "saved_count": 21,
+  "saved_count": 22,
   "posts": [
+    {
+      "handle": "@hal.lifedesign",
+      "post_id": "DYfpBYukpHp",
+      "post_url": "https://www.threads.com/@hal.lifedesign/post/DYfpBYukpHp",
+      "first_seen_at": "2026-05-18T23:27:08Z",
+      "captured_at": "2026-05-18T23:27:13Z",
+      "screenshot_size_bytes": 466561,
+      "screenshot_width": 1280,
+      "screenshot_height": 1800,
+      "screenshot_path": "screenshots/hal.lifedesign/DYfpBYukpHp__20260518T232713Z.png"
+    },
     {
       "handle": "@hal.lifedesign",
       "post_id": "DYeWkolEhU9",
@@ -243,46 +254,46 @@
   ],
   "recent_stats": {
     "window_hours": 24,
-    "total": 843,
-    "ok": 803,
+    "total": 814,
+    "ok": 774,
     "partial_error": 40,
     "error": 0,
     "other": 0,
-    "success_rate": 0.9525504151838672
+    "success_rate": 0.9508599508599509
   },
   "recent_stats_by_window": {
     "1": {
       "window_hours": 1,
-      "total": 0,
-      "ok": 0,
+      "total": 3,
+      "ok": 3,
       "partial_error": 0,
       "error": 0,
       "other": 0,
-      "success_rate": null
+      "success_rate": 1.0
     },
     "24": {
       "window_hours": 24,
-      "total": 843,
-      "ok": 803,
+      "total": 814,
+      "ok": 774,
       "partial_error": 40,
       "error": 0,
       "other": 0,
-      "success_rate": 0.9525504151838672
+      "success_rate": 0.9508599508599509
     },
     "168": {
       "window_hours": 168,
-      "total": 1501,
-      "ok": 1461,
+      "total": 1504,
+      "ok": 1464,
       "partial_error": 40,
       "error": 0,
       "other": 0,
-      "success_rate": 0.9733510992671552
+      "success_rate": 0.973404255319149
     }
   },
   "sync_state": {
     "cursor": 43,
-    "db_max": 44,
-    "delta": 1,
+    "db_max": 45,
+    "delta": 2,
     "cursor_file_exists": true
   },
   "dry_run_alert": {
@@ -290,5 +301,5 @@
     "since": "2026-05-18T14:57:28Z",
     "delta": 3
   },
-  "snapshot_generated_at": "2026-05-18T22:52:49Z"
+  "snapshot_generated_at": "2026-05-18T23:27:55Z"
 }
