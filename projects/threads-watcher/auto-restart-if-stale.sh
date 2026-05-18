@@ -14,11 +14,19 @@
 #   reloaded.
 #
 # Behaviour:
-#   1. Run `python watcher.py --health-check`.
-#   2. If output contains the staleness reason
+#   1. Pre-check: if pgrep finds NO `watcher.py --watch` process,
+#      treat as dead-process and invoke restart-watcher.sh (subject
+#      to cooldown). Added 2026-05-18 after the live PID 83222
+#      silently died and this script — which only checked staleness —
+#      reported "healthy — no action" while there was no watcher at
+#      all. --health-check itself returns "staleness not applicable"
+#      for the no-process case, so the staleness grep below would
+#      miss it.
+#   2. Run `python watcher.py --health-check`.
+#   3. If output contains the staleness reason
 #      ("source file(s) have been edited since"), and we're outside
 #      the cooldown window, invoke restart-watcher.sh.
-#   3. Cooldown: touch a marker file after each restart. Don't
+#   4. Cooldown: touch a marker file after each restart. Don't
 #      restart again within ${COOLDOWN_SECONDS:-300} (5 min) — avoids
 #      tight loops on transient mtime/race conditions.
 #
@@ -46,6 +54,55 @@ now_ts=$(date +%s)
 ts_log() {
   printf '%s %s %s\n' "$(date -u +%FT%TZ)" "$LOG_PREFIX:" "$*"
 }
+
+# ── helpers ─────────────────────────────────────────────────────────────
+
+# Check cooldown; return 0 (clear) or 1 (still cooling) without restarting.
+# Logs the cooldown decision so operators can see why a needed restart
+# was deferred.
+check_cooldown() {
+  if [ -f "$MARKER" ]; then
+    local last_ts elapsed
+    last_ts=$(stat -f %m "$MARKER" 2>/dev/null || stat -c %Y "$MARKER" 2>/dev/null || echo 0)
+    elapsed=$((now_ts - last_ts))
+    if [ "$elapsed" -lt "$COOLDOWN_SECONDS" ]; then
+      ts_log "cooldown active: last restart was ${elapsed}s ago, threshold ${COOLDOWN_SECONDS}s — SKIP"
+      ts_log "(operator may force: rm $MARKER && ./auto-restart-if-stale.sh)"
+      return 1
+    fi
+  fi
+  return 0
+}
+
+# Invoke restart-watcher.sh, touch the cooldown marker on success.
+# Returns the script's exit (0 on success, non-zero on failure).
+do_restart() {
+  local reason="$1"
+  ts_log "invoking ./restart-watcher.sh (reason: $reason)"
+  if ./restart-watcher.sh; then
+    touch "$MARKER"
+    ts_log "restart succeeded; cooldown marker set"
+    return 0
+  else
+    local rc=$?
+    ts_log "ERROR: restart-watcher.sh failed (exit $rc)"
+    return 2
+  fi
+}
+
+# ── dead-process gate (pre-staleness) ──────────────────────────────────
+# Why first: --health-check's process-staleness sub-check returns
+# "not applicable" when there's no live watcher, which would silently
+# pass the staleness grep below and leave the dead process unrevived.
+# pgrep is the cheapest way to detect absence.
+if ! pgrep -f "watcher.py --watch" >/dev/null 2>&1; then
+  ts_log "no live watcher process detected (pgrep returned nothing)"
+  if check_cooldown; then
+    do_restart "dead-process"
+    exit $?
+  fi
+  exit 1
+fi
 
 # ── run health-check ────────────────────────────────────────────────────
 # Activate venv inline so cron env doesn't need PATH magic.
@@ -78,24 +135,9 @@ fi
 
 ts_log "staleness signal detected"
 
-# ── cooldown gate ──────────────────────────────────────────────────────
-if [ -f "$MARKER" ]; then
-  last_ts=$(stat -f %m "$MARKER" 2>/dev/null || stat -c %Y "$MARKER" 2>/dev/null || echo 0)
-  elapsed=$((now_ts - last_ts))
-  if [ "$elapsed" -lt "$COOLDOWN_SECONDS" ]; then
-    ts_log "cooldown active: last restart was ${elapsed}s ago, threshold ${COOLDOWN_SECONDS}s — SKIP"
-    ts_log "(operator may force: rm $MARKER && ./auto-restart-if-stale.sh)"
-    exit 1
-  fi
+# ── cooldown gate + restart ────────────────────────────────────────────
+if check_cooldown; then
+  do_restart "staleness"
+  exit $?
 fi
-
-# ── invoke restart ─────────────────────────────────────────────────────
-ts_log "invoking ./restart-watcher.sh"
-if ./restart-watcher.sh; then
-  touch "$MARKER"
-  ts_log "restart succeeded; cooldown marker set"
-  exit 0
-else
-  ts_log "ERROR: restart-watcher.sh failed (exit $?)"
-  exit 2
-fi
+exit 1
