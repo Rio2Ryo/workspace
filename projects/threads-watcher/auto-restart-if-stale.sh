@@ -51,6 +51,29 @@ trap 'rm -f "$HEALTH_LOG"' EXIT
 
 now_ts=$(date +%s)
 
+# ── rotate auto-restart.out.log if oversized ─────────────────────────
+# launchd captures this script's stdout (ts_log via printf) into
+# logs/auto-restart.out.log. Without rotation the file accumulates
+# forever (~12 KB/day observed). Rotation runs at the TOP of each
+# launchd cycle — when the rename fires, the current launchd-held fd
+# keeps writing to the renamed .1 file for the remainder of this
+# tick, and the NEXT tick opens a fresh logs/auto-restart.out.log.
+# Net: each rotated file holds complete tick output, log family
+# bounded by max-bytes × backup-count.
+# Defaults: 1 MB × 5 = 5 MB. Tunable via env vars.
+AUTO_RESTART_LOG="logs/auto-restart.out.log"
+AUTO_RESTART_LOG_MAX_BYTES="${AUTO_RESTART_LOG_MAX_BYTES:-1048576}"
+AUTO_RESTART_LOG_BACKUP_COUNT="${AUTO_RESTART_LOG_BACKUP_COUNT:-5}"
+if [ -x venv/bin/python ]; then
+  _PY=venv/bin/python
+else
+  _PY=python3
+fi
+"$_PY" log_rotation.py "$AUTO_RESTART_LOG" \
+  --max-bytes "$AUTO_RESTART_LOG_MAX_BYTES" \
+  --backup-count "$AUTO_RESTART_LOG_BACKUP_COUNT" \
+  2>/dev/null || true  # rotation failure must never block the health check
+
 ts_log() {
   printf '%s %s %s\n' "$(date -u +%FT%TZ)" "$LOG_PREFIX:" "$*"
 }

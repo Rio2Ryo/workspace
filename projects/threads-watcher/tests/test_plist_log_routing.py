@@ -123,3 +123,27 @@ def test_sync_plist_dry_run_default_no_confirm_no_push():
         "alongside the plist."
     )
     assert "--enable-push" not in args
+
+
+def test_sync_plist_activates_log_rotation():
+    # Rotation code shipped in sync.py (9a0f888) with default
+    # max_bytes=0 (= no rotation, back-compat). The plist must
+    # ACTIVATE it by passing --max-log-bytes — otherwise the
+    # well-tested rotation primitive sits dormant forever.
+    plist = _load(SYNC_PLIST)
+    args = plist.get("ProgramArguments", [])
+    assert "--max-log-bytes" in args, (
+        "Sync plist must enable log rotation. The TeeLogger default "
+        "is max_bytes=0 (no rotation); the plist is the only place "
+        "we actively bound the on-disk growth."
+    )
+    # Following the --max-log-bytes flag, expect a sensible positive
+    # integer (catches `0` or accidental string typos).
+    idx = args.index("--max-log-bytes")
+    assert idx + 1 < len(args)
+    value = int(args[idx + 1])
+    assert value > 0
+    # Sanity ceiling: 100 MB is way past any reasonable single-file
+    # log size. A value above that almost certainly indicates a
+    # missed unit conversion (e.g., 1048576 vs 1073741824).
+    assert value <= 100 * 1024 * 1024

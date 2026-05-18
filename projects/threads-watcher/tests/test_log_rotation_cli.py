@@ -31,6 +31,7 @@ from log_rotation import main, maybe_rotate, rotate_log_files  # noqa: E402
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
 LOG_ROTATION_SCRIPT = PROJECT_ROOT / "log_rotation.py"
 RESTART_WATCHER_SH = PROJECT_ROOT / "restart-watcher.sh"
+AUTO_RESTART_SH = PROJECT_ROOT / "auto-restart-if-stale.sh"
 
 
 # ── maybe_rotate (size-aware wrapper) ───────────────────────────────────
@@ -154,3 +155,19 @@ def test_restart_watcher_sh_invokes_log_rotation_with_expected_flags():
     # Env-var overrides documented in the script header.
     assert "WATCHER_LOG_MAX_BYTES" in sh
     assert "WATCHER_LOG_BACKUP_COUNT" in sh
+
+
+def test_auto_restart_sh_invokes_log_rotation_with_expected_flags():
+    """auto-restart-if-stale.sh runs at every launchd tick and
+    rotates logs/auto-restart.out.log so its log family stays
+    bounded. Same wiring contract as restart-watcher.sh — typo'd
+    flag names would silently let the file grow forever."""
+    sh = AUTO_RESTART_SH.read_text(encoding="utf-8")
+    assert "log_rotation.py" in sh
+    assert "--max-bytes" in sh
+    assert "--backup-count" in sh
+    # Env-var overrides specific to this rotation site.
+    assert "AUTO_RESTART_LOG_MAX_BYTES" in sh
+    assert "AUTO_RESTART_LOG_BACKUP_COUNT" in sh
+    # The target log file (NOT watcher.log).
+    assert "logs/auto-restart.out.log" in sh

@@ -50,6 +50,15 @@
     <!-- DRY-RUN. Uncomment these to promote to live commits / pushes:   -->
     <!-- <string>--confirm</string>     -->
     <!-- <string>--enable-push</string> -->
+
+    <!-- Log rotation: cap sync.log at 1 MB with 5 backups = 5 MB
+         ceiling. At observed ~5 KB/day cadence this rotates roughly
+         twice a year; safety net for a future loglevel bump. Code
+         shipped in 9a0f888; this activates it. -->
+    <string>--max-log-bytes</string>
+    <string>1048576</string>
+    <string>--log-backup-count</string>
+    <string>5</string>
   </array>
 
   <key>EnvironmentVariables</key>
