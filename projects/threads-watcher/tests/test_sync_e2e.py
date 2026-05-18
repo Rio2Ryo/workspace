@@ -296,3 +296,145 @@ def test_skips_commit_when_snapshot_matches_committed_state(tmp_path):
     assert after == before  # no commit
     # Cursor still bumped — we did all the work the next run would have done.
     assert paths["cursor"].read_text(encoding="utf-8").strip() == "3"
+
+
+# ── --enable-push paths (bare repo as origin) ───────────────────────────
+
+
+def _make_bare_origin(tmp_path: Path, workspace: Path, *, branch: str = "main") -> Path:
+    """Create a bare repo to serve as `origin`, point workspace at it."""
+    bare = tmp_path / "origin.git"
+    _run("git", "init", "--bare", "-q", "-b", branch, cwd=tmp_path)
+    # `git init --bare -b main` doesn't actually take cwd that way for the
+    # bare dir; do it explicitly.
+    if not bare.exists():
+        subprocess.run(["git", "init", "--bare", "-q", "-b", branch, str(bare)], check=True)
+    _run("git", "remote", "add", "origin", str(bare), cwd=workspace)
+    # Push the initial commit so the branch exists upstream; otherwise the
+    # first `git push origin <branch>` would set upstream itself, which we
+    # don't want to bake into the test (sync.py doesn't pass -u).
+    _run("git", "push", "-q", "origin", branch, cwd=workspace)
+    return bare
+
+
+def _bare_branch_tip(bare: Path, branch: str) -> str:
+    """SHA at the tip of <branch> in the bare repo (or '' if absent)."""
+    res = subprocess.run(
+        ["git", "-C", str(bare), "rev-parse", branch],
+        capture_output=True, text=True,
+    )
+    return res.stdout.strip() if res.returncode == 0 else ""
+
+
+def test_enable_push_pushes_commit_to_origin(tmp_path):
+    paths = _seed_repo(tmp_path)
+    bare = _make_bare_origin(tmp_path, paths["workspace"])
+    _mutate_snapshot(paths["snapshot"], n=2)
+
+    bare_tip_before = _bare_branch_tip(bare, "main")
+    rc = sync_mod.main(_argv(paths, "--branch", "main", "--confirm", "--enable-push"))
+    bare_tip_after = _bare_branch_tip(bare, "main")
+
+    assert rc == 0
+    # The bare repo's HEAD moved to the new commit we just created.
+    assert bare_tip_after != ""
+    assert bare_tip_after != bare_tip_before
+    # And it matches the workspace HEAD — proof the right SHA was pushed.
+    ws_head = subprocess.check_output(
+        ["git", "-C", str(paths["workspace"]), "rev-parse", "HEAD"], text=True,
+    ).strip()
+    assert bare_tip_after == ws_head
+
+    log_text = paths["log"].read_text(encoding="utf-8")
+    assert "pushed to origin main" in log_text
+
+
+def test_confirm_without_enable_push_does_not_advance_remote(tmp_path):
+    """The --enable-push gate must be opt-in. A plain --confirm commits
+    locally but leaves the bare remote untouched. Pin so a future
+    "always push" refactor can't silently publish dev snapshots."""
+    paths = _seed_repo(tmp_path)
+    bare = _make_bare_origin(tmp_path, paths["workspace"])
+    _mutate_snapshot(paths["snapshot"], n=1)
+
+    bare_tip_before = _bare_branch_tip(bare, "main")
+    rc = sync_mod.main(_argv(paths, "--branch", "main", "--confirm"))
+    bare_tip_after = _bare_branch_tip(bare, "main")
+
+    assert rc == 0
+    assert bare_tip_after == bare_tip_before  # remote untouched
+    # But locally a new commit exists.
+    ws_head = subprocess.check_output(
+        ["git", "-C", str(paths["workspace"]), "rev-parse", "HEAD"], text=True,
+    ).strip()
+    assert ws_head != bare_tip_before
+
+    log_text = paths["log"].read_text(encoding="utf-8")
+    assert "skipping push" in log_text
+
+
+def test_enable_push_failure_returns_1_and_logs_error(tmp_path):
+    """When the push subprocess fails (e.g., bogus remote), exit=1 and
+    the error message must be in the log — not swallowed."""
+    paths = _seed_repo(tmp_path)
+    # Point origin at a nonexistent path — push will fail.
+    _run("git", "remote", "add", "origin", str(tmp_path / "does-not-exist.git"), cwd=paths["workspace"])
+    _mutate_snapshot(paths["snapshot"], n=1)
+
+    rc = sync_mod.main(_argv(paths, "--branch", "main", "--confirm", "--enable-push"))
+
+    assert rc == 1
+    log_text = paths["log"].read_text(encoding="utf-8")
+    assert "git push failed" in log_text
+    # The local commit still happened — only the push failed. That's the
+    # current behaviour, pinned: a follow-up run will skip (no-delta) but
+    # leave the divergence between local and remote for the human.
+    ws_commits = _commit_count(paths["workspace"])
+    assert ws_commits == 2  # initial + the one sync just made
+
+
+def test_enable_push_targets_the_requested_branch(tmp_path):
+    """The --branch argument must reach `git push origin <branch>` — not
+    a default. Use a non-conventional branch name to make a regression
+    in build_git_push_args obvious."""
+    paths = _seed_repo(tmp_path)
+    workspace = paths["workspace"]
+
+    # Switch workspace to a non-default branch so push exercises --branch.
+    _run("git", "checkout", "-q", "-b", "shiro/test-push-branch", cwd=workspace)
+    bare = _make_bare_origin(tmp_path, workspace, branch="shiro/test-push-branch")
+    _mutate_snapshot(paths["snapshot"], n=1)
+
+    rc = sync_mod.main(_argv(paths, "--branch", "shiro/test-push-branch", "--confirm", "--enable-push"))
+
+    assert rc == 0
+    pushed_tip = _bare_branch_tip(bare, "shiro/test-push-branch")
+    ws_head = subprocess.check_output(
+        ["git", "-C", str(workspace), "rev-parse", "HEAD"], text=True,
+    ).strip()
+    assert pushed_tip == ws_head
+    # And `main` was NOT created in the bare (we didn't push it).
+    assert _bare_branch_tip(bare, "main") == ""
+
+
+def test_commit_happens_before_push_attempt(tmp_path):
+    """Pin ordering: commit must succeed before push runs. If a future
+    refactor inverts them, a push-first failure would leave us without
+    a commit to push the next time around (compounding the problem).
+
+    We verify by setting up a push that succeeds, then inspecting the
+    log line ordering — committed line must precede pushed line."""
+    paths = _seed_repo(tmp_path)
+    _make_bare_origin(tmp_path, paths["workspace"])
+    _mutate_snapshot(paths["snapshot"], n=3)
+
+    rc = sync_mod.main(_argv(paths, "--branch", "main", "--confirm", "--enable-push"))
+    assert rc == 0
+
+    log_lines = paths["log"].read_text(encoding="utf-8").splitlines()
+    committed_idx = next((i for i, l in enumerate(log_lines) if "committed:" in l), -1)
+    pushed_idx = next((i for i, l in enumerate(log_lines) if "pushed to origin" in l), -1)
+
+    assert committed_idx >= 0, f"no committed line in log: {log_lines}"
+    assert pushed_idx >= 0, f"no pushed line in log: {log_lines}"
+    assert committed_idx < pushed_idx, "commit must be logged before push"
