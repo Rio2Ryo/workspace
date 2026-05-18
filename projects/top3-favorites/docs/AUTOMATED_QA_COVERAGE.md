@@ -60,6 +60,7 @@
 - `tests/import-impact-tags-deterministic-order.e2e.spec.ts`
 - `tests/import-impact-tags-expand-toggle.e2e.spec.ts`
 - `tests/import-impact-terms-helper-text.e2e.spec.ts`
+- `tests/import-impact-terms-helper-toggle-a11y.e2e.spec.ts`
 - `tests/import-impact-terms-helper-toggle.e2e.spec.ts`
 - `tests/import-impact-zero-metrics-muted.e2e.spec.ts`
 - `tests/import-invalid-after-valid-clears-preview.e2e.spec.ts`

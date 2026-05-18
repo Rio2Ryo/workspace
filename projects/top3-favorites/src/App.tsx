@@ -750,7 +750,7 @@ export function App() {
                 )}
                 {pendingImport.excludedDetails.length > 0 && (
                   <>
-                    <p className="hint compact" data-testid="import-preview-excluded-details">
+                    <p id="import-preview-excluded-details" className="hint compact" data-testid="import-preview-excluded-details">
                       除外理由: {excludedDetailsPreview.visible.map((detail) => `・${detail.name}（${detail.reason}）`).join(' / ')}
                       {excludedDetailsPreview.hiddenCount > 0 ? `（ほか${excludedDetailsPreview.hiddenCount}件）` : ''}
                     </p>
@@ -759,6 +759,8 @@ export function App() {
                         className="ghost small"
                         onClick={() => setIsExcludedDetailsExpanded((prev) => !prev)}
                         data-testid="import-excluded-details-toggle"
+                        aria-controls="import-preview-excluded-details"
+                        aria-expanded={isExcludedDetailsExpanded}
                       >
                         {isExcludedDetailsExpanded ? '除外理由を折りたたむ' : '除外理由を全件表示'}
                       </button>
@@ -789,11 +791,13 @@ export function App() {
                       className="ghost small"
                       onClick={() => setIsImpactTermsHelperExpanded((prev) => !prev)}
                       data-testid="import-impact-terms-helper-toggle"
+                      aria-controls="import-impact-terms-helper"
+                      aria-expanded={isImpactTermsHelperExpanded}
                     >
                       {isImpactTermsHelperExpanded ? '差分用語の詳細説明を隠す' : '差分用語の詳細説明を表示'}
                     </button>
                     {isImpactTermsHelperExpanded && (
-                      <p className="hint compact" data-testid="import-impact-terms-helper">
+                      <p id="import-impact-terms-helper" className="hint compact" data-testid="import-impact-terms-helper">
                         削除予定: 現在DBにあるが、インポート後データに含まれない項目 / 正規化除外: インポートJSON内で同一タグTop3に収まらず取り込まれない項目
                       </p>
                     )}
@@ -801,6 +805,7 @@ export function App() {
                       <p className="hint compact" data-testid="import-preview-no-change">差分なし（このインポートでデータ変更はありません）</p>
                     )}
                     <p
+                      id="import-preview-impact-tags"
                       className="hint compact"
                       data-testid="import-preview-impact-tags"
                       data-impact-tag-count={pendingImportImpact.tags.length}
@@ -814,6 +819,8 @@ export function App() {
                         className="ghost small"
                         onClick={() => setIsImpactTagsExpanded((prev) => !prev)}
                         data-testid="import-impact-tags-toggle"
+                        aria-controls="import-preview-impact-tags"
+                        aria-expanded={isImpactTagsExpanded}
                       >
                         {isImpactTagsExpanded ? '影響タグを折りたたむ' : '影響タグを全件表示'}
                       </button>
