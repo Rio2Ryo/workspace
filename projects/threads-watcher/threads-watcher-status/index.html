@@ -76,6 +76,14 @@
       <div class="row"><span class="label">error</span><span id="rs-error">—</span></div>
     </section>
 
+    <section class="card" id="sync-state">
+      <div class="label" style="margin-bottom:8px">sync.py state (cursor vs DB)</div>
+      <div class="row"><span class="label">db_max(posts.id)</span><span id="ss-dbmax">—</span></div>
+      <div class="row"><span class="label">cursor (last synced)</span><span id="ss-cursor">—</span></div>
+      <div class="row"><span class="label">delta</span><span id="ss-delta">—</span></div>
+      <div class="row"><span class="label">cursor file</span><span id="ss-cursor-exists">—</span></div>
+    </section>
+
     <section class="card">
       <div class="label" style="margin-bottom:8px">recent saved screenshots (newest first)</div>
       <ul id="posts"><li class="muted">loading…</li></ul>
@@ -115,6 +123,19 @@
           document.getElementById('rs-ok').textContent = rs.ok;
           document.getElementById('rs-partial').textContent = rs.partial_error;
           document.getElementById('rs-error').textContent = rs.error;
+        }
+
+        const ss = data.sync_state;
+        if (ss && typeof ss.db_max === 'number') {
+          document.getElementById('ss-dbmax').textContent = ss.db_max;
+          document.getElementById('ss-cursor').textContent = ss.cursor;
+          const deltaEl = document.getElementById('ss-delta');
+          deltaEl.textContent = ss.delta;
+          // delta > 0 means sync would commit at next --confirm cycle.
+          // Not an error, just operator-noticeable.
+          if (ss.delta > 0) deltaEl.classList.add('err');
+          document.getElementById('ss-cursor-exists').textContent =
+            ss.cursor_file_exists ? 'present' : 'missing (never synced)';
         }
 
         const ul = document.getElementById('posts');

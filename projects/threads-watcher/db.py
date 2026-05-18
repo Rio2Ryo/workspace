@@ -12,6 +12,10 @@ from typing import Any
 
 PROJECT_ROOT = Path(__file__).resolve().parent
 DEFAULT_DB_FILE = PROJECT_ROOT / "threads_watcher.db"
+# Mirrors sync.py's DEFAULT_CURSOR. Duplicated here (vs imported from
+# sync.py) to avoid creating a db→sync module dependency loop; this is
+# a constant convention, not logic.
+DEFAULT_CURSOR_FILE = PROJECT_ROOT / ".sync_cursor"
 
 SCHEMA_SQL = """
 CREATE TABLE IF NOT EXISTS posts (
@@ -186,6 +190,42 @@ def recent_stats(
     }
 
 
+def sync_state(
+    conn: sqlite3.Connection,
+    cursor_path: Path = DEFAULT_CURSOR_FILE,
+) -> dict[str, Any]:
+    """Surface sync.py's progress against the live DB without depending on sync.py.
+
+    Returns `{cursor, db_max, delta, cursor_file_exists}` where:
+      - cursor: int read from `cursor_path`, or 0 if missing/corrupt
+      - db_max: MAX(id) from posts table (0 if empty)
+      - delta: db_max - cursor (≥0 means sync would commit if --confirm
+        AND the recent-failures guard passes)
+      - cursor_file_exists: bool, to distinguish "never synced" (False, 0)
+        from "synced and caught up" (True, 0)
+
+    Operators reading state.json can see at-a-glance whether sync.py
+    is healthy and current without tailing logs.
+    """
+    row = conn.execute("SELECT COALESCE(MAX(id), 0) AS m FROM posts").fetchone()
+    db_max = int(row[0]) if row else 0
+
+    cursor_exists = cursor_path.exists()
+    cursor = 0
+    if cursor_exists:
+        try:
+            cursor = max(0, int(cursor_path.read_text(encoding="utf-8").strip()))
+        except (FileNotFoundError, ValueError):
+            cursor = 0
+
+    return {
+        "cursor": cursor,
+        "db_max": db_max,
+        "delta": max(0, db_max - cursor),
+        "cursor_file_exists": cursor_exists,
+    }
+
+
 def latest_snapshot(conn: sqlite3.Connection, handle: str) -> dict[str, Any]:
     post_rows = conn.execute(
         """
@@ -213,4 +253,5 @@ def latest_snapshot(conn: sqlite3.Connection, handle: str) -> dict[str, Any]:
         "saved_count": len(post_rows),
         "posts": [dict(row) for row in post_rows],
         "recent_stats": recent_stats(conn, handle, window_hours=24),
+        "sync_state": sync_state(conn),
     }
