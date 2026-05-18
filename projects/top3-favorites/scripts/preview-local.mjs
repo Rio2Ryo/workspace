@@ -151,8 +151,18 @@ function normalizeImportedTop3(items) {
   return normalized
 }
 
-function hasDuplicateIds(items) {
-  return new Set(items.map((item) => item.id)).size !== items.length
+function duplicateItemIdError(items) {
+  const firstById = new Map()
+  for (const [index, item] of items.entries()) {
+    const first = firstById.get(item.id)
+    if (first) {
+      const firstName = first.item.name.trim() || 'untitled item'
+      const duplicateName = item.name.trim() || 'untitled item'
+      return `duplicate item id "${item.id}" at rows ${first.index + 1} "${firstName}" and ${index + 1} "${duplicateName}"`
+    }
+    firstById.set(item.id, { item, index })
+  }
+  return null
 }
 
 function makeItem(payload, existing) {
@@ -203,8 +213,9 @@ async function handleApi(req, res, url) {
       }
 
       const validItems = normalized.filter(Boolean)
-      if (hasDuplicateIds(validItems)) {
-        return sendJson(res, 400, { error: 'duplicate item id exists' })
+      const duplicateError = duplicateItemIdError(validItems)
+      if (duplicateError) {
+        return sendJson(res, 400, { error: duplicateError })
       }
 
       const items = normalizeImportedTop3(validItems)

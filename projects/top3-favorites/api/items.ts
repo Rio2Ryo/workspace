@@ -101,8 +101,18 @@ function toValidItem(value: unknown): FavoriteItem | null {
   return { ...base, mapsUrl: buildMapsUrl(base) }
 }
 
-function hasDuplicateIds(items: FavoriteItem[]): boolean {
-  return new Set(items.map((item) => item.id)).size !== items.length
+function duplicateItemIdError(items: FavoriteItem[]): string | null {
+  const firstById = new Map<string, { item: FavoriteItem; index: number }>()
+  for (const [index, item] of items.entries()) {
+    const first = firstById.get(item.id)
+    if (first) {
+      const firstName = first.item.name.trim() || 'untitled item'
+      const duplicateName = item.name.trim() || 'untitled item'
+      return `duplicate item id "${item.id}" at rows ${first.index + 1} "${firstName}" and ${index + 1} "${duplicateName}"`
+    }
+    firstById.set(item.id, { item, index })
+  }
+  return null
 }
 
 async function streamToText(stream: ReadableStream<Uint8Array>): Promise<string> {
@@ -237,8 +247,9 @@ export default async function handler(req: any, res: any) {
         }
 
         const validItems = normalized.filter((v): v is FavoriteItem => v !== null)
-        if (hasDuplicateIds(validItems)) {
-          return send(res, 400, { error: 'duplicate item id exists' })
+        const duplicateError = duplicateItemIdError(validItems)
+        if (duplicateError) {
+          return send(res, 400, { error: duplicateError })
         }
         const top3Normalized = normalizeImportedTop3(validItems)
         await writeData({ items: top3Normalized })

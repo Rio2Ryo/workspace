@@ -38,5 +38,5 @@ test('API replace import rejects duplicate item ids', async ({ request }) => {
   expect(res.status()).toBe(400)
 
   const json = await res.json()
-  expect(String(json.error ?? '')).toMatch(/duplicate|invalid/i)
+  expect(json.error).toBe('duplicate item id "dup-1" at rows 1 "Duplicate First" and 2 "Duplicate Second"')
 })
