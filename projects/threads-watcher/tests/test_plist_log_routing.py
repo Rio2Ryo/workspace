@@ -72,9 +72,11 @@ def test_sync_plist_keeps_stderr_path_for_python_tracebacks():
     plist = _load(SYNC_PLIST)
     err_path = plist.get("StandardErrorPath", "")
     assert err_path.endswith("/logs/sync.err.log"), (
-        "TeeLogger writes via stderr; uncaught Python tracebacks "
-        "(e.g., import failures before TeeLogger runs) need a capture. "
-        "Removing this loses crash visibility."
+        "Uncaught Python tracebacks / import failures bypass TeeLogger "
+        "entirely (they fire before main() runs). Removing this key "
+        "loses crash visibility. Post-TeeLogger-double-write-fix the "
+        "stream is now mostly empty in healthy operation — that's "
+        "expected and intentional."
     )
 
 

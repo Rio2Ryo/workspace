@@ -294,17 +294,34 @@ def get_last_commit_ts(workspace: Path, relpath: str) -> int:
 
 
 class TeeLogger:
-    """Append-to-file + stderr. No rotation; matches sync.sh logger."""
+    """Append-to-file logger. `also_stderr` opts in to the legacy
+    double-write behaviour (mirror every line to sys.stderr).
 
-    def __init__(self, log_path: Path):
+    The double-write was the original design — and remains useful for
+    `python sync.py` invoked from a TTY so the operator sees output
+    in real time. But under launchd, every line was getting captured
+    BOTH into the on-disk file AND into launchd's StandardErrorPath
+    (logs/sync.err.log). Two copies of the same data, 2x disk usage,
+    2x I/O per tick.
+
+    Default is file-only. Operator TTY use sets also_stderr=True
+    explicitly. launchd's StandardErrorPath stays wired to catch
+    uncaught Python tracebacks / import errors that bypass this
+    logger entirely (those go to real stderr from the interpreter,
+    not from any TeeLogger.log() call).
+    """
+
+    def __init__(self, log_path: Path, also_stderr: bool = False):
         self.log_path = log_path
+        self.also_stderr = also_stderr
         log_path.parent.mkdir(parents=True, exist_ok=True)
 
     def log(self, msg: str) -> None:
         line = f"{now_iso()} {msg}\n"
         with self.log_path.open("a", encoding="utf-8") as f:
             f.write(line)
-        sys.stderr.write(line)
+        if self.also_stderr:
+            sys.stderr.write(line)
 
 
 # ── orchestration ───────────────────────────────────────────────────────
@@ -350,6 +367,16 @@ def parse_args(argv: list[str] | None) -> argparse.Namespace:
             f"({DRY_RUN_ALERT_THRESHOLD}) ticks. Override for tests."
         ),
     )
+    p.add_argument(
+        "--tee-stderr",
+        action="store_true",
+        help=(
+            "Mirror every log line to stderr in addition to the "
+            "--log file. Default: false (file-only — avoids the "
+            "double-write into launchd's StandardErrorPath). Pass "
+            "this when running interactively from a TTY."
+        ),
+    )
     return p.parse_args(argv)
 
 
@@ -390,7 +417,14 @@ def release_lock(lockdir: Path) -> None:
 
 def main(argv: list[str] | None = None) -> int:
     args = parse_args(argv)
-    log = TeeLogger(args.log)
+    # Auto-enable stderr mirror when stderr is a TTY (interactive run);
+    # CLI --tee-stderr is the explicit override for non-TTY cases where
+    # the operator still wants both streams. launchd's stderr is a file
+    # descriptor → isatty() is False → no double write.
+    also_stderr = args.tee_stderr or (
+        getattr(sys.stderr, "isatty", lambda: False)()
+    )
+    log = TeeLogger(args.log, also_stderr=also_stderr)
 
     if not args.db.exists():
         log.log(f"ERROR: db not found: {args.db}")
