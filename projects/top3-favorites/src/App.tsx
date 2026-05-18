@@ -248,6 +248,7 @@ export function App() {
   const pendingImportSummary = useMemo(() => {
     if (!pendingImport || !pendingImportImpact) return null
     return {
+      version: 1,
       before: items.length,
       after: pendingImport.items.length,
       normalizationBefore: pendingImport.originalCount,

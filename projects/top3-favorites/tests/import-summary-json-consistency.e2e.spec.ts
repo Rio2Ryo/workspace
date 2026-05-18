@@ -34,6 +34,7 @@ test('import preview exposes a consistent summary JSON for QA assertions', async
   expect(summaryAttr).toBeTruthy()
 
   const summary = JSON.parse(summaryAttr as string) as {
+    version: number
     before: number
     after: number
     normalizationBefore: number
@@ -46,6 +47,7 @@ test('import preview exposes a consistent summary JSON for QA assertions', async
     excludedNames: string[]
   }
 
+  expect(summary.version).toBe(1)
   expect(summary.before).toBe(3)
   expect(summary.after).toBe(4)
   expect(summary.normalizationBefore).toBe(5)
