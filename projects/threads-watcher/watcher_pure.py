@@ -322,3 +322,34 @@ def combine_error_messages(base: str | None, capture_errors: list[str]) -> str |
     if base:
         return f"{base} | {failure_summary}"
     return failure_summary
+
+
+def build_web_snapshot_payload(
+    snapshot: dict[str, Any],
+    dry_run_alert: dict | None,
+    generated_at: str,
+) -> dict[str, Any]:
+    """Pure builder for the threads-watcher-status/state.json payload.
+
+    Extracted from watcher._write_web_snapshot_from_db so the public
+    snapshot shape is testable without importing playwright (which
+    pulls in browser binaries). The thin file-writer in watcher.py
+    just calls this + writes; all field-presence / sanitisation logic
+    is here.
+
+    `dry_run_alert` is either None (no active streak — UI hides the
+    banner) or {pending_ticks, since, delta}. Surfaces sync.py's
+    "promote to --confirm" signal, previously only visible via
+    `grep ALERT logs/sync.log`.
+    """
+    return {
+        "handle": snapshot["handle"],
+        "last_check": snapshot["last_check"],
+        "saved_count": snapshot["saved_count"],
+        "posts": snapshot["posts"],
+        "recent_stats": snapshot.get("recent_stats"),
+        "recent_stats_by_window": snapshot.get("recent_stats_by_window"),
+        "sync_state": snapshot.get("sync_state"),
+        "dry_run_alert": dry_run_alert,
+        "snapshot_generated_at": generated_at,
+    }

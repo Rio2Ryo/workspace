@@ -111,6 +111,36 @@ def should_emit_dry_run_alert(state: DryRunState, threshold: int = DRY_RUN_ALERT
     return state.count >= threshold and state.delta > 0
 
 
+def get_active_dry_run_alert(
+    state_path: Path = DEFAULT_DRY_STATE,
+    threshold: int = DRY_RUN_ALERT_THRESHOLD,
+) -> dict | None:
+    """Read the persisted dry-run state and return a serializable
+    alert payload if the threshold has been reached.
+
+    Used by watcher._write_web_snapshot_from_db to surface the alert
+    into threads-watcher-status/state.json so the web UI can render
+    a banner. Returns None when there's no alert (state missing,
+    streak under threshold, or delta cleared) so the UI hides the
+    banner without extra JS branching.
+
+    Side-effect-free; safe to call from any process that has read
+    access to the state file. Returns plain dict (not the
+    DryRunState dataclass) so json.dumps can serialize it directly
+    into the snapshot payload.
+    """
+    state = load_dry_run_state(state_path)
+    if state is None:
+        return None
+    if not should_emit_dry_run_alert(state, threshold):
+        return None
+    return {
+        "pending_ticks": state.count,
+        "since": state.since,
+        "delta": state.delta,
+    }
+
+
 def load_dry_run_state(path: Path) -> DryRunState | None:
     """Read the persisted state file. Missing / corrupt → None (fresh start)."""
     try:

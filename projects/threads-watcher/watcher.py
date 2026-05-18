@@ -66,27 +66,22 @@ def _write_web_snapshot_from_db(snapshot: dict[str, Any]) -> None:
 
     The public status file intentionally excludes screenshot BLOBs and local file
     paths, but includes proof that screenshots were captured and persisted.
+
+    Delegates payload shape to watcher_pure.build_web_snapshot_payload so the
+    field-presence contract is testable without importing this module (which
+    pulls in playwright). Side-effects here: dir create + JSON write +
+    reading the dry-run state file.
     """
     WEB_SNAPSHOT_FILE.parent.mkdir(parents=True, exist_ok=True)
-    payload = {
-        "handle": snapshot["handle"],
-        "last_check": snapshot["last_check"],
-        "saved_count": snapshot["saved_count"],
-        "posts": snapshot["posts"],
-        # recent_stats (24h aggregate) added 2026-05-18 so operators see
-        # partial_error frequency at a glance, not just "current run ok"
-        # which hides the ~8% blip rate observed on @hal.lifedesign.
-        "recent_stats": snapshot.get("recent_stats"),
-        # recent_stats_by_window keyed by hours: 1 / 24 / 168 (7d). UI
-        # picks one based on ?window= URL param so operators don't need
-        # log-tailing or a server round-trip to compare.
-        "recent_stats_by_window": snapshot.get("recent_stats_by_window"),
-        # sync_state (cursor vs db_max + delta) lets operators see
-        # whether sync.py would commit at next launchd cycle without
-        # needing to tail logs/sync.err.log.
-        "sync_state": snapshot.get("sync_state"),
-        "snapshot_generated_at": _now_iso(),
-    }
+    # Late import: sync.py imports sync_guards which imports json/sqlite —
+    # all stdlib, no playwright dependency.
+    from sync import get_active_dry_run_alert
+    from watcher_pure import build_web_snapshot_payload
+    payload = build_web_snapshot_payload(
+        snapshot,
+        dry_run_alert=get_active_dry_run_alert(),
+        generated_at=_now_iso(),
+    )
     WEB_SNAPSHOT_FILE.write_text(json.dumps(payload, ensure_ascii=False, indent=2), encoding="utf-8")
 
 
