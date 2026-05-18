@@ -70,14 +70,15 @@ function isItem(value: unknown): value is FavoriteItem {
   )
 }
 
-function importItemValidationError(value: unknown, index: number): string | null {
-  const row = index + 1
-  if (!value || typeof value !== 'object') return `invalid item at row ${row}: item must be an object`
+function importItemValidationError(value: unknown, index: number, source = 'API replace import'): string | null {
+  const row = `${index + 1}件目`
+  const detail = (field: string, hint: string) => `${source}の${row} / フィールド: ${field} / 修正: ${hint}`
+  if (!value || typeof value !== 'object') return detail('item', '各項目はJSONオブジェクトにしてください')
   const o = value as Record<string, unknown>
-  if (!normalizeText(o.id)) return `invalid item at row ${row}: id is required`
-  if (!normalizeText(o.tag)) return `invalid item at row ${row}: tag is required`
-  if (!normalizeText(o.name)) return `invalid item at row ${row}: name is required`
-  if (parseImportRank(o.rank) === null) return `invalid item at row ${row}: rank must be 1, 2, or 3`
+  if (!normalizeText(o.id)) return detail('id', 'IDを入力してください')
+  if (!normalizeText(o.tag)) return detail('tag', 'タグを入力してください')
+  if (!normalizeText(o.name)) return detail('name', '店舗名を入力してください')
+  if (parseImportRank(o.rank) === null) return detail('rank', '順位は1、2、3のいずれかにしてください')
   return null
 }
 
@@ -112,14 +113,14 @@ function toValidItem(value: unknown): FavoriteItem | null {
   return { ...base, mapsUrl: buildMapsUrl(base) }
 }
 
-function duplicateItemIdError(items: FavoriteItem[]): string | null {
+function duplicateItemIdError(items: FavoriteItem[], source = 'API replace import'): string | null {
   const firstById = new Map<string, { item: FavoriteItem; index: number }>()
   for (const [index, item] of items.entries()) {
     const first = firstById.get(item.id)
     if (first) {
       const firstName = first.item.name.trim() || 'untitled item'
       const duplicateName = item.name.trim() || 'untitled item'
-      return `duplicate item id "${item.id}" at rows ${first.index + 1} "${firstName}" and ${index + 1} "${duplicateName}"`
+      return `${source}のID「${item.id}」が重複しています: ${first.index + 1}件目「${firstName}」と${index + 1}件目「${duplicateName}」を確認してください`
     }
     firstById.set(item.id, { item, index })
   }

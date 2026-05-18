@@ -66,13 +66,14 @@ function isItem(value) {
     typeof value.updatedAt === 'string'
 }
 
-function importItemValidationError(value, index) {
-  const row = index + 1
-  if (!value || typeof value !== 'object') return `invalid item at row ${row}: item must be an object`
-  if (!normalizeText(value.id)) return `invalid item at row ${row}: id is required`
-  if (!normalizeText(value.tag)) return `invalid item at row ${row}: tag is required`
-  if (!normalizeText(value.name)) return `invalid item at row ${row}: name is required`
-  if (parseImportRank(value.rank) === null) return `invalid item at row ${row}: rank must be 1, 2, or 3`
+function importItemValidationError(value, index, source = 'API replace import') {
+  const row = `${index + 1}件目`
+  const detail = (field, hint) => `${source}の${row} / フィールド: ${field} / 修正: ${hint}`
+  if (!value || typeof value !== 'object') return detail('item', '各項目はJSONオブジェクトにしてください')
+  if (!normalizeText(value.id)) return detail('id', 'IDを入力してください')
+  if (!normalizeText(value.tag)) return detail('tag', 'タグを入力してください')
+  if (!normalizeText(value.name)) return detail('name', '店舗名を入力してください')
+  if (parseImportRank(value.rank) === null) return detail('rank', '順位は1、2、3のいずれかにしてください')
   return null
 }
 
@@ -174,14 +175,14 @@ function normalizeImportedTop3(items) {
   return normalized
 }
 
-function duplicateItemIdError(items) {
+function duplicateItemIdError(items, source = 'API replace import') {
   const firstById = new Map()
   for (const [index, item] of items.entries()) {
     const first = firstById.get(item.id)
     if (first) {
       const firstName = first.item.name.trim() || 'untitled item'
       const duplicateName = item.name.trim() || 'untitled item'
-      return `duplicate item id "${item.id}" at rows ${first.index + 1} "${firstName}" and ${index + 1} "${duplicateName}"`
+      return `${source}のID「${item.id}」が重複しています: ${first.index + 1}件目「${firstName}」と${index + 1}件目「${duplicateName}」を確認してください`
     }
     firstById.set(item.id, { item, index })
   }

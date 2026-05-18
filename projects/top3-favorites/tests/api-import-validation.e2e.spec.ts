@@ -23,7 +23,7 @@ test('API replace import rejects invalid rank (server-side validation)', async (
   expect(res.status()).toBe(400)
 
   const json = await res.json()
-  expect(json.error).toBe('invalid item at row 1: rank must be 1, 2, or 3')
+  expect(json.error).toBe('API replace importの1件目 / フィールド: rank / 修正: 順位は1、2、3のいずれかにしてください')
 })
 
 test('API replace import rejects duplicate item ids', async ({ request }) => {
@@ -38,5 +38,5 @@ test('API replace import rejects duplicate item ids', async ({ request }) => {
   expect(res.status()).toBe(400)
 
   const json = await res.json()
-  expect(json.error).toBe('duplicate item id "dup-1" at rows 1 "Duplicate First" and 2 "Duplicate Second"')
+  expect(json.error).toBe('API replace importのID「dup-1」が重複しています: 1件目「Duplicate First」と2件目「Duplicate Second」を確認してください')
 })
