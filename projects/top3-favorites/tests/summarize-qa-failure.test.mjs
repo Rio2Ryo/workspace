@@ -33,6 +33,7 @@ test('[Script] summarize-qa-failure extracts first failing test and contract met
   assert.match(r.stdout, /firstFailingTest: \[App\]\[config-quality\] sample failure/)
   assert.match(r.stdout, /contractScope: App/)
   assert.match(r.stdout, /contractRule: bar baz/)
+  assert.match(r.stdout, /focusedCommand: pnpm test:qa-current/)
 })
 
 test('[Script] summarize-qa-failure supports json format', () => {
@@ -46,6 +47,20 @@ test('[Script] summarize-qa-failure supports json format', () => {
   assert.equal(parsed.firstFailingTest, '[Docs][integrity] stale path')
   assert.equal(parsed.contractScope, 'Docs')
   assert.equal(parsed.contractRule, 'stale docs path')
+  assert.equal(parsed.focusedCommand, 'pnpm test:qa-docs')
+})
+
+test('[Script] summarize-qa-failure suggests focused Playwright command when a spec path is present', () => {
+  const log = createLog([
+    'Running 222 tests using 1 worker',
+    '  ✘  46 [chromium] › tests/import-preview/summary/import-preview-summary.e2e.spec.ts:24:1 › import confirmation summarizes added removed kept items and tag impact (1.2s)',
+    '    Error: expect(locator).toContainText(expected) failed',
+  ].join('\n'))
+  const r = run([`--log=${log}`, '--format=json'])
+  assert.equal(r.status, 0)
+  const parsed = JSON.parse(r.stdout)
+  assert.equal(parsed.firstFailingTest, '[chromium] › tests/import-preview/summary/import-preview-summary.e2e.spec.ts:24:1 › import confirmation summarizes added removed kept items and tag impact')
+  assert.equal(parsed.focusedCommand, 'pnpm test:e2e -- tests/import-preview/summary/import-preview-summary.e2e.spec.ts')
 })
 
 test('[Script] summarize-qa-failure handles no failures', () => {
