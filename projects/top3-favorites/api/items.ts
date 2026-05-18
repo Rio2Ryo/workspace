@@ -73,14 +73,14 @@ function isItem(value: unknown): value is FavoriteItem {
 function importItemValidationError(value: unknown, index: number, source = 'API replace import'): string | null {
   const row = `${index + 1}件目`
   const detail = (field: string, hint: string) => `${source}の${row} / フィールド: ${field} / 修正: ${hint}`
-  if (!value || typeof value !== 'object') return detail('item', '各項目はJSONオブジェクトにしてください')
+  if (!value || typeof value !== 'object') return detail('item', '各行をオブジェクト形式にしてください。')
   const o = value as Record<string, unknown>
-  if (!normalizeText(o.id)) return detail('id', 'IDを入力してください')
-  if (!normalizeText(o.tag)) return detail('tag', 'タグを入力してください')
-  if (typeof o.location !== 'string') return detail('location', '場所を文字列で入力してください')
-  if (!normalizeText(o.name)) return detail('name', '店舗名を入力してください')
-  if (parseImportRank(o.rank) === null) return detail('rank', '順位は1、2、3のいずれかにしてください')
-  if (typeof o.memo !== 'string') return detail('memo', 'メモを文字列で入力してください')
+  if (!normalizeText(o.id)) return detail('id', 'IDを入力してください。')
+  if (!normalizeText(o.tag)) return detail('tag', 'タグを入力してください。')
+  if (typeof o.location !== 'string') return detail('location', '場所を文字列で入力してください。')
+  if (!normalizeText(o.name)) return detail('name', '店舗名を入力してください。')
+  if (parseImportRank(o.rank) === null) return detail('rank', '順位は1〜3で入力してください。')
+  if (typeof o.memo !== 'string') return detail('memo', 'メモを文字列で入力してください。')
   return null
 }
 
@@ -122,7 +122,7 @@ function duplicateItemIdError(items: FavoriteItem[], source = 'API replace impor
     if (first) {
       const firstName = first.item.name.trim() || 'untitled item'
       const duplicateName = item.name.trim() || 'untitled item'
-      return `${source}のID「${item.id}」が重複しています: ${first.index + 1}件目「${firstName}」と${index + 1}件目「${duplicateName}」を確認してください`
+      return `${source}のID「${item.id}」が${first.index + 1}件目「${firstName}」と${index + 1}件目「${duplicateName}」で重複しています。`
     }
     firstById.set(item.id, { item, index })
   }

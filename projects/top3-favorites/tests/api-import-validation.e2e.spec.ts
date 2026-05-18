@@ -23,7 +23,7 @@ test('API replace import rejects invalid rank (server-side validation)', async (
   expect(res.status()).toBe(400)
 
   const json = await res.json()
-  expect(json.error).toBe('API replace importの1件目 / フィールド: rank / 修正: 順位は1、2、3のいずれかにしてください')
+  expect(json.error).toBe('API replace importの1件目 / フィールド: rank / 修正: 順位は1〜3で入力してください。')
 })
 
 test('API replace import rejects missing location like the UI preflight', async ({ request }) => {
@@ -35,7 +35,7 @@ test('API replace import rejects missing location like the UI preflight', async 
   expect(res.status()).toBe(400)
 
   const json = await res.json()
-  expect(json.error).toBe('API replace importの1件目 / フィールド: location / 修正: 場所を文字列で入力してください')
+  expect(json.error).toBe('API replace importの1件目 / フィールド: location / 修正: 場所を文字列で入力してください。')
 })
 
 test('API replace import rejects missing memo like the UI preflight', async ({ request }) => {
@@ -47,7 +47,7 @@ test('API replace import rejects missing memo like the UI preflight', async ({ r
   expect(res.status()).toBe(400)
 
   const json = await res.json()
-  expect(json.error).toBe('API replace importの1件目 / フィールド: memo / 修正: メモを文字列で入力してください')
+  expect(json.error).toBe('API replace importの1件目 / フィールド: memo / 修正: メモを文字列で入力してください。')
 })
 
 test('API replace import rejects duplicate item ids', async ({ request }) => {
@@ -62,5 +62,5 @@ test('API replace import rejects duplicate item ids', async ({ request }) => {
   expect(res.status()).toBe(400)
 
   const json = await res.json()
-  expect(json.error).toBe('API replace importのID「dup-1」が重複しています: 1件目「Duplicate First」と2件目「Duplicate Second」を確認してください')
+  expect(json.error).toBe('API replace importのID「dup-1」が1件目「Duplicate First」と2件目「Duplicate Second」で重複しています。')
 })
