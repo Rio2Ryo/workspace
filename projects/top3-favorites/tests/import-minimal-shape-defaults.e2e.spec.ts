@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test'
-import { resetItemsByReplace } from './e2e-helpers'
+import { uploadJsonImportFile, resetItemsByReplace } from './e2e-helpers'
 
 test.beforeEach(async ({ request }) => {
   await resetItemsByReplace(request)
@@ -15,11 +15,7 @@ test('UI import accepts minimal valid items and fills generated fields before AP
     { id: 'minimal-4', tag: 'カフェラテ', location: '柏の葉', name: 'Minimal D', rank: 3, memo: '' },
   ]
 
-  await page.locator('input[type="file"][accept*="json"]').setInputFiles({
-    name: 'minimal-shape.json',
-    mimeType: 'application/json',
-    buffer: Buffer.from(JSON.stringify(payload), 'utf-8'),
-  })
+  await uploadJsonImportFile(page, 'minimal-shape.json', payload)
 
   await expect(page.getByTestId('import-preview-counts')).toHaveAttribute('data-after-count', '3')
   await expect(page.getByTestId('import-preview-normalization')).toHaveAttribute('data-normalization-before-count', '4')

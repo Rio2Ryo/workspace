@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test'
-import { resetItemsByReplace } from './e2e-helpers'
+import { uploadJsonImportFile, resetItemsByReplace } from './e2e-helpers'
 
 test.beforeEach(async ({ request }) => {
   await resetItemsByReplace(request)
@@ -17,11 +17,7 @@ test('excluded details are rendered in a readable bullet-like format', async ({ 
     { id: 'e', tag: 'カフェラテ', location: '柏の葉', name: 'E店', rank: 3, memo: '', mapsUrl: '', placeId: '', createdAt, updatedAt: '2026-05-18T00:01:00.000Z' },
   ]
 
-  await page.locator('input[type="file"][accept*="json"]').setInputFiles({
-    name: 'excluded-format.json',
-    mimeType: 'application/json',
-    buffer: Buffer.from(JSON.stringify(payload), 'utf-8'),
-  })
+  await uploadJsonImportFile(page, 'excluded-format.json', payload)
 
   const details = page.getByTestId('import-preview-excluded-details')
   await expect(details).toContainText('除外理由:')

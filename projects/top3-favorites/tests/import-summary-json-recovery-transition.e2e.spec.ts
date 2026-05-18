@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test'
-import { parseImportPreviewSummary, resetItemsByReplace } from './e2e-helpers'
+import { uploadJsonImportFile, parseImportPreviewSummary, resetItemsByReplace } from './e2e-helpers'
 
 test.beforeEach(async ({ request }) => {
   await resetItemsByReplace(request)
@@ -12,8 +12,6 @@ test('summary json transitions correctly across valid -> invalid -> valid import
   await page.getByLabel('場所', { exact: true }).fill('柏の葉')
   await page.getByLabel('店舗名', { exact: true }).fill('Baseline')
   await page.getByRole('button', { name: 'DBに保存' }).click()
-
-  const fileInput = page.locator('input[type="file"][accept*="json"]')
   const now = new Date().toISOString()
   const validItems = [
     { id: 'r1', tag: 'プリン', location: '浅草', name: 'A', rank: 1, memo: '', mapsUrl: '', placeId: '', createdAt: now, updatedAt: now },
@@ -21,11 +19,7 @@ test('summary json transitions correctly across valid -> invalid -> valid import
   ]
 
   // valid: preview summary exists and has coherent values
-  await fileInput.setInputFiles({
-    name: 'valid-1.json',
-    mimeType: 'application/json',
-    buffer: Buffer.from(JSON.stringify(validItems), 'utf-8'),
-  })
+  await uploadJsonImportFile(page, 'valid-1.json', validItems)
 
   const summaryNode = page.getByTestId('import-preview-summary')
   await expect(summaryNode).toBeVisible()
@@ -40,20 +34,12 @@ test('summary json transitions correctly across valid -> invalid -> valid import
   expect(summary1.added + summary1.kept).toBe(summary1.after)
 
   // invalid in between: preview should be cleared
-  await fileInput.setInputFiles({
-    name: 'broken.json',
-    mimeType: 'application/json',
-    buffer: Buffer.from('{"broken": ', 'utf-8'),
-  })
+  await uploadJsonImportFile(page, 'broken.json', '{"broken": ')
   await expect(page.getByRole('alert')).toContainText('インポート失敗: ファイル「broken.json」のJSON構文を解析できません。既存データは保持しました。')
   await expect(page.getByTestId('import-preview-summary')).toHaveCount(0)
 
   // valid again: summary should be rebuilt coherently
-  await fileInput.setInputFiles({
-    name: 'valid-2.json',
-    mimeType: 'application/json',
-    buffer: Buffer.from(JSON.stringify(validItems), 'utf-8'),
-  })
+  await uploadJsonImportFile(page, 'valid-2.json', validItems)
 
   const summaryNode2 = page.getByTestId('import-preview-summary')
   await expect(summaryNode2).toBeVisible()

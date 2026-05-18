@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test'
-import { resetItemsByReplace } from './e2e-helpers'
+import { uploadJsonImportFile, resetItemsByReplace } from './e2e-helpers'
 
 test.beforeEach(async ({ request }) => {
   await resetItemsByReplace(request)
@@ -17,11 +17,7 @@ test('import preview shows excluded store names in deterministic sorted order', 
     { id: 'x5', tag: 'カフェラテ', location: '柏の葉', name: 'Y店', rank: 3, memo: '', mapsUrl: '', placeId: '', createdAt: now, updatedAt: now },
   ]
 
-  await page.locator('input[type="file"][accept*="json"]').setInputFiles({
-    name: 'excluded-order.json',
-    mimeType: 'application/json',
-    buffer: Buffer.from(JSON.stringify(payload), 'utf-8'),
-  })
+  await uploadJsonImportFile(page, 'excluded-order.json', payload)
 
   const normalization = page.getByTestId('import-preview-normalization')
   await expect(normalization).toHaveAttribute('data-normalization-before-count', '5')

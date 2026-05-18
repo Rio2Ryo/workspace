@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test'
-import { resetItemsByReplace } from './e2e-helpers'
+import { uploadJsonImportFile, resetItemsByReplace } from './e2e-helpers'
 
 test.beforeEach(async ({ request }) => {
   await resetItemsByReplace(request)
@@ -18,16 +18,10 @@ test('context transition matrix keeps only one active workflow context', async (
   const payload = [
     { id: 'imp-1', tag: 'プリン', location: '浅草', name: 'Pending A', rank: 1, memo: '', mapsUrl: '', placeId: '', createdAt: now, updatedAt: now },
   ]
-
-  const fileInput = page.locator('input[type="file"][accept*="json"]')
   const searchSection = page.locator('section.card').filter({ has: page.getByRole('heading', { name: '探す' }) })
 
   // baseline: import preview visible
-  await fileInput.setInputFiles({
-    name: 'pending.json',
-    mimeType: 'application/json',
-    buffer: Buffer.from(JSON.stringify(payload), 'utf-8'),
-  })
+  await uploadJsonImportFile(page, 'pending.json', payload)
   await expect(page.getByLabel('インポート確認')).toBeVisible()
 
   // search select should close import preview
@@ -35,11 +29,7 @@ test('context transition matrix keeps only one active workflow context', async (
   await expect(page.getByLabel('インポート確認')).toHaveCount(0)
 
   // make import preview visible again
-  await fileInput.setInputFiles({
-    name: 'pending-again.json',
-    mimeType: 'application/json',
-    buffer: Buffer.from(JSON.stringify(payload), 'utf-8'),
-  })
+  await uploadJsonImportFile(page, 'pending-again.json', payload)
   await expect(page.getByLabel('インポート確認')).toBeVisible()
 
   // search clear should also close import preview

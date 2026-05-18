@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test'
-import { resetItemsByReplace } from './e2e-helpers'
+import { uploadJsonImportFile, resetItemsByReplace } from './e2e-helpers'
 
 test.beforeEach(async ({ request }) => {
   await resetItemsByReplace(request)
@@ -10,11 +10,7 @@ test('importing broken JSON shows parse error and keeps existing data (fail-clos
   await page.getByRole('button', { name: 'サンプルをDB保存' }).click()
   await expect(page.getByRole('status')).toContainText('サンプルをDBに保存しました。')
 
-  await page.locator('input[type="file"][accept*="json"]').setInputFiles({
-    name: 'broken.json',
-    mimeType: 'application/json',
-    buffer: Buffer.from('{"items":[', 'utf-8'),
-  })
+  await uploadJsonImportFile(page, 'broken.json', '{"items":[')
 
   await expect(page.getByRole('alert')).toContainText('インポート失敗: ファイル「broken.json」のJSON構文を解析できません。既存データは保持しました。')
 

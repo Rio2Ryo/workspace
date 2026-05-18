@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test'
-import { parseImportPreviewSummary, resetItemsByReplace } from './e2e-helpers'
+import { uploadJsonImportFile, parseImportPreviewSummary, resetItemsByReplace } from './e2e-helpers'
 
 test.beforeEach(async ({ request }) => {
   await resetItemsByReplace(request)
@@ -16,11 +16,7 @@ test('import normalizes visually equivalent tag spaces before Top3 truncation', 
     { id: 'tag-space-4', tag: 'カフェ　ラテ', location: '柏の葉', name: 'D', rank: 3, memo: '', mapsUrl: '', placeId: '', createdAt: now, updatedAt: '2000-01-01T00:00:00.000Z' },
   ]
 
-  await page.locator('input[type="file"][accept*="json"]').setInputFiles({
-    name: 'tag-space-normalization.json',
-    mimeType: 'application/json',
-    buffer: Buffer.from(JSON.stringify(items), 'utf-8'),
-  })
+  await uploadJsonImportFile(page, 'tag-space-normalization.json', items)
 
   await expect(page.getByTestId('import-preview-counts')).toHaveText('現在0件 → インポート後3件')
   await expect(page.getByTestId('import-preview-normalization')).toHaveText('同一タグはTop3に正規化: 4件中3件を反映予定')

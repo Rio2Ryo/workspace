@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test'
-import { resetItemsByReplace } from './e2e-helpers'
+import { uploadJsonImportFile, resetItemsByReplace } from './e2e-helpers'
 
 test.beforeEach(async ({ request }) => {
   await resetItemsByReplace(request)
@@ -20,22 +20,12 @@ test('invalid JSON after a valid import preview clears pending preview and keeps
     { id: 'v2', tag: 'プリン', location: '浅草', name: 'P2', rank: 2, memo: '', mapsUrl: '', placeId: '', createdAt: now, updatedAt: now },
   ]
 
-  const fileInput = page.locator('input[type="file"][accept*="json"]')
-
   // 1) valid file -> preview visible
-  await fileInput.setInputFiles({
-    name: 'valid.json',
-    mimeType: 'application/json',
-    buffer: Buffer.from(JSON.stringify(validItems), 'utf-8'),
-  })
+  await uploadJsonImportFile(page, 'valid.json', validItems)
   await expect(page.getByLabel('インポート確認')).toBeVisible()
 
   // 2) invalid file -> preview must be cleared (fail-closed UI)
-  await fileInput.setInputFiles({
-    name: 'broken.json',
-    mimeType: 'application/json',
-    buffer: Buffer.from('{"broken": ', 'utf-8'),
-  })
+  await uploadJsonImportFile(page, 'broken.json', '{"broken": ')
 
   await expect(page.getByRole('alert')).toContainText('インポート失敗: ファイル「broken.json」のJSON構文を解析できません。既存データは保持しました。')
   await expect(page.getByLabel('インポート確認')).toHaveCount(0)

@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test'
-import { parseDownloadedJsonFile, resetItemsByReplace } from './e2e-helpers'
+import { uploadJsonImportFile, parseDownloadedJsonFile, resetItemsByReplace } from './e2e-helpers'
 
 test.beforeEach(async ({ request }) => {
   await resetItemsByReplace(request)
@@ -16,12 +16,7 @@ test('json import/export UI exists and invalid import keeps existing data', asyn
   await expect(page.getByRole('button', { name: 'JSONインポート' })).toBeVisible()
 
   // Invalid import must not destroy existing data (fail-closed)
-  const fileInput = page.locator('input[type="file"][accept*="json"]')
-  await fileInput.setInputFiles({
-    name: 'invalid.json',
-    mimeType: 'application/json',
-    buffer: Buffer.from('{"foo":1}', 'utf-8'),
-  })
+  await uploadJsonImportFile(page, 'invalid.json', '{"foo":1}')
 
   await expect(page.getByText(/インポート失敗/)).toBeVisible()
   await expect(page.getByText('1位: Solito MAGO')).toBeVisible()
@@ -45,11 +40,7 @@ test('exported JSON can be downloaded and imported back through the confirmation
   await expect(page.getByRole('button', { name: 'JSONエクスポート' })).toBeDisabled()
   await expect(page.getByText('該当するTop3がありません。')).toBeVisible()
 
-  await page.locator('input[type="file"][accept*="json"]').setInputFiles({
-    name: filename,
-    mimeType: 'application/json',
-    buffer: Buffer.from(exportedText, 'utf-8'),
-  })
+  await uploadJsonImportFile(page, filename, exportedText)
 
   await expect(page.getByText('現在0件 → インポート後3件')).toBeVisible()
   await page.getByRole('button', { name: 'この内容でインポート' }).click()
@@ -81,11 +72,7 @@ test('valid import clears stale tag filters so imported data is immediately visi
     },
   ]
 
-  await page.locator('input[type="file"][accept*="json"]').setInputFiles({
-    name: 'valid-import.json',
-    mimeType: 'application/json',
-    buffer: Buffer.from(JSON.stringify(importedItems), 'utf-8'),
-  })
+  await uploadJsonImportFile(page, 'valid-import.json', importedItems)
 
   await expect(page.getByText('現在3件 → インポート後1件')).toBeVisible()
   await page.getByRole('button', { name: 'この内容でインポート' }).click()

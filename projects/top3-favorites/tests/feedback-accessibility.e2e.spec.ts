@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test'
-import { resetItemsByReplace } from './e2e-helpers'
+import { uploadJsonImportFile, resetItemsByReplace } from './e2e-helpers'
 
 test.beforeEach(async ({ request }) => {
   await resetItemsByReplace(request)
@@ -11,11 +11,7 @@ test('success and error feedback are exposed through accessible live regions', a
   await page.getByRole('button', { name: 'サンプルをDB保存' }).click()
   await expect(page.getByRole('status')).toContainText('サンプルをDBに保存しました。')
 
-  await page.locator('input[type="file"][accept*="json"]').setInputFiles({
-    name: 'invalid-shape.json',
-    mimeType: 'application/json',
-    buffer: Buffer.from('{"foo":1}', 'utf-8'),
-  })
+  await uploadJsonImportFile(page, 'invalid-shape.json', '{"foo":1}')
 
   await expect(page.getByRole('alert')).toContainText('インポート失敗: JSON配列形式ではありません。既存データは保持しました。')
   await expect(page.getByRole('status')).not.toBeVisible()

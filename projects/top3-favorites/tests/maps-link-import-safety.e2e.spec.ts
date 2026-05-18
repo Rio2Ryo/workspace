@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test'
-import { resetItemsByReplace } from './e2e-helpers'
+import { uploadJsonImportFile, resetItemsByReplace } from './e2e-helpers'
 
 test.beforeEach(async ({ request }) => {
   await resetItemsByReplace(request)
@@ -24,11 +24,7 @@ test('maps link ignores imported mapsUrl and uses Google Maps query built from i
     },
   ]
 
-  await page.locator('input[type="file"][accept*="json"]').setInputFiles({
-    name: 'import-evil-maps.json',
-    mimeType: 'application/json',
-    buffer: Buffer.from(JSON.stringify(imported), 'utf-8'),
-  })
+  await uploadJsonImportFile(page, 'import-evil-maps.json', imported)
 
   await page.getByRole('button', { name: 'この内容でインポート' }).click()
   await expect(page.getByRole('status')).toContainText('インポート成功: 1件を反映しました。')

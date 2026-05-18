@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test'
-import { resetItemsByReplace } from './e2e-helpers'
+import { uploadJsonImportFile, resetItemsByReplace } from './e2e-helpers'
 
 test.beforeEach(async ({ request }) => {
   await resetItemsByReplace(request)
@@ -16,11 +16,7 @@ test('import preview handles string ranks and still normalizes same tag to Top3'
     { id: 's4', tag: 'カフェラテ', location: '柏の葉', name: 'S4', rank: '1', memo: '', mapsUrl: '', placeId: '', createdAt: now, updatedAt: now },
   ]
 
-  await page.locator('input[type="file"][accept*="json"]').setInputFiles({
-    name: 'rank-string.json',
-    mimeType: 'application/json',
-    buffer: Buffer.from(JSON.stringify(payload), 'utf-8'),
-  })
+  await uploadJsonImportFile(page, 'rank-string.json', payload)
 
   await expect(page.getByText('現在0件 → インポート後3件')).toBeVisible()
   await expect(page.getByText('同一タグはTop3に正規化: 4件中3件を反映予定')).toBeVisible()

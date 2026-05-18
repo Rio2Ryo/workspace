@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test'
-import { resetItemsByReplace } from './e2e-helpers'
+import { uploadJsonImportFile, resetItemsByReplace } from './e2e-helpers'
 
 function item(id: string, tag: string, name: string, rank = 1) {
   const now = new Date().toISOString()
@@ -28,11 +28,7 @@ test('import shows a confirmation preview before replacing existing data', async
   await expect(page.getByText('1位: Solito MAGO')).toBeVisible()
 
   const replacement = [item('preview-1', 'プリン', 'Preview Pudding')]
-  await page.locator('input[type="file"][accept*="json"]').setInputFiles({
-    name: 'preview-import.json',
-    mimeType: 'application/json',
-    buffer: Buffer.from(JSON.stringify(replacement), 'utf-8'),
-  })
+  await uploadJsonImportFile(page, 'preview-import.json', replacement)
 
   await expect(page.getByRole('status')).toContainText('インポート確認: 1件')
   await expect(page.getByText('現在3件 → インポート後1件')).toBeVisible()
@@ -45,11 +41,7 @@ test('import shows a confirmation preview before replacing existing data', async
   await expect(page.getByText('インポートをキャンセルしました。')).toBeVisible()
   await expect(page.getByText('1位: Solito MAGO')).toBeVisible()
 
-  await page.locator('input[type="file"][accept*="json"]').setInputFiles({
-    name: 'preview-import.json',
-    mimeType: 'application/json',
-    buffer: Buffer.from(JSON.stringify(replacement), 'utf-8'),
-  })
+  await uploadJsonImportFile(page, 'preview-import.json', replacement)
   await page.getByRole('button', { name: 'この内容でインポート' }).click()
 
   await expect(page.getByText('インポート成功: 1件を反映しました。')).toBeVisible()

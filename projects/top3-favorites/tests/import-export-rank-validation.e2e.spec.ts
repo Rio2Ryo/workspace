@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test'
-import { resetItemsByReplace } from './e2e-helpers'
+import { uploadJsonImportFile, resetItemsByReplace } from './e2e-helpers'
 
 test.beforeEach(async ({ request }) => {
   await resetItemsByReplace(request)
@@ -25,13 +25,7 @@ test('import rejects rank out of range and keeps existing data (fail-closed)', a
       updatedAt: new Date().toISOString(),
     },
   ]
-
-  const fileInput = page.locator('input[type="file"][accept*="json"]')
-  await fileInput.setInputFiles({
-    name: 'invalid-rank.json',
-    mimeType: 'application/json',
-    buffer: Buffer.from(JSON.stringify(invalidItems), 'utf-8'),
-  })
+  await uploadJsonImportFile(page, 'invalid-rank.json', invalidItems)
 
   await expect(page.getByText(/インポート失敗/)).toBeVisible()
   await expect(page.getByText('1位: Solito MAGO')).toBeVisible()
@@ -71,11 +65,7 @@ test('import rejects duplicate ids with a clear message and keeps existing data'
     },
   ]
 
-  await page.locator('input[type="file"][accept*="json"]').setInputFiles({
-    name: 'duplicate-ids.json',
-    mimeType: 'application/json',
-    buffer: Buffer.from(JSON.stringify(duplicateItems), 'utf-8'),
-  })
+  await uploadJsonImportFile(page, 'duplicate-ids.json', duplicateItems)
 
   await expect(page.getByRole('alert')).toContainText(
     'インポート失敗: ファイル「duplicate-ids.json」のID「dup-ui-1」が1件目「Duplicate Pudding A」と2件目「Duplicate Pudding B」で重複しています。既存データは保持しました。',

@@ -4,6 +4,7 @@ import test from 'node:test'
 
 const root = new URL('..', import.meta.url)
 const helperPath = new URL('tests/e2e-helpers.ts', `${root}/`)
+const testsRoot = new URL('tests/', `${root}/`)
 const importPreviewRoot = new URL('tests/import-preview/', `${root}/`)
 
 const validationSpecs = [
@@ -42,7 +43,7 @@ async function listE2eSpecs(dirUrl) {
 }
 
 function sourceImportsUploadHelper(source) {
-  return /import \{[^}]*uploadJsonImportFile[^}]*\} from '(?:\.\.\/)*e2e-helpers'/.test(source)
+  return /import \{[^}]*uploadJsonImportFile[^}]*\} from '(?:\.\/|\.\.\/)*e2e-helpers'/.test(source)
 }
 
 function sourceUsesDirectJsonUpload(source) {
@@ -119,6 +120,33 @@ test('[E2E-Helper][import-file] all import preview specs upload JSON through sha
     offenders.sort(),
     [],
     `import preview specs should share uploadJsonImportFile() for JSON import setup across categories: ${offenders.join(', ')}`,
+  )
+})
+
+test('[E2E-Helper][import-file] all E2E specs share JSON import upload mechanics', async () => {
+  const offenders = []
+  const specs = await listE2eSpecs(testsRoot)
+
+  assert.ok(specs.length > 0, 'contract should discover E2E specs')
+
+  for (const spec of specs) {
+    const specUrl = new URL(spec, `${root}/`)
+    const source = await readFile(specUrl, 'utf8')
+    const usesUploadHelper = /uploadJsonImportFile\(/.test(source)
+    const usesDirectUpload = sourceUsesDirectJsonUpload(source)
+
+    if (usesDirectUpload) {
+      offenders.push(`${relativePath(specUrl)}: direct file input upload`)
+    }
+    if (usesUploadHelper && !sourceImportsUploadHelper(source)) {
+      offenders.push(`${relativePath(specUrl)}: helper call without named import`)
+    }
+  }
+
+  assert.deepEqual(
+    offenders.sort(),
+    [],
+    `E2E specs should use uploadJsonImportFile() for JSON import setup instead of duplicating selectors, MIME type, and buffers: ${offenders.join(', ')}`,
   )
 })
 
