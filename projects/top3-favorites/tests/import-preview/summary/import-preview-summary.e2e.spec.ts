@@ -1,4 +1,5 @@
 import { expect, test } from '@playwright/test'
+import { resetItemsByReplace } from '../helpers'
 
 function item(id: string, tag: string, name: string, rank = 1) {
   const now = new Date().toISOString()
@@ -17,7 +18,7 @@ function item(id: string, tag: string, name: string, rank = 1) {
 }
 
 test.beforeEach(async ({ request }) => {
-  await request.post('/api/items?mode=replace', { data: { items: [] } })
+  await resetItemsByReplace(request)
 })
 
 test('import confirmation summarizes added removed kept items and tag impact', async ({ page }) => {

@@ -59,3 +59,40 @@ test('manual checklist includes import preview categories aligned with automated
     assert.ok(markdown.includes(heading), `manual checklist missing heading: ${heading}`)
   }
 })
+
+test('README links QA docs with import preview six-category guidance', async () => {
+  const readme = await readFile(new URL('README.md', `${root}/`), 'utf8')
+
+  assert.match(
+    readme,
+    /import preview.*direction\s*\/\s*live\s*\/\s*tags\s*\/\s*terms\s*\/\s*naming\s*\/\s*summary/s,
+    'README should explicitly mention import preview six-category guidance',
+  )
+  assert.match(readme, /docs\/MANUAL_TEST_CHECKLIST\.md/, 'README should link MANUAL_TEST_CHECKLIST')
+  assert.match(readme, /docs\/AUTOMATED_QA_COVERAGE\.md/, 'README should link AUTOMATED_QA_COVERAGE')
+})
+
+test('README provides staged verification commands (quick/docs-only/import-preview-only/full)', async () => {
+  const readme = await readFile(new URL('README.md', `${root}/`), 'utf8')
+
+  assert.match(readme, /pnpm test:quick/, 'README should include quick verification command')
+  assert.match(readme, /pnpm test:docs-only/, 'README should include docs-only verification command')
+  assert.match(readme, /pnpm test:import-preview-only/, 'README should include import-preview-only verification command')
+  assert.match(readme, /pnpm test:full/, 'README should include full verification command')
+})
+
+test('README includes import preview category-level quick regression commands', async () => {
+  const readme = await readFile(new URL('README.md', `${root}/`), 'utf8')
+  const commands = [
+    'pnpm test:import-preview-direction',
+    'pnpm test:import-preview-live',
+    'pnpm test:import-preview-tags',
+    'pnpm test:import-preview-terms',
+    'pnpm test:import-preview-naming',
+    'pnpm test:import-preview-summary',
+  ]
+
+  for (const command of commands) {
+    assert.ok(readme.includes(command), `README should include command: ${command}`)
+  }
+})

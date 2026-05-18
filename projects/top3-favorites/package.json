@@ -11,7 +11,17 @@
     "test:e2e": "playwright test",
     "test:qa-docs": "node --test tests/qa-coverage-doc.test.mjs",
     "test:copy-docs": "node --test tests/concept-copy-contract.test.mjs",
-    "test:qa-current": "node --test tests/qa-current-contract.test.mjs"
+    "test:qa-current": "node --test tests/qa-current-contract.test.mjs",
+    "test:quick": "pnpm test:qa-current && pnpm test:qa-docs",
+    "test:docs-only": "pnpm test:qa-current && pnpm test:qa-docs && pnpm test:copy-docs",
+    "test:import-preview-only": "playwright test tests/import-preview",
+    "test:import-preview-direction": "playwright test tests/import-preview/direction",
+    "test:import-preview-live": "playwright test tests/import-preview/live",
+    "test:import-preview-tags": "playwright test tests/import-preview/tags",
+    "test:import-preview-terms": "playwright test tests/import-preview/terms",
+    "test:import-preview-naming": "playwright test tests/import-preview/naming",
+    "test:import-preview-summary": "playwright test tests/import-preview/summary",
+    "test:full": "pnpm test:docs-only && pnpm test:e2e && pnpm build"
   },
   "dependencies": {
     "@vercel/blob": "^2.3.3",

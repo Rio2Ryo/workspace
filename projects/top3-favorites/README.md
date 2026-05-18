@@ -31,9 +31,39 @@ vercel dev
 
 ## 検証
 
+### 最短（ドキュメント整合のみ）
+
 ```bash
-pnpm test:e2e
-pnpm build
+pnpm test:quick
+```
+
+### ドキュメント契約を全確認
+
+```bash
+pnpm test:docs-only
+```
+
+### import preview 回帰のみ
+
+```bash
+pnpm test:import-preview-only
+```
+
+### import preview をカテゴリ別に最短回帰
+
+```bash
+pnpm test:import-preview-direction
+pnpm test:import-preview-live
+pnpm test:import-preview-tags
+pnpm test:import-preview-terms
+pnpm test:import-preview-naming
+pnpm test:import-preview-summary
+```
+
+### フル検証（推奨）
+
+```bash
+pnpm test:full
 ```
 
 ## 受け入れ条件（インポート安全性）
@@ -49,8 +79,10 @@ pnpm build
   - 名前案、タグライン、オンボーディング文言、README/LP向けコピー、将来機能案
 - `docs/MANUAL_TEST_CHECKLIST.md`
   - 実ブラウザで確認する手動QA観点
+  - import preview は `4.2` 節で `direction / live / tags / terms / naming / summary` の6分類で確認
 - `docs/AUTOMATED_QA_COVERAGE.md`
   - E2Eで自動確認済みのQA観点と手動に残す項目
+  - import preview は `JSON import/export/validation/Top3正規化` 内で `direction / live / tags / terms / naming / summary` に分類
 - `docs/QA_RESULT.md`
   - コード読解ベースの静的QA結果
 - `docs/VERIFICATION_HANDOFF.md`

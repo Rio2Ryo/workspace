@@ -40,6 +40,7 @@
 
 - `tests/api-import-top3-normalization.e2e.spec.ts`
 - `tests/api-import-validation.e2e.spec.ts`
+- `tests/api-rank-validation.e2e.spec.ts`
 - `tests/export-disabled-when-empty.e2e.spec.ts`
 - `tests/export-download-roundtrip.e2e.spec.ts`
 - `tests/import-broken-json.e2e.spec.ts`

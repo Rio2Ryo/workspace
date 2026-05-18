@@ -29,6 +29,17 @@ function normalizeRank(value) {
   return n === 2 || n === 3 ? n : 1
 }
 
+function parseMutationRank(value) {
+  if (value === 1 || value === '1') return 1
+  if (value === 2 || value === '2') return 2
+  if (value === 3 || value === '3') return 3
+  return null
+}
+
+function hasInvalidMutationRank(payload) {
+  return Object.prototype.hasOwnProperty.call(payload, 'rank') && parseMutationRank(payload.rank) === null
+}
+
 function parseImportRank(value) {
   if (value === 1 || value === '1') return 1
   if (value === 2 || value === '2') return 2
@@ -202,6 +213,7 @@ async function handleApi(req, res, url) {
     }
 
     const item = makeItem(payload)
+    if (hasInvalidMutationRank(payload)) return sendJson(res, 400, { error: 'rank must be 1, 2, or 3' })
     if (!item.tag || !item.name) return sendJson(res, 400, { error: 'tag and name are required' })
     const items = rebalance(data.items, item)
     await writeData({ items })
@@ -212,6 +224,7 @@ async function handleApi(req, res, url) {
     const existing = data.items.find((item) => item.id === normalizeText(payload.id))
     if (!existing) return sendJson(res, 404, { error: 'item not found' })
     const edited = makeItem(payload, existing)
+    if (hasInvalidMutationRank(payload)) return sendJson(res, 400, { error: 'rank must be 1, 2, or 3' })
     if (!edited.tag || !edited.name) return sendJson(res, 400, { error: 'tag and name are required' })
     const items = rebalance(data.items.filter((item) => item.id !== existing.id), edited)
     await writeData({ items })
