@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test'
-import { parseImportPreviewSummary, resetItemsByReplace } from '../../e2e-helpers'
+import { uploadJsonImportFile, parseImportPreviewSummary, resetItemsByReplace } from '../../e2e-helpers'
 
 test.beforeEach(async ({ request }) => {
   await resetItemsByReplace(request)
@@ -20,11 +20,7 @@ test('excluded store names preview includes tag context when multiple themes exc
     { id: 'ramen-4', tag: 'つけ麺', location: '松戸', name: '同名店', rank: 3, memo: '', mapsUrl: '', placeId: '', createdAt: now, updatedAt: now },
   ]
 
-  await page.locator('input[type="file"][accept*="json"]').setInputFiles({
-    name: 'excluded-names-tag-context.json',
-    mimeType: 'application/json',
-    buffer: Buffer.from(JSON.stringify(payload), 'utf-8'),
-  })
+  await uploadJsonImportFile(page, 'excluded-names-tag-context.json', payload)
 
   const names = page.getByTestId('import-preview-excluded-names')
   await expect(names).toHaveAttribute('data-excluded-name-count', '2')

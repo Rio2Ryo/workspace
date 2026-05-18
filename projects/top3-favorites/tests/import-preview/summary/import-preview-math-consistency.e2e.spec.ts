@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test'
-import { resetItemsByReplace } from '../../e2e-helpers'
+import { uploadJsonImportFile, resetItemsByReplace } from '../../e2e-helpers'
 
 test.beforeEach(async ({ request }) => {
   await resetItemsByReplace(request)
@@ -25,11 +25,7 @@ test('import confirmation math is consistent for added/kept/removed/excluded cou
     { id: 'new-4', tag: 'カフェラテ', location: '柏の葉', name: 'New 4', rank: 1, memo: '', mapsUrl: '', placeId: '', createdAt: now, updatedAt: now },
   ]
 
-  await page.locator('input[type="file"][accept*="json"]').setInputFiles({
-    name: 'impact-math.json',
-    mimeType: 'application/json',
-    buffer: Buffer.from(JSON.stringify(payload), 'utf-8'),
-  })
+  await uploadJsonImportFile(page, 'impact-math.json', payload)
 
   // normalized result should be 4 items out of original 5 (one excluded by Top3 normalization)
   const counts = page.getByTestId('import-preview-counts')

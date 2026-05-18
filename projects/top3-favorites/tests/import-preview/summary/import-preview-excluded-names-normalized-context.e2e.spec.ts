@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test'
-import { parseImportPreviewSummary, resetItemsByReplace } from '../../e2e-helpers'
+import { uploadJsonImportFile, parseImportPreviewSummary, resetItemsByReplace } from '../../e2e-helpers'
 
 test.beforeEach(async ({ request }) => {
   await resetItemsByReplace(request)
@@ -20,11 +20,7 @@ test('excluded store names add tag context for visually equivalent full-width an
     { id: 'dessert-4', tag: 'プリン', location: '松戸', name: 'Ｃａｆｅ　Ｋ', rank: 3, memo: '', mapsUrl: '', placeId: '', createdAt: now, updatedAt: '2026-05-18T00:00:00.000Z' },
   ]
 
-  await page.locator('input[type="file"][accept*="json"]').setInputFiles({
-    name: 'excluded-names-normalized-context.json',
-    mimeType: 'application/json',
-    buffer: Buffer.from(JSON.stringify(payload), 'utf-8'),
-  })
+  await uploadJsonImportFile(page, 'excluded-names-normalized-context.json', payload)
 
   const names = page.getByTestId('import-preview-excluded-names')
   await expect(names).toHaveAttribute('data-excluded-name-count', '2')

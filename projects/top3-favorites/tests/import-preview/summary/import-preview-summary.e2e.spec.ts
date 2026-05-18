@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test'
-import { resetItemsByReplace } from '../../e2e-helpers'
+import { uploadJsonImportFile, resetItemsByReplace } from '../../e2e-helpers'
 
 function item(id: string, tag: string, name: string, rank = 1) {
   const now = new Date().toISOString()
@@ -35,11 +35,7 @@ test('import confirmation summarizes added removed kept items and tag impact', a
   const current = await page.request.get('/api/items').then((res) => res.json()) as { items: { id: string }[] }
   replacement[0].id = current.items[0].id
 
-  await page.locator('input[type="file"][accept*="json"]').setInputFiles({
-    name: 'impact-import.json',
-    mimeType: 'application/json',
-    buffer: Buffer.from(JSON.stringify(replacement), 'utf-8'),
-  })
+  await uploadJsonImportFile(page, 'impact-import.json', replacement)
 
   const preview = page.locator('[aria-label="インポート確認"]')
   await expect(preview).toContainText('現在3件 → インポート後2件')

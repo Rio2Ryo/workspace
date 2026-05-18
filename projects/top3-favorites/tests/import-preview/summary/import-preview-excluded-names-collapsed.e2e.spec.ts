@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test'
-import { resetItemsByReplace } from '../../e2e-helpers'
+import { uploadJsonImportFile, resetItemsByReplace } from '../../e2e-helpers'
 
 test.beforeEach(async ({ request }) => {
   await resetItemsByReplace(request)
@@ -19,11 +19,7 @@ test('excluded store names preview collapses long lists and can be expanded', as
     { id: 'g', tag: 'カフェラテ', location: '柏の葉', name: 'G店', rank: 1, memo: '', mapsUrl: '', placeId: '', createdAt: now, updatedAt: now },
   ]
 
-  await page.locator('input[type="file"][accept*="json"]').setInputFiles({
-    name: 'excluded-names-collapsed.json',
-    mimeType: 'application/json',
-    buffer: Buffer.from(JSON.stringify(payload), 'utf-8'),
-  })
+  await uploadJsonImportFile(page, 'excluded-names-collapsed.json', payload)
 
   const names = page.getByTestId('import-preview-excluded-names')
   await expect(names).toHaveAttribute('aria-label', 'Top3外で除外予定の店舗名プレビュー')

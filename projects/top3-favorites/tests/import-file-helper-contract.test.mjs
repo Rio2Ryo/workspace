@@ -10,6 +10,17 @@ const validationSpecs = [
   'tests/import-validation-trimmed-fields.e2e.spec.ts',
 ]
 
+const summaryPreviewSpecs = [
+  'tests/import-preview/summary/import-preview-excluded-names-collapsed.e2e.spec.ts',
+  'tests/import-preview/summary/import-preview-excluded-names-normalized-context.e2e.spec.ts',
+  'tests/import-preview/summary/import-preview-excluded-names-tag-context.e2e.spec.ts',
+  'tests/import-preview/summary/import-preview-expand-toggles-a11y.e2e.spec.ts',
+  'tests/import-preview/summary/import-preview-math-consistency.e2e.spec.ts',
+  'tests/import-preview/summary/import-preview-operation-guards-matrix.e2e.spec.ts',
+  'tests/import-preview/summary/import-preview-summary.e2e.spec.ts',
+  'tests/import-preview/summary/import-preview-zero-metrics-muted.e2e.spec.ts',
+]
+
 function relativePath(url) {
   return url.pathname.replace(root.pathname, '')
 }
@@ -32,6 +43,27 @@ test('[E2E-Helper][import-file] validation specs upload JSON through shared help
     offenders.sort(),
     [],
     `import validation specs should use uploadJsonImportFile() so file input selector, mime type, and JSON/string buffer creation stay centralized: ${offenders.join(', ')}`,
+  )
+})
+
+test('[E2E-Helper][import-file] import preview summary specs upload JSON through shared helper', async () => {
+  const offenders = []
+
+  for (const spec of summaryPreviewSpecs) {
+    const specUrl = new URL(spec, `${root}/`)
+    const source = await readFile(specUrl, 'utf8')
+    if (!/import \{[^}]*uploadJsonImportFile[^}]*\} from '\.\.\/\.\.\/e2e-helpers'/.test(source) || !/uploadJsonImportFile\(/.test(source)) {
+      offenders.push(relativePath(specUrl))
+    }
+    if (/locator\('input\[type="file"\]\[accept\*="json"\]'\)|\.setInputFiles\(/.test(source)) {
+      offenders.push(`${relativePath(specUrl)}: direct file input upload`)
+    }
+  }
+
+  assert.deepEqual(
+    offenders.sort(),
+    [],
+    `import preview summary specs should use uploadJsonImportFile() so import-preview UX contracts share the same file upload mechanics: ${offenders.join(', ')}`,
   )
 })
 

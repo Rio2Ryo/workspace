@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test'
-import { resetItemsByReplace } from '../../e2e-helpers'
+import { uploadJsonImportFile, resetItemsByReplace } from '../../e2e-helpers'
 
 test.beforeEach(async ({ request }) => {
   await resetItemsByReplace(request)
@@ -19,11 +19,7 @@ test('pending import preview enforces operation guards across registration/searc
     { id: 'imp-1', tag: 'プリン', location: '浅草', name: 'Pending A', rank: 1, memo: '', mapsUrl: '', placeId: '', createdAt: now, updatedAt: now },
   ]
 
-  await page.locator('input[type="file"][accept*="json"]').setInputFiles({
-    name: 'pending.json',
-    mimeType: 'application/json',
-    buffer: Buffer.from(JSON.stringify(payload), 'utf-8'),
-  })
+  await uploadJsonImportFile(page, 'pending.json', payload)
 
   await expect(page.getByLabel('インポート確認')).toBeVisible()
   await expect(page.getByTestId('import-lock-hint')).toBeVisible()

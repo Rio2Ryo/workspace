@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test'
-import { resetItemsByDelete } from '../../e2e-helpers'
+import { uploadJsonImportFile, resetItemsByDelete } from '../../e2e-helpers'
 
 test.beforeEach(async ({ request }) => {
   await resetItemsByDelete(request)
@@ -36,11 +36,7 @@ test('impact-tags and excluded-details toggles expose aria-expanded/aria-control
     { id: 'f4', tag: 'F', location: '柏', name: 'F4', rank: 1, memo: '', mapsUrl: '', placeId: '', createdAt: now, updatedAt: now },
   ]
 
-  await page.locator('input[type="file"][accept*="json"]').setInputFiles({
-    name: 'expand-a11y.json',
-    mimeType: 'application/json',
-    buffer: Buffer.from(JSON.stringify(payload), 'utf-8'),
-  })
+  await uploadJsonImportFile(page, 'expand-a11y.json', payload)
 
   const tagsToggle = page.getByTestId('import-preview-toggle-impact-tags')
   await expect(tagsToggle).toHaveAttribute('aria-controls', 'import-preview-impact-tags')
