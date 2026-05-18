@@ -647,7 +647,7 @@ export function App() {
           <span className={isLoading ? 'status loading' : 'status'}>{isLoading ? 'DB読込中' : 'DB保存'}</span>
         </div>
 
-        <TagPicker tags={tags} activeTag={draft.tag} selectedTag={selectedTag} onSelect={selectTag} onClear={clearSelectedTag} />
+        <TagPicker label="登録タグ選択" tags={tags} activeTag={draft.tag} selectedTag={selectedTag} onSelect={selectTag} onClear={clearSelectedTag} />
         {isImportPreviewActive && <p className="hint compact" data-testid="import-lock-hint">インポート確認中のため登録フォームは一時ロック中です。</p>}
         {selectedTag && (
           <p className="hint compact" data-testid="tag-sync-status">
@@ -856,7 +856,7 @@ export function App() {
           placeholder="例: カフェラテ / 柏の葉 / Solito"
           aria-label="Top3検索"
         />
-        <TagPicker tags={tags} activeTag={selectedTag} selectedTag={selectedTag} onSelect={selectTag} onClear={clearSelectedTag} showClearButton={false} />
+        <TagPicker label="検索タグ選択" tags={tags} activeTag={selectedTag} selectedTag={selectedTag} onSelect={selectTag} onClear={clearSelectedTag} showClearButton={false} />
 
         {filteredGroups.length === 0 ? (
           <p className="hint empty">該当するTop3がありません。</p>
@@ -897,6 +897,7 @@ export function App() {
 }
 
 function TagPicker({
+  label,
   tags,
   activeTag,
   selectedTag,
@@ -904,6 +905,7 @@ function TagPicker({
   onClear,
   showClearButton = true,
 }: {
+  label: string
   tags: string[]
   activeTag: string
   selectedTag: string
@@ -913,7 +915,7 @@ function TagPicker({
 }) {
   if (tags.length === 0) return <p className="hint">登録済みタグはまだありません。</p>
   return (
-    <div className="tags" aria-label="タグ選択">
+    <div className="tags" aria-label={label}>
       {tags.map((tag) => (
         <button key={tag} className={activeTag === tag || selectedTag === tag ? 'chip active-chip' : 'chip'} onClick={() => onSelect(tag)}>
           #{tag}

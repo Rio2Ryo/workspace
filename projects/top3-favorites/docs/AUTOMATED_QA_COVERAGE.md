@@ -51,30 +51,9 @@
 - `tests/import-export-rank-validation.e2e.spec.ts`
 - `tests/import-export.e2e.spec.ts`
 - `tests/import-fail-closed-matrix.e2e.spec.ts`
-- `tests/import-preview/direction/import-preview-direction-a11y-labels.e2e.spec.ts`
-- `tests/import-preview/direction/import-preview-direction-color-classes.e2e.spec.ts`
-- `tests/import-preview/direction/import-preview-direction-metrics.e2e.spec.ts`
-- `tests/import-preview/summary/import-preview-math-consistency.e2e.spec.ts`
-- `tests/import-preview/summary/import-preview-summary.e2e.spec.ts`
-- `tests/import-preview/tags/import-preview-tags-collapsed.e2e.spec.ts`
-- `tests/import-preview/tags/import-preview-tags-deterministic-order.e2e.spec.ts`
-- `tests/import-preview/tags/import-preview-tags-expand-toggle.e2e.spec.ts`
-- `tests/import-preview/terms/import-preview-terms-helper-text.e2e.spec.ts`
-- `tests/import-preview/terms/import-preview-terms-helper-toggle-a11y.e2e.spec.ts`
-- `tests/import-preview/terms/import-preview-terms-helper-toggle.e2e.spec.ts`
-- `tests/import-preview/summary/import-preview-zero-metrics-muted.e2e.spec.ts`
 - `tests/import-invalid-after-valid-clears-preview.e2e.spec.ts`
 - `tests/import-minimal-shape-defaults.e2e.spec.ts`
 - `tests/import-no-change-badge.e2e.spec.ts`
-- `tests/import-preview/summary/import-preview-expand-toggles-a11y.e2e.spec.ts`
-- `tests/import-preview/live/import-preview-live-region-updates.e2e.spec.ts`
-- `tests/import-preview/live/import-preview-live-summary-concise.e2e.spec.ts`
-- `tests/import-preview/live/import-preview-live-summary-excluded-lead-consistency.e2e.spec.ts`
-- `tests/import-preview/live/import-preview-live-summary-includes-excluded-name.e2e.spec.ts`
-- `tests/import-preview/summary/import-preview-operation-guards-matrix.e2e.spec.ts`
-- `tests/import-preview/naming/import-preview-toggle-aria-label-consistency.e2e.spec.ts`
-- `tests/import-preview/naming/import-preview-toggle-testid-contract.e2e.spec.ts`
-- `tests/import-preview/naming/import-preview-testid-naming-consistency.e2e.spec.ts`
 - `tests/import-rank-string-normalization.e2e.spec.ts`
 - `tests/import-retry-trigger-clears-stale-error.e2e.spec.ts`
 - `tests/import-retry-trigger-clears-stale-preview.e2e.spec.ts`
@@ -85,6 +64,38 @@
 - `tests/import-terminology-normalization-exclusion-consistency.e2e.spec.ts`
 - `tests/import-validation-trimmed-fields.e2e.spec.ts`
 
+#### import preview / direction
+- `tests/import-preview/direction/import-preview-direction-a11y-labels.e2e.spec.ts`
+- `tests/import-preview/direction/import-preview-direction-color-classes.e2e.spec.ts`
+- `tests/import-preview/direction/import-preview-direction-metrics.e2e.spec.ts`
+
+#### import preview / live
+- `tests/import-preview/live/import-preview-live-region-updates.e2e.spec.ts`
+- `tests/import-preview/live/import-preview-live-summary-concise.e2e.spec.ts`
+- `tests/import-preview/live/import-preview-live-summary-excluded-lead-consistency.e2e.spec.ts`
+- `tests/import-preview/live/import-preview-live-summary-includes-excluded-name.e2e.spec.ts`
+
+#### import preview / tags
+- `tests/import-preview/tags/import-preview-tags-collapsed.e2e.spec.ts`
+- `tests/import-preview/tags/import-preview-tags-deterministic-order.e2e.spec.ts`
+- `tests/import-preview/tags/import-preview-tags-expand-toggle.e2e.spec.ts`
+
+#### import preview / terms
+- `tests/import-preview/terms/import-preview-terms-helper-text.e2e.spec.ts`
+- `tests/import-preview/terms/import-preview-terms-helper-toggle-a11y.e2e.spec.ts`
+- `tests/import-preview/terms/import-preview-terms-helper-toggle.e2e.spec.ts`
+
+#### import preview / naming
+- `tests/import-preview/naming/import-preview-toggle-aria-label-consistency.e2e.spec.ts`
+- `tests/import-preview/naming/import-preview-toggle-testid-contract.e2e.spec.ts`
+- `tests/import-preview/naming/import-preview-testid-naming-consistency.e2e.spec.ts`
+
+#### import preview / summary
+- `tests/import-preview/summary/import-preview-math-consistency.e2e.spec.ts`
+- `tests/import-preview/summary/import-preview-summary.e2e.spec.ts`
+- `tests/import-preview/summary/import-preview-zero-metrics-muted.e2e.spec.ts`
+- `tests/import-preview/summary/import-preview-expand-toggles-a11y.e2e.spec.ts`
+- `tests/import-preview/summary/import-preview-operation-guards-matrix.e2e.spec.ts`
 ### コンテキスト遷移・インポート確認中の操作ガード
 
 - `tests/context-transition-matrix.e2e.spec.ts`
@@ -97,6 +108,7 @@
 - `tests/search-clear-closes-import-preview.e2e.spec.ts`
 - `tests/search-select-closes-import-preview.e2e.spec.ts`
 - `tests/search-tag-select-syncs-registration-tag.e2e.spec.ts`
+- `tests/tag-chip-region-a11y-and-uniqueness.e2e.spec.ts`
 - `tests/tag-clear-label-contract.e2e.spec.ts`
 - `tests/tag-manual-edit-breaks-sync.e2e.spec.ts`
 - `tests/tag-manual-edit-shows-sync-break-notice.e2e.spec.ts`

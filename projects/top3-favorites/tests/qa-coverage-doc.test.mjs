@@ -38,6 +38,22 @@ test('coverage doc describes recursive E2E coverage scope', async () => {
   )
 })
 
+test('coverage doc includes import preview category headings (1:1 with directory structure)', async () => {
+  const doc = await readFile(coverageDocPath, 'utf8')
+  const headings = [
+    '#### import preview / direction',
+    '#### import preview / live',
+    '#### import preview / tags',
+    '#### import preview / terms',
+    '#### import preview / naming',
+    '#### import preview / summary',
+  ]
+
+  for (const heading of headings) {
+    assert.ok(doc.includes(heading), `missing heading in docs/AUTOMATED_QA_COVERAGE.md: ${heading}`)
+  }
+})
+
 test('automated QA coverage doc references every E2E spec', async () => {
   const [doc, e2eSpecs] = await Promise.all([
     readFile(coverageDocPath, 'utf8'),

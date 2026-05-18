@@ -42,3 +42,20 @@ test('QA manuals and QA result docs match the current implementation contract', 
     }
   }
 })
+
+test('manual checklist includes import preview categories aligned with automated QA structure', async () => {
+  const markdown = await readFile(new URL('docs/MANUAL_TEST_CHECKLIST.md', `${root}/`), 'utf8')
+
+  const headings = [
+    '#### 4.2.1 direction（追加/保持/削除予定）',
+    '#### 4.2.2 live（読み上げ要約）',
+    '#### 4.2.3 tags（影響タグ）',
+    '#### 4.2.4 terms（差分用語説明）',
+    '#### 4.2.5 naming（a11y命名）',
+    '#### 4.2.6 summary（件数サマリ）',
+  ]
+
+  for (const heading of headings) {
+    assert.ok(markdown.includes(heading), `manual checklist missing heading: ${heading}`)
+  }
+})
