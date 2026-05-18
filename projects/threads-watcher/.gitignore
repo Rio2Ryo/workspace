@@ -12,5 +12,8 @@ logs/
 # Runtime cursor for sync.py — local-only state, not source.
 .sync_cursor
 
+# Cooldown marker for auto-restart-if-stale.sh — local-only state.
+.last-auto-restart
+
 # One-off QA artifact dumps (screenshots, reports, zips).
 artifacts/
