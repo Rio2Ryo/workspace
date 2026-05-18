@@ -28,6 +28,7 @@ import {
   analyzeEnumList,
   assertDeepFrozen,
   collectBracketScopeAndSubscopePairs,
+  collectContextKeyUsageByScopeFromSource,
   collectContextObjectKeysFromSource,
   collectFiles,
   collectSpecUrlsByNamePredicate,
@@ -270,11 +271,48 @@ test('[App][config-quality] QA title subscope dictionaries are non-empty, unique
   }
 })
 
-test('[App][config-quality] missingItemsMessage context keys follow naming and allowed-set contract', async () => {
+test('[App][config-quality] missingItemsMessage context key dictionary and usage follow contract', async () => {
+  assert.equal(
+    Object.isFrozen(missingItemsContextKeyContract),
+    true,
+    contractMessage({
+      scope: 'App',
+      rule: 'missingItemsContextKeyContract freeze guard',
+      expected: 'missingItemsContextKeyContract is frozen',
+      fix: 'freeze missingItemsContextKeyContract in tests/qa-current-contract.config.mjs',
+    }),
+  )
+  assert.equal(
+    Object.isFrozen(missingItemsContextKeyContract.allowed),
+    true,
+    contractMessage({
+      scope: 'App',
+      rule: 'missingItemsContextKeyContract.allowed freeze guard',
+      expected: 'missingItemsContextKeyContract.allowed is frozen',
+      fix: 'freeze missingItemsContextKeyContract.allowed in tests/qa-current-contract.config.mjs',
+    }),
+  )
+
   const lowerCamel = /^[a-z][a-zA-Z0-9]*$/
-  const allowed = new Set(missingItemsContextKeyContract.allowed)
+  const allowedList = [...missingItemsContextKeyContract.allowed]
+  const allowed = new Set(allowedList)
+  const { duplicates, unsorted } = analyzeEnumList(allowedList, { locale: 'en' })
+  const emptyAllowed = allowedList.filter((k) => k.trim().length === 0)
+  const nonAsciiAllowed = allowedList.filter((k) => /[^\x20-\x7E]/.test(k))
+
   const qaCurrentSource = await readFile(new URL('tests/qa-current-contract.test.mjs', `${root}/`), 'utf8')
   const qaDocsSource = await readFile(new URL('tests/qa-coverage-doc.test.mjs', `${root}/`), 'utf8')
+  const usageByScope = new Map()
+  const mergeUsage = (incoming) => {
+    for (const [key, scopes] of incoming.entries()) {
+      const acc = usageByScope.get(key) ?? new Set()
+      for (const s of scopes) acc.add(s)
+      usageByScope.set(key, acc)
+    }
+  }
+  mergeUsage(await collectContextKeyUsageByScopeFromSource(qaCurrentSource))
+  mergeUsage(await collectContextKeyUsageByScopeFromSource(qaDocsSource))
+
   const keys = [
     ...await collectContextObjectKeysFromSource(qaCurrentSource),
     ...await collectContextObjectKeysFromSource(qaDocsSource),
@@ -282,6 +320,48 @@ test('[App][config-quality] missingItemsMessage context keys follow naming and a
   const uniqueKeys = Array.from(new Set(keys)).sort((a, b) => a.localeCompare(b, 'en'))
   const malformed = uniqueKeys.filter((k) => !lowerCamel.test(k))
   const unknown = uniqueKeys.filter((k) => !allowed.has(k))
+  const deadAllowedKeys = allowedList.filter((k) => !uniqueKeys.includes(k)).sort((a, b) => a.localeCompare(b, 'en'))
+
+  assert.deepEqual(
+    emptyAllowed,
+    [],
+    missingItemsMessage({
+      scope: 'App',
+      rule: 'missingItemsContextKeyContract.allowed non-empty entries',
+      fix: 'remove empty entries from missingItemsContextKeyContract.allowed',
+      items: emptyAllowed,
+    }),
+  )
+  assert.deepEqual(
+    duplicates,
+    [],
+    missingItemsMessage({
+      scope: 'App',
+      rule: 'missingItemsContextKeyContract.allowed uniqueness',
+      fix: 'remove duplicate keys from missingItemsContextKeyContract.allowed',
+      items: duplicates,
+    }),
+  )
+  assert.deepEqual(
+    unsorted,
+    [],
+    missingItemsMessage({
+      scope: 'App',
+      rule: 'missingItemsContextKeyContract.allowed sorted order',
+      fix: 'sort missingItemsContextKeyContract.allowed in ascending en locale order',
+      items: unsorted,
+    }),
+  )
+  assert.deepEqual(
+    nonAsciiAllowed,
+    [],
+    missingItemsMessage({
+      scope: 'App',
+      rule: 'missingItemsContextKeyContract.allowed ASCII policy',
+      fix: 'keep missingItemsContextKeyContract.allowed keys ASCII-only',
+      items: nonAsciiAllowed,
+    }),
+  )
 
   assert.deepEqual(
     malformed,
@@ -301,6 +381,23 @@ test('[App][config-quality] missingItemsMessage context keys follow naming and a
       rule: 'missingItemsMessage context key allowed set',
       fix: 'add new keys to missingItemsContextKeyContract.allowed or rename context keys',
       items: unknown,
+    }),
+  )
+  const usageSummary = Object.fromEntries(
+    Array.from(usageByScope.entries())
+      .sort((a, b) => a[0].localeCompare(b[0], 'en'))
+      .map(([key, scopes]) => [key, Array.from(scopes).sort((a, b) => a.localeCompare(b, 'en')).join(', ')]),
+  )
+
+  assert.deepEqual(
+    deadAllowedKeys,
+    [],
+    missingItemsMessage({
+      scope: 'App',
+      rule: 'missingItemsContextKeyContract.allowed dead keys',
+      fix: 'remove unused keys from missingItemsContextKeyContract.allowed or add matching context usage',
+      context: usageSummary,
+      items: deadAllowedKeys,
     }),
   )
 })

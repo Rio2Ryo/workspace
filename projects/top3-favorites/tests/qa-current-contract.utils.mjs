@@ -114,17 +114,73 @@ export function assertDeepFrozen(value, { label = 'value', visit = new Set(), sk
 }
 
 export async function collectContextObjectKeysFromSource(source) {
-  const blocks = source.match(/context\s*:\s*\{[\s\S]*?\}/g) ?? []
-  const keys = []
-
-  for (const block of blocks) {
-    const quoted = Array.from(block.matchAll(/['"]([a-zA-Z0-9_-]+)['"]\s*:/g)).map((m) => m[1])
+  const collectKeys = (block) => {
+    const quoted = Array.from(block.matchAll(/[\'"]([a-zA-Z0-9_-]+)[\'"]\s*:/g)).map((m) => m[1])
     const unquoted = Array.from(block.matchAll(/\b([a-zA-Z][a-zA-Z0-9_]*)\s*:/g)).map((m) => m[1])
+    return [...quoted, ...unquoted]
+  }
 
-    keys.push(...quoted, ...unquoted)
+  const keys = []
+  const inlineContextBlocks = source.match(/context\s*:\s*\{[\s\S]*?\}/g) ?? []
+  for (const block of inlineContextBlocks) {
+    keys.push(...collectKeys(block))
+  }
+
+  const contextVariableNames = Array.from(source.matchAll(/context\s*:\s*([a-zA-Z][a-zA-Z0-9_]*)\b/g))
+    .map((m) => m[1])
+  for (const name of contextVariableNames) {
+    const escapedName = name.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+    const declaration = new RegExp(`(?:const|let|var)\\s+${escapedName}\\s*=\\s*\\{([\\s\\S]*?)\\n\\s*\\}`, 'm')
+    const match = declaration.exec(source)
+    if (match) {
+      keys.push(...collectKeys(match[1]))
+    }
   }
 
   return Array.from(new Set(keys)).sort((a, b) => a.localeCompare(b, 'en'))
+}
+
+export async function collectContextKeyUsageByScopeFromSource(source) {
+  const collectKeys = (block) => {
+    const quoted = Array.from(block.matchAll(/[\'"]([a-zA-Z0-9_-]+)[\'"]\s*:/g)).map((m) => m[1])
+    const unquoted = Array.from(block.matchAll(/\b([a-zA-Z][a-zA-Z0-9_]*)\s*:/g)).map((m) => m[1])
+    return Array.from(new Set([...quoted, ...unquoted])).sort((a, b) => a.localeCompare(b, 'en'))
+  }
+
+  const usage = new Map()
+  const calls = Array.from(source.matchAll(/missingItemsMessage\(\{([\s\S]*?)\}\)/g)).map((m) => m[1])
+
+  for (const call of calls) {
+    const scopeMatch = call.match(/scope\s*:\s*[\'\"]([^\'\"]+)[\'\"]/)
+    if (!scopeMatch) continue
+    const scope = scopeMatch[1]
+
+    const inlineContextMatch = call.match(/context\s*:\s*\{([\s\S]*?)\}/)
+    if (inlineContextMatch) {
+      for (const key of collectKeys(inlineContextMatch[1])) {
+        const scopes = usage.get(key) ?? new Set()
+        scopes.add(scope)
+        usage.set(key, scopes)
+      }
+      continue
+    }
+
+    const varContextMatch = call.match(/context\s*:\s*([a-zA-Z][a-zA-Z0-9_]*)\b/)
+    if (!varContextMatch) continue
+    const varName = varContextMatch[1]
+    const escaped = varName.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+    const declaration = new RegExp(`(?:const|let|var)\\s+${escaped}\\s*=\\s*\\{([\\s\\S]*?)\\n\\s*\\}`, 'm')
+    const declarationMatch = declaration.exec(source)
+    if (!declarationMatch) continue
+
+    for (const key of collectKeys(declarationMatch[1])) {
+      const scopes = usage.get(key) ?? new Set()
+      scopes.add(scope)
+      usage.set(key, scopes)
+    }
+  }
+
+  return usage
 }
 
 export async function findBeforeEachOffenders(rootUrl, specUrls, blockPattern) {
