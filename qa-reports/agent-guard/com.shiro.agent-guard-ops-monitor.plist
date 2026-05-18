@@ -1,0 +1,82 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  launchd entry for ops-monitor.sh — periodic audit of workspace +
+  second-brain for the submodule-mixin / chore-bundles pattern.
+  ACTIVATED in default mode (no Discord webhook).
+
+  What it does (per run, every hour):
+    1. Runs qa-reports/agent-guard/audit-recent-commits.sh against
+       workspace (.) and second-brain submodule.
+    2. Compares this run's FLAG set against the previous run's
+       marker file.
+    3. If NEW flags appear, prints "NEW ALERT" to stderr (captured
+       by launchd .err.log) and optionally posts to Discord when
+       DISCORD_WEBHOOK_URL is set in the environment.
+
+  Why safe to activate without explicit approval:
+    - Read-only: only invokes audit scripts, never modifies code.
+    - Writes a log file (qa-reports/agent-guard/logs/ops-monitor.log)
+      and a marker (qa-reports/agent-guard/.ops-monitor.last-flags).
+      Both are local artefacts; the marker is git-ignored via
+      .gitignore additions in the same PR as this plist.
+
+  Install location:
+    ~/Library/LaunchAgents/com.shiro.agent-guard-ops-monitor.plist
+
+  Activate:
+    launchctl load -w ~/Library/LaunchAgents/com.shiro.agent-guard-ops-monitor.plist
+
+  Disable (rollback):
+    launchctl unload -w ~/Library/LaunchAgents/com.shiro.agent-guard-ops-monitor.plist
+
+  Status:
+    launchctl list | grep agent-guard-ops-monitor
+    tail -f qa-reports/agent-guard/logs/ops-monitor.log
+
+  Enable Discord webhook (after Yakon approval — a URL is a secret):
+    Add a DISCORD_WEBHOOK_URL key to EnvironmentVariables below, then
+    `launchctl unload -w && launchctl load -w`. Keep the URL out of
+    version control — store via macOS Keychain or 1Password and
+    reference via launchctl setenv if you prefer.
+
+  Defaults:
+    - 1-hour StartInterval (audit fires once per hour)
+    - RunAtLoad=false (no immediate fire at install)
+    - logs to qa-reports/agent-guard/logs/ops-monitor.{out,err}.log
+-->
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+  <key>Label</key>
+  <string>com.shiro.agent-guard-ops-monitor</string>
+
+  <key>ProgramArguments</key>
+  <array>
+    <string>/Users/umi/.openclaw/workspace/qa-reports/agent-guard/ops-monitor.sh</string>
+  </array>
+
+  <key>EnvironmentVariables</key>
+  <dict>
+    <key>PATH</key>
+    <string>/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin</string>
+    <!-- Optional: set DISCORD_WEBHOOK_URL after approval. Format:
+         <key>DISCORD_WEBHOOK_URL</key>
+         <string>https://discord.com/api/webhooks/.../...</string>
+    -->
+  </dict>
+
+  <key>StartInterval</key>
+  <integer>3600</integer>
+
+  <key>RunAtLoad</key>
+  <false/>
+
+  <key>StandardOutPath</key>
+  <string>/Users/umi/.openclaw/workspace/qa-reports/agent-guard/logs/ops-monitor.out.log</string>
+  <key>StandardErrorPath</key>
+  <string>/Users/umi/.openclaw/workspace/qa-reports/agent-guard/logs/ops-monitor.err.log</string>
+
+  <key>WorkingDirectory</key>
+  <string>/Users/umi/.openclaw/workspace</string>
+</dict>
+</plist>

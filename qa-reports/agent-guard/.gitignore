@@ -1,0 +1,3 @@
+# Runtime artefacts from ops-monitor.sh — local-only state, not source.
+.ops-monitor.last-flags
+logs/
