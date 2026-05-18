@@ -127,7 +127,7 @@ def _screenshot_post(
         context.close()
 
 
-def run_once(handle: str) -> int:
+def run_once(handle: str, *, baseline_lookback_days: int | None = None) -> int:
     handle = _normalize_handle(handle)
     conn = connect(DB_FILE)
     init_db(conn)
@@ -163,7 +163,7 @@ def run_once(handle: str) -> int:
 
                 if not post_ids:
                     print(f"[warn] no post links found on {profile_url} — DOM may have changed or content gated", file=sys.stderr)
-                prev_max = previous_max_found(conn, handle)
+                prev_max = previous_max_found(conn, handle, lookback_days=baseline_lookback_days)
                 partial_reason = judge_partial_error(found_count, prev_max)
                 if partial_reason is not None:
                     status = "partial_error"
@@ -223,14 +223,14 @@ def run_once(handle: str) -> int:
     return new_count
 
 
-def run_watch(handle: str, interval_s: int) -> None:
+def run_watch(handle: str, interval_s: int, *, baseline_lookback_days: int | None = None) -> None:
     if interval_s < 60:
         print("[warn] interval below 60s is not allowed; clamping to 60s", file=sys.stderr)
         interval_s = 60
-    print(f"[watch] handle={handle} interval={interval_s}s")
+    print(f"[watch] handle={handle} interval={interval_s}s lookback_days={baseline_lookback_days}")
     while True:
         try:
-            run_once(handle)
+            run_once(handle, baseline_lookback_days=baseline_lookback_days)
         except KeyboardInterrupt:
             print("[watch] interrupted")
             return
@@ -338,15 +338,27 @@ def main(argv: list[str] | None = None) -> int:
     mode.add_argument("--health-check", action="store_true", help="Audit-log-only health check (no network)")
     parser.add_argument("--interval", type=int, default=600, help="Polling interval in seconds when --watch (min 60)")
     parser.add_argument("--threshold", type=int, default=3, help="Consecutive-failure threshold for --health-check")
+    parser.add_argument(
+        "--baseline-lookback-days",
+        type=int,
+        default=None,
+        help=(
+            "If set, restrict the partial-error baseline (previous_max_found) "
+            "to checks newer than N days. Default None = all-time peak "
+            "(preserves long-standing behaviour). Use this when a handle's "
+            "true baseline has permanently dropped and the historic peak "
+            "is no longer a fair comparison."
+        ),
+    )
     args = parser.parse_args(argv)
 
     handle = _normalize_handle(args.handle)
     if args.health_check:
         return run_health_check(handle, threshold=args.threshold)
     if args.watch:
-        run_watch(handle, args.interval)
+        run_watch(handle, args.interval, baseline_lookback_days=args.baseline_lookback_days)
         return 0
-    run_once(handle)
+    run_once(handle, baseline_lookback_days=args.baseline_lookback_days)
     return 0
 
 

@@ -48,7 +48,13 @@ CREATE INDEX IF NOT EXISTS idx_checks_handle_checked_at
 """
 
 
-def connect(db_path: Path = DEFAULT_DB_FILE) -> sqlite3.Connection:
+def connect(db_path: str | Path = DEFAULT_DB_FILE) -> sqlite3.Connection:
+    # Coerce str → Path so callers can pass either ("threads.db" from a
+    # CLI arg, Path("...") from a typed module). All production callers
+    # currently pass Path explicitly, but the unannotated str case
+    # raised AttributeError on .parent during interactive debugging on
+    # 2026-05-18 — robustness fix, not a live caller bug.
+    db_path = Path(db_path)
     db_path.parent.mkdir(parents=True, exist_ok=True)
     conn = sqlite3.connect(db_path)
     conn.row_factory = sqlite3.Row
