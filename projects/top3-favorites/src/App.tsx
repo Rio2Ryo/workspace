@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
+import { IMPORT_PREVIEW_SUMMARY_SCHEMA, IMPORT_PREVIEW_SUMMARY_VERSION } from './shared/import-preview-summary-contract.mjs'
 import { normalizeTagKey, normalizeTagText } from './shared/tag-normalization.mjs'
 
 type Rank = 1 | 2 | 3
@@ -393,8 +394,8 @@ export function App() {
     const excludedDetailsWithLabels = buildExcludedDetailsWithLabels(pendingImport.excludedDetails)
     const normalizedExcludedNameGroups = buildNormalizedExcludedNameGroups(pendingImport.excludedDetails)
     return {
-      schema: 'top3-import-preview-summary',
-      version: 1,
+      schema: IMPORT_PREVIEW_SUMMARY_SCHEMA,
+      version: IMPORT_PREVIEW_SUMMARY_VERSION,
       before: items.length,
       after: pendingImport.items.length,
       normalizationBefore: pendingImport.originalCount,
