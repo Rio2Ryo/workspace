@@ -96,6 +96,7 @@
 
 #### import preview / summary
 - `tests/import-preview/summary/import-preview-excluded-names-collapsed.e2e.spec.ts`
+- `tests/import-preview/summary/import-preview-excluded-names-normalized-context.e2e.spec.ts`
 - `tests/import-preview/summary/import-preview-excluded-names-tag-context.e2e.spec.ts`
 - `tests/import-preview/summary/import-preview-math-consistency.e2e.spec.ts`
 - `tests/import-preview/summary/import-preview-summary.e2e.spec.ts`

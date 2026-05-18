@@ -199,18 +199,27 @@ function analyzeImportedTop3(items: FavoriteItem[]): { items: FavoriteItem[]; ex
   }
 }
 
+function normalizeExcludedNameKey(name: string): string {
+  return name
+    .normalize('NFKC')
+    .replace(/\s+/g, ' ')
+    .trim()
+    .toLocaleLowerCase('ja')
+}
+
 function buildExcludedNameLabel(detail: ImportExcludedDetail, nameCounts: Map<string, number>): string {
   const name = detail.name.trim()
   if (!name) return ''
-  return (nameCounts.get(name) ?? 0) > 1 ? `${detail.tag}: ${name}` : name
+  const normalizedName = normalizeExcludedNameKey(name)
+  return (nameCounts.get(normalizedName) ?? 0) > 1 ? `${detail.tag}: ${name}` : name
 }
 
 function countExcludedNames(details: ImportExcludedDetail[]): Map<string, number> {
   const nameCounts = new Map<string, number>()
   for (const detail of details) {
-    const name = detail.name.trim()
-    if (!name) continue
-    nameCounts.set(name, (nameCounts.get(name) ?? 0) + 1)
+    const normalizedName = normalizeExcludedNameKey(detail.name)
+    if (!normalizedName) continue
+    nameCounts.set(normalizedName, (nameCounts.get(normalizedName) ?? 0) + 1)
   }
   return nameCounts
 }
