@@ -32,7 +32,7 @@ async function collectE2ESpecPaths(dirUrl, relBase = 'tests') {
   return out
 }
 
-test('[Docs-Scope] coverage doc describes recursive E2E coverage scope', async () => {
+test('[Docs][scope] coverage doc describes recursive E2E coverage scope', async () => {
   const doc = await readFile(coverageDocPath, 'utf8')
   assert.match(
     doc,
@@ -41,7 +41,7 @@ test('[Docs-Scope] coverage doc describes recursive E2E coverage scope', async (
   )
 })
 
-test('[Docs-Scope] scopeLimitRules do not overlap for qa-docs + qa-current discovered scopes', async () => {
+test('[Docs][scope] scopeLimitRules do not overlap for qa-docs + qa-current discovered scopes', async () => {
   const here = new URL('..', import.meta.url)
   const contractTestPaths = [
     new URL('tests/qa-coverage-doc.test.mjs', `${here}/`),
@@ -61,7 +61,7 @@ test('[Docs-Scope] scopeLimitRules do not overlap for qa-docs + qa-current disco
   )
 })
 
-test('[Docs-Structure] coverage doc includes import preview category headings (1:1 with directory structure)', async () => {
+test('[Docs][structure] coverage doc includes import preview category headings (1:1 with directory structure)', async () => {
   const doc = await readFile(coverageDocPath, 'utf8')
   const headings = [
     '#### import preview / direction',
@@ -77,7 +77,7 @@ test('[Docs-Structure] coverage doc includes import preview category headings (1
   }
 })
 
-test('[Docs-Completeness] automated QA coverage doc references every E2E spec', async () => {
+test('[Docs][completeness] automated QA coverage doc references every E2E spec', async () => {
   const [doc, e2eSpecs] = await Promise.all([
     readFile(coverageDocPath, 'utf8'),
     collectE2ESpecPaths(testsDir),
@@ -99,7 +99,7 @@ test('[Docs-Completeness] automated QA coverage doc references every E2E spec', 
   )
 })
 
-test('[Docs-Integrity] automated QA coverage doc does not include non-existent E2E paths', async () => {
+test('[Docs][integrity] automated QA coverage doc does not include non-existent E2E paths', async () => {
   const doc = await readFile(coverageDocPath, 'utf8')
   const listed = Array.from(new Set(doc.match(/tests\/[\w./-]+\.e2e\.spec\.ts/g) ?? [])).sort((a, b) =>
     a.localeCompare(b, 'en'),
