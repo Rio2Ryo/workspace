@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test'
-import { uploadJsonImportFile, parseImportPreviewSummary, resetItemsByReplace } from './e2e-helpers'
+import { uploadJsonImportFile, parseImportPreviewSummary, resetItemsByReplace, registrationSaveButton } from './e2e-helpers'
 
 test.beforeEach(async ({ request }) => {
   await resetItemsByReplace(request)
@@ -11,7 +11,7 @@ test('summary json transitions correctly across valid -> invalid -> valid import
   await page.getByLabel('タグ', { exact: true }).fill('カフェラテ')
   await page.getByLabel('場所', { exact: true }).fill('柏の葉')
   await page.getByLabel('店舗名', { exact: true }).fill('Baseline')
-  await page.getByRole('button', { name: 'DBに保存' }).click()
+  await registrationSaveButton(page).click()
   const now = new Date().toISOString()
   const validItems = [
     { id: 'r1', tag: 'プリン', location: '浅草', name: 'A', rank: 1, memo: '', mapsUrl: '', placeId: '', createdAt: now, updatedAt: now },

@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test'
-import { resetItemsByReplace } from './e2e-helpers'
+import { resetItemsByReplace, registrationSaveButton } from './e2e-helpers'
 
 test.beforeEach(async ({ request }) => {
   await resetItemsByReplace(request)
@@ -13,7 +13,7 @@ test('maps link includes name location and tag in Google Maps search query', asy
   await page.getByLabel('店舗名', { exact: true }).fill('検証店')
   await page.getByLabel('メモ', { exact: true }).fill('maps link e2e')
   await page.getByRole('button', { name: '登録 1位に入れる' }).click()
-  await page.getByRole('button', { name: 'DBに保存' }).click()
+  await registrationSaveButton(page).click()
 
   await expect(page.getByRole('status')).toContainText('検証タグ の1位に保存しました。')
 

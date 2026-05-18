@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test'
-import { itemEditButton, editSaveButton, resetItemsByReplace } from './e2e-helpers'
+import { itemEditButton, editSaveButton, resetItemsByReplace, registrationSaveButton } from './e2e-helpers'
 
 test.beforeEach(async ({ request }) => {
   await resetItemsByReplace(request)
@@ -12,13 +12,13 @@ test('editing last item tag clears stale selected filter so remaining data is vi
   await page.getByLabel('タグ', { exact: true }).fill('元タグ')
   await page.getByLabel('場所', { exact: true }).fill('柏')
   await page.getByLabel('店舗名', { exact: true }).fill('Move Me')
-  await page.getByRole('button', { name: 'DBに保存' }).click()
+  await registrationSaveButton(page).click()
   await expect(page.getByRole('status')).toContainText('元タグ の1位に保存しました。')
 
   await page.getByLabel('タグ', { exact: true }).fill('残るタグ')
   await page.getByLabel('場所', { exact: true }).fill('松戸')
   await page.getByLabel('店舗名', { exact: true }).fill('Keep Me')
-  await page.getByRole('button', { name: 'DBに保存' }).click()
+  await registrationSaveButton(page).click()
   await expect(page.getByRole('status')).toContainText('残るタグ の1位に保存しました。')
 
   const searchSection = page.locator('section.card').filter({ has: page.getByRole('heading', { name: '探す' }) })

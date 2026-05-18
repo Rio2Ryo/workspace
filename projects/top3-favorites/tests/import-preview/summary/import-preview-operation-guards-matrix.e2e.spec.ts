@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test'
-import { itemEditButton, uploadJsonImportFile, resetItemsByReplace , itemDeleteButton, importCancelButton, importConfirmButton} from '../../e2e-helpers'
+import { itemEditButton, uploadJsonImportFile, resetItemsByReplace, itemDeleteButton, importCancelButton, importConfirmButton, registrationSaveButton } from '../../e2e-helpers'
 
 test.beforeEach(async ({ request }) => {
   await resetItemsByReplace(request)
@@ -12,7 +12,7 @@ test('pending import preview enforces operation guards across registration/searc
   await page.getByLabel('タグ', { exact: true }).fill('カフェラテ')
   await page.getByLabel('場所', { exact: true }).fill('柏の葉')
   await page.getByLabel('店舗名', { exact: true }).fill('Guard Seed')
-  await page.getByRole('button', { name: 'DBに保存' }).click()
+  await registrationSaveButton(page).click()
 
   const now = new Date().toISOString()
   const payload = [
@@ -34,7 +34,7 @@ test('pending import preview enforces operation guards across registration/searc
   await expect(page.getByRole('button', { name: '登録 3位に入れる' })).toBeDisabled()
 
   // save/sample/export locks
-  await expect(page.getByRole('button', { name: 'DBに保存' })).toBeDisabled()
+  await expect(registrationSaveButton(page)).toBeDisabled()
   await expect(page.getByRole('button', { name: 'サンプルをDB保存' })).toBeDisabled()
   await expect(page.getByRole('button', { name: 'JSONエクスポート' })).toBeDisabled()
   await expect(page.getByTestId('import-export-lock-hint')).toHaveText('インポート確認中のため、現在DBのJSONエクスポートは一時停止中です。')

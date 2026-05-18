@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test'
-import { resetItemsByReplace } from './e2e-helpers'
+import { resetItemsByReplace, registrationSaveButton } from './e2e-helpers'
 
 test.beforeEach(async ({ request }) => {
   await resetItemsByReplace(request)
@@ -22,7 +22,7 @@ test('adding new 1st place rebalances to Top3 and persists ranks after reload + 
   await page.getByLabel('場所', { exact: true }).fill('柏の葉')
   await page.getByLabel('店舗名', { exact: true }).fill('New 1st')
   await page.getByRole('button', { name: '登録 1位に入れる' }).click()
-  await page.getByRole('button', { name: 'DBに保存' }).click()
+  await registrationSaveButton(page).click()
   await expect(page.getByRole('status')).toContainText('カフェラテ の1位に保存しました。')
 
   const searchSection = page.locator('section.card').filter({ has: page.getByRole('heading', { name: '探す' }) })

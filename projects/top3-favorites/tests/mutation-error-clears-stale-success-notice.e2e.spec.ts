@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test'
-import { itemEditButton, editSaveButton, resetItemsByReplace , itemDeleteButton} from './e2e-helpers'
+import { itemEditButton, editSaveButton, resetItemsByReplace, itemDeleteButton, registrationSaveButton } from './e2e-helpers'
 
 test.beforeEach(async ({ request }) => {
   await resetItemsByReplace(request)
@@ -10,7 +10,7 @@ async function seedOne(page: import('@playwright/test').Page, name: string) {
   await page.getByLabel('タグ', { exact: true }).fill('カフェラテ')
   await page.getByLabel('場所', { exact: true }).fill('柏の葉')
   await page.getByLabel('店舗名', { exact: true }).fill(name)
-  await page.getByRole('button', { name: 'DBに保存' }).click()
+  await registrationSaveButton(page).click()
   await expect(page.getByRole('status')).toContainText('カフェラテ の1位に保存しました。')
 }
 

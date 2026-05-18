@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test'
-import { itemEditButton, editSaveButton, resetItemsByReplace } from './e2e-helpers'
+import { itemEditButton, editSaveButton, resetItemsByReplace, registrationSaveButton } from './e2e-helpers'
 
 test.beforeEach(async ({ request }) => {
   await resetItemsByReplace(request)
@@ -11,7 +11,7 @@ test('editing item tag move keeps registration tag in sync with active search ta
   await page.getByLabel('タグ', { exact: true }).fill('元タグ')
   await page.getByLabel('場所', { exact: true }).fill('柏')
   await page.getByLabel('店舗名', { exact: true }).fill('Move Me')
-  await page.getByRole('button', { name: 'DBに保存' }).click()
+  await registrationSaveButton(page).click()
   await expect(page.getByRole('status')).toContainText('元タグ の1位に保存しました。')
 
   const searchSection = page.locator('section.card').filter({ has: page.getByRole('heading', { name: '探す' }) })

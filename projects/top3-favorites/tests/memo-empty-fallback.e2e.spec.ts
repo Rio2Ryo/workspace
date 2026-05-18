@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test'
-import { resetItemsByReplace } from './e2e-helpers'
+import { resetItemsByReplace, registrationSaveButton } from './e2e-helpers'
 
 test.beforeEach(async ({ request }) => {
   await resetItemsByReplace(request)
@@ -13,7 +13,7 @@ test('item with empty memo shows fallback text （メモなし） in details', a
   await page.getByLabel('店舗名', { exact: true }).fill('茶亭')
   await page.getByLabel('メモ', { exact: true }).fill('')
   await page.getByRole('button', { name: '登録 2位に入れる' }).click()
-  await page.getByRole('button', { name: 'DBに保存' }).click()
+  await registrationSaveButton(page).click()
 
   const group = page.locator('.group').filter({ has: page.getByRole('heading', { name: 'カフェ' }) })
   await expect(group.getByText(/\d位: 茶亭/)).toBeVisible()

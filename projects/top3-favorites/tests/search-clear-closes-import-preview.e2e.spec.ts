@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test'
-import { clearSearchTagFilter, uploadJsonImportFile, resetItemsByReplace } from './e2e-helpers'
+import { clearSearchTagFilter, uploadJsonImportFile, resetItemsByReplace, registrationSaveButton } from './e2e-helpers'
 
 test.beforeEach(async ({ request }) => {
   await resetItemsByReplace(request)
@@ -11,7 +11,7 @@ test('clearing search tag closes pending import preview to keep search context c
   await page.getByLabel('タグ', { exact: true }).fill('カフェラテ')
   await page.getByLabel('場所', { exact: true }).fill('柏の葉')
   await page.getByLabel('店舗名', { exact: true }).fill('Clear Target')
-  await page.getByRole('button', { name: 'DBに保存' }).click()
+  await registrationSaveButton(page).click()
 
   const now = new Date().toISOString()
   const payload = [
