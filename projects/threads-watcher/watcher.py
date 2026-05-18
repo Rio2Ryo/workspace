@@ -77,6 +77,10 @@ def _write_web_snapshot_from_db(snapshot: dict[str, Any]) -> None:
         # partial_error frequency at a glance, not just "current run ok"
         # which hides the ~8% blip rate observed on @hal.lifedesign.
         "recent_stats": snapshot.get("recent_stats"),
+        # recent_stats_by_window keyed by hours: 1 / 24 / 168 (7d). UI
+        # picks one based on ?window= URL param so operators don't need
+        # log-tailing or a server round-trip to compare.
+        "recent_stats_by_window": snapshot.get("recent_stats_by_window"),
         # sync_state (cursor vs db_max + delta) lets operators see
         # whether sync.py would commit at next launchd cycle without
         # needing to tail logs/sync.err.log.

@@ -247,11 +247,21 @@ def latest_snapshot(conn: sqlite3.Connection, handle: str) -> dict[str, Any]:
         """,
         (handle,),
     ).fetchone()
+    # Pre-compute 1h / 24h / 7d windows so the static UI can switch
+    # without a server round-trip — operators flip ?window=1 / 24 / 168
+    # in the URL. `recent_stats` (24h alias) preserved for callers that
+    # don't know about the indexed map.
+    rs_by_window = {
+        "1": recent_stats(conn, handle, window_hours=1),
+        "24": recent_stats(conn, handle, window_hours=24),
+        "168": recent_stats(conn, handle, window_hours=168),  # 7 days
+    }
     return {
         "handle": handle,
         "last_check": dict(check_row) if check_row else None,
         "saved_count": len(post_rows),
         "posts": [dict(row) for row in post_rows],
-        "recent_stats": recent_stats(conn, handle, window_hours=24),
+        "recent_stats": rs_by_window["24"],
+        "recent_stats_by_window": rs_by_window,
         "sync_state": sync_state(conn),
     }

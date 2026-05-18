@@ -68,7 +68,10 @@
     </section>
 
     <section class="card" id="recent-stats">
-      <div class="label" style="margin-bottom:8px">last 24h (rolling window)</div>
+      <div class="label" style="margin-bottom:8px">
+        last <span id="rs-window-label">24h</span> (rolling window)
+        — switch via URL <code>?window=1</code> / <code>?window=24</code> / <code>?window=168</code>
+      </div>
       <div class="row"><span class="label">total checks</span><span id="rs-total">—</span></div>
       <div class="row"><span class="label">success rate</span><span id="rs-rate">—</span></div>
       <div class="row"><span class="label">ok</span><span id="rs-ok">—</span></div>
@@ -106,9 +109,21 @@
         document.getElementById('status').textContent = data.last_check ? `${data.last_check.status} / found ${data.last_check.found_count} / new ${data.last_check.new_count}` : '—';
         document.getElementById('generated').textContent = data.snapshot_generated_at || '—';
 
-        // Recent 24h aggregate (added 2026-05-18 — surfaces blip rate
-        // operators previously had to read sqlite for).
-        const rs = data.recent_stats;
+        // Recent stats aggregate (added 2026-05-18 — surfaces blip rate
+        // operators previously had to read sqlite for). Window selectable
+        // via ?window=1 / 24 / 168 URL param. Falls back to 24h alias if
+        // the selected window doesn't exist in the payload.
+        const allWindows = data.recent_stats_by_window || {};
+        const params = new URLSearchParams(window.location.search);
+        const wantedWindow = params.get('window');
+        let rs = (wantedWindow && allWindows[wantedWindow]) || data.recent_stats;
+        // Update the visible label to match what we're actually showing,
+        // so a `?window=168` URL doesn't still say "24h".
+        const labelEl = document.getElementById('rs-window-label');
+        if (rs && typeof rs.window_hours === 'number') {
+          // 1 → "1h", 24 → "24h", 168 → "7d" (168h reads awkwardly).
+          labelEl.textContent = rs.window_hours === 168 ? '7d' : `${rs.window_hours}h`;
+        }
         if (rs && typeof rs.total === 'number') {
           document.getElementById('rs-total').textContent = rs.total;
           const rate = typeof rs.success_rate === 'number'
