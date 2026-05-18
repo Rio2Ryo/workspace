@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test'
-import { uploadJsonImportFile, parseDownloadedJsonFile, resetItemsByReplace, downloadJsonExport } from './e2e-helpers'
+import { uploadJsonImportFile, parseDownloadedJsonFile, resetItemsByReplace, downloadJsonExport, saveSampleItems } from './e2e-helpers'
 
 const requiredStringFields = ['id', 'tag', 'location', 'name', 'memo', 'mapsUrl', 'placeId', 'createdAt', 'updatedAt'] as const
 
@@ -11,7 +11,7 @@ test.beforeEach(async ({ request }) => {
 
 test('exported JSON file has valid item shape and can be imported back through the UI', async ({ page, request }) => {
   await page.goto('/')
-  await page.getByRole('button', { name: 'サンプルをDB保存' }).click()
+  await saveSampleItems(page)
   await expect(page.getByText('サンプルをDBに保存しました。')).toBeVisible()
 
   const download = await downloadJsonExport(page)

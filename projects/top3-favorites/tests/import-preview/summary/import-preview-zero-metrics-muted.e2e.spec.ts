@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test'
-import { uploadJsonImportFile, resetItemsByReplace } from '../../e2e-helpers'
+import { uploadJsonImportFile, resetItemsByReplace, saveSampleItems } from '../../e2e-helpers'
 
 test.beforeEach(async ({ request }) => {
   await resetItemsByReplace(request)
@@ -7,7 +7,7 @@ test.beforeEach(async ({ request }) => {
 
 test('zero-value impact metric is marked as muted for quick visual scan', async ({ page, request }) => {
   await page.goto('/')
-  await page.getByRole('button', { name: 'サンプルをDB保存' }).click()
+  await saveSampleItems(page)
   await expect(page.getByRole('status')).toContainText('サンプルをDBに保存しました。')
 
   // Re-import the exact same payload: added=0, kept=3, removed=0

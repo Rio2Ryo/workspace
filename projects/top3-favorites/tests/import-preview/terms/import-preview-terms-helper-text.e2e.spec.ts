@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test'
-import { uploadJsonImportFile, resetItemsByDelete } from '../../e2e-helpers'
+import { uploadJsonImportFile, resetItemsByDelete, saveSampleItems } from '../../e2e-helpers'
 
 test.beforeEach(async ({ request }) => {
   await resetItemsByDelete(request)
@@ -9,7 +9,7 @@ test('import preview explains difference between 削除予定 and 正規化除�
   await page.goto('/')
 
   // seed current items so removed count can happen
-  await page.getByRole('button', { name: 'サンプルをDB保存' }).click()
+  await saveSampleItems(page)
   await expect(page.getByRole('status')).toContainText('サンプルをDBに保存しました。')
 
   const now = new Date().toISOString()

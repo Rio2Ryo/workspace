@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test'
-import { uploadJsonImportFile, resetItemsByDelete } from '../../e2e-helpers'
+import { uploadJsonImportFile, resetItemsByDelete, saveSampleItems } from '../../e2e-helpers'
 
 test.beforeEach(async ({ request }) => {
   await resetItemsByDelete(request)
@@ -7,7 +7,7 @@ test.beforeEach(async ({ request }) => {
 
 test('import preview metrics/helpers use unified import-preview-* testid naming', async ({ page, request }) => {
   await page.goto('/')
-  await page.getByRole('button', { name: 'サンプルをDB保存' }).click()
+  await saveSampleItems(page)
   await expect(page.getByRole('status')).toContainText('サンプルをDBに保存しました。')
 
   const current = (await request.get('/api/items').then((res) => res.json())) as { items: unknown[] }

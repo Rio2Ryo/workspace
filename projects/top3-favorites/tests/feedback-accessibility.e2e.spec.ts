@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test'
-import { uploadJsonImportFile, resetItemsByReplace } from './e2e-helpers'
+import { uploadJsonImportFile, resetItemsByReplace, saveSampleItems } from './e2e-helpers'
 
 test.beforeEach(async ({ request }) => {
   await resetItemsByReplace(request)
@@ -8,7 +8,7 @@ test.beforeEach(async ({ request }) => {
 test('success and error feedback are exposed through accessible live regions', async ({ page }) => {
   await page.goto('/')
 
-  await page.getByRole('button', { name: 'サンプルをDB保存' }).click()
+  await saveSampleItems(page)
   await expect(page.getByRole('status')).toContainText('サンプルをDBに保存しました。')
 
   await uploadJsonImportFile(page, 'invalid-shape.json', '{"foo":1}')

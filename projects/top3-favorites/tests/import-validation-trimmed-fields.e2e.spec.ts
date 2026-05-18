@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test'
-import { uploadJsonImportFile, resetItemsByReplace } from './e2e-helpers'
+import { uploadJsonImportFile, resetItemsByReplace, saveSampleItems } from './e2e-helpers'
 
 test.beforeEach(async ({ request }) => {
   await resetItemsByReplace(request)
@@ -7,7 +7,7 @@ test.beforeEach(async ({ request }) => {
 
 test('import rejects whitespace-only required fields with clear validation message', async ({ page }) => {
   await page.goto('/')
-  await page.getByRole('button', { name: 'サンプルをDB保存' }).click()
+  await saveSampleItems(page)
   await expect(page.getByText('サンプルをDBに保存しました。')).toBeVisible()
 
   const now = new Date().toISOString()

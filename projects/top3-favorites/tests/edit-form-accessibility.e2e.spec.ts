@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test'
-import { resetItemsByReplace } from './e2e-helpers'
+import { resetItemsByReplace, saveSampleItems } from './e2e-helpers'
 
 test.beforeEach(async ({ request }) => {
   await resetItemsByReplace(request)
@@ -7,7 +7,7 @@ test.beforeEach(async ({ request }) => {
 
 test('edit form fields have accessible names and save edited Top3 data', async ({ page }) => {
   await page.goto('/')
-  await page.getByRole('button', { name: 'サンプルをDB保存' }).click()
+  await saveSampleItems(page)
   await expect(page.getByRole('status')).toContainText('サンプルをDBに保存しました。')
 
   await page.getByText(/\d位: Solito MAGO/).first().click()
@@ -30,7 +30,7 @@ test('edit form fields have accessible names and save edited Top3 data', async (
 
 test('edit form validates required fields before saving', async ({ page }) => {
   await page.goto('/')
-  await page.getByRole('button', { name: 'サンプルをDB保存' }).click()
+  await saveSampleItems(page)
   await expect(page.getByRole('status')).toContainText('サンプルをDBに保存しました。')
 
   await page.getByText(/\d位: Solito MAGO/).first().click()

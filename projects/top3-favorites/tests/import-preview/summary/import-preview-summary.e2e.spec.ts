@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test'
-import { uploadJsonImportFile, resetItemsByReplace } from '../../e2e-helpers'
+import { uploadJsonImportFile, resetItemsByReplace, saveSampleItems } from '../../e2e-helpers'
 
 function item(id: string, tag: string, name: string, rank = 1) {
   const now = new Date().toISOString()
@@ -23,7 +23,7 @@ test.beforeEach(async ({ request }) => {
 
 test('import confirmation summarizes added removed kept items and tag impact', async ({ page }) => {
   await page.goto('/')
-  await page.getByRole('button', { name: 'サンプルをDB保存' }).click()
+  await saveSampleItems(page)
   await expect(page.getByText('サンプルをDBに保存しました。')).toBeVisible()
 
   const replacement = [

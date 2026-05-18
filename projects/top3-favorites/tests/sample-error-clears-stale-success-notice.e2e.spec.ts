@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test'
-import { resetItemsByReplace } from './e2e-helpers'
+import { resetItemsByReplace, clickSampleSaveButton } from './e2e-helpers'
 
 test.beforeEach(async ({ request }) => {
   await resetItemsByReplace(request)
@@ -22,7 +22,7 @@ test('failed sample save clears stale success notice and keeps existing data vis
     await route.continue()
   })
 
-  await page.getByRole('button', { name: 'サンプルをDB保存' }).click()
+  await clickSampleSaveButton(page)
 
   await expect(page.getByRole('alert')).toContainText('サンプル保存APIが一時的に利用できません。')
   await expect(page.getByText('カフェラテ の1位に保存しました。')).toHaveCount(0)

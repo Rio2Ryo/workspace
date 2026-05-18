@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test'
-import { uploadJsonImportFile, resetItemsByReplace } from './e2e-helpers'
+import { uploadJsonImportFile, resetItemsByReplace, saveSampleItems } from './e2e-helpers'
 
 test.beforeEach(async ({ request }) => {
   await resetItemsByReplace(request)
@@ -7,7 +7,7 @@ test.beforeEach(async ({ request }) => {
 
 test('import rejects rank out of range and keeps existing data (fail-closed)', async ({ page }) => {
   await page.goto('/')
-  await page.getByRole('button', { name: 'サンプルをDB保存' }).click()
+  await saveSampleItems(page)
   await expect(page.getByText('サンプルをDBに保存しました。')).toBeVisible()
   await expect(page.getByText('1位: Solito MAGO')).toBeVisible()
 
@@ -34,7 +34,7 @@ test('import rejects rank out of range and keeps existing data (fail-closed)', a
 
 test('import rejects duplicate ids with a clear message and keeps existing data', async ({ page }) => {
   await page.goto('/')
-  await page.getByRole('button', { name: 'サンプルをDB保存' }).click()
+  await saveSampleItems(page)
   await expect(page.getByText('サンプルをDBに保存しました。')).toBeVisible()
   await expect(page.getByText('1位: Solito MAGO')).toBeVisible()
 

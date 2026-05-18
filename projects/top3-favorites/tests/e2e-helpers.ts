@@ -11,6 +11,16 @@ export async function resetItemsByDelete(request: APIRequestContext) {
   await resetItemsByReplace(request)
 }
 
+
+export async function clickSampleSaveButton(page: Page): Promise<void> {
+  await page.getByRole('button', { name: 'サンプルをDB保存' }).click()
+}
+
+export async function saveSampleItems(page: Page): Promise<void> {
+  await clickSampleSaveButton(page)
+  await expect(page.getByRole('status')).toContainText('サンプルをDBに保存しました。')
+}
+
 export async function uploadJsonImportFile(page: Page, name: string, body: string | unknown): Promise<void> {
   const buffer = Buffer.from(typeof body === 'string' ? body : JSON.stringify(body), 'utf-8')
   await page.locator('input[type="file"][accept*="json"]').setInputFiles({
