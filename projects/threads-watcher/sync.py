@@ -293,31 +293,97 @@ def get_last_commit_ts(workspace: Path, relpath: str) -> int:
 # ── logging ─────────────────────────────────────────────────────────────
 
 
+def _rotate_log_files(path: Path, backup_count: int) -> None:
+    """Rotate `path` to `path.1`, shifting existing `.N` → `.N+1`,
+    dropping anything beyond `backup_count`. Mirrors stdlib's
+    RotatingFileHandler.doRollover() without subclassing it (we
+    want full control over the timestamp prefix + atomic
+    open-append-close pattern that TeeLogger uses).
+
+    Best-effort: silently ignores rename failures (rare on local
+    disk; the next log() call will retry the size check). Never
+    raises.
+    """
+    if backup_count <= 0:
+        # No backups requested — just truncate.
+        try:
+            path.unlink(missing_ok=True)
+        except OSError:
+            pass
+        return
+
+    # Shift .N → .N+1 from the highest existing index downward to
+    # avoid clobbering. Drop anything past backup_count.
+    for i in range(backup_count - 1, 0, -1):
+        src = path.with_suffix(path.suffix + f".{i}")
+        dst = path.with_suffix(path.suffix + f".{i + 1}")
+        if src.exists():
+            try:
+                if dst.exists():
+                    dst.unlink()
+                src.rename(dst)
+            except OSError:
+                pass
+    # Rename current → .1
+    if path.exists():
+        try:
+            dst = path.with_suffix(path.suffix + ".1")
+            if dst.exists():
+                dst.unlink()
+            path.rename(dst)
+        except OSError:
+            pass
+
+
 class TeeLogger:
-    """Append-to-file logger. `also_stderr` opts in to the legacy
-    double-write behaviour (mirror every line to sys.stderr).
+    """Append-to-file logger with optional stderr mirror and optional
+    size-based rotation.
 
-    The double-write was the original design — and remains useful for
-    `python sync.py` invoked from a TTY so the operator sees output
-    in real time. But under launchd, every line was getting captured
-    BOTH into the on-disk file AND into launchd's StandardErrorPath
-    (logs/sync.err.log). Two copies of the same data, 2x disk usage,
-    2x I/O per tick.
+    Stderr mirror (`also_stderr`)
+    -----------------------------
+    Pre-fix the logger unconditionally wrote to both file and stderr;
+    under launchd that produced two near-identical files (logs/sync.log
+    + StandardErrorPath capture of stderr). File-only is the new
+    default; operator TTY runs and `--tee-stderr` opt back in.
 
-    Default is file-only. Operator TTY use sets also_stderr=True
-    explicitly. launchd's StandardErrorPath stays wired to catch
-    uncaught Python tracebacks / import errors that bypass this
-    logger entirely (those go to real stderr from the interpreter,
-    not from any TeeLogger.log() call).
+    Rotation (`max_bytes`, `backup_count`)
+    --------------------------------------
+    Default `max_bytes=0` is no rotation (back-compat with pre-existing
+    callers that just want unbounded append). When `max_bytes > 0`,
+    every log() call checks the file size BEFORE writing; if a write
+    would push past the threshold, the current file is rotated to
+    `path.1` (existing `.N` shifted to `.N+1`, anything past
+    `backup_count` dropped) and a fresh file is opened. Matches
+    stdlib RotatingFileHandler semantics without subclassing — we
+    keep the timestamp-prefix format under our control.
+
+    Rotation IS triggered by the current write (not the next one)
+    so an oversize append never lands. Atomicity: rename is the only
+    cross-process mutation; reads of `path` from a concurrent process
+    either see the old name (just before rename) or the new file
+    (after rename), never a torn read.
     """
 
-    def __init__(self, log_path: Path, also_stderr: bool = False):
+    def __init__(
+        self,
+        log_path: Path,
+        also_stderr: bool = False,
+        max_bytes: int = 0,
+        backup_count: int = 5,
+    ):
         self.log_path = log_path
         self.also_stderr = also_stderr
+        self.max_bytes = max_bytes
+        self.backup_count = backup_count
         log_path.parent.mkdir(parents=True, exist_ok=True)
 
     def log(self, msg: str) -> None:
         line = f"{now_iso()} {msg}\n"
+        line_bytes = line.encode("utf-8")
+        if self.max_bytes > 0 and self.log_path.exists():
+            current = self.log_path.stat().st_size
+            if current + len(line_bytes) > self.max_bytes:
+                _rotate_log_files(self.log_path, self.backup_count)
         with self.log_path.open("a", encoding="utf-8") as f:
             f.write(line)
         if self.also_stderr:
@@ -377,6 +443,27 @@ def parse_args(argv: list[str] | None) -> argparse.Namespace:
             "this when running interactively from a TTY."
         ),
     )
+    p.add_argument(
+        "--max-log-bytes",
+        type=int,
+        default=0,
+        help=(
+            "Rotate --log when it exceeds N bytes. Default 0 = no "
+            "rotation (unbounded append). 1048576 (1 MB) is a "
+            "reasonable launchd-cadence value: at ~5 lines/tick × "
+            "30-min cadence, rotation fires roughly every ~3-4 "
+            "months and 5 backups = ~5 MB ceiling."
+        ),
+    )
+    p.add_argument(
+        "--log-backup-count",
+        type=int,
+        default=5,
+        help=(
+            "Number of rotated log backups to keep (path.1 .. "
+            "path.N). Only effective when --max-log-bytes > 0."
+        ),
+    )
     return p.parse_args(argv)
 
 
@@ -424,7 +511,12 @@ def main(argv: list[str] | None = None) -> int:
     also_stderr = args.tee_stderr or (
         getattr(sys.stderr, "isatty", lambda: False)()
     )
-    log = TeeLogger(args.log, also_stderr=also_stderr)
+    log = TeeLogger(
+        args.log,
+        also_stderr=also_stderr,
+        max_bytes=args.max_log_bytes,
+        backup_count=args.log_backup_count,
+    )
 
     if not args.db.exists():
         log.log(f"ERROR: db not found: {args.db}")
