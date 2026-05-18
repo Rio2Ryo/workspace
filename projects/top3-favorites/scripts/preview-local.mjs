@@ -90,11 +90,20 @@ function themeKey(item) {
   return item.tag.trim().toLowerCase()
 }
 
+function compareTop3Items(a, b) {
+  return (
+    a.rank - b.rank ||
+    b.updatedAt.localeCompare(a.updatedAt) ||
+    a.name.localeCompare(b.name, 'ja') ||
+    a.id.localeCompare(b.id)
+  )
+}
+
 function rebalance(items, target) {
   const key = themeKey(target)
   const same = items
     .filter((item) => themeKey(item) === key && item.id !== target.id)
-    .sort((a, b) => a.rank - b.rank || b.updatedAt.localeCompare(a.updatedAt))
+    .sort(compareTop3Items)
   const inserted = []
   let pushed = false
   for (const item of same) {
@@ -119,7 +128,7 @@ function normalizeImportedTop3(items) {
   const normalized = []
   for (const list of byTheme.values()) {
     const top3 = [...list]
-      .sort((a, b) => a.rank - b.rank || b.updatedAt.localeCompare(a.updatedAt))
+      .sort(compareTop3Items)
       .slice(0, 3)
       .map((item, index) => ({ ...item, rank: index + 1 }))
     normalized.push(...top3)

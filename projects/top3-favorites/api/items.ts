@@ -126,11 +126,20 @@ function themeKey(item: Pick<FavoriteItem, 'tag'>): string {
   return item.tag.trim().toLowerCase()
 }
 
+function compareTop3Items(a: FavoriteItem, b: FavoriteItem): number {
+  return (
+    a.rank - b.rank ||
+    b.updatedAt.localeCompare(a.updatedAt) ||
+    a.name.localeCompare(b.name, 'ja') ||
+    a.id.localeCompare(b.id)
+  )
+}
+
 function rebalance(items: FavoriteItem[], target: FavoriteItem): FavoriteItem[] {
   const key = themeKey(target)
   const same = items
     .filter((item) => themeKey(item) === key && item.id !== target.id)
-    .sort((a, b) => a.rank - b.rank || b.updatedAt.localeCompare(a.updatedAt))
+    .sort(compareTop3Items)
 
   const inserted: FavoriteItem[] = []
   let pushed = false
@@ -158,7 +167,7 @@ function normalizeImportedTop3(items: FavoriteItem[]): FavoriteItem[] {
   const normalized: FavoriteItem[] = []
   for (const list of byTheme.values()) {
     const top3 = [...list]
-      .sort((a, b) => a.rank - b.rank || b.updatedAt.localeCompare(a.updatedAt))
+      .sort(compareTop3Items)
       .slice(0, 3)
       .map((item, index) => ({ ...item, rank: (index + 1) as Rank }))
     normalized.push(...top3)

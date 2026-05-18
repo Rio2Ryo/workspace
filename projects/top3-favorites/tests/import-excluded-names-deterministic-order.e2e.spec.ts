@@ -25,9 +25,9 @@ test('import preview shows excluded store names in deterministic sorted order', 
     buffer: Buffer.from(JSON.stringify(payload), 'utf-8'),
   })
 
-  await expect(page.getByText('同一タグはTop3に正規化: 5件中3件を反映予定')).toBeVisible()
-  await expect(page.getByText('追加3件 / 更新・保持0件 / 削除予定0件 / 正規化で除外予定2件')).toBeVisible()
+  await expect(page.getByTestId('import-preview-normalization')).toHaveText('同一タグはTop3に正規化: 5件中3件を反映予定')
+  await expect(page.getByTestId('import-preview-impact-math')).toHaveText('追加3件 / 更新・保持0件 / 削除予定0件 / 正規化で除外予定2件')
 
   // Excluded names should be deterministic (ja locale sort), not input-order dependent
-  await expect(page.getByText('除外予定の店舗: Y店, Z店')).toBeVisible()
+  await expect(page.getByTestId('import-preview-excluded-names')).toHaveText('除外予定の店舗: Y店, Z店')
 })

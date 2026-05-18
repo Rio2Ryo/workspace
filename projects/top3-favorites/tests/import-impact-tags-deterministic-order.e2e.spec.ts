@@ -23,5 +23,5 @@ test('import preview shows impacted tags in deterministic sorted order', async (
     buffer: Buffer.from(JSON.stringify(payload), 'utf-8'),
   })
 
-  await expect(page.getByText('影響タグ: カフェラテ, つけ麺, プリン')).toBeVisible()
+  await expect(page.getByTestId('import-preview-impact-tags')).toHaveText('影響タグ: カフェラテ, つけ麺, プリン')
 })
