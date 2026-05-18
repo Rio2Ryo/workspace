@@ -40,6 +40,7 @@
   - 自動確認: `tests/top3.e2e.spec.ts` と `tests/search-memo-contains.e2e.spec.ts` が店名・メモ検索を含む検索導線を検証する
 - [ ] タグチップ押下で該当データのみ表示される
 - [ ] `クリア` で全件表示に戻る
+  - 自動確認: `tests/tag-clear-label-contract.e2e.spec.ts` と `tests/clear-tag-filter-syncs-registration-tag.e2e.spec.ts` がクリア表示・全件復帰・登録フォーム側タグ同期解除を検証する
 
 ---
 
@@ -56,10 +57,12 @@
 - [ ] **永続化確認**
   - 手順: 追加後に再読み込みする
   - 期待: `/api/items` から取得したデータが一覧に復元される
+  - 自動確認: `tests/create-persists-after-reload-and-api.e2e.spec.ts` が新規追加後のreload復元とAPI保存内容を検証する
 
 - [ ] **サンプルデータ投入（UI）**
   - 手順: `サンプルをDB保存` を押す
   - 期待: サンプル3件が保存され、再読み込み後も一覧へ反映される
+  - 自動確認: `tests/sample-data-persists-after-reload-and-api.e2e.spec.ts` がサンプル3件のUI表示・reload復元・API保存内容を検証する
 
 - [ ] **API取得失敗耐性**
   - 手順: API停止またはネットワーク失敗を再現できる環境でトップ画面を開く
@@ -81,14 +84,17 @@
 - [ ] **JSONインポート失敗（配列以外）**
   - 手順: `{ "foo": 1 }` のようなJSONを読み込む
   - 期待: 反映されずエラー表示、既存データは保持される
+  - 自動確認: `tests/import-fail-closed-matrix.e2e.spec.ts` が配列以外のJSONを拒否し既存データを保持することを検証する
 
 - [ ] **JSONインポート失敗（不正要素混在）**
   - 手順: 配列内に `id` 欠損・`rank: 4`・空タグなど不正要素を1件混ぜる
   - 期待: 全体を反映しない（fail-closed）、既存データは保持される
+  - 自動確認: `tests/import-fail-closed-matrix.e2e.spec.ts`、`tests/import-export-rank-validation.e2e.spec.ts`、`tests/import-validation-error-details.e2e.spec.ts` が不正要素・rank範囲外・重複ID/行番号付きエラーを検証する
 
 - [ ] **JSONインポート失敗（壊れたJSON）**
   - 手順: パース不能な文字列を `.json` として読み込む
   - 期待: エラー表示、既存データは保持される
+  - 自動確認: `tests/import-broken-json.e2e.spec.ts` と `tests/import-fail-closed-matrix.e2e.spec.ts` がパース不能JSONのエラー表示・既存データ保持・プレビュー破棄を検証する
 
 ### 4.2 インポート確認パネル（import preview）
 

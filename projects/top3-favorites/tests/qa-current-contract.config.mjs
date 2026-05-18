@@ -232,12 +232,24 @@ const rawManualAutomatedLinkContracts = {
       message: 'manual checklist should connect the DevTools console check to an automated startup console smoke spec',
     },
     {
+      pattern: /永続化確認[\s\S]*自動確認: `tests\/create-persists-after-reload-and-api\.e2e\.spec\.ts`/,
+      message: 'manual checklist should connect create reload/API persistence to the automated persistence spec',
+    },
+    {
+      pattern: /サンプルデータ投入（UI）[\s\S]*自動確認: `tests\/sample-data-persists-after-reload-and-api\.e2e\.spec\.ts`/,
+      message: 'manual checklist should connect sample seed reload/API persistence to the automated sample spec',
+    },
+    {
       pattern: /API取得失敗耐性[\s\S]*自動確認: `tests\/api-load-retry\.e2e\.spec\.ts`/,
       message: 'manual checklist should connect API failure resilience to the automated retry spec',
     },
     {
       pattern: /検索欄で `店名\/タグ\/場所\/メモ` それぞれ部分一致検索が効く[\s\S]*自動確認: `tests\/top3\.e2e\.spec\.ts` と `tests\/search-memo-contains\.e2e\.spec\.ts`/,
       message: 'manual checklist should connect multi-field partial search to automated search specs',
+    },
+    {
+      pattern: /`クリア` で全件表示に戻る[\s\S]*自動確認: `tests\/tag-clear-label-contract\.e2e\.spec\.ts` と `tests\/clear-tag-filter-syncs-registration-tag\.e2e\.spec\.ts`/,
+      message: 'manual checklist should connect clear-filter behavior to automated clear/reset specs',
     },
     {
       pattern: /各アイテムの `Maps` を押すと新規タブでGoogle Maps検索が開く[\s\S]*自動確認: `tests\/maps-link-new-tab-contract\.e2e\.spec\.ts` と `tests\/maps-link-query\.e2e\.spec\.ts`/,
@@ -250,6 +262,18 @@ const rawManualAutomatedLinkContracts = {
     {
       pattern: /JSONインポート成功（正常データ）[\s\S]*自動確認: `tests\/import-export\.e2e\.spec\.ts`/,
       message: 'manual checklist should connect JSON import success to the automated import/export roundtrip spec',
+    },
+    {
+      pattern: /JSONインポート失敗（配列以外）[\s\S]*自動確認: `tests\/import-fail-closed-matrix\.e2e\.spec\.ts`/,
+      message: 'manual checklist should connect non-array JSON import failure to the automated fail-closed matrix spec',
+    },
+    {
+      pattern: /JSONインポート失敗（不正要素混在）[\s\S]*自動確認: `tests\/import-fail-closed-matrix\.e2e\.spec\.ts`、`tests\/import-export-rank-validation\.e2e\.spec\.ts`、`tests\/import-validation-error-details\.e2e\.spec\.ts`/,
+      message: 'manual checklist should connect invalid mixed import rows to automated validation specs',
+    },
+    {
+      pattern: /JSONインポート失敗（壊れたJSON）[\s\S]*自動確認: `tests\/import-broken-json\.e2e\.spec\.ts` と `tests\/import-fail-closed-matrix\.e2e\.spec\.ts`/,
+      message: 'manual checklist should connect broken JSON import failure to automated parse-error specs',
     },
     {
       pattern: /編集ボタンで既存値が編集フォームに入る[\s\S]*編集保存で一覧表示が更新される[\s\S]*自動確認: `tests\/edit-form-accessibility\.e2e\.spec\.ts`/,
@@ -309,11 +333,14 @@ Object.freeze(rawDeepFreezeSkipTypeRules)
 export const deepFreezeSkipTypeRules = rawDeepFreezeSkipTypeRules
 
 const rawMissingItemsContextKeyContract = {
-  allowed: ['configured', 'discovered', 'documentedMatches', 'listed', 'missingOnDisk', 'observed'],
+  allowed: ['configured', 'discovered', 'documentedMatches', 'expected', 'listed', 'missingOnDisk', 'observed', 'scopePriorityDeadScopes', 'usedScopes'],
   allowedContextSortModes: ['key', 'valueCountDesc'],
+  scopePriority: ['App', 'Docs', 'Manual', 'README', 'E2E-Helper'],
+  enforceDeadScopePriority: false,
 }
 Object.freeze(rawMissingItemsContextKeyContract.allowed)
 Object.freeze(rawMissingItemsContextKeyContract.allowedContextSortModes)
+Object.freeze(rawMissingItemsContextKeyContract.scopePriority)
 Object.freeze(rawMissingItemsContextKeyContract)
 export const missingItemsContextKeyContract = rawMissingItemsContextKeyContract
 

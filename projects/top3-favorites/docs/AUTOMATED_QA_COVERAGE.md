@@ -14,6 +14,7 @@
 
 - `tests/startup-console-health.e2e.spec.ts`
 - `tests/create-persists-after-reload-and-api.e2e.spec.ts`
+- `tests/sample-data-persists-after-reload-and-api.e2e.spec.ts`
 - `tests/rank-selection-preserved.e2e.spec.ts`
 - `tests/rebalance-persists-after-reload-and-api.e2e.spec.ts`
 - `tests/top3.e2e.spec.ts`

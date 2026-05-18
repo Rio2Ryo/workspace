@@ -459,10 +459,93 @@ test('[App][config-quality] missingItemsMessage context key dictionary and usage
       items: unknown,
     }),
   )
+
+  const scopePriority = [...missingItemsContextKeyContract.scopePriority]
+  const expectedScopePriority = ['App', 'Docs', 'Manual', 'README', 'E2E-Helper']
+  const { duplicates: duplicatedScopePriority } = analyzeEnumList(scopePriority, { locale: 'en' })
+  const emptyScopePriority = scopePriority.filter((s) => s.trim().length === 0)
+  const invalidScopePriority = scopePriority.filter((s) => !expectedScopePriority.includes(s))
+  const deadScopePriority = scopePriority.filter((s) => {
+    const scopes = Array.from(usageByScope.values()).flatMap((v) => Array.from(v))
+    return !scopes.includes(s)
+  }).sort((a, b) => a.localeCompare(b, 'en'))
+
+  assert.deepEqual(
+    emptyScopePriority,
+    [],
+    missingItemsMessage({
+      scope: 'App',
+      rule: 'missingItemsContextKeyContract.scopePriority non-empty entries',
+      fix: 'remove empty entries from missingItemsContextKeyContract.scopePriority',
+      items: emptyScopePriority,
+    }),
+  )
+  assert.deepEqual(
+    duplicatedScopePriority,
+    [],
+    missingItemsMessage({
+      scope: 'App',
+      rule: 'missingItemsContextKeyContract.scopePriority uniqueness',
+      fix: 'remove duplicate entries from missingItemsContextKeyContract.scopePriority',
+      items: duplicatedScopePriority,
+    }),
+  )
+  assert.deepEqual(
+    invalidScopePriority,
+    [],
+    missingItemsMessage({
+      scope: 'App',
+      rule: 'missingItemsContextKeyContract.scopePriority allowed set',
+      fix: 'align scopePriority entries with qaTestTitleSubscopeContract.allowedByScope keys',
+      context: { expectedScopePriority },
+      items: invalidScopePriority,
+    }),
+  )
+  assert.deepEqual(
+    scopePriority,
+    expectedScopePriority,
+    missingItemsMessage({
+      scope: 'App',
+      rule: 'missingItemsContextKeyContract.scopePriority order policy',
+      fix: 'keep scopePriority order consistent with qaTestTitleSubscopeContract.allowedByScope key order',
+      context: {
+        configured: scopePriority,
+        expected: expectedScopePriority,
+      },
+      items: [],
+    }),
+  )
+  if (missingItemsContextKeyContract.enforceDeadScopePriority) {
+    assert.deepEqual(
+      deadScopePriority,
+      [],
+      missingItemsMessage({
+        scope: 'App',
+        rule: 'missingItemsContextKeyContract.scopePriority dead scope entries',
+        fix: 'remove unused scopes from scopePriority or add matching context usage in tests',
+        context: {
+          usedScopes: Array.from(new Set(Array.from(usageByScope.values()).flatMap((v) => Array.from(v)))).sort((a, b) =>
+            a.localeCompare(b, 'en'),
+          ),
+        },
+        items: deadScopePriority,
+      }),
+    )
+  }
+
+  const scopeRank = new Map(scopePriority.map((s, i) => [s, i]))
   const usageSummary = Object.fromEntries(
     Array.from(usageByScope.entries())
       .sort((a, b) => a[0].localeCompare(b[0], 'en'))
-      .map(([key, scopes]) => [key, Array.from(scopes).sort((a, b) => a.localeCompare(b, 'en')).join(', ')]),
+      .map(([key, scopes]) => {
+        const sortedScopes = Array.from(scopes).sort((a, b) => {
+          const ra = scopeRank.has(a) ? scopeRank.get(a) : Number.MAX_SAFE_INTEGER
+          const rb = scopeRank.has(b) ? scopeRank.get(b) : Number.MAX_SAFE_INTEGER
+          if (ra !== rb) return ra - rb
+          return a.localeCompare(b, 'en')
+        })
+        return [key, `${sortedScopes.join(', ')} (count=${sortedScopes.length})`]
+      }),
   )
 
   assert.deepEqual(
@@ -472,7 +555,10 @@ test('[App][config-quality] missingItemsMessage context key dictionary and usage
       scope: 'App',
       rule: 'missingItemsContextKeyContract.allowed dead keys',
       fix: 'remove unused keys from missingItemsContextKeyContract.allowed or add matching context usage',
-      context: usageSummary,
+      context: {
+        ...usageSummary,
+        scopePriorityDeadScopes: deadScopePriority.join(', '),
+      },
       contextSortMode: 'valueCountDesc',
       items: deadAllowedKeys,
     }),
