@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test'
-import { resetItemsByReplace } from './e2e-helpers'
+import { uploadJsonImportFile, resetItemsByReplace } from './e2e-helpers'
 
 test.beforeEach(async ({ request }) => {
   await resetItemsByReplace(request)
@@ -14,11 +14,7 @@ test('import validation error identifies the first invalid row and field for qui
     { id: 'invalid-2', tag: '   ', location: '柏の葉', name: 'Whitespace Tag Shop', rank: 2, memo: '', mapsUrl: '', placeId: '', createdAt: now, updatedAt: now },
   ]
 
-  await page.locator('input[type="file"][accept*="json"]').setInputFiles({
-    name: 'invalid-import-field-details.json',
-    mimeType: 'application/json',
-    buffer: Buffer.from(JSON.stringify(invalidItems), 'utf-8'),
-  })
+  await uploadJsonImportFile(page, 'invalid-import-field-details.json', invalidItems)
 
   await expect(page.getByRole('alert')).toContainText(
     'インポート失敗: ファイル「invalid-import-field-details.json」の2件目 / フィールド: tag / 修正: タグを入力してください。既存データは保持しました。',

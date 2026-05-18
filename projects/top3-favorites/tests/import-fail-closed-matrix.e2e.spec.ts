@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test'
-import { resetItemsByReplace } from './e2e-helpers'
+import { uploadJsonImportFile, resetItemsByReplace } from './e2e-helpers'
 
 test.beforeEach(async ({ request }) => {
   await resetItemsByReplace(request)
@@ -15,7 +15,6 @@ test('import fail-closed matrix: all invalid inputs keep existing data and clear
   await page.getByRole('button', { name: 'DBに保存' }).click()
   await expect(page.getByRole('status')).toContainText('カフェラテ の1位に保存しました。')
 
-  const fileInput = page.locator('input[type="file"][accept*="json"]')
   const now = new Date().toISOString()
 
   const cases: Array<{ name: string; body: string | object; expected: RegExp }> = [
@@ -45,8 +44,7 @@ test('import fail-closed matrix: all invalid inputs keep existing data and clear
   ]
 
   for (const c of cases) {
-    const buffer = Buffer.from(typeof c.body === 'string' ? c.body : JSON.stringify(c.body), 'utf-8')
-    await fileInput.setInputFiles({ name: c.name, mimeType: 'application/json', buffer })
+    await uploadJsonImportFile(page, c.name, c.body)
 
     await expect(page.getByRole('alert')).toContainText(c.expected)
     await expect(page.getByLabel('インポート確認')).toHaveCount(0)
@@ -62,26 +60,14 @@ test('import fail-closed matrix: all invalid inputs keep existing data and clear
     { id: 'ok-2', tag: 'スイーツ', location: '浅草', name: 'Valid B', rank: 2, memo: '', mapsUrl: '', placeId: '', createdAt: now, updatedAt: now },
   ]
 
-  await fileInput.setInputFiles({
-    name: 'valid-first.json',
-    mimeType: 'application/json',
-    buffer: Buffer.from(JSON.stringify(validItems), 'utf-8'),
-  })
+  await uploadJsonImportFile(page, 'valid-first.json', validItems)
   await expect(page.getByLabel('インポート確認')).toBeVisible()
 
-  await fileInput.setInputFiles({
-    name: 'invalid-middle.json',
-    mimeType: 'application/json',
-    buffer: Buffer.from('{"broken": ', 'utf-8'),
-  })
+  await uploadJsonImportFile(page, 'invalid-middle.json', '{"broken": ')
   await expect(page.getByRole('alert')).toContainText(/ファイル「invalid-middle\.json」のJSON構文を解析できません/)
   await expect(page.getByLabel('インポート確認')).toHaveCount(0)
 
-  await fileInput.setInputFiles({
-    name: 'valid-last.json',
-    mimeType: 'application/json',
-    buffer: Buffer.from(JSON.stringify(validItems), 'utf-8'),
-  })
+  await uploadJsonImportFile(page, 'valid-last.json', validItems)
   await expect(page.getByLabel('インポート確認')).toBeVisible()
   await page.getByRole('button', { name: 'この内容でインポート' }).click()
   await expect(page.getByRole('status')).toContainText('インポート成功: 2件を反映しました。')

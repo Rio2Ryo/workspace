@@ -1,5 +1,5 @@
 import { readFile } from 'node:fs/promises'
-import { expect, type APIRequestContext, type Download, type Locator } from '@playwright/test'
+import { expect, type APIRequestContext, type Download, type Locator, type Page } from '@playwright/test'
 import { validateImportPreviewSummary } from '../src/shared/import-preview-summary-contract.mjs'
 
 export async function resetItemsByReplace(request: APIRequestContext, items: unknown[] = []) {
@@ -9,6 +9,15 @@ export async function resetItemsByReplace(request: APIRequestContext, items: unk
 
 export async function resetItemsByDelete(request: APIRequestContext) {
   await resetItemsByReplace(request)
+}
+
+export async function uploadJsonImportFile(page: Page, name: string, body: string | unknown): Promise<void> {
+  const buffer = Buffer.from(typeof body === 'string' ? body : JSON.stringify(body), 'utf-8')
+  await page.locator('input[type="file"][accept*="json"]').setInputFiles({
+    name,
+    mimeType: 'application/json',
+    buffer,
+  })
 }
 
 export async function parseImportPreviewSummary<T = Record<string, unknown>>(summaryLocator: Locator): Promise<T> {

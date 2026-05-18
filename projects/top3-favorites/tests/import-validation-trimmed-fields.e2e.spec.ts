@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test'
-import { resetItemsByReplace } from './e2e-helpers'
+import { uploadJsonImportFile, resetItemsByReplace } from './e2e-helpers'
 
 test.beforeEach(async ({ request }) => {
   await resetItemsByReplace(request)
@@ -26,12 +26,7 @@ test('import rejects whitespace-only required fields with clear validation messa
     },
   ]
 
-  const fileInput = page.locator('input[type="file"][accept*="json"]')
-  await fileInput.setInputFiles({
-    name: 'invalid-whitespace-fields.json',
-    mimeType: 'application/json',
-    buffer: Buffer.from(JSON.stringify(invalidItems), 'utf-8'),
-  })
+  await uploadJsonImportFile(page, 'invalid-whitespace-fields.json', invalidItems)
 
   await expect(page.getByRole('alert')).toContainText(
     'インポート失敗: ファイル「invalid-whitespace-fields.json」の1件目 / フィールド: id / 修正: IDを入力してください。既存データは保持しました。',
