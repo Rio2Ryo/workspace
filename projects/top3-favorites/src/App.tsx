@@ -46,11 +46,12 @@ type PendingImport = {
 type ImportValidationIssue = {
   filename: string
   row: string
+  path: string
   field: string
   fix: string
   message: string
   totalIssues: number
-  relatedIssues: Array<Pick<ImportValidationIssue, 'row' | 'field' | 'fix'>>
+  relatedIssues: Array<Pick<ImportValidationIssue, 'row' | 'path' | 'field' | 'fix'>>
 }
 
 const initialDraft: Draft = {
@@ -119,15 +120,19 @@ function rankItems(items: FavoriteItem[], target?: FavoriteItem): FavoriteItem[]
 function importItemValidationIssue(value: unknown, index: number, filename: string): ImportValidationIssue | null {
   const row = `${index + 1}件目`
   const prefix = `ファイル「${filename}」の${row}`
-  const detail = (field: string, fix: string): ImportValidationIssue => ({
-    filename,
-    row,
-    field,
-    fix,
-    message: `${prefix} / フィールド: ${field} / 修正: ${fix}`,
-    totalIssues: 1,
-    relatedIssues: [{ row, field, fix }],
-  })
+  const detail = (field: string, fix: string): ImportValidationIssue => {
+    const path = field === 'item' ? `$.items[${index}]` : `$.items[${index}].${field}`
+    return {
+      filename,
+      row,
+      path,
+      field,
+      fix,
+      message: `${prefix} / フィールド: ${field} / 修正: ${fix}`,
+      totalIssues: 1,
+      relatedIssues: [{ row, path, field, fix }],
+    }
+  }
   if (!value || typeof value !== 'object') return detail('item', '各行をオブジェクト形式にしてください。')
   const o = value as Record<string, unknown>
 
@@ -637,7 +642,7 @@ export function App() {
         const issueWithCount = {
           ...importValidationIssue,
           totalIssues: importValidationIssues.length,
-          relatedIssues: importValidationIssues.map(({ row, field, fix }) => ({ row, field, fix })),
+          relatedIssues: importValidationIssues.map(({ row, path, field, fix }) => ({ row, path, field, fix })),
         }
         setError(`インポート失敗: ${issueWithCount.message}既存データは保持しました。`)
         setImportValidationIssue(issueWithCount)
@@ -892,6 +897,10 @@ export function App() {
                       <dd>{importValidationIssue.row}</dd>
                     </div>
                     <div>
+                      <dt>JSONパス</dt>
+                      <dd>{importValidationIssue.path}</dd>
+                    </div>
+                    <div>
                       <dt>フィールド</dt>
                       <dd>{importValidationIssue.field}</dd>
                     </div>
@@ -912,7 +921,7 @@ export function App() {
                       <p className="hint compact">検出した修正対象</p>
                       <ol>
                         {importValidationIssue.relatedIssues.map((issue) => (
-                          <li key={`${issue.row}-${issue.field}`}>{issue.row} / {issue.field} / {issue.fix}</li>
+                          <li key={`${issue.row}-${issue.path}-${issue.field}`}>{issue.row} / {issue.path} / {issue.field} / {issue.fix}</li>
                         ))}
                       </ol>
                     </div>

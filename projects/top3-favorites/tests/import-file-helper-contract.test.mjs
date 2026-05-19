@@ -155,16 +155,17 @@ test('[E2E-Helper][import-file] import validation errors expose structured repai
   const appSource = await readFile(appPath, 'utf8')
   const validationSpec = await readFile(new URL('tests/import-validation-error-details.e2e.spec.ts', `${root}/`), 'utf8')
 
-  assert.match(appSource, /type ImportValidationIssue = \{[\s\S]*filename: string[\s\S]*row: string[\s\S]*field: string[\s\S]*fix: string[\s\S]*message: string[\s\S]*totalIssues: number[\s\S]*relatedIssues: Array<Pick<ImportValidationIssue, 'row' \| 'field' \| 'fix'>>[\s\S]*\}/, 'App should keep structured import validation issue data instead of only a joined error sentence')
+  assert.match(appSource, /type ImportValidationIssue = \{[\s\S]*filename: string[\s\S]*row: string[\s\S]*path: string[\s\S]*field: string[\s\S]*fix: string[\s\S]*message: string[\s\S]*totalIssues: number[\s\S]*relatedIssues: Array<Pick<ImportValidationIssue, 'row' \| 'path' \| 'field' \| 'fix'>>[\s\S]*\}/, 'App should keep structured import validation issue data instead of only a joined error sentence')
   assert.match(appSource, /data-testid="import-validation-error-details"/, 'App should render a dedicated validation repair details block')
-  assert.match(appSource, /<dl>[\s\S]*<dt>ファイル<\/dt>[\s\S]*<dt>行<\/dt>[\s\S]*<dt>フィールド<\/dt>[\s\S]*<dt>修正<\/dt>[\s\S]*<dt>検出件数<\/dt>/, 'App should keep file, row, field, fix, and total issue count as separate term labels')
+  assert.match(appSource, /<dl>[\s\S]*<dt>ファイル<\/dt>[\s\S]*<dt>行<\/dt>[\s\S]*<dt>JSONパス<\/dt>[\s\S]*<dt>フィールド<\/dt>[\s\S]*<dt>修正<\/dt>[\s\S]*<dt>検出件数<\/dt>/, 'App should keep file, row, JSON path, field, fix, and total issue count as separate term labels')
+  assert.match(appSource, /\$\.items\[\$\{index\}\]\.\$\{field\}/, 'App should expose JSON paths for field-level import validation issues')
   assert.match(appSource, /検出した修正対象[\s\S]*relatedIssues\.map/, 'App should show the full list of detected validation issues for multi-error recovery')
   const helperSource = await readFile(helperPath, 'utf8')
   assert.match(helperSource, /export function importValidationErrorDetails/, 'tests/e2e-helpers.ts should export importValidationErrorDetails(page)')
   assert.match(helperSource, /getByTestId\('import-validation-error-details'\)/, 'importValidationErrorDetails helper should own the validation details test id')
   assert.match(validationSpec, /importValidationErrorDetails\(page\)/, 'E2E should verify the structured import validation details block through the shared helper')
   assert.doesNotMatch(validationSpec, /getByTestId\('import-validation-error-details'\)/, 'E2E specs should not duplicate the import validation details test id')
-  assert.match(validationSpec, /locator\('dt'\)\)\.toHaveText\(\['ファイル', '行', 'フィールド', '修正', '検出件数'\]\)/, 'E2E should verify the term labels including total issue count, not just the joined alert text')
+  assert.match(validationSpec, /locator\('dt'\)\)\.toHaveText\(\['ファイル', '行', 'JSONパス', 'フィールド', '修正', '検出件数'\]\)/, 'E2E should verify the term labels including JSON path and total issue count, not just the joined alert text')
 })
 
 test('[E2E-Helper][import-file] uploadJsonImportFile helper owns selector/mime/buffer mechanics', async () => {
