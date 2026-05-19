@@ -239,6 +239,14 @@ const rawManualAutomatedLinkContracts = {
       message: 'manual checklist should connect create reload/API persistence to the automated persistence spec',
     },
     {
+      pattern: /正常入力（メモなし）[\s\S]*期待: 追加され、メモ欄は `（メモなし）`[\s\S]*自動確認: `tests\/memo-empty-fallback\.e2e\.spec\.ts`/,
+      message: 'manual checklist should connect empty memo fallback to the automated memo-empty spec',
+    },
+    {
+      pattern: /順位選択[\s\S]*入力: 順位を `3位` にして保存[\s\S]*自動確認: `tests\/rank-selection-preserved\.e2e\.spec\.ts` と `tests\/api-rank-selection-preserved\.e2e\.spec\.ts`/,
+      message: 'manual checklist should connect explicit rank selection to the UI/API automated rank specs',
+    },
+    {
       pattern: /サンプルデータ投入（UI）[\s\S]*自動確認: `tests\/sample-data-persists-after-reload-and-api\.e2e\.spec\.ts`/,
       message: 'manual checklist should connect sample seed reload/API persistence to the automated sample spec',
     },
