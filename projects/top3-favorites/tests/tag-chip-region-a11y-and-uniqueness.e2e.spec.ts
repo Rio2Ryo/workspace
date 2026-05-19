@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test'
-import { resetItemsByReplace } from './e2e-helpers'
+import { tagFilterButton, resetItemsByReplace } from './e2e-helpers'
 
 const item = (id: string, tag: string, rank: 1 | 2 | 3, name: string) => ({
   id,
@@ -31,12 +31,12 @@ test('tag chip regions have distinct accessible labels and show each tag once pe
   await expect(registrationTags).toBeVisible()
   await expect(searchTags).toBeVisible()
 
-  await expect(registrationTags.getByRole('button', { name: '#重複タグ' })).toHaveCount(1)
-  await expect(registrationTags.getByRole('button', { name: '#別タグ' })).toHaveCount(1)
-  await expect(searchTags.getByRole('button', { name: '#重複タグ' })).toHaveCount(1)
-  await expect(searchTags.getByRole('button', { name: '#別タグ' })).toHaveCount(1)
+  await expect(tagFilterButton(registrationTags, '重複タグ')).toHaveCount(1)
+  await expect(tagFilterButton(registrationTags, '別タグ')).toHaveCount(1)
+  await expect(tagFilterButton(searchTags, '重複タグ')).toHaveCount(1)
+  await expect(tagFilterButton(searchTags, '別タグ')).toHaveCount(1)
 
-  await searchTags.getByRole('button', { name: '#重複タグ' }).click()
+  await tagFilterButton(searchTags, '重複タグ').click()
   await expect(page.getByText(/1位: 重複タグA/)).toBeVisible()
   await expect(page.getByText(/2位: 重複タグB/)).toBeVisible()
   await expect(page.getByText(/1位: 別タグA/)).not.toBeVisible()

@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test'
-import { acceptNextDeleteDialog, resetItemsByReplace, itemDeleteButton } from './e2e-helpers'
+import { tagFilterButton, acceptNextDeleteDialog, resetItemsByReplace, itemDeleteButton } from './e2e-helpers'
 
 test.beforeEach(async ({ request }) => {
   await resetItemsByReplace(request)
@@ -15,7 +15,7 @@ test('delete removes only the confirmed target item when multiple tags exist', a
 
   // Open target item and delete only that one
   const searchSection = page.locator('section.card').filter({ has: page.getByRole('heading', { name: '探す' }) })
-  await searchSection.getByRole('button', { name: '#カフェラテ' }).click()
+  await tagFilterButton(searchSection, 'カフェラテ').click()
   await expect(searchSection.getByText(/\d位: 削除対象A/)).toBeVisible()
   await searchSection.getByText(/\d位: 削除対象A/).click()
 

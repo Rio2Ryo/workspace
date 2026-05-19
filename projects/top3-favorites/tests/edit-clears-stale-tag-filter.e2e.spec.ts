@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test'
-import { itemEditButton, editSaveButton, resetItemsByReplace, registrationSaveButton } from './e2e-helpers'
+import { tagFilterButton, itemEditButton, editSaveButton, resetItemsByReplace, registrationSaveButton } from './e2e-helpers'
 
 test.beforeEach(async ({ request }) => {
   await resetItemsByReplace(request)
@@ -24,7 +24,7 @@ test('editing last item tag clears stale selected filter so remaining data is vi
   const searchSection = page.locator('section.card').filter({ has: page.getByRole('heading', { name: '探す' }) })
 
   // Filter by 元タグ and edit its only item to another tag
-  await searchSection.getByRole('button', { name: '#元タグ' }).click()
+  await tagFilterButton(searchSection, '元タグ').click()
   await expect(searchSection.getByText(/\d位: Move Me/)).toBeVisible()
   await searchSection.getByText(/\d位: Move Me/).click()
   await itemEditButton(searchSection, 'Move Me').click()

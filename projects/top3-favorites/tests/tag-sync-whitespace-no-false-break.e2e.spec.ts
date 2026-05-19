@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test'
-import { resetItemsByReplace, registrationSaveButton } from './e2e-helpers'
+import { tagFilterButton, resetItemsByReplace, registrationSaveButton } from './e2e-helpers'
 
 test.beforeEach(async ({ request }) => {
   await resetItemsByReplace(request)
@@ -14,7 +14,7 @@ test('typing same tag with trailing whitespace does not falsely break sync', asy
   await registrationSaveButton(page).click()
 
   const searchSection = page.locator('section.card').filter({ has: page.getByRole('heading', { name: '探す' }) })
-  await searchSection.getByRole('button', { name: '#カフェラテ' }).click()
+  await tagFilterButton(searchSection, 'カフェラテ').click()
   await expect(page.getByTestId('tag-sync-status')).toHaveCount(1)
 
   await page.getByLabel('タグ', { exact: true }).fill('カフェラテ ')

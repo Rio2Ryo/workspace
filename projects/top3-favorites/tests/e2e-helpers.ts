@@ -27,6 +27,11 @@ export async function clearSearchTagFilter(searchSection: Locator): Promise<void
   await clearButton.click()
 }
 
+export function tagFilterButton(scope: Page | Locator, tag: string): Locator {
+  const name = `#${tag}`
+  return scope.getByRole('button', { name })
+}
+
 export function registrationSaveButton(page: Page): Locator {
   return page.getByRole('button', { name: 'DBに保存' })
 }

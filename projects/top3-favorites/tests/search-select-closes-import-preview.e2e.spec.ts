@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test'
-import { uploadJsonImportFile, resetItemsByReplace, registrationSaveButton } from './e2e-helpers'
+import { tagFilterButton, uploadJsonImportFile, resetItemsByReplace, registrationSaveButton } from './e2e-helpers'
 
 test.beforeEach(async ({ request }) => {
   await resetItemsByReplace(request)
@@ -21,6 +21,6 @@ test('selecting search tag closes pending import preview to avoid mixed contexts
   await expect(page.getByLabel('インポート確認')).toBeVisible()
 
   const searchSection = page.locator('section.card').filter({ has: page.getByRole('heading', { name: '探す' }) })
-  await searchSection.getByRole('button', { name: '#カフェラテ' }).click()
+  await tagFilterButton(searchSection, 'カフェラテ').click()
   await expect(page.getByLabel('インポート確認')).toHaveCount(0)
 })
