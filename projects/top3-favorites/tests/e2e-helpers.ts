@@ -76,6 +76,22 @@ export function editRankButton(page: Page, rank: 1 | 2 | 3): Locator {
   return page.getByRole('button', { name: `編集 ${rank}位に変更` })
 }
 
+export function editNameField(page: Page): Locator {
+  return page.getByRole('textbox', { name: '編集 店舗名' })
+}
+
+export function editTagField(page: Page): Locator {
+  return page.getByRole('combobox', { name: '編集 タグ' })
+}
+
+export function editLocationField(page: Page): Locator {
+  return page.getByRole('textbox', { name: '編集 場所' })
+}
+
+export function editMemoField(page: Page): Locator {
+  return page.getByRole('textbox', { name: '編集 メモ' })
+}
+
 export function editSaveButton(page: Page): Locator {
   return page.getByRole('button', { name: '編集を保存' })
 }

@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test'
-import { itemEditButton, editCancelButton, editSaveButton, resetItemsByReplace, saveSampleItems, expectOperationAlert, expectOperationStatus, operationAlert } from './e2e-helpers'
+import { itemEditButton, editCancelButton, editSaveButton, resetItemsByReplace, saveSampleItems, expectOperationAlert, expectOperationStatus, operationAlert, editNameField, editTagField, editLocationField, editMemoField } from './e2e-helpers'
 
 test.beforeEach(async ({ request }) => {
   await resetItemsByReplace(request)
@@ -12,11 +12,11 @@ test('edit form fields have accessible names and save edited Top3 data', async (
   await page.getByText(/\d位: Solito MAGO/).first().click()
   await itemEditButton(page, /編集$/).click()
 
-  const nameField = page.getByRole('textbox', { name: '編集 店舗名' })
+  const nameField = editNameField(page)
   await expect(nameField).toBeVisible()
-  await expect(page.getByRole('combobox', { name: '編集 タグ' })).toBeVisible()
-  await expect(page.getByRole('textbox', { name: '編集 場所' })).toBeVisible()
-  await expect(page.getByRole('textbox', { name: '編集 メモ' })).toBeVisible()
+  await expect(editTagField(page)).toBeVisible()
+  await expect(editLocationField(page)).toBeVisible()
+  await expect(editMemoField(page)).toBeVisible()
 
   await nameField.fill('Solito MAGO Edited')
   await editSaveButton(page).click()
@@ -35,11 +35,11 @@ test('edit form validates required fields before saving', async ({ page }) => {
   await page.getByText(/\d位: Solito MAGO/).first().click()
   await itemEditButton(page, /編集$/).click()
 
-  await page.getByRole('textbox', { name: '編集 店舗名' }).fill('   ')
+  await editNameField(page).fill('   ')
   await editSaveButton(page).click()
 
   await expectOperationAlert(page, 'タグと店舗名は必須です。')
-  await expect(page.getByRole('textbox', { name: '編集 店舗名' })).toBeVisible()
+  await expect(editNameField(page)).toBeVisible()
 
   await editCancelButton(page).click()
   await expect(page.getByText(/\d位: Solito MAGO/)).toBeVisible()
