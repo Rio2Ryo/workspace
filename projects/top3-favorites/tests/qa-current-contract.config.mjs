@@ -319,8 +319,8 @@ const rawManualAutomatedLinkContracts = {
       message: 'manual checklist should connect import preview live summary behavior to child-level automated specs',
     },
     {
-      pattern: /tags（影響タグ）[\s\S]*影響タグが多い場合、先頭表示 \+ `ほかN件`[\s\S]*`影響タグを全件表示` \/ `影響タグを折りたたむ`[\s\S]*自動確認: `tests\/import-preview\/tags\/import-preview-tags-collapsed\.e2e\.spec\.ts`、`tests\/import-preview\/tags\/import-preview-tags-expand-toggle\.e2e\.spec\.ts`、`tests\/import-preview\/tags\/import-preview-tags-deterministic-order\.e2e\.spec\.ts`/,
-      message: 'manual checklist should connect import preview impacted-tag collapse/expand behavior to automated specs',
+      pattern: /tags（影響タグ）[\s\S]*影響タグが多い場合、先頭表示 \+ `ほかN件`[\s\S]*自動確認: `tests\/import-preview\/tags\/import-preview-tags-collapsed\.e2e\.spec\.ts` と `tests\/import-preview\/tags\/import-preview-tags-deterministic-order\.e2e\.spec\.ts`[\s\S]*`影響タグを全件表示` \/ `影響タグを折りたたむ`[\s\S]*自動確認: `tests\/import-preview\/tags\/import-preview-tags-expand-toggle\.e2e\.spec\.ts`/,
+      message: 'manual checklist should connect import preview impacted-tag collapse/expand behavior to child-level automated specs',
     },
     {
       pattern: /terms（差分用語説明）[\s\S]*初期状態では差分用語説明は非表示[\s\S]*`差分用語の詳細説明を表示`[\s\S]*自動確認: `tests\/import-preview\/terms\/import-preview-terms-helper-toggle\.e2e\.spec\.ts`、`tests\/import-preview\/terms\/import-preview-terms-helper-text\.e2e\.spec\.ts`、`tests\/import-preview\/terms\/import-preview-terms-helper-toggle-a11y\.e2e\.spec\.ts`/,

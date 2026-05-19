@@ -1448,6 +1448,31 @@ test('[Manual][automation-link] import preview live child items have direct auto
   }
 })
 
+test('[Manual][automation-link] import preview tags child items have direct automated links', async () => {
+  const markdown = await readFile(new URL('docs/MANUAL_TEST_CHECKLIST.md', `${root}/`), 'utf8')
+  const childContracts = [
+    {
+      item: '影響タグが多い場合、先頭表示 + `ほかN件` で折りたたまれる',
+      specs: [
+        'tests/import-preview/tags/import-preview-tags-collapsed.e2e.spec.ts',
+        'tests/import-preview/tags/import-preview-tags-deterministic-order.e2e.spec.ts',
+      ],
+    },
+    {
+      item: '`影響タグを全件表示` / `影響タグを折りたたむ` で開閉できる',
+      specs: ['tests/import-preview/tags/import-preview-tags-expand-toggle.e2e.spec.ts'],
+    },
+  ]
+
+  for (const { item, specs } of childContracts) {
+    const block = manualChecklistItemBlock(markdown, item)
+    assert.match(block, /自動確認:/, contractMessage({ scope: 'Manual', rule: 'import preview tags child checklist item has direct automated link', expected: item, fix: 'add an indented 自動確認 line directly under this import preview tags manual checklist item' }))
+    for (const spec of specs) {
+      assert.ok(block.includes(`\`${spec}\``), contractMessage({ scope: 'Manual', rule: 'import preview tags child checklist item cites authoritative spec', expected: spec, fix: 'add the focused tags E2E path to the child item 自動確認 line' }))
+    }
+  }
+})
+
 test('[Manual][automation-link] import preview summary child items have direct automated links', async () => {
   const markdown = await readFile(new URL('docs/MANUAL_TEST_CHECKLIST.md', `${root}/`), 'utf8')
   const childContracts = [

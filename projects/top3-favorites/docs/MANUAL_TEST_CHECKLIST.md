@@ -127,8 +127,9 @@
 
 #### 4.2.3 tags（影響タグ）
 - [ ] 影響タグが多い場合、先頭表示 + `ほかN件` で折りたたまれる
+  - 自動確認: `tests/import-preview/tags/import-preview-tags-collapsed.e2e.spec.ts` と `tests/import-preview/tags/import-preview-tags-deterministic-order.e2e.spec.ts` が影響タグの折りたたみ・安定順序を検証する
 - [ ] `影響タグを全件表示` / `影響タグを折りたたむ` で開閉できる
-  - 自動確認: `tests/import-preview/tags/import-preview-tags-collapsed.e2e.spec.ts`、`tests/import-preview/tags/import-preview-tags-expand-toggle.e2e.spec.ts`、`tests/import-preview/tags/import-preview-tags-deterministic-order.e2e.spec.ts` が影響タグの折りたたみ・開閉・安定順序を検証する
+  - 自動確認: `tests/import-preview/tags/import-preview-tags-expand-toggle.e2e.spec.ts` が影響タグの開閉を検証する
 
 #### 4.2.4 terms（差分用語説明）
 - [ ] 初期状態では差分用語説明は非表示
