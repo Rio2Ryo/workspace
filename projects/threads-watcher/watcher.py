@@ -72,7 +72,7 @@ def _combined_snapshot(conn: Any, handles: list[str]) -> dict[str, Any]:
     posts: list[dict[str, Any]] = []
     for snap in snapshots:
         posts.extend(snap.get("posts", []))
-    posts.sort(key=lambda p: str(p.get("captured_at") or p.get("first_seen_at") or ""), reverse=True)
+    posts.sort(key=lambda p: str(p.get("posted_at") or p.get("captured_at") or p.get("first_seen_at") or ""), reverse=True)
 
     last_checks = [s.get("last_check") for s in snapshots if s.get("last_check")]
     last_checks.sort(key=lambda c: str(c.get("checked_at") or ""), reverse=True)
