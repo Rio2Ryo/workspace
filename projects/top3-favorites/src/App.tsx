@@ -319,6 +319,7 @@ export function App() {
   const [loadError, setLoadError] = useState(false)
   const [pendingImport, setPendingImport] = useState<PendingImport | null>(null)
   const [importValidationIssue, setImportValidationIssue] = useState<ImportValidationIssue | null>(null)
+  const [selectedImportValidationField, setSelectedImportValidationField] = useState('')
   const [isImpactTagsExpanded, setIsImpactTagsExpanded] = useState(false)
   const [isExcludedNamesExpanded, setIsExcludedNamesExpanded] = useState(false)
   const [isExcludedDetailsExpanded, setIsExcludedDetailsExpanded] = useState(false)
@@ -329,6 +330,7 @@ export function App() {
     setError('')
     setNotice('')
     setImportValidationIssue(null)
+    setSelectedImportValidationField('')
     if (options?.pendingImport) {
       setPendingImport(null)
       setIsImpactTagsExpanded(false)
@@ -633,6 +635,14 @@ export function App() {
     ).sort((left, right) => right.count - left.count)
     : []
 
+  const visibleImportValidationIssues = importValidationIssue
+    ? selectedImportValidationField
+      ? importValidationIssue.relatedIssues.filter((issue) => issue.field === selectedImportValidationField)
+      : importValidationIssue.relatedIssues
+    : []
+
+  const selectedImportValidationFieldCount = visibleImportValidationIssues.length
+
   const copyImportExcludedNames = async () => {
     if (!pendingImport) return
     const labels = pendingImport.excludedNameReasonLabels.join('\n')
@@ -715,6 +725,7 @@ export function App() {
         }
         setError(`インポート失敗: ${issueWithCount.message}既存データは保持しました。`)
         setImportValidationIssue(issueWithCount)
+        setSelectedImportValidationField('')
         setNotice('')
         setPendingImport(null)
         return
@@ -723,6 +734,7 @@ export function App() {
       if (duplicateImportError) {
         setError(`インポート失敗: ${duplicateImportError}既存データは保持しました。`)
         setImportValidationIssue(null)
+        setSelectedImportValidationField('')
         setNotice('')
         setPendingImport(null)
         return
@@ -749,6 +761,7 @@ export function App() {
         excludedDetails: analyzed.excludedDetails,
       })
       setImportValidationIssue(null)
+      setSelectedImportValidationField('')
       setIsImpactTagsExpanded(false)
       setIsExcludedNamesExpanded(false)
       setIsExcludedDetailsExpanded(false)
@@ -762,6 +775,7 @@ export function App() {
         setError('インポート失敗: JSONの読み取りに失敗しました。既存データは保持しました。')
       }
       setImportValidationIssue(null)
+      setSelectedImportValidationField('')
       setNotice('')
       setPendingImport(null)
     }
@@ -990,7 +1004,17 @@ export function App() {
                       <p className="hint compact">フィールド別内訳</p>
                       <ul>
                         {importValidationFieldCounts.map(({ field, count }) => (
-                          <li key={field}>{field}: {count}件</li>
+                          <li key={field}>
+                            <button
+                              className="ghost compact"
+                              type="button"
+                              aria-pressed={selectedImportValidationField === field}
+                              onClick={() => setSelectedImportValidationField(field)}
+                            >
+                              {field}の修正対象だけ表示
+                            </button>
+                            <span>{field}: {count}件</span>
+                          </li>
                         ))}
                       </ul>
                     </div>
@@ -998,10 +1022,13 @@ export function App() {
                   {importValidationIssue.relatedIssues.length > 1 && (
                     <div className="import-validation-error-list">
                       <p className="hint compact">検出した修正対象</p>
+                      {selectedImportValidationField && (
+                        <p className="hint compact">表示中: {selectedImportValidationField} の修正対象{selectedImportValidationFieldCount}件</p>
+                      )}
                       <button className="ghost" type="button" onClick={copyImportValidationPaths}>JSONパス一覧をコピー</button>
                       <button className="ghost" type="button" onClick={copyImportValidationRepairs}>修正対象一覧をコピー</button>
                       <ol>
-                        {importValidationIssue.relatedIssues.map((issue) => (
+                        {visibleImportValidationIssues.map((issue) => (
                           <li key={`${issue.row}-${issue.path}-${issue.field}`}>{issue.row} / {issue.path} / {issue.field} / {issue.fix}</li>
                         ))}
                       </ol>

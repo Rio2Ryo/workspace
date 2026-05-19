@@ -6,6 +6,7 @@ import {
   importValidationCopyJsonPaths,
   importValidationCopyRepairList,
   importValidationErrorDetails,
+  importValidationFieldFilter,
   importValidationFieldSummary,
   resetItemsByReplace,
   uploadJsonImportFile,
@@ -56,7 +57,7 @@ test('import validation error identifies the first invalid row and field for qui
   await expect(details.getByText('検出した修正対象')).toBeVisible()
   const fieldSummary = importValidationFieldSummary(page)
   await expect(fieldSummary).toBeVisible()
-  await expect(fieldSummary.locator('li')).toHaveText(['tag: 1件', 'name: 1件'])
+  await expect(fieldSummary.locator('li span')).toHaveText(['tag: 1件', 'name: 1件'])
   await expect(details.locator('.import-validation-error-list ol li')).toHaveText([
     '2件目 / $.items[1].tag / tag / タグを入力してください。',
     '3件目 / $.items[2].name / name / 店舗名を入力してください。',
@@ -87,5 +88,36 @@ test('import validation field summary prioritizes repeated fields over first-see
   await expectOperationAlert(page,
     'インポート失敗: ファイル「invalid-import-field-priority.json」の1件目 / フィールド: name / 修正: 店舗名を入力してください。既存データは保持しました。',
   )
-  await expect(importValidationFieldSummary(page).locator('li')).toHaveText(['tag: 2件', 'name: 1件'])
+  await expect(importValidationFieldSummary(page).locator('li span')).toHaveText(['tag: 2件', 'name: 1件'])
+})
+
+test('import validation field summary filters the repair list to the selected repeated field', async ({ page }) => {
+  await page.goto('/')
+
+  const now = '2026-05-18T00:00:00.000Z'
+  const invalidItems = [
+    { id: 'invalid-name-first', tag: 'カフェラテ', location: '柏の葉', name: '', rank: 1, memo: '', mapsUrl: '', placeId: '', createdAt: now, updatedAt: now },
+    { id: 'invalid-tag-second', tag: '   ', location: '柏の葉', name: 'Whitespace Tag Shop 1', rank: 2, memo: '', mapsUrl: '', placeId: '', createdAt: now, updatedAt: now },
+    { id: 'invalid-tag-third', tag: '', location: '柏の葉', name: 'Whitespace Tag Shop 2', rank: 3, memo: '', mapsUrl: '', placeId: '', createdAt: now, updatedAt: now },
+  ]
+
+  await uploadJsonImportFile(page, 'invalid-import-field-filter.json', invalidItems)
+
+  const details = importValidationErrorDetails(page)
+  await expect(details.locator('.import-validation-error-list ol li')).toHaveText([
+    '1件目 / $.items[0].name / name / 店舗名を入力してください。',
+    '2件目 / $.items[1].tag / tag / タグを入力してください。',
+    '3件目 / $.items[2].tag / tag / タグを入力してください。',
+  ])
+  await importValidationFieldFilter(page, 'tag').click()
+  await expect(details.getByText('表示中: tag の修正対象2件')).toBeVisible()
+  await expect(details.locator('.import-validation-error-list ol li')).toHaveText([
+    '2件目 / $.items[1].tag / tag / タグを入力してください。',
+    '3件目 / $.items[2].tag / tag / タグを入力してください。',
+  ])
+  await importValidationFieldFilter(page, 'name').click()
+  await expect(details.getByText('表示中: name の修正対象1件')).toBeVisible()
+  await expect(details.locator('.import-validation-error-list ol li')).toHaveText([
+    '1件目 / $.items[0].name / name / 店舗名を入力してください。',
+  ])
 })
