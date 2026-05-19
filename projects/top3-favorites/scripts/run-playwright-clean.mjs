@@ -4,6 +4,15 @@ import { fileURLToPath } from 'node:url'
 
 const DEFAULT_PORT = 4180
 
+export function staleProcessCleanupPatterns() {
+  return [
+    'playwright test',
+    'pnpm exec playwright',
+    'scripts/preview-local.mjs',
+    'node scripts/run-playwright-clean.mjs',
+  ]
+}
+
 export function previewCleanupCommands({ port = DEFAULT_PORT } = {}) {
   return [`lsof -tiTCP:${port} -sTCP:LISTEN`, 'kill <pids>', `wait-port-empty ${port}`]
 }
@@ -36,6 +45,35 @@ async function listeningPids(port) {
   }
 }
 
+async function staleProcessPids({ patterns = staleProcessCleanupPatterns() } = {}) {
+  const stdout = await execFileText('ps', ['-axo', 'pid=,command='])
+  const selfPid = String(process.pid)
+  const parentPid = String(process.ppid)
+  return stdout
+    .split('\n')
+    .map((line) => line.trim())
+    .filter(Boolean)
+    .map((line) => {
+      const match = /^(\d+)\s+([\s\S]+)$/.exec(line)
+      return match ? { pid: match[1], command: match[2] } : null
+    })
+    .filter(Boolean)
+    .filter(({ pid, command }) => pid !== selfPid && pid !== parentPid && patterns.some((pattern) => command.includes(pattern)))
+    .map(({ pid }) => pid)
+}
+
+export async function cleanupStaleProcessFamilies({ log = console.error } = {}) {
+  const pids = await staleProcessPids()
+  if (pids.length === 0) return []
+
+  log(`[top3-e2e-clean] killing stale Playwright/preview process families: ${pids.join(', ')}`)
+  await execFileText('kill', pids).catch(async (error) => {
+    const remaining = await staleProcessPids()
+    if (remaining.length > 0) throw error
+  })
+  return pids
+}
+
 async function waitForPortEmpty(port, { attempts = 20, intervalMs = 250 } = {}) {
   for (let attempt = 0; attempt < attempts; attempt += 1) {
     const pids = await listeningPids(port)
@@ -63,6 +101,7 @@ export async function runPlaywrightClean(args = process.argv.slice(2), options =
   const port = Number.parseInt(process.env.E2E_PREVIEW_PORT || process.env.PORT || `${DEFAULT_PORT}`, 10)
   const log = options.log || console.error
 
+  await cleanupStaleProcessFamilies({ log })
   await cleanupPreviewPort({ port, log })
   const pnpmArgs = buildPlaywrightArgs(args)
   const result = await new Promise((resolve) => {
@@ -74,6 +113,7 @@ export async function runPlaywrightClean(args = process.argv.slice(2), options =
     })
   })
   await cleanupPreviewPort({ port, log })
+  await cleanupStaleProcessFamilies({ log })
   return result.code
 }
 

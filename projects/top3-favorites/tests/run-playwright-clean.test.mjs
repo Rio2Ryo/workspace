@@ -1,13 +1,22 @@
 import assert from 'node:assert/strict'
 import { readFile } from 'node:fs/promises'
 import test from 'node:test'
-import { buildPlaywrightArgs, previewCleanupCommands } from '../scripts/run-playwright-clean.mjs'
+import { buildPlaywrightArgs, previewCleanupCommands, staleProcessCleanupPatterns } from '../scripts/run-playwright-clean.mjs'
 
 test('clean Playwright runner exposes explicit pre/post preview-port cleanup', () => {
   assert.deepEqual(previewCleanupCommands({ port: 4180 }), [
     'lsof -tiTCP:4180 -sTCP:LISTEN',
     'kill <pids>',
     'wait-port-empty 4180',
+  ])
+})
+
+test('clean Playwright runner scans stale Playwright and preview process families before retrying full E2E', () => {
+  assert.deepEqual(staleProcessCleanupPatterns(), [
+    'playwright test',
+    'pnpm exec playwright',
+    'scripts/preview-local.mjs',
+    'node scripts/run-playwright-clean.mjs',
   ])
 })
 

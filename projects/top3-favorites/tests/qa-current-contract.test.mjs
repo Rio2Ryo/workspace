@@ -1369,9 +1369,19 @@ test('[Manual][a11y] manual checklist uses current normalization-exclusion store
     contractMessage({ scope: 'App', rule: 'import preview excluded-name label terminology', expected: 'App renders 正規化除外予定の店舗:', fix: 'keep excluded-name preview label explicit about normalization exclusion' }),
   )
   assert.match(
+    appSource,
+    /excludedNameReasonLabels[\s\S]*正規化除外予定の店舗:/,
+    contractMessage({ scope: 'App', rule: 'import preview excluded-name reason labels', expected: 'App renders excluded store preview with inline Top3-out reason labels', fix: 'keep excludedNameReasonLabels connected to the visible excluded-store preview' }),
+  )
+  assert.match(
+    summarySection,
+    /正規化除外がある時は `正規化除外予定の店舗: 店名（タグ名でTop3外: N位相当）` が表示される/,
+    contractMessage({ scope: 'Manual', rule: 'manual checklist reflects excluded-name reason labels', expected: 'summary checklist expects inline Top3-out reason labels', fix: 'update docs/MANUAL_TEST_CHECKLIST.md import preview summary item to show 店名（タグ名でTop3外: N位相当）' }),
+  )
+  assert.doesNotMatch(
     summarySection,
     /正規化除外がある時は `正規化除外予定の店舗: 店名` が表示される/,
-    contractMessage({ scope: 'Manual', rule: 'manual checklist reflects current excluded-name label', expected: 'summary checklist expects 正規化除外予定の店舗', fix: 'update docs/MANUAL_TEST_CHECKLIST.md import preview summary item to the current label' }),
+    contractMessage({ scope: 'Manual', rule: 'manual checklist avoids reasonless excluded-name label', expected: 'no reasonless excluded-store preview wording after inline reasons shipped', fix: 'replace stale 店名-only excluded-store preview wording with 店名（タグ名でTop3外: N位相当）' }),
   )
   assert.doesNotMatch(
     summarySection,
@@ -1391,8 +1401,9 @@ test('[Manual][automation-link] normalization-exclusion store-name preview items
   const markdown = await readFile(new URL('docs/MANUAL_TEST_CHECKLIST.md', `${root}/`), 'utf8')
   const childContracts = [
     {
-      item: '正規化除外がある時は `正規化除外予定の店舗: 店名` が表示される',
+      item: '正規化除外がある時は `正規化除外予定の店舗: 店名（タグ名でTop3外: N位相当）` が表示される',
       specs: [
+        'tests/import-excluded-reasons-preview.e2e.spec.ts',
         'tests/import-preview/summary/import-preview-excluded-names-normalized-context.e2e.spec.ts',
         'tests/import-preview/summary/import-preview-excluded-names-tag-context.e2e.spec.ts',
       ],
