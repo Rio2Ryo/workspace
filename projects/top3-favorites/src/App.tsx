@@ -642,9 +642,14 @@ export function App() {
 
   const copyImportValidationRepairs = async () => {
     if (!importValidationIssue) return
-    const repairs = visibleImportValidationIssues
-      .map((issue) => `${issue.row} / ${issue.path} / ${issue.field} / ${issue.fix}`)
-      .join('\n')
+    const targetSummary = selectedImportValidationField
+      ? `${selectedImportValidationField} ${visibleImportValidationIssues.length}件 / 全${importValidationIssue.totalIssues}件`
+      : `全${importValidationIssue.totalIssues}件`
+    const repairs = [
+      `ファイル: ${importValidationIssue.filename}`,
+      `対象: ${targetSummary}`,
+      ...visibleImportValidationIssues.map((issue) => `${issue.row} / ${issue.path} / ${issue.field} / ${issue.fix}`),
+    ].join('\n')
     try {
       await navigator.clipboard.writeText(repairs)
       setNotice('修正対象一覧をコピーしました。')

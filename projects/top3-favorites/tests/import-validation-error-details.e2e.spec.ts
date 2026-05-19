@@ -72,7 +72,7 @@ test('import validation error identifies the first invalid row and field for qui
   await importValidationCopyRepairList(page).click()
   await expectOperationStatus(page, '修正対象一覧をコピーしました。')
   await expect.poll(() => readClipboardRecorder(page, 'last-copied-import-validation')).toBe(
-    '2件目 / $.items[1].tag / tag / タグを入力してください。\n3件目 / $.items[2].name / name / 店舗名を入力してください。',
+    'ファイル: invalid-import-field-details.json\n対象: 全2件\n2件目 / $.items[1].tag / tag / タグを入力してください。\n3件目 / $.items[2].name / name / 店舗名を入力してください。',
   )
   await expect(importPreviewSummary(page)).toHaveCount(0)
 })
@@ -161,7 +161,7 @@ test('import validation field summary filters the repair list to the selected re
   await importValidationCopyRepairList(page).click()
   await expectOperationStatus(page, '修正対象一覧をコピーしました。')
   await expect.poll(() => readClipboardRecorder(page, 'last-copied-import-validation')).toBe(
-    '2件目 / $.items[1].tag / tag / タグを入力してください。\n3件目 / $.items[2].tag / tag / タグを入力してください。',
+    'ファイル: invalid-import-field-filter.json\n対象: tag 2件 / 全3件\n2件目 / $.items[1].tag / tag / タグを入力してください。\n3件目 / $.items[2].tag / tag / タグを入力してください。',
   )
   await importValidationFieldFilter(page, 'name').click()
   await expect(importValidationFilteredRepairStatus(page, 'name', 1)).toBeVisible()
