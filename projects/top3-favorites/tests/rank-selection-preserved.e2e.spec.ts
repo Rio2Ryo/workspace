@@ -1,5 +1,15 @@
 import { expect, test } from '@playwright/test'
-import { resetItemsByReplace, registrationSaveButton, expectOperationStatus, registrationRankButton, registrationLocationField, registrationNameField, registrationTagField, fetchItems } from './e2e-helpers'
+import {
+  resetItemsByReplace,
+  registrationSaveButton,
+  expectOperationStatus,
+  registrationRankButton,
+  registrationLocationField,
+  registrationNameField,
+  registrationTagField,
+  fetchItems,
+  tagGroup,
+} from './e2e-helpers'
 
 test.beforeEach(async ({ request }) => {
   await resetItemsByReplace(request)
@@ -24,6 +34,6 @@ test('saving with rank 3 keeps the selected rank in API and list output', async 
   expect(saved).toBeTruthy()
   expect(saved?.rank).toBe(3)
 
-  const group = page.locator('.group').filter({ has: page.getByRole('heading', { name: 'ランチ' }) })
+  const group = tagGroup(page, 'ランチ')
   await expect(group.locator('summary').filter({ hasText: /3位:\s*三番目食堂/ })).toBeVisible()
 })

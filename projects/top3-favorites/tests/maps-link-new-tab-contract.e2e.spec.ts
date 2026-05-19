@@ -10,6 +10,7 @@ import {
   registrationSaveButton,
   registrationTagField,
   resetItemsByReplace,
+  tagGroup,
 } from './e2e-helpers'
 
 test.beforeEach(async ({ request }) => {
@@ -28,7 +29,7 @@ test('maps link opens in a new tab with safe rel attributes', async ({ page }) =
 
   await expectOperationStatus(page, 'カフェラテ の1位に保存しました。')
 
-  const group = page.locator('.group').filter({ has: page.getByRole('heading', { name: 'カフェラテ' }) })
+  const group = tagGroup(page, 'カフェラテ')
   await rankedItemSummary(group, 1, 'Solito MAGO').click()
 
   const mapsAnchor = mapsLink(group).first()

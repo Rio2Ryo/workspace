@@ -1,5 +1,12 @@
 import { expect, test } from '@playwright/test'
-import {uploadJsonImportFile, resetItemsByReplace, confirmImportAndWaitForStatus, expectImportPreviewCounts, importPreviewImpactMath} from './e2e-helpers'
+import {
+  uploadJsonImportFile,
+  resetItemsByReplace,
+  confirmImportAndWaitForStatus,
+  expectImportPreviewCounts,
+  importPreviewImpactMath,
+  tagGroup,
+} from './e2e-helpers'
 
 test.beforeEach(async ({ request }) => {
   await resetItemsByReplace(request)
@@ -25,6 +32,6 @@ test('import preview handles string ranks and still normalizes same tag to Top3'
 
   await confirmImportAndWaitForStatus(page, 'インポート成功: 3件を反映しました。')
 
-  const group = page.locator('.group').filter({ has: page.getByRole('heading', { name: 'カフェラテ' }) })
+  const group = tagGroup(page, 'カフェラテ')
   await expect(group.getByText(/位:/)).toHaveCount(3)
 })

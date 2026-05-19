@@ -1,5 +1,12 @@
 import { expect, test } from '@playwright/test'
-import {uploadJsonImportFile, resetItemsByReplace, confirmImportAndWaitForStatus, expectImportPreviewCounts, expectImportPreviewImpactMath} from './e2e-helpers'
+import {
+  uploadJsonImportFile,
+  resetItemsByReplace,
+  confirmImportAndWaitForStatus,
+  expectImportPreviewCounts,
+  expectImportPreviewImpactMath,
+  tagGroup,
+} from './e2e-helpers'
 
 test.beforeEach(async ({ request }) => {
   await resetItemsByReplace(request)
@@ -23,7 +30,7 @@ test('UI shows only Top3 after importing 4 items of same tag', async ({ page }) 
   await expect(page.getByText(/^正規化除外予定の店舗:/)).toBeVisible()
   await confirmImportAndWaitForStatus(page, 'インポート成功')
 
-  const group = page.locator('.group').filter({ has: page.getByRole('heading', { name: 'カフェラテ' }) })
+  const group = tagGroup(page, 'カフェラテ')
   await expect(group.getByText(/位:/)).toHaveCount(3)
 
   // UI list must be normalized to Top3 only
