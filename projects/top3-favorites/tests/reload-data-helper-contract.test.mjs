@@ -32,6 +32,10 @@ function importsReloadDataButtonHelper(source) {
   return /import \{[^}]*reloadDataButton[^}]*\} from '(?:\.\/|\.\.\/)*e2e-helpers'/.test(source)
 }
 
+function importsReloadDataCompletionHelper(source) {
+  return /import \{[^}]*reloadDataAndWaitForStatus[^}]*\} from '(?:\.\/|\.\.\/)*e2e-helpers'/.test(source)
+}
+
 test('[E2E-Helper][reload-data] E2E specs use shared reload-data button helper', async () => {
   const offenders = []
   const specs = await listE2eSpecs(testsRoot)
@@ -67,5 +71,40 @@ test('[E2E-Helper][reload-data] helper owns reload-data button accessible name',
     source,
     /reloadDataButton[\s\S]*getByRole\(['"]button['"],\s*\{\s*name:\s*['"]データを再読み込み['"]\s*\}\)/,
     'reloadDataButton should own the retry button role/name locator',
+  )
+})
+
+test('[E2E-Helper][reload-data] helper owns retry click and completion status wait', async () => {
+  const source = await readFile(helperPath, 'utf8')
+
+  assert.match(
+    source,
+    /export async function reloadDataAndWaitForStatus\(\s*page: Page,\s*text: string \| RegExp\s*\): Promise<void> \{[\s\S]*?await reloadDataButton\(page\)\.click\(\)[\s\S]*?await expectOperationStatus\(page, text\)[\s\S]*?\}/,
+    'tests/e2e-helpers.ts should expose reloadDataAndWaitForStatus(page, text) that owns retry click + operation status wait',
+  )
+})
+
+test('[E2E-Helper][reload-data] retry workflows use completion helper before recovery assertions', async () => {
+  const offenders = []
+  const specs = await listE2eSpecs(testsRoot)
+
+  for (const spec of specs) {
+    const specUrl = new URL(spec, `${root}/`)
+    const source = await readFile(specUrl, 'utf8')
+    const usesRawRetryClick = /await\s+reloadDataButton\(page\)\.click\(\)/.test(source)
+    const usesCompletionHelper = /reloadDataAndWaitForStatus\(/.test(source)
+
+    if (usesRawRetryClick) {
+      offenders.push(`${relativePath(specUrl)}: use reloadDataAndWaitForStatus(page, expectedStatus) instead of raw reloadDataButton(page).click()`)
+    }
+    if (usesCompletionHelper && !importsReloadDataCompletionHelper(source)) {
+      offenders.push(`${relativePath(specUrl)}: reloadDataAndWaitForStatus helper call without named import`)
+    }
+  }
+
+  assert.deepEqual(
+    offenders.sort(),
+    [],
+    `Retry recovery E2E should wait for the reload completion live-region through the shared helper: ${offenders.join(', ')}`,
   )
 })

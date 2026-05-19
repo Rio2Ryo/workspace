@@ -83,6 +83,11 @@ export function reloadDataButton(page: Page): Locator {
   return page.getByRole('button', { name: 'データを再読み込み' })
 }
 
+export async function reloadDataAndWaitForStatus(page: Page, text: string | RegExp): Promise<void> {
+  await reloadDataButton(page).click()
+  await expectOperationStatus(page, text)
+}
+
 export function searchSection(page: Page): Locator {
   return page.locator('section.card').filter({ has: page.getByRole('heading', { name: '探す' }) })
 }
