@@ -4,6 +4,7 @@ import {
   expectOperationStatus,
   importPreviewExcludedNames,
   importPreviewCopyExcludedNames,
+  importPreviewCopyExcludedNameLabels,
   importPreviewToggleExcludedNames,
   resetItemsByReplace,
   uploadJsonImportFile,
@@ -62,6 +63,12 @@ test('excluded store names preview collapses long lists and can be expanded', as
   await expectOperationStatus(page, '正規化除外店舗一覧をコピーしました。')
   await expect.poll(() => page.evaluate(() => window.localStorage.getItem('last-copied-import-excluded-names'))).toBe(
     'B店（カフェラテでTop3外: 6位相当）\nC店（カフェラテでTop3外: 7位相当）\nF店（カフェラテでTop3外: 4位相当）\nG店（カフェラテでTop3外: 5位相当）',
+  )
+
+  await importPreviewCopyExcludedNameLabels(page).click()
+  await expectOperationStatus(page, '正規化除外店舗名だけをコピーしました。')
+  await expect.poll(() => page.evaluate(() => window.localStorage.getItem('last-copied-import-excluded-names'))).toBe(
+    'B店\nC店\nF店\nG店',
   )
 
   const toggle = importPreviewToggleExcludedNames(page)
