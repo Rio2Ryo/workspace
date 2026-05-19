@@ -111,6 +111,9 @@ export function tagFilterButton(scope: Page | Locator, tag: string): Locator {
   return scope.getByRole('button', { name })
 }
 
+export function mapsLink(scope: Page | Locator): Locator {
+  return scope.getByRole('link', { name: 'Mapsで開く' })
+}
 
 export function registrationTagField(page: Page): Locator {
   return page.getByRole('combobox', { name: 'タグ' })

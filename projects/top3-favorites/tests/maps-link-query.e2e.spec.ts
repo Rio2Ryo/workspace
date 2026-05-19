@@ -1,5 +1,15 @@
 import { expect, test } from '@playwright/test'
-import { resetItemsByReplace, registrationSaveButton, expectOperationStatus, registrationRankButton, registrationLocationField, registrationMemoField, registrationNameField, registrationTagField } from './e2e-helpers'
+import {
+  expectOperationStatus,
+  mapsLink,
+  registrationLocationField,
+  registrationMemoField,
+  registrationNameField,
+  registrationRankButton,
+  registrationSaveButton,
+  registrationTagField,
+  resetItemsByReplace,
+} from './e2e-helpers'
 
 test.beforeEach(async ({ request }) => {
   await resetItemsByReplace(request)
@@ -19,10 +29,10 @@ test('maps link includes name location and tag in Google Maps search query', asy
 
   await page.getByText('1位: 検証店').click()
 
-  const mapsLink = page.getByRole('link', { name: 'Mapsで開く' }).first()
-  await expect(mapsLink).toBeVisible()
+  const mapsAnchor = mapsLink(page).first()
+  await expect(mapsAnchor).toBeVisible()
 
-  const href = await mapsLink.getAttribute('href')
+  const href = await mapsAnchor.getAttribute('href')
   expect(href).toBeTruthy()
 
   const url = new URL(href as string)

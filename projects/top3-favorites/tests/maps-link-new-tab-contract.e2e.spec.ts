@@ -1,5 +1,15 @@
 import { expect, test } from '@playwright/test'
-import { resetItemsByReplace, registrationSaveButton, expectOperationStatus, registrationRankButton, registrationLocationField, registrationMemoField, registrationNameField, registrationTagField } from './e2e-helpers'
+import {
+  expectOperationStatus,
+  mapsLink,
+  registrationLocationField,
+  registrationMemoField,
+  registrationNameField,
+  registrationRankButton,
+  registrationSaveButton,
+  registrationTagField,
+  resetItemsByReplace,
+} from './e2e-helpers'
 
 test.beforeEach(async ({ request }) => {
   await resetItemsByReplace(request)
@@ -20,11 +30,11 @@ test('maps link opens in a new tab with safe rel attributes', async ({ page }) =
   const group = page.locator('.group').filter({ has: page.getByRole('heading', { name: 'カフェラテ' }) })
   await group.locator('summary', { hasText: /1位:\s*Solito MAGO/ }).click()
 
-  const mapsLink = group.getByRole('link', { name: 'Mapsで開く' }).first()
-  await expect(mapsLink).toBeVisible()
-  await expect(mapsLink).toHaveAttribute('target', '_blank')
+  const mapsAnchor = mapsLink(group).first()
+  await expect(mapsAnchor).toBeVisible()
+  await expect(mapsAnchor).toHaveAttribute('target', '_blank')
 
-  const rel = await mapsLink.getAttribute('rel')
+  const rel = await mapsAnchor.getAttribute('rel')
   expect(rel).toBeTruthy()
   const relTokens = new Set((rel ?? '').split(/\s+/).filter(Boolean))
   expect(relTokens.has('noreferrer')).toBe(true)

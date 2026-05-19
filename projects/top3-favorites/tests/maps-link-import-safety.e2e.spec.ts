@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test'
-import {uploadJsonImportFile, resetItemsByReplace, confirmImportAndWaitForStatus} from './e2e-helpers'
+import { confirmImportAndWaitForStatus, mapsLink, resetItemsByReplace, uploadJsonImportFile } from './e2e-helpers'
 
 test.beforeEach(async ({ request }) => {
   await resetItemsByReplace(request)
@@ -29,10 +29,10 @@ test('maps link ignores imported mapsUrl and uses Google Maps query built from i
   await confirmImportAndWaitForStatus(page, 'インポート成功: 1件を反映しました。')
 
   await page.getByText('1位: 安全カレー店').click()
-  const mapsLink = page.getByRole('link', { name: 'Mapsで開く' }).first()
-  await expect(mapsLink).toBeVisible()
+  const mapsAnchor = mapsLink(page).first()
+  await expect(mapsAnchor).toBeVisible()
 
-  const href = await mapsLink.getAttribute('href')
+  const href = await mapsAnchor.getAttribute('href')
   expect(href).toBeTruthy()
   const url = new URL(href as string)
 
