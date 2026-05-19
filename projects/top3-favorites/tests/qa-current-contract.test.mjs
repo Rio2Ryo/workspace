@@ -1358,6 +1358,28 @@ test('[Manual][a11y] manual checklist uses the current import preview toggle ari
   )
 })
 
+test('[Manual][a11y] manual checklist uses current normalization-exclusion store-name terminology', async () => {
+  const appSource = await readFile(appPath, 'utf8')
+  const markdown = await readFile(new URL('docs/MANUAL_TEST_CHECKLIST.md', `${root}/`), 'utf8')
+  const summarySection = markdown.slice(markdown.indexOf('#### 4.2.6 summary（件数サマリ）'), markdown.indexOf('---', markdown.indexOf('#### 4.2.6 summary（件数サマリ）')))
+
+  assert.match(
+    appSource,
+    /正規化除外予定の店舗:/,
+    contractMessage({ scope: 'App', rule: 'import preview excluded-name label terminology', expected: 'App renders 正規化除外予定の店舗:', fix: 'keep excluded-name preview label explicit about normalization exclusion' }),
+  )
+  assert.match(
+    summarySection,
+    /正規化除外がある時は `正規化除外予定の店舗: 店名` が表示される/,
+    contractMessage({ scope: 'Manual', rule: 'manual checklist reflects current excluded-name label', expected: 'summary checklist expects 正規化除外予定の店舗', fix: 'update docs/MANUAL_TEST_CHECKLIST.md import preview summary item to the current label' }),
+  )
+  assert.doesNotMatch(
+    summarySection,
+    /正規化除外がある時は `除外予定の店舗: 店名` が表示される/,
+    contractMessage({ scope: 'Manual', rule: 'manual checklist avoids stale excluded-name label', expected: 'no stale 除外予定の店舗 label in summary checklist', fix: 'replace stale excluded-store preview wording with 正規化除外予定の店舗' }),
+  )
+})
+
 test('[Manual][automation-link] manual checklist marks browser-console, API-failure, and import/export checks as automated where possible', async () => {
   const markdown = await readFile(new URL('docs/MANUAL_TEST_CHECKLIST.md', `${root}/`), 'utf8')
   const coverageDoc = await readFile(new URL('docs/AUTOMATED_QA_COVERAGE.md', `${root}/`), 'utf8')

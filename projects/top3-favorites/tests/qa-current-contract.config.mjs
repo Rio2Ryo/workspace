@@ -339,8 +339,8 @@ const rawManualAutomatedLinkContracts = {
       message: 'manual checklist should connect import preview summary/no-change/excluded-name behavior to automated specs',
     },
     {
-      pattern: /summary（件数サマリ）[\s\S]*正規化除外がある時は `除外予定の店舗: 店名` が表示される[\s\S]*除外予定の店舗が多い場合、先頭表示 \+ `ほかN件`[\s\S]*`除外店舗名を全件表示` \/ `除外店舗名を折りたたむ`[\s\S]*自動確認:[\s\S]*`tests\/import-preview\/summary\/import-preview-excluded-names-collapsed\.e2e\.spec\.ts`[\s\S]*`tests\/import-preview\/summary\/import-preview-excluded-names-normalized-context\.e2e\.spec\.ts`[\s\S]*`tests\/import-preview\/summary\/import-preview-excluded-names-tag-context\.e2e\.spec\.ts`/,
-      message: 'manual checklist should connect excluded store-name preview display/collapse/context to automated specs',
+      pattern: /summary（件数サマリ）[\s\S]*正規化除外がある時は `正規化除外予定の店舗: 店名` が表示される[\s\S]*正規化除外予定の店舗が多い場合、先頭表示 \+ `ほかN件`[\s\S]*`除外店舗名を全件表示` \/ `除外店舗名を折りたたむ`[\s\S]*自動確認:[\s\S]*`tests\/import-preview\/summary\/import-preview-excluded-names-collapsed\.e2e\.spec\.ts`[\s\S]*`tests\/import-preview\/summary\/import-preview-excluded-names-normalized-context\.e2e\.spec\.ts`[\s\S]*`tests\/import-preview\/summary\/import-preview-excluded-names-tag-context\.e2e\.spec\.ts`/,
+      message: 'manual checklist should connect normalization-exclusion store-name preview display/collapse/context to automated specs',
     },
     {
       pattern: /編集ボタンで既存値が編集フォームに入る[\s\S]*編集保存で一覧表示が更新される[\s\S]*自動確認: `tests\/edit-form-accessibility\.e2e\.spec\.ts`/,
