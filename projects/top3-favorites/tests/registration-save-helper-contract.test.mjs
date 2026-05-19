@@ -68,3 +68,11 @@ test('[E2E-Helper][registration-save] helper owns registration save accessible-n
   assert.match(source, /name:\s*['"]DBに保存['"]/, 'registrationSaveButton should own the DB save accessible name')
   assert.match(source, /getByRole\(['"]button['"],\s*\{\s*name:\s*['"]DBに保存['"]\s*\}\)/, 'registrationSaveButton should return the shared button locator')
 })
+
+test('[E2E-Helper][registration-save] import-invalid-after-valid waits for save completion before import upload', async () => {
+  const specUrl = new URL('tests/import-invalid-after-valid-clears-preview.e2e.spec.ts', `${root}/`)
+  const source = await readFile(specUrl, 'utf8')
+
+  assert.match(source, /expectOperationStatus\(page, ['"]カフェラテ の1位に保存しました。['"]\)/, 'the flaky import-after-save regression spec should wait for the save success live-region before uploading import files')
+  assert.match(source, /registrationSaveButton\(page\)\.click\(\)[\s\S]*expectOperationStatus\(page, ['"]カフェラテ の1位に保存しました。['"]\)[\s\S]*uploadJsonImportFile\(page, ['"]valid\.json['"]/, 'save click, save completion assertion, and import upload should stay in that order')
+})

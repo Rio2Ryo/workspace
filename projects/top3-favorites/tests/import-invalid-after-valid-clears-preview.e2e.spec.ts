@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test'
-import { uploadJsonImportFile, resetItemsByReplace, registrationSaveButton, expectOperationAlert } from './e2e-helpers'
+import { uploadJsonImportFile, resetItemsByReplace, registrationSaveButton, expectOperationAlert, expectOperationStatus } from './e2e-helpers'
 
 test.beforeEach(async ({ request }) => {
   await resetItemsByReplace(request)
@@ -13,6 +13,7 @@ test('invalid JSON after a valid import preview clears pending preview and keeps
   await page.getByLabel('場所', { exact: true }).fill('柏の葉')
   await page.getByLabel('店舗名', { exact: true }).fill('Base Item')
   await registrationSaveButton(page).click()
+  await expectOperationStatus(page, 'カフェラテ の1位に保存しました。')
 
   const now = new Date().toISOString()
   const validItems = [
