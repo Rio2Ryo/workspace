@@ -8,9 +8,11 @@
 ## 0. 事前準備
 
 - [ ] アプリを起動し、トップ画面が表示される
+  - 自動確認: `tests/startup-console-health.e2e.spec.ts` が初期表示の見出し・DB保存ステータス表示を検証する
 - [ ] ブラウザDevToolsで Console に致命的エラーがない
   - 自動確認: `tests/startup-console-health.e2e.spec.ts` が初期表示時の `console.error` / `pageerror` 不在を検証する
 - [ ] 必要に応じて `/api/items` のテストデータを削除して初期状態から開始
+  - 自動確認: `tests/e2e-helpers.ts` の `resetItemsByReplace` と `tests/qa-current-contract.test.mjs` の beforeEach reset 契約が、各E2Eの初期化導線を検証する
 
 ---
 

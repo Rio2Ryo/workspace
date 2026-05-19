@@ -1397,6 +1397,28 @@ function manualChecklistItemBlock(markdown, itemText) {
   return nextItemIndex === -1 ? markdown.slice(itemIndex) : markdown.slice(itemIndex, nextItemIndex)
 }
 
+test('[Manual][automation-link] preparation checklist items have direct automated links', async () => {
+  const markdown = await readFile(new URL('docs/MANUAL_TEST_CHECKLIST.md', `${root}/`), 'utf8')
+  const childContracts = [
+    {
+      item: 'アプリを起動し、トップ画面が表示される',
+      specs: ['tests/startup-console-health.e2e.spec.ts'],
+    },
+    {
+      item: '必要に応じて `/api/items` のテストデータを削除して初期状態から開始',
+      specs: ['tests/e2e-helpers.ts', 'tests/qa-current-contract.test.mjs'],
+    },
+  ]
+
+  for (const { item, specs } of childContracts) {
+    const block = manualChecklistItemBlock(markdown, item)
+    assert.match(block, /自動確認:/, contractMessage({ scope: 'Manual', rule: 'preparation checklist item has direct automated link', expected: item, fix: 'add an indented 自動確認 line directly under this preparation checklist item' }))
+    for (const spec of specs) {
+      assert.ok(block.includes(`\`${spec}\``), contractMessage({ scope: 'Manual', rule: 'preparation checklist item cites authoritative automation', expected: spec, fix: 'add the automation path to the preparation item 自動確認 line' }))
+    }
+  }
+})
+
 test('[Manual][automation-link] import preview direction child items have direct automated links', async () => {
   const markdown = await readFile(new URL('docs/MANUAL_TEST_CHECKLIST.md', `${root}/`), 'utf8')
   const childContracts = [
