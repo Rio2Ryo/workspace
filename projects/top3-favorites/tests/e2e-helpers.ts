@@ -285,6 +285,18 @@ export function importPreviewPanel(page: Page): Locator {
   return page.getByLabel('インポート確認')
 }
 
+export function importLockHint(page: Page): Locator {
+  return page.getByTestId('import-lock-hint')
+}
+
+export function importExportLockHint(page: Page): Locator {
+  return page.getByTestId('import-export-lock-hint')
+}
+
+export function importListActionLockHint(page: Page): Locator {
+  return page.getByTestId('import-list-action-lock-hint')
+}
+
 export function importPreviewSummary(page: Page): Locator {
   return page.getByTestId('import-preview-summary')
 }

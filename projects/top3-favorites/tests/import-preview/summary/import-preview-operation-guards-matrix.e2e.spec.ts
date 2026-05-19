@@ -3,6 +3,9 @@ import {
   expectOperationStatus,
   importCancelButton,
   importConfirmButton,
+  importExportLockHint,
+  importListActionLockHint,
+  importLockHint,
   importPreviewPanel,
   itemDeleteButton,
   itemEditButton,
@@ -41,7 +44,7 @@ test('pending import preview enforces operation guards across registration/searc
   await uploadJsonImportFile(page, 'pending.json', payload)
 
   await expect(importPreviewPanel(page)).toBeVisible()
-  await expect(page.getByTestId('import-lock-hint')).toBeVisible()
+  await expect(importLockHint(page)).toBeVisible()
 
   // registration form locks
   await expect(registrationTagField(page)).toBeDisabled()
@@ -59,7 +62,7 @@ test('pending import preview enforces operation guards across registration/searc
   await expect(sampleSaveButton(page)).toHaveAccessibleDescription('インポート確認中のため登録フォームは一時ロック中です。')
   await expect(jsonExportButton(page)).toBeDisabled()
   await expect(jsonExportButton(page)).toHaveAccessibleDescription('インポート確認中のため、現在DBのJSONエクスポートは一時停止中です。')
-  await expect(page.getByTestId('import-export-lock-hint')).toHaveText('インポート確認中のため、現在DBのJSONエクスポートは一時停止中です。')
+  await expect(importExportLockHint(page)).toHaveText('インポート確認中のため、現在DBのJSONエクスポートは一時停止中です。')
 
   // list actions lock
   await rankedItemSummary(page, 1, 'Guard Seed').click()
@@ -67,7 +70,7 @@ test('pending import preview enforces operation guards across registration/searc
   await expect(itemEditButton(page, 'Guard Seed')).toHaveAccessibleDescription('インポート確認中のため、既存Top3の編集・削除は一時停止中です。')
   await expect(itemDeleteButton(page, 'Guard Seed')).toBeDisabled()
   await expect(itemDeleteButton(page, 'Guard Seed')).toHaveAccessibleDescription('インポート確認中のため、既存Top3の編集・削除は一時停止中です。')
-  await expect(page.getByTestId('import-list-action-lock-hint')).toHaveText('インポート確認中のため、既存Top3の編集・削除は一時停止中です。')
+  await expect(importListActionLockHint(page)).toHaveText('インポート確認中のため、既存Top3の編集・削除は一時停止中です。')
 
   // import controls remain available to finish/cancel
   await expect(importConfirmButton(page)).toBeEnabled()

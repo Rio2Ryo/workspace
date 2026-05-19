@@ -1,5 +1,6 @@
 import { expect, test } from '@playwright/test'
 import {
+  importLockHint,
   importPreviewPanel,
   registrationLocationField,
   registrationMemoField,
@@ -25,7 +26,7 @@ test('registration form inputs are locked while import preview is active', async
   await uploadJsonImportFile(page, 'pending.json', payload)
 
   await expect(importPreviewPanel(page)).toBeVisible()
-  await expect(page.getByTestId('import-lock-hint')).toBeVisible()
+  await expect(importLockHint(page)).toBeVisible()
 
   await expect(registrationTagField(page)).toBeDisabled()
   await expect(registrationLocationField(page)).toBeDisabled()
