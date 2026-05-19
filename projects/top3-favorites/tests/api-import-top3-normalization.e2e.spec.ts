@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test'
-import { resetItemsByReplace } from './e2e-helpers'
+import { resetItemsByReplace, replaceItems } from './e2e-helpers'
 
 test.beforeEach(async ({ request }) => {
   await resetItemsByReplace(request)
@@ -16,7 +16,7 @@ test('API replace import normalizes same-tag data to Top3 with ranks 1..3', asyn
     ],
   }
 
-  const res = await request.post('/api/items?mode=replace', { data: payload })
+  const res = await replaceItems(request, payload)
   expect(res.status()).toBe(200)
 
   const json = (await res.json()) as { items: { tag: string; rank: number; name: string }[] }
@@ -38,7 +38,7 @@ test('API replace import uses deterministic name/id tie-breakers for identical r
     ],
   }
 
-  const res = await request.post('/api/items?mode=replace', { data: payload })
+  const res = await replaceItems(request, payload)
   expect(res.status()).toBe(200)
 
   const json = (await res.json()) as { items: { tag: string; rank: number; name: string }[] }

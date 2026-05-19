@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test'
-import { tagFilterButton, acceptNextDeleteDialog, resetItemsByReplace, itemDeleteButton, expectOperationStatus, searchSection as searchSectionLocator, reloadPageAndWaitForSearchReady, fetchItems } from './e2e-helpers'
+import { tagFilterButton, acceptNextDeleteDialog, resetItemsByReplace, itemDeleteButton, expectOperationStatus, searchSection as searchSectionLocator, reloadPageAndWaitForSearchReady, fetchItems, postItem } from './e2e-helpers'
 
 test.beforeEach(async ({ request }) => {
   await resetItemsByReplace(request)
@@ -12,7 +12,7 @@ test('deleted item stays removed after reload and is absent from API data', asyn
     { tag: '削除タグ', location: '柏', name: 'Delete Persist Target', rank: 1, memo: '' },
     { tag: '残存タグ', location: '松戸', name: 'Persist Survivor', rank: 1, memo: '' },
   ]) {
-    const response = await request.post('/api/items', { data: item })
+    const response = await postItem(request, item)
     expect(response.status()).toBe(200)
   }
 

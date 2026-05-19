@@ -1,4 +1,5 @@
 import { expect, test } from '@playwright/test'
+import { replaceItems } from './e2e-helpers'
 
 const validItem = (patch: Record<string, unknown> = {}) => ({
   id: 'api-valid-1',
@@ -15,7 +16,7 @@ const validItem = (patch: Record<string, unknown> = {}) => ({
 })
 
 test('API replace import rejects missing items array with a localized recovery hint', async ({ request }) => {
-  const res = await request.post('/api/items?mode=replace', { data: { itemz: [] } })
+  const res = await replaceItems(request, { itemz: [] }, { expectedStatus: 400 })
   expect(res.status()).toBe(400)
 
   const json = await res.json()
@@ -27,7 +28,7 @@ test('API replace import rejects invalid rank (server-side validation)', async (
     items: [validItem({ id: 'api-bad-rank-1', name: 'Invalid API Rank', rank: 4, memo: 'should be rejected' })],
   }
 
-  const res = await request.post('/api/items?mode=replace', { data: payload })
+  const res = await replaceItems(request, payload, { expectedStatus: 400 })
   expect(res.status()).toBe(400)
 
   const json = await res.json()
@@ -39,7 +40,7 @@ test('API replace import rejects missing location like the UI preflight', async 
     items: [validItem({ id: 'api-missing-location-1', name: 'Missing API Location', location: undefined })],
   }
 
-  const res = await request.post('/api/items?mode=replace', { data: payload })
+  const res = await replaceItems(request, payload, { expectedStatus: 400 })
   expect(res.status()).toBe(400)
 
   const json = await res.json()
@@ -51,7 +52,7 @@ test('API replace import rejects missing memo like the UI preflight', async ({ r
     items: [validItem({ id: 'api-missing-memo-1', name: 'Missing API Memo', memo: undefined })],
   }
 
-  const res = await request.post('/api/items?mode=replace', { data: payload })
+  const res = await replaceItems(request, payload, { expectedStatus: 400 })
   expect(res.status()).toBe(400)
 
   const json = await res.json()
@@ -66,7 +67,7 @@ test('API replace import rejects duplicate item ids', async ({ request }) => {
     ],
   }
 
-  const res = await request.post('/api/items?mode=replace', { data: payload })
+  const res = await replaceItems(request, payload, { expectedStatus: 400 })
   expect(res.status()).toBe(400)
 
   const json = await res.json()

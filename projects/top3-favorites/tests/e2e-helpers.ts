@@ -1,10 +1,13 @@
 import { readFile } from 'node:fs/promises'
-import { expect, type APIRequestContext, type Dialog, type Download, type Locator, type Page } from '@playwright/test'
+import { expect, type APIRequestContext, type APIResponse, type Dialog, type Download, type Locator, type Page } from '@playwright/test'
 import { validateImportPreviewSummary } from '../src/shared/import-preview-summary-contract.mjs'
 
+type ApiItemsMutationOptions = {
+  expectedStatus?: number
+}
+
 export async function resetItemsByReplace(request: APIRequestContext, items: unknown[] = []) {
-  const response = await request.post('/api/items?mode=replace', { data: { items } })
-  expect(response.ok(), 'resetItemsByReplace should atomically replace API data before each test').toBe(true)
+  await replaceItems(request, { items })
 }
 
 export async function resetItemsByDelete(request: APIRequestContext) {
@@ -15,6 +18,36 @@ export async function fetchItems<T = { items: unknown[] }>(request: APIRequestCo
   const response = await request.get('/api/items')
   expect(response.ok(), 'fetchItems should read the current /api/items state before assertions').toBe(true)
   return (await response.json()) as T
+}
+
+export async function postItem(
+  request: APIRequestContext,
+  data: unknown,
+  { expectedStatus = 200 }: ApiItemsMutationOptions = {},
+): Promise<APIResponse> {
+  const response = await request.post('/api/items', { data })
+  expect(response.status(), 'postItem should receive the expected /api/items create status before the test continues').toBe(expectedStatus)
+  return response
+}
+
+export async function putItem(
+  request: APIRequestContext,
+  data: unknown,
+  { expectedStatus = 200 }: ApiItemsMutationOptions = {},
+): Promise<APIResponse> {
+  const response = await request.put('/api/items', { data })
+  expect(response.status(), 'putItem should receive the expected /api/items edit status before the test continues').toBe(expectedStatus)
+  return response
+}
+
+export async function replaceItems(
+  request: APIRequestContext,
+  data: unknown,
+  { expectedStatus = 200 }: ApiItemsMutationOptions = {},
+): Promise<APIResponse> {
+  const response = await request.post('/api/items?mode=replace', { data })
+  expect(response.status(), 'replaceItems should receive the expected /api/items replace status before the test continues').toBe(expectedStatus)
+  return response
 }
 
 export function sampleSaveButton(page: Page): Locator {

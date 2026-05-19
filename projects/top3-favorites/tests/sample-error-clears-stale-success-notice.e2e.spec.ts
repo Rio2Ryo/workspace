@@ -1,12 +1,12 @@
 import { expect, test } from '@playwright/test'
-import { resetItemsByReplace, clickSampleSaveButton, expectOperationAlert, fetchItems } from './e2e-helpers'
+import { resetItemsByReplace, clickSampleSaveButton, expectOperationAlert, fetchItems, postItem } from './e2e-helpers'
 
 test.beforeEach(async ({ request }) => {
   await resetItemsByReplace(request)
 })
 
 test('failed sample save clears stale success notice and keeps existing data visible', async ({ page, request }) => {
-  await request.post('/api/items', { data: { tag: 'カフェラテ', location: '柏の葉', rank: 1, name: 'Existing Keep', memo: '' } })
+  await postItem(request, { tag: 'カフェラテ', location: '柏の葉', rank: 1, name: 'Existing Keep', memo: '' })
   await page.goto('/')
   await expect(page.getByText('1位: Existing Keep')).toBeVisible()
 

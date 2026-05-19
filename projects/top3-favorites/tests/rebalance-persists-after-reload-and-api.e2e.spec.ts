@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test'
-import { resetItemsByReplace, registrationSaveButton, expectOperationStatus, registrationRankButton, searchSection as searchSectionLocator, registrationLocationField, registrationNameField, registrationTagField, reloadPageAndWaitForSearchReady, fetchItems } from './e2e-helpers'
+import { resetItemsByReplace, registrationSaveButton, expectOperationStatus, registrationRankButton, searchSection as searchSectionLocator, registrationLocationField, registrationNameField, registrationTagField, reloadPageAndWaitForSearchReady, fetchItems, postItem } from './e2e-helpers'
 
 test.beforeEach(async ({ request }) => {
   await resetItemsByReplace(request)
@@ -13,7 +13,7 @@ test('adding new 1st place rebalances to Top3 and persists ranks after reload + 
   ] as const
 
   for (const item of seed) {
-    await request.post('/api/items', { data: item })
+    await postItem(request, item)
   }
 
   await page.goto('/')

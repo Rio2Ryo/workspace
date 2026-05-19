@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test'
-import { tagFilterButton, searchClearButton, acceptNextDeleteDialog, resetItemsByReplace, itemDeleteButton, expectOperationStatus, searchSection as searchSectionLocator } from './e2e-helpers'
+import { tagFilterButton, searchClearButton, acceptNextDeleteDialog, resetItemsByReplace, itemDeleteButton, expectOperationStatus, searchSection as searchSectionLocator, postItem } from './e2e-helpers'
 
 test.beforeEach(async ({ request }) => {
   await resetItemsByReplace(request)
@@ -7,9 +7,9 @@ test.beforeEach(async ({ request }) => {
 
 test('delete removes only the confirmed target item when multiple tags exist', async ({ page, request }) => {
   // Seed multiple tags/items through the same API the UI uses, then exercise the real delete control.
-  await request.post('/api/items', { data: { tag: 'カフェラテ', location: '柏の葉', rank: 1, name: '削除対象A', memo: '' } })
-  await request.post('/api/items', { data: { tag: 'つけ麺', location: '松戸', rank: 1, name: '残すB', memo: '' } })
-  await request.post('/api/items', { data: { tag: 'プリン', location: '浅草', rank: 1, name: '残すC', memo: '' } })
+  await postItem(request, { tag: 'カフェラテ', location: '柏の葉', rank: 1, name: '削除対象A', memo: '' })
+  await postItem(request, { tag: 'つけ麺', location: '松戸', rank: 1, name: '残すB', memo: '' })
+  await postItem(request, { tag: 'プリン', location: '浅草', rank: 1, name: '残すC', memo: '' })
 
   await page.goto('/')
 
