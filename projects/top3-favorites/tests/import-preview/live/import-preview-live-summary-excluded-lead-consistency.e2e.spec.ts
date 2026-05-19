@@ -31,8 +31,8 @@ test('live summary representative excluded name is consistent with excluded-deta
   await uploadJsonImportFile(page, 'live-excluded-lead-consistency.json', payload)
 
   const details = importPreviewExcludedDetails(page)
-  await expect(details).toContainText('・Z3店')
-  await expect(details).toContainText('・A3店')
+  await expect(details.getByRole('listitem').nth(0)).toHaveText('Z3店（ZタグでTop3外: 4位相当）')
+  await expect(details.getByRole('listitem').nth(1)).toHaveText('A3店（AタグでTop3外: 4位相当）')
 
   const live = importPreviewLive(page)
   await expect(live).toContainText('正規化除外2件')

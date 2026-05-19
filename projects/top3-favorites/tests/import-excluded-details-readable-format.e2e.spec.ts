@@ -20,8 +20,8 @@ test('excluded details are rendered in a readable bullet-like format', async ({ 
   await uploadJsonImportFile(page, 'excluded-format.json', payload)
 
   const details = importPreviewExcludedDetails(page)
-  await expect(details).toContainText('除外理由:')
-  await expect(details).toContainText('・')
-  await expect(details).toContainText('D店')
-  await expect(details).toContainText('E店')
+  await expect(details).toHaveAttribute('aria-label', 'Top3外で正規化除外された理由')
+  await expect(details.getByRole('listitem')).toHaveCount(2)
+  await expect(details.getByRole('listitem').nth(0)).toHaveText('D店（カフェラテでTop3外: 4位相当）')
+  await expect(details.getByRole('listitem').nth(1)).toHaveText('E店（カフェラテでTop3外: 5位相当）')
 })

@@ -925,10 +925,24 @@ export function App() {
                 )}
                 {pendingImport.excludedDetails.length > 0 && (
                   <>
-                    <p id="import-preview-excluded-details" className="hint compact" data-testid="import-preview-excluded-details">
-                      除外理由: {excludedDetailsPreview.visible.map((detail) => `・${detail.label}（${detail.reason}）`).join(' / ')}
-                      {excludedDetailsPreview.hiddenCount > 0 ? `（ほか${excludedDetailsPreview.hiddenCount}件）` : ''}
-                    </p>
+                    <div
+                      id="import-preview-excluded-details"
+                      className="hint compact import-preview-reason-list"
+                      data-testid="import-preview-excluded-details"
+                      aria-label="Top3外で正規化除外された理由"
+                    >
+                      <p className="import-preview-reason-heading">除外理由:</p>
+                      <ul>
+                        {excludedDetailsPreview.visible.map((detail) => (
+                          <li key={`${detail.tag}-${detail.name}-${detail.reason}`}>
+                            {detail.label}（{detail.reason}）
+                          </li>
+                        ))}
+                      </ul>
+                      {excludedDetailsPreview.hiddenCount > 0 && (
+                        <p className="import-preview-reason-more">ほか{excludedDetailsPreview.hiddenCount}件</p>
+                      )}
+                    </div>
                     {pendingImport.excludedDetails.length > 3 && (
                       <button
                         className="ghost small"

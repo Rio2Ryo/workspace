@@ -31,7 +31,8 @@ test('import preview explains why each excluded store will not be imported', asy
 
   const details = importPreviewExcludedDetails(page)
   await expect(details).toBeVisible()
-  await expect(details).toHaveText('除外理由: ・D店（カフェラテでTop3外: 4位相当）')
+  await expect(details).toHaveAttribute('aria-label', 'Top3外で正規化除外された理由')
+  await expect(details.getByRole('listitem')).toHaveText('D店（カフェラテでTop3外: 4位相当）')
 
   const summary = await parseImportPreviewSummary<{ excludedDetails: unknown[] }>(importPreviewSummary(page))
   expect(summary.excludedDetails).toEqual([
