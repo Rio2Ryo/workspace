@@ -247,6 +247,10 @@ const rawManualAutomatedLinkContracts = {
       message: 'manual checklist should connect explicit rank selection to the UI/API automated rank specs',
     },
     {
+      pattern: /正常入力（メモあり）[\s\S]*期待: 1件追加、`1位: とみ田`、タグ表示、場所表示、メモ表示\n  - 自動確認: `tests\/create-persists-after-reload-and-api\.e2e\.spec\.ts`[^\n]*\n\n- \[ \] \*\*正常入力（メモなし）\*\*/,
+      message: 'manual checklist should connect normal memo-present structured form input to the automated create persistence/API spec',
+    },
+    {
       pattern: /必須入力不足[\s\S]*期待: 追加されず `タグと店舗名は必須です。` が表示される[\s\S]*自動確認: `tests\/error-clears-stale-success-notice\.e2e\.spec\.ts`/,
       message: 'manual checklist should connect required-field validation to the automated stale-success clearing spec',
     },

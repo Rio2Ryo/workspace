@@ -19,10 +19,14 @@ test('newly created item remains after reload and exists in API data', async ({ 
 
   const searchSection = page.locator('section.card').filter({ has: page.getByRole('heading', { name: '探す' }) })
   await expect(searchSection.getByText(/2位:\s*Persist New Item/)).toBeVisible()
+  await searchSection.getByText(/2位:\s*Persist New Item/).click()
+  await expect(searchSection.getByText('reload persistence contract')).toBeVisible()
 
   await page.reload()
 
   await expect(searchSection.getByText(/2位:\s*Persist New Item/)).toBeVisible()
+  await searchSection.getByText(/2位:\s*Persist New Item/).click()
+  await expect(searchSection.getByText('reload persistence contract')).toBeVisible()
   await expect(searchSection.getByRole('heading', { name: '永続化タグ' })).toBeVisible()
 
   const apiData = (await request.get('/api/items').then((res) => res.json())) as {
