@@ -46,6 +46,47 @@ const directButtonRules = [
   },
 ]
 
+function collectImportConfirmRaceOffenders(spec, source) {
+  const riskyNextActions = [
+    "request.get('/api/items'",
+    'request.get("/api/items"',
+    'page.reload(',
+    'downloadJsonExport(',
+    'page.waitForEvent(',
+    'page.getByText(',
+    'page.locator(',
+    'searchSection.getBy',
+  ]
+  const offenders = []
+  const confirmClickPattern = /await\s+importConfirmButton\(page\)\.click\(\)/g
+  const matches = [...source.matchAll(confirmClickPattern)]
+
+  for (const match of matches) {
+    const start = match.index + match[0].length
+    const nextMutationIndexes = [
+      source.indexOf('importConfirmButton(page).click()', start),
+      source.indexOf('registrationSaveButton(page).click()', start),
+      source.indexOf('editSaveButton(page).click()', start),
+    ].filter((index) => index !== -1)
+    const end = nextMutationIndexes.length > 0 ? Math.min(...nextMutationIndexes) : undefined
+    const block = source.slice(start, end)
+    const statusIndex = block.indexOf('expectOperationStatus(page,')
+    const riskyAction = riskyNextActions.find((token) => block.includes(token))
+
+    if (!riskyAction) {
+      continue
+    }
+    if (statusIndex !== -1 && statusIndex < block.indexOf(riskyAction)) {
+      continue
+    }
+
+    const line = source.slice(0, match.index).split('\n').length
+    offenders.push(`${spec}:${line}: wait for expectOperationStatus(page, ...) before ${riskyAction}`)
+  }
+
+  return offenders
+}
+
 test('[E2E-Helper][import-preview-actions] E2E specs use shared import preview action locators', async () => {
   const offenders = []
   const specs = await listE2eSpecs(testsRoot)
@@ -80,4 +121,20 @@ test('[E2E-Helper][import-preview-actions] helpers own import preview action acc
   assert.match(source, /export function importCancelButton/, 'tests/e2e-helpers.ts should export importCancelButton')
   assert.match(source, /name:\s*['"]この内容でインポート['"]/, 'importConfirmButton should own the confirm accessible name')
   assert.match(source, /name:\s*['"]インポートをキャンセル['"]/, 'importCancelButton should own the cancel accessible name')
+})
+
+test('[E2E-Helper][import-preview-actions] risky post-import-confirm workflows wait for import completion', async () => {
+  const offenders = []
+  const specs = await listE2eSpecs(testsRoot)
+
+  for (const spec of specs) {
+    const source = await readFile(new URL(spec, `${root}/`), 'utf8')
+    offenders.push(...collectImportConfirmRaceOffenders(spec, source))
+  }
+
+  assert.deepEqual(
+    offenders.sort(),
+    [],
+    `E2E specs that confirm an import and then inspect UI/API/export state should wait for the import success live-region first: ${offenders.join(', ')}`,
+  )
 })

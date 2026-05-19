@@ -43,7 +43,7 @@ test('import shows a confirmation preview before replacing existing data', async
   await uploadJsonImportFile(page, 'preview-import.json', replacement)
   await importConfirmButton(page).click()
 
-  await expect(page.getByText('インポート成功: 1件を反映しました。')).toBeVisible()
+  await expectOperationStatus(page, 'インポート成功: 1件を反映しました。')
   await expect(page.getByText('1位: Preview Pudding')).toBeVisible()
   await expect(page.getByText('Solito MAGO')).not.toBeVisible()
 })
