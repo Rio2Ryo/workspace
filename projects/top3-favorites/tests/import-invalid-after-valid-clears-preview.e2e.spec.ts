@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test'
-import { uploadJsonImportFile, resetItemsByReplace, registrationSaveButton } from './e2e-helpers'
+import { uploadJsonImportFile, resetItemsByReplace, registrationSaveButton, expectOperationAlert } from './e2e-helpers'
 
 test.beforeEach(async ({ request }) => {
   await resetItemsByReplace(request)
@@ -27,7 +27,7 @@ test('invalid JSON after a valid import preview clears pending preview and keeps
   // 2) invalid file -> preview must be cleared (fail-closed UI)
   await uploadJsonImportFile(page, 'broken.json', '{"broken": ')
 
-  await expect(page.getByRole('alert')).toContainText('インポート失敗: ファイル「broken.json」のJSON構文を解析できません。既存データは保持しました。')
+  await expectOperationAlert(page, 'インポート失敗: ファイル「broken.json」のJSON構文を解析できません。既存データは保持しました。')
   await expect(page.getByLabel('インポート確認')).toHaveCount(0)
 
   // DB should remain unchanged (still seeded 1 item)

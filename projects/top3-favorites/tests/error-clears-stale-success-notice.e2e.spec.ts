@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test'
-import { resetItemsByReplace, registrationSaveButton, expectOperationStatus } from './e2e-helpers'
+import { resetItemsByReplace, registrationSaveButton, expectOperationStatus, expectOperationAlert } from './e2e-helpers'
 
 test.beforeEach(async ({ request }) => {
   await resetItemsByReplace(request)
@@ -18,6 +18,6 @@ test('validation error clears stale success notice to avoid mixed feedback', asy
   await page.getByLabel('店舗名', { exact: true }).fill('')
   await registrationSaveButton(page).click()
 
-  await expect(page.getByRole('alert')).toContainText('タグと店舗名は必須です。')
+  await expectOperationAlert(page, 'タグと店舗名は必須です。')
   await expect(page.getByText('カフェラテ の1位に保存しました。')).toHaveCount(0)
 })

@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test'
-import { resetItemsByReplace, registrationSaveButton, expectOperationStatus } from './e2e-helpers'
+import { resetItemsByReplace, registrationSaveButton, expectOperationStatus, expectOperationAlert } from './e2e-helpers'
 
 test.beforeEach(async ({ request }) => {
   await resetItemsByReplace(request)
@@ -29,7 +29,7 @@ test('failed save clears stale success notice and keeps draft for retry', async 
   await page.getByLabel('店舗名', { exact: true }).fill('Retry Candidate')
   await registrationSaveButton(page).click()
 
-  await expect(page.getByRole('alert')).toContainText('保存APIが一時的に利用できません。')
+  await expectOperationAlert(page, '保存APIが一時的に利用できません。')
   await expect(page.getByText('カフェラテ の1位に保存しました。')).toHaveCount(0)
   await expect(page.getByLabel('店舗名', { exact: true })).toHaveValue('Retry Candidate')
 })

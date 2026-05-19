@@ -28,6 +28,14 @@ export async function expectOperationStatus(page: Page, text: string | RegExp): 
   await expect(operationStatus(page)).toContainText(text)
 }
 
+export function operationAlert(page: Page): Locator {
+  return page.getByRole('alert')
+}
+
+export async function expectOperationAlert(page: Page, text: string | RegExp): Promise<void> {
+  await expect(operationAlert(page)).toContainText(text)
+}
+
 export async function saveSampleItems(page: Page): Promise<void> {
   await clickSampleSaveButton(page)
   await expectOperationStatus(page, 'サンプルをDBに保存しました。')

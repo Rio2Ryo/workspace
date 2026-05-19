@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test'
-import { uploadJsonImportFile, parseImportPreviewSummary, resetItemsByReplace, registrationSaveButton } from './e2e-helpers'
+import { uploadJsonImportFile, parseImportPreviewSummary, resetItemsByReplace, registrationSaveButton, expectOperationAlert } from './e2e-helpers'
 
 test.beforeEach(async ({ request }) => {
   await resetItemsByReplace(request)
@@ -35,7 +35,7 @@ test('summary json transitions correctly across valid -> invalid -> valid import
 
   // invalid in between: preview should be cleared
   await uploadJsonImportFile(page, 'broken.json', '{"broken": ')
-  await expect(page.getByRole('alert')).toContainText('インポート失敗: ファイル「broken.json」のJSON構文を解析できません。既存データは保持しました。')
+  await expectOperationAlert(page, 'インポート失敗: ファイル「broken.json」のJSON構文を解析できません。既存データは保持しました。')
   await expect(page.getByTestId('import-preview-summary')).toHaveCount(0)
 
   // valid again: summary should be rebuilt coherently
