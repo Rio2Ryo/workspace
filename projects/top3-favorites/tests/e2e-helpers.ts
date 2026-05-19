@@ -41,6 +41,10 @@ export async function saveSampleItems(page: Page): Promise<void> {
   await expectOperationStatus(page, 'サンプルをDBに保存しました。')
 }
 
+export function reloadDataButton(page: Page): Locator {
+  return page.getByRole('button', { name: 'データを再読み込み' })
+}
+
 export function searchSection(page: Page): Locator {
   return page.locator('section.card').filter({ has: page.getByRole('heading', { name: '探す' }) })
 }
