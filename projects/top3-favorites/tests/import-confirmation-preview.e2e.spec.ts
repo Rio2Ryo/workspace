@@ -37,7 +37,7 @@ test('import shows a confirmation preview before replacing existing data', async
   expect(beforeConfirm.items.map((saved) => saved.name).sort()).toEqual(['Solito MAGO', 'T-SITEのカフェ', 'とみ田'].sort())
 
   await importCancelButton(page).click()
-  await expect(page.getByText('インポートをキャンセルしました。')).toBeVisible()
+  await expectOperationStatus(page, 'インポートをキャンセルしました。')
   await expect(page.getByText('1位: Solito MAGO')).toBeVisible()
 
   await uploadJsonImportFile(page, 'preview-import.json', replacement)

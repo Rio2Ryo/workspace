@@ -87,6 +87,47 @@ function collectImportConfirmRaceOffenders(spec, source) {
   return offenders
 }
 
+function collectImportCancelRaceOffenders(spec, source) {
+  const riskyNextActions = [
+    'uploadJsonImportFile(',
+    'jsonImportButton(page).click()',
+    "request.get('/api/items'",
+    'request.get("/api/items"',
+    'page.reload(',
+    'downloadJsonExport(',
+    'page.waitForEvent(',
+  ]
+  const offenders = []
+  const cancelClickPattern = /await\s+importCancelButton\(page\)\.click\(\)/g
+  const matches = [...source.matchAll(cancelClickPattern)]
+
+  for (const match of matches) {
+    const start = match.index + match[0].length
+    const nextImportPreviewActionIndexes = [
+      source.indexOf('importCancelButton(page).click()', start),
+      source.indexOf('importConfirmButton(page).click()', start),
+      source.indexOf('registrationSaveButton(page).click()', start),
+      source.indexOf('editSaveButton(page).click()', start),
+    ].filter((index) => index !== -1)
+    const end = nextImportPreviewActionIndexes.length > 0 ? Math.min(...nextImportPreviewActionIndexes) : undefined
+    const block = source.slice(start, end)
+    const statusIndex = block.indexOf('expectOperationStatus(page,')
+    const riskyAction = riskyNextActions.find((token) => block.includes(token))
+
+    if (!riskyAction) {
+      continue
+    }
+    if (statusIndex !== -1 && statusIndex < block.indexOf(riskyAction)) {
+      continue
+    }
+
+    const line = source.slice(0, match.index).split('\n').length
+    offenders.push(`${spec}:${line}: wait for expectOperationStatus(page, ...) before ${riskyAction}`)
+  }
+
+  return offenders
+}
+
 test('[E2E-Helper][import-preview-actions] E2E specs use shared import preview action locators', async () => {
   const offenders = []
   const specs = await listE2eSpecs(testsRoot)
@@ -136,5 +177,21 @@ test('[E2E-Helper][import-preview-actions] risky post-import-confirm workflows w
     offenders.sort(),
     [],
     `E2E specs that confirm an import and then inspect UI/API/export state should wait for the import success live-region first: ${offenders.join(', ')}`,
+  )
+})
+
+test('[E2E-Helper][import-preview-actions] risky post-import-cancel workflows wait for cancel completion', async () => {
+  const offenders = []
+  const specs = await listE2eSpecs(testsRoot)
+
+  for (const spec of specs) {
+    const source = await readFile(new URL(spec, `${root}/`), 'utf8')
+    offenders.push(...collectImportCancelRaceOffenders(spec, source))
+  }
+
+  assert.deepEqual(
+    offenders.sort(),
+    [],
+    `E2E specs that cancel an import preview and then start another workflow should wait for the cancel live-region first: ${offenders.join(', ')}`,
   )
 })
