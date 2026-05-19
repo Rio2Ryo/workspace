@@ -881,11 +881,11 @@ export function App() {
                       id="import-preview-excluded-names"
                       className="hint compact"
                       data-testid="import-preview-excluded-names"
-                      aria-label="Top3外で除外予定の店舗名プレビュー"
+                      aria-label="Top3外で正規化除外予定の店舗名プレビュー"
                       data-excluded-name-count={pendingImport.excludedNames.length}
                       data-excluded-name-labels={pendingImport.excludedNameLabels.join('|')}
                     >
-                      除外予定の店舗: {excludedNamesPreview.visible.join(', ')}
+                      正規化除外予定の店舗: {excludedNamesPreview.visible.join(', ')}
                       {excludedNamesPreview.hiddenCount > 0 ? `（ほか${excludedNamesPreview.hiddenCount}件）` : ''}
                     </p>
                     {normalizedExcludedNameGroups.length > 0 && (

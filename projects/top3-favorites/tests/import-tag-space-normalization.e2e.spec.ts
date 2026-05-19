@@ -20,7 +20,7 @@ test('import normalizes visually equivalent tag spaces before Top3 truncation', 
 
   await expect(page.getByTestId('import-preview-counts')).toHaveText('現在0件 → インポート後3件')
   await expect(page.getByTestId('import-preview-normalization')).toHaveText('同一タグはTop3に正規化: 4件中3件を反映予定')
-  await expect(page.getByTestId('import-preview-excluded-names')).toHaveText('除外予定の店舗: D')
+  await expect(page.getByTestId('import-preview-excluded-names')).toHaveText('正規化除外予定の店舗: D')
 
   const summary = await parseImportPreviewSummary<{ tags: string[]; excludedNames: string[] }>(page.getByTestId('import-preview-summary'))
   expect(summary.tags).toEqual(['カフェ ラテ'])

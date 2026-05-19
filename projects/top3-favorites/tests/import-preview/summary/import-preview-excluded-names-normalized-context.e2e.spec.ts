@@ -25,7 +25,7 @@ test('excluded store names add tag context for visually equivalent full-width an
   const names = page.getByTestId('import-preview-excluded-names')
   await expect(names).toHaveAttribute('data-excluded-name-count', '2')
   await expect(names).toHaveAttribute('data-excluded-name-labels', 'カフェラテ: Cafe K|プリン: Ｃａｆｅ　Ｋ')
-  await expect(names).toHaveText('除外予定の店舗: カフェラテ: Cafe K, プリン: Ｃａｆｅ　Ｋ')
+  await expect(names).toHaveText('正規化除外予定の店舗: カフェラテ: Cafe K, プリン: Ｃａｆｅ　Ｋ')
 
   const variants = page.getByTestId('import-preview-excluded-name-variants')
   await expect(variants).toHaveText('表記ゆれ候補: カフェラテ: Cafe K / プリン: Ｃａｆｅ　Ｋ')
