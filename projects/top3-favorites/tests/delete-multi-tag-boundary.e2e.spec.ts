@@ -1,8 +1,6 @@
 import { expect, test } from '@playwright/test'
 import {
-  acceptNextDeleteDialog,
-  expectOperationStatus,
-  itemDeleteButton,
+  deleteItemAndWaitForStatus,
   postItem,
   rankedItemSummary,
   rankedItemSummaryByName,
@@ -30,10 +28,7 @@ test('delete removes only the confirmed target item when multiple tags exist', a
   await expect(rankedItemSummaryByName(searchSection, '削除対象A')).toBeVisible()
   await rankedItemSummary(searchSection, 1, '削除対象A').click()
 
-  const dialogPromise = acceptNextDeleteDialog(page, '削除対象A をTop3から削除しますか？')
-  await itemDeleteButton(page, '削除対象A').click()
-  await dialogPromise
-  await expectOperationStatus(page, '削除しました。')
+  await deleteItemAndWaitForStatus(page, page, '削除対象A', '削除対象A をTop3から削除しますか？', '削除しました。')
 
   // Target should be deleted
   await expect(page.getByText('削除対象A')).not.toBeVisible()

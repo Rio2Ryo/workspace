@@ -1,8 +1,7 @@
 import { expect, test } from '@playwright/test'
 import {
-  acceptNextDeleteDialog,
+  deleteItemAndWaitForStatus,
   expectOperationStatus,
-  itemDeleteButton,
   rankedItemSummary,
   rankedItemSummaryByName,
   registrationLocationField,
@@ -45,11 +44,13 @@ test('deleting the last item in selected tag clears stale tag filter and keeps r
 
   // Delete the only item in that selected tag
   await rankedItemSummary(searchSection, 1, 'Delete Me').click()
-  const dialogPromise = acceptNextDeleteDialog(page, 'Delete Me')
-  await itemDeleteButton(searchSection as searchSectionLocator, 'Delete Me').click()
-  await dialogPromise
-
-  await expectOperationStatus(page, '削除しました。')
+  await deleteItemAndWaitForStatus(
+    page,
+    searchSection as searchSectionLocator,
+    'Delete Me',
+    'Delete Me',
+    '削除しました。',
+  )
 
   // Stale selectedTag should be cleared so remaining data is visible
   await expect(searchClearButton(searchSection)).not.toBeVisible()

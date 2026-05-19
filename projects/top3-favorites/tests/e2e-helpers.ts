@@ -238,6 +238,19 @@ export function acceptNextDeleteDialog(page: Page, expectedMessage?: string | Re
   return handleNextDeleteDialog(page, 'accept', expectedMessage)
 }
 
+export async function deleteItemAndWaitForStatus(
+  page: Page,
+  scope: Page | Locator,
+  itemName: string | RegExp,
+  expectedDialogMessage: string | RegExp,
+  expectedStatus: string | RegExp,
+): Promise<void> {
+  const dialogPromise = acceptNextDeleteDialog(page, expectedDialogMessage)
+  await itemDeleteButton(scope, itemName).click()
+  await dialogPromise
+  await expectOperationStatus(page, expectedStatus)
+}
+
 export function dismissNextDeleteDialog(page: Page, expectedMessage?: string | RegExp): Promise<void> {
   return handleNextDeleteDialog(page, 'dismiss', expectedMessage)
 }

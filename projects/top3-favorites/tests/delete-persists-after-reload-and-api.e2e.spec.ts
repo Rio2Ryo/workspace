@@ -1,9 +1,7 @@
 import { expect, test } from '@playwright/test'
 import {
-  acceptNextDeleteDialog,
-  expectOperationStatus,
+  deleteItemAndWaitForStatus,
   fetchItems,
-  itemDeleteButton,
   postItem,
   rankedItemSummary,
   reloadPageAndWaitForSearchReady,
@@ -33,10 +31,13 @@ test('deleted item stays removed after reload and is absent from API data', asyn
   await tagFilterButton(searchSection as searchSectionLocator, '削除タグ').click()
   await rankedItemSummary(searchSection, 1, 'Delete Persist Target').click()
 
-  const dialogPromise = acceptNextDeleteDialog(page, 'Delete Persist Target')
-  await itemDeleteButton(searchSection as searchSectionLocator, 'Delete Persist Target').click()
-  await dialogPromise
-  await expectOperationStatus(page, '削除しました。')
+  await deleteItemAndWaitForStatus(
+    page,
+    searchSection as searchSectionLocator,
+    'Delete Persist Target',
+    'Delete Persist Target',
+    '削除しました。',
+  )
 
   // UI state before reload
   await expect(searchSection.getByText('Delete Persist Target')).toHaveCount(0)

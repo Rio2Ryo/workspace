@@ -31,40 +31,21 @@ function sourceImportsItemDeleteHelper(source) {
   return /import \{[^}]*itemDeleteButton[^}]*\} from '(?:\.\/|\.\.\/)*e2e-helpers'/.test(source)
 }
 
+function sourceImportsDeleteCompletionHelper(source) {
+  return /import \{[^}]*deleteItemAndWaitForStatus[^}]*\} from '(?:\.\/|\.\.\/)*e2e-helpers'/.test(source)
+}
+
 function sourceUsesDirectItemDeleteButton(source) {
   return /getByRole\(['"]button['"],\s*\{\s*name:\s*(?:`[^`]*を削除`|['"][^#'"][^'"]*を削除['"]|['"]削除['"]|\/[^/]*削除[^/]*\/)\s*\}\)/.test(source)
 }
 
-function collectItemDeleteRaceOffenders(spec, source) {
-  const riskyNextActions = [
-    "request.get('/api/items'",
-    'request.get("/api/items"',
-    "page.request.get('/api/items'",
-    'page.request.get("/api/items"',
-    'page.reload(',
-    'downloadJsonExport(',
-    'uploadJsonImportFile(',
-  ]
+function collectRawSuccessfulDeleteClickOffenders(spec, source) {
   const offenders = []
-  const deleteClickPattern = /await\s+itemDeleteButton\([^\n]+?\)\.click\(\)/g
-  const matches = [...source.matchAll(deleteClickPattern)]
+  const rawSuccessPattern = /const\s+\w+\s*=\s*acceptNextDeleteDialog\(page,[\s\S]{0,240}?await\s+itemDeleteButton\([^\n]+?\)\.click\(\)[\s\S]{0,240}?await\s+\w+\s*\n\s*await\s+expectOperationStatus\(page,\s*['"]削除しました。['"]\)/g
 
-  for (const match of matches) {
-    const start = match.index + match[0].length
-    const nextDeleteIndex = source.indexOf('itemDeleteButton(', start)
-    const block = source.slice(start, nextDeleteIndex === -1 ? undefined : nextDeleteIndex)
-    const statusIndex = block.indexOf('expectOperationStatus(page,')
-    const riskyAction = riskyNextActions.find((token) => block.includes(token))
-
-    if (!riskyAction) {
-      continue
-    }
-    if (statusIndex !== -1 && statusIndex < block.indexOf(riskyAction)) {
-      continue
-    }
-
+  for (const match of source.matchAll(rawSuccessPattern)) {
     const line = source.slice(0, match.index).split('\n').length
-    offenders.push(`${spec}:${line}: wait for expectOperationStatus(page, ...) before ${riskyAction}`)
+    offenders.push(`${spec}:${line}: use deleteItemAndWaitForStatus(...) for accepted successful delete flows`)
   }
 
   return offenders
@@ -105,18 +86,32 @@ test('[E2E-Helper][item-delete-action] helper owns item delete action accessible
   assert.match(source, /getByRole\(['"]button['"],\s*\{\s*name\s*\}\)/, 'itemDeleteButton should return the shared button locator')
 })
 
-test('[E2E-Helper][item-delete-action] risky post-delete workflows wait for delete completion', async () => {
+test('[E2E-Helper][item-delete-action] helper owns accepted delete click, dialog, and status wait', async () => {
+  const source = await readFile(helperPath, 'utf8')
+
+  assert.match(
+    source,
+    /export async function deleteItemAndWaitForStatus\(\s*page: Page,\s*scope: Page \| Locator,\s*itemName: string \| RegExp,\s*expectedDialogMessage: string \| RegExp,\s*expectedStatus: string \| RegExp,?\s*\): Promise<void> \{[\s\S]*?const dialogPromise = acceptNextDeleteDialog\(page, expectedDialogMessage\)[\s\S]*?await itemDeleteButton\(scope, itemName\)\.click\(\)[\s\S]*?await dialogPromise[\s\S]*?await expectOperationStatus\(page, expectedStatus\)[\s\S]*?\}/,
+    'tests/e2e-helpers.ts should expose deleteItemAndWaitForStatus(page, scope, itemName, expectedDialogMessage, expectedStatus) that owns accepted delete + dialog + status wait',
+  )
+})
+
+test('[E2E-Helper][item-delete-action] successful accepted delete workflows use completion helper', async () => {
   const offenders = []
   const specs = await listE2eSpecs(testsRoot)
 
   for (const spec of specs) {
-    const source = await readFile(new URL(spec, `${root}/`), 'utf8')
-    offenders.push(...collectItemDeleteRaceOffenders(spec, source))
+    const specUrl = new URL(spec, `${root}/`)
+    const source = await readFile(specUrl, 'utf8')
+    offenders.push(...collectRawSuccessfulDeleteClickOffenders(spec, source))
+    if (/deleteItemAndWaitForStatus\(/.test(source) && !sourceImportsDeleteCompletionHelper(source)) {
+      offenders.push(`${relativePath(specUrl)}: deleteItemAndWaitForStatus helper call without named import`)
+    }
   }
 
   assert.deepEqual(
     offenders.sort(),
     [],
-    `E2E specs that delete an item and then start another workflow should wait for the delete success live-region first: ${offenders.join(', ')}`,
+    `Successful accepted delete E2E flows should use the shared completion helper: ${offenders.join(', ')}`,
   )
 })
