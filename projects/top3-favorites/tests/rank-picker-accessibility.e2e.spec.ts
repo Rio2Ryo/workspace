@@ -1,5 +1,14 @@
 import { expect, test } from '@playwright/test'
-import { itemEditButton, editSaveButton, resetItemsByReplace, saveSampleItems, expectOperationStatus, registrationRankButton, editRankButton } from './e2e-helpers'
+import {
+  itemEditButton,
+  editSaveButton,
+  resetItemsByReplace,
+  saveSampleItems,
+  expectOperationStatus,
+  registrationRankButton,
+  editRankButton,
+  rankedItemSummary,
+} from './e2e-helpers'
 
 test.beforeEach(async ({ request }) => {
   await resetItemsByReplace(request)
@@ -12,7 +21,7 @@ test('new and edit rank pickers have context-specific accessible names', async (
 
   await saveSampleItems(page)
 
-  await page.getByText('1位: Solito MAGO').click()
+  await rankedItemSummary(page, 1, 'Solito MAGO').click()
   await itemEditButton(page, /編集$/).click()
 
   const editThird = editRankButton(page, 3)

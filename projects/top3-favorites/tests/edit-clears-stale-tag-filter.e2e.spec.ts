@@ -13,6 +13,7 @@ import {
   registrationNameField,
   registrationTagField,
   tagHeading,
+  rankedItemSummary,
 } from './e2e-helpers'
 
 test.beforeEach(async ({ request }) => {
@@ -40,7 +41,7 @@ test('editing last item tag clears stale selected filter so remaining data is vi
   // Filter by 元タグ and edit its only item to another tag
   await tagFilterButton(searchSection as searchSectionLocator, '元タグ').click()
   await expect(searchSection.getByText(/\d位: Move Me/)).toBeVisible()
-  await searchSection.getByText(/\d位: Move Me/).click()
+  await rankedItemSummary(searchSection, 1, 'Move Me').click()
   await itemEditButton(searchSection as searchSectionLocator, 'Move Me').click()
 
   await editTagField(page).fill('移動先タグ')

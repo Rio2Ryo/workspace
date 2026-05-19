@@ -8,6 +8,7 @@ import {
   registrationNameField,
   registrationTagField,
   tagGroup,
+  rankedItemSummary,
 } from './e2e-helpers'
 
 test.beforeEach(async ({ request }) => {
@@ -27,6 +28,6 @@ test('item with empty memo shows fallback text （メモなし） in details', a
   const group = tagGroup(page, 'カフェ')
   await expect(group.getByText(/\d位: 茶亭/)).toBeVisible()
 
-  await group.locator('summary', { hasText: /\d位: 茶亭/ }).click()
+  await rankedItemSummary(group, 2, '茶亭').click()
   await expect(group.getByText('（メモなし）')).toBeVisible()
 })

@@ -1,5 +1,23 @@
 import { expect, test } from '@playwright/test'
-import { sampleSaveButton, jsonExportButton, itemEditButton, uploadJsonImportFile, resetItemsByReplace, itemDeleteButton, importCancelButton, importConfirmButton, registrationSaveButton, expectOperationStatus, registrationRankButton, registrationLocationField, registrationMemoField, registrationNameField, registrationTagField , importPreviewPanel} from '../../e2e-helpers'
+import {
+  sampleSaveButton,
+  jsonExportButton,
+  itemEditButton,
+  uploadJsonImportFile,
+  resetItemsByReplace,
+  itemDeleteButton,
+  importCancelButton,
+  importConfirmButton,
+  registrationSaveButton,
+  expectOperationStatus,
+  registrationRankButton,
+  registrationLocationField,
+  registrationMemoField,
+  registrationNameField,
+  registrationTagField,
+  importPreviewPanel,
+  rankedItemSummary,
+} from '../../e2e-helpers'
 
 test.beforeEach(async ({ request }) => {
   await resetItemsByReplace(request)
@@ -44,7 +62,7 @@ test('pending import preview enforces operation guards across registration/searc
   await expect(page.getByTestId('import-export-lock-hint')).toHaveText('インポート確認中のため、現在DBのJSONエクスポートは一時停止中です。')
 
   // list actions lock
-  await page.getByText('1位: Guard Seed').click()
+  await rankedItemSummary(page, 1, 'Guard Seed').click()
   await expect(itemEditButton(page, 'Guard Seed')).toBeDisabled()
   await expect(itemEditButton(page, 'Guard Seed')).toHaveAccessibleDescription('インポート確認中のため、既存Top3の編集・削除は一時停止中です。')
   await expect(itemDeleteButton(page, 'Guard Seed')).toBeDisabled()

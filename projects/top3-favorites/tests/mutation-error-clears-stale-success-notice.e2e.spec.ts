@@ -1,5 +1,19 @@
 import { expect, test } from '@playwright/test'
-import { acceptNextDeleteDialog, itemEditButton, editSaveButton, resetItemsByReplace, itemDeleteButton, registrationSaveButton, expectOperationStatus, expectOperationAlert, registrationLocationField, registrationNameField, registrationTagField, operationStatus } from './e2e-helpers'
+import {
+  acceptNextDeleteDialog,
+  itemEditButton,
+  editSaveButton,
+  resetItemsByReplace,
+  itemDeleteButton,
+  registrationSaveButton,
+  expectOperationStatus,
+  expectOperationAlert,
+  registrationLocationField,
+  registrationNameField,
+  registrationTagField,
+  operationStatus,
+  rankedItemSummary,
+} from './e2e-helpers'
 
 test.beforeEach(async ({ request }) => {
   await resetItemsByReplace(request)
@@ -17,7 +31,7 @@ async function seedOne(page: import('@playwright/test').Page, name: string) {
 test('failed edit clears stale success notice and keeps edit draft for retry', async ({ page }) => {
   await seedOne(page, 'Edit Base')
 
-  await page.getByText('1位: Edit Base').click()
+  await rankedItemSummary(page, 1, 'Edit Base').click()
   await itemEditButton(page, 'Edit Base').click()
   await page.getByLabel('編集 店舗名').fill('Edit Retry Candidate')
 
@@ -43,7 +57,7 @@ test('failed edit clears stale success notice and keeps edit draft for retry', a
 test('failed delete clears stale success notice and keeps item visible', async ({ page }) => {
   await seedOne(page, 'Delete Base')
 
-  await page.getByText('1位: Delete Base').click()
+  await rankedItemSummary(page, 1, 'Delete Base').click()
   await page.route('**/api/items?**', async (route) => {
     if (route.request().method() === 'DELETE') {
       await route.fulfill({
@@ -61,5 +75,5 @@ test('failed delete clears stale success notice and keeps item visible', async (
 
   await expectOperationAlert(page, '削除APIが一時的に利用できません。')
   await expect(operationStatus(page)).toHaveCount(0)
-  await expect(page.getByText('1位: Delete Base')).toBeVisible()
+  await expect(rankedItemSummary(page, 1, 'Delete Base')).toBeVisible()
 })

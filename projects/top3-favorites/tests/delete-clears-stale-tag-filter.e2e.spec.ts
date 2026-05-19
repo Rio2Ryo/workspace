@@ -13,6 +13,7 @@ import {
   registrationTagField,
   reloadPageAndWaitForSearchReady,
   tagHeading,
+  rankedItemSummary,
 } from './e2e-helpers'
 
 test.beforeEach(async ({ request }) => {
@@ -42,7 +43,7 @@ test('deleting the last item in selected tag clears stale tag filter and keeps r
   await expect(searchSection.getByText(/\d位: Delete Me/)).toBeVisible()
 
   // Delete the only item in that selected tag
-  await searchSection.getByText(/\d位: Delete Me/).click()
+  await rankedItemSummary(searchSection, 1, 'Delete Me').click()
   const dialogPromise = acceptNextDeleteDialog(page, 'Delete Me')
   await itemDeleteButton(searchSection as searchSectionLocator, 'Delete Me').click()
   await dialogPromise

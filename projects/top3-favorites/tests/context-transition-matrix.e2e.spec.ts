@@ -1,5 +1,21 @@
 import { expect, test } from '@playwright/test'
-import { tagFilterButton, itemEditButton, editSaveButton, clearSearchTagFilter, uploadJsonImportFile, resetItemsByReplace, jsonImportButton, registrationSaveButton, expectOperationStatus, searchSection as searchSectionLocator, registrationLocationField, registrationNameField, registrationTagField , importPreviewPanel} from './e2e-helpers'
+import {
+  tagFilterButton,
+  itemEditButton,
+  editSaveButton,
+  clearSearchTagFilter,
+  uploadJsonImportFile,
+  resetItemsByReplace,
+  jsonImportButton,
+  registrationSaveButton,
+  expectOperationStatus,
+  searchSection as searchSectionLocator,
+  registrationLocationField,
+  registrationNameField,
+  registrationTagField,
+  importPreviewPanel,
+  rankedItemSummary,
+} from './e2e-helpers'
 
 test.beforeEach(async ({ request }) => {
   await resetItemsByReplace(request)
@@ -38,7 +54,7 @@ test('context transition matrix keeps only one active workflow context', async (
   await expect(importPreviewPanel(page)).toHaveCount(0)
 
   // open edit context
-  await page.getByText('1位: Context Base').click()
+  await rankedItemSummary(page, 1, 'Context Base').click()
   await itemEditButton(page, /編集/).first().click()
   await expect(editSaveButton(page)).toBeVisible()
 

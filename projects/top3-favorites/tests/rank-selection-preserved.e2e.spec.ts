@@ -9,6 +9,7 @@ import {
   registrationTagField,
   fetchItems,
   tagGroup,
+  rankedItemSummary,
 } from './e2e-helpers'
 
 test.beforeEach(async ({ request }) => {
@@ -35,5 +36,5 @@ test('saving with rank 3 keeps the selected rank in API and list output', async 
   expect(saved?.rank).toBe(3)
 
   const group = tagGroup(page, 'ランチ')
-  await expect(group.locator('summary').filter({ hasText: /3位:\s*三番目食堂/ })).toBeVisible()
+  await expect(rankedItemSummary(group, 3, '三番目食堂')).toBeVisible()
 })

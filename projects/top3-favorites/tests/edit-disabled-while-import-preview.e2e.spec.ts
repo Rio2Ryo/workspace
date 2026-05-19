@@ -1,5 +1,16 @@
 import { expect, test } from '@playwright/test'
-import { itemEditButton, uploadJsonImportFile, resetItemsByReplace, registrationSaveButton, expectOperationStatus, registrationLocationField, registrationNameField, registrationTagField , importPreviewPanel} from './e2e-helpers'
+import {
+  itemEditButton,
+  uploadJsonImportFile,
+  resetItemsByReplace,
+  registrationSaveButton,
+  expectOperationStatus,
+  registrationLocationField,
+  registrationNameField,
+  registrationTagField,
+  importPreviewPanel,
+  rankedItemSummary,
+} from './e2e-helpers'
 
 test.beforeEach(async ({ request }) => {
   await resetItemsByReplace(request)
@@ -21,6 +32,6 @@ test('edit action is disabled while import preview is active (preventive context
   await uploadJsonImportFile(page, 'pending.json', payload)
   await expect(importPreviewPanel(page)).toBeVisible()
 
-  await page.getByText('1位: Guard Target').click()
+  await rankedItemSummary(page, 1, 'Guard Target').click()
   await expect(itemEditButton(page, /編集/).first()).toBeDisabled()
 })

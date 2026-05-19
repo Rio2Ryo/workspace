@@ -12,6 +12,7 @@ import {
   reloadPageAndWaitForSearchReady,
   fetchItems,
   tagHeading,
+  rankedItemSummary,
 } from './e2e-helpers'
 
 test.beforeEach(async ({ request }) => {
@@ -32,13 +33,13 @@ test('newly created item remains after reload and exists in API data', async ({ 
 
   const searchSection = searchSectionLocator(page)
   await expect(searchSection.getByText(/2位:\s*Persist New Item/)).toBeVisible()
-  await searchSection.getByText(/2位:\s*Persist New Item/).click()
+  await rankedItemSummary(searchSection, 2, 'Persist New Item').click()
   await expect(searchSection.getByText('reload persistence contract')).toBeVisible()
 
   await reloadPageAndWaitForSearchReady(page)
 
   await expect(searchSection.getByText(/2位:\s*Persist New Item/)).toBeVisible()
-  await searchSection.getByText(/2位:\s*Persist New Item/).click()
+  await rankedItemSummary(searchSection, 2, 'Persist New Item').click()
   await expect(searchSection.getByText('reload persistence contract')).toBeVisible()
   await expect(tagHeading(searchSection, '永続化タグ')).toBeVisible()
 
