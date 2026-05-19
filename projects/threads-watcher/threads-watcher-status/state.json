@@ -5,14 +5,157 @@
     "@bmw_intokyo"
   ],
   "last_check": {
-    "checked_at": "2026-05-19T00:06:02Z",
-    "found_count": 4,
-    "new_count": 4,
+    "checked_at": "2026-05-19T00:09:10Z",
+    "found_count": 15,
+    "new_count": 11,
     "status": "ok",
     "error": null
   },
-  "saved_count": 26,
+  "saved_count": 37,
   "posts": [
+    {
+      "handle": "@bmw_intokyo",
+      "post_id": "DYZLei4CTNv",
+      "post_url": "https://www.threads.com/@bmw_intokyo/post/DYZLei4CTNv",
+      "first_seen_at": "2026-05-19T00:09:05Z",
+      "captured_at": "2026-05-19T00:09:10Z",
+      "screenshot_size_bytes": 151749,
+      "screenshot_width": 1280,
+      "screenshot_height": 1800,
+      "post_text": "合流してイタリアン行く たわいもない話してて楽しいって大事",
+      "posted_at": "2026-05-16T08:49:27.000Z",
+      "screenshot_path": "screenshots/bmw_intokyo/DYZLei4CTNv__20260519T000910Z.png"
+    },
+    {
+      "handle": "@bmw_intokyo",
+      "post_id": "DYZLWqfCSuj",
+      "post_url": "https://www.threads.com/@bmw_intokyo/post/DYZLWqfCSuj",
+      "first_seen_at": "2026-05-19T00:09:00Z",
+      "captured_at": "2026-05-19T00:09:05Z",
+      "screenshot_size_bytes": 116644,
+      "screenshot_width": 1280,
+      "screenshot_height": 1800,
+      "post_text": "楽しむことわすれてた！！！ 楽しいの大事や！！",
+      "posted_at": "2026-05-16T08:48:23.000Z",
+      "screenshot_path": "screenshots/bmw_intokyo/DYZLWqfCSuj__20260519T000905Z.png"
+    },
+    {
+      "handle": "@bmw_intokyo",
+      "post_id": "DYYlukkibIy",
+      "post_url": "https://www.threads.com/@bmw_intokyo/post/DYYlukkibIy",
+      "first_seen_at": "2026-05-19T00:08:56Z",
+      "captured_at": "2026-05-19T00:09:00Z",
+      "screenshot_size_bytes": 105374,
+      "screenshot_width": 1280,
+      "screenshot_height": 1800,
+      "post_text": "梅田なんでこんな人多いん？ 土曜にしてもおおい",
+      "posted_at": "2026-05-16T03:19:36.000Z",
+      "screenshot_path": "screenshots/bmw_intokyo/DYYlukkibIy__20260519T000900Z.png"
+    },
+    {
+      "handle": "@bmw_intokyo",
+      "post_id": "DYXcwLWiYGr",
+      "post_url": "https://www.threads.com/@bmw_intokyo/post/DYXcwLWiYGr",
+      "first_seen_at": "2026-05-19T00:08:52Z",
+      "captured_at": "2026-05-19T00:08:56Z",
+      "screenshot_size_bytes": 169750,
+      "screenshot_width": 1280,
+      "screenshot_height": 1800,
+      "post_text": "ミナミ人多いな",
+      "posted_at": "2026-05-15T16:41:56.000Z",
+      "screenshot_path": "screenshots/bmw_intokyo/DYXcwLWiYGr__20260519T000856Z.png"
+    },
+    {
+      "handle": "@bmw_intokyo",
+      "post_id": "DYXOd92iQly",
+      "post_url": "https://www.threads.com/@bmw_intokyo/post/DYXOd92iQly",
+      "first_seen_at": "2026-05-19T00:08:48Z",
+      "captured_at": "2026-05-19T00:08:52Z",
+      "screenshot_size_bytes": 180655,
+      "screenshot_width": 1280,
+      "screenshot_height": 1800,
+      "post_text": "新地の鮨はいい 六本木もいい 4時までやってるから 1人2万くらいであのクオリティならリーズナブル",
+      "posted_at": "2026-05-15T14:37:07.000Z",
+      "screenshot_path": "screenshots/bmw_intokyo/DYXOd92iQly__20260519T000852Z.png"
+    },
+    {
+      "handle": "@bmw_intokyo",
+      "post_id": "DYXCtuUCR6_",
+      "post_url": "https://www.threads.com/@bmw_intokyo/post/DYXCtuUCR6_",
+      "first_seen_at": "2026-05-19T00:08:44Z",
+      "captured_at": "2026-05-19T00:08:48Z",
+      "screenshot_size_bytes": 185778,
+      "screenshot_width": 1280,
+      "screenshot_height": 1800,
+      "post_text": "あ、こいつ男できたな そういうのは敏感にわかってしまう 直接聞いたろ 幸せにおなり ブラック企業やめれるやん",
+      "posted_at": "2026-05-15T12:54:24.000Z",
+      "screenshot_path": "screenshots/bmw_intokyo/DYXCtuUCR6___20260519T000848Z.png"
+    },
+    {
+      "handle": "@bmw_intokyo",
+      "post_id": "DYXCWohiWki",
+      "post_url": "https://www.threads.com/@bmw_intokyo/post/DYXCWohiWki",
+      "first_seen_at": "2026-05-19T00:08:39Z",
+      "captured_at": "2026-05-19T00:08:44Z",
+      "screenshot_size_bytes": 592970,
+      "screenshot_width": 1280,
+      "screenshot_height": 1800,
+      "post_text": "シェーヌダンクル 今20万くらい？と思ったら30万やん イタリアから持ってきてもらうからもうちょい安くでいけるかな",
+      "posted_at": "2026-05-15T12:51:15.000Z",
+      "screenshot_path": "screenshots/bmw_intokyo/DYXCWohiWki__20260519T000844Z.png"
+    },
+    {
+      "handle": "@bmw_intokyo",
+      "post_id": "DYXBIH6ieM1",
+      "post_url": "https://www.threads.com/@bmw_intokyo/post/DYXBIH6ieM1",
+      "first_seen_at": "2026-05-19T00:08:35Z",
+      "captured_at": "2026-05-19T00:08:39Z",
+      "screenshot_size_bytes": 140488,
+      "screenshot_width": 1280,
+      "screenshot_height": 1800,
+      "post_text": "いつ呼んでも来てくれるよね 都合いい女とは言わない いきなり飯をご馳走してくれる男とおもってくれ",
+      "posted_at": "2026-05-15T12:40:32.000Z",
+      "screenshot_path": "screenshots/bmw_intokyo/DYXBIH6ieM1__20260519T000839Z.png"
+    },
+    {
+      "handle": "@bmw_intokyo",
+      "post_id": "DYXA-VtiYLZ",
+      "post_url": "https://www.threads.com/@bmw_intokyo/post/DYXA-VtiYLZ",
+      "first_seen_at": "2026-05-19T00:08:30Z",
+      "captured_at": "2026-05-19T00:08:35Z",
+      "screenshot_size_bytes": 185786,
+      "screenshot_width": 1280,
+      "screenshot_height": 1800,
+      "post_text": "年に1度の期間咳がとまらなくなる メンタルやられたり 疲れが溜まったり 仕事でミスしたり やだやだ",
+      "posted_at": "2026-05-15T12:39:12.000Z",
+      "screenshot_path": "screenshots/bmw_intokyo/DYXA-VtiYLZ__20260519T000835Z.png"
+    },
+    {
+      "handle": "@bmw_intokyo",
+      "post_id": "DYW-oqqCYYR",
+      "post_url": "https://www.threads.com/@bmw_intokyo/post/DYW-oqqCYYR",
+      "first_seen_at": "2026-05-19T00:08:25Z",
+      "captured_at": "2026-05-19T00:08:30Z",
+      "screenshot_size_bytes": 182357,
+      "screenshot_width": 1280,
+      "screenshot_height": 1800,
+      "post_text": "当日夜なのに鮨付き合ってくれてありがとう この前名前間違えて呼んだのに ブラック企業で働いてる以外いい女だよあんたは はやくやめな",
+      "posted_at": "2026-05-15T12:18:46.000Z",
+      "screenshot_path": "screenshots/bmw_intokyo/DYW-oqqCYYR__20260519T000830Z.png"
+    },
+    {
+      "handle": "@bmw_intokyo",
+      "post_id": "DYW7L_2iddh",
+      "post_url": "https://www.threads.com/@bmw_intokyo/post/DYW7L_2iddh",
+      "first_seen_at": "2026-05-19T00:08:21Z",
+      "captured_at": "2026-05-19T00:08:25Z",
+      "screenshot_size_bytes": 141704,
+      "screenshot_width": 1280,
+      "screenshot_height": 1800,
+      "post_text": "商社から連絡あって シェーヌダンクル買えるっぽい 激アツ",
+      "posted_at": "2026-05-15T11:48:38.000Z",
+      "screenshot_path": "screenshots/bmw_intokyo/DYW7L_2iddh__20260519T000825Z.png"
+    },
     {
       "handle": "@bmw_intokyo",
       "post_id": "DYbNd2CCZyT",
@@ -354,18 +497,18 @@
   ],
   "recent_stats": {
     "window_hours": 24,
-    "total": 778,
-    "ok": 738,
+    "total": 777,
+    "ok": 737,
     "partial_error": 40,
     "error": 0,
     "other": 0,
-    "success_rate": 0.9485861182519281
+    "success_rate": 0.9485199485199485
   },
   "recent_stats_by_window": {
     "1": {
       "window_hours": 1,
-      "total": 3,
-      "ok": 3,
+      "total": 4,
+      "ok": 4,
       "partial_error": 0,
       "error": 0,
       "other": 0,
@@ -373,33 +516,29 @@
     },
     "24": {
       "window_hours": 24,
-      "total": 778,
-      "ok": 738,
+      "total": 777,
+      "ok": 737,
       "partial_error": 40,
       "error": 0,
       "other": 0,
-      "success_rate": 0.9485861182519281
+      "success_rate": 0.9485199485199485
     },
     "168": {
       "window_hours": 168,
-      "total": 1504,
-      "ok": 1464,
+      "total": 1505,
+      "ok": 1465,
       "partial_error": 40,
       "error": 0,
       "other": 0,
-      "success_rate": 0.973404255319149
+      "success_rate": 0.973421926910299
     }
   },
   "sync_state": {
     "cursor": 49,
-    "db_max": 49,
-    "delta": 0,
+    "db_max": 60,
+    "delta": 11,
     "cursor_file_exists": true
   },
-  "dry_run_alert": {
-    "pending_ticks": 4,
-    "since": "2026-05-18T23:46:27Z",
-    "delta": 3
-  },
-  "snapshot_generated_at": "2026-05-19T00:07:24Z"
+  "dry_run_alert": null,
+  "snapshot_generated_at": "2026-05-19T00:09:16Z"
 }
