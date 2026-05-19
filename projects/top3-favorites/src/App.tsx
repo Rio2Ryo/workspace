@@ -630,7 +630,7 @@ export function App() {
         return counts
       }, new Map()),
       ([field, count]) => ({ field, count }),
-    )
+    ).sort((left, right) => right.count - left.count)
     : []
 
   const copyImportExcludedNames = async () => {

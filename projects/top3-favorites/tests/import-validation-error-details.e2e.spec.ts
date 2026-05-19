@@ -71,3 +71,21 @@ test('import validation error identifies the first invalid row and field for qui
   )
   await expect(importPreviewSummary(page)).toHaveCount(0)
 })
+
+test('import validation field summary prioritizes repeated fields over first-seen order', async ({ page }) => {
+  await page.goto('/')
+
+  const now = '2026-05-18T00:00:00.000Z'
+  const invalidItems = [
+    { id: 'invalid-name-first', tag: 'カフェラテ', location: '柏の葉', name: '', rank: 1, memo: '', mapsUrl: '', placeId: '', createdAt: now, updatedAt: now },
+    { id: 'invalid-tag-second', tag: '   ', location: '柏の葉', name: 'Whitespace Tag Shop 1', rank: 2, memo: '', mapsUrl: '', placeId: '', createdAt: now, updatedAt: now },
+    { id: 'invalid-tag-third', tag: '', location: '柏の葉', name: 'Whitespace Tag Shop 2', rank: 3, memo: '', mapsUrl: '', placeId: '', createdAt: now, updatedAt: now },
+  ]
+
+  await uploadJsonImportFile(page, 'invalid-import-field-priority.json', invalidItems)
+
+  await expectOperationAlert(page,
+    'インポート失敗: ファイル「invalid-import-field-priority.json」の1件目 / フィールド: name / 修正: 店舗名を入力してください。既存データは保持しました。',
+  )
+  await expect(importValidationFieldSummary(page).locator('li')).toHaveText(['tag: 2件', 'name: 1件'])
+})
