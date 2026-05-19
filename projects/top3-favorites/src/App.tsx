@@ -995,9 +995,21 @@ export function App() {
                       {isImpactTermsHelperExpanded ? '差分用語の詳細説明を隠す' : '差分用語の詳細説明を表示'}
                     </button>
                     {isImpactTermsHelperExpanded && (
-                      <p id="import-preview-terms-helper" className="hint compact" data-testid="import-preview-terms-helper">
-                        削除予定: 現在DBにあるが、インポート後データに含まれない項目 / 正規化除外: インポートJSON内で同一タグTop3に収まらず取り込まれない項目
-                      </p>
+                      <dl
+                        id="import-preview-terms-helper"
+                        className="hint compact import-preview-terms-list"
+                        data-testid="import-preview-terms-helper"
+                        aria-label="差分用語の説明"
+                      >
+                        <div>
+                          <dt>削除予定</dt>
+                          <dd>現在DBにあるが、インポート後データに含まれない項目</dd>
+                        </div>
+                        <div>
+                          <dt>正規化除外</dt>
+                          <dd>インポートJSON内で同一タグTop3に収まらず取り込まれない項目</dd>
+                        </div>
+                      </dl>
                     )}
                     {pendingImportImpact.added === 0 && pendingImportImpact.removed === 0 && pendingImportImpact.excluded === 0 && (
                       <p className="hint compact" data-testid="import-preview-no-change">差分なし（このインポートでデータ変更はありません）</p>

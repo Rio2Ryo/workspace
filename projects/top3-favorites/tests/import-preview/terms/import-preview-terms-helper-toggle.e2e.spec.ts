@@ -30,8 +30,11 @@ test('impact terms helper is collapsed by default and can be expanded/collapsed'
 
   await importPreviewToggleTermsHelper(page).click()
   const helper = importPreviewTermsHelper(page)
-  await expect(helper).toContainText('削除予定: 現在DBにあるが、インポート後データに含まれない項目')
-  await expect(helper).toContainText('正規化除外: インポートJSON内で同一タグTop3に収まらず取り込まれない項目')
+  await expect(helper.locator('dt')).toHaveText(['削除予定', '正規化除外'])
+  await expect(helper.locator('dd')).toHaveText([
+    '現在DBにあるが、インポート後データに含まれない項目',
+    'インポートJSON内で同一タグTop3に収まらず取り込まれない項目',
+  ])
 
   await importPreviewToggleTermsHelper(page).click()
   await expect(importPreviewTermsHelper(page)).toHaveCount(0)

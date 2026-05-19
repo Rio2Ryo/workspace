@@ -6,6 +6,7 @@ const root = new URL('..', import.meta.url)
 const helperPath = new URL('tests/e2e-helpers.ts', `${root}/`)
 const testsRoot = new URL('tests/', `${root}/`)
 const packagePath = new URL('package.json', `${root}/`)
+const appPath = new URL('src/App.tsx', `${root}/`)
 
 const helperNames = [
   'importPreviewDirectionMetrics',
@@ -115,6 +116,18 @@ test('[E2E-Helper][import-preview-details] helpers own direction/tag/terms test 
   for (const [helper, testId] of expectations) {
     assert.match(source, new RegExp(`${helper}[\\s\\S]*getByTestId\\(['\"]${testId}['\"]\\)`), `${helper} should own ${testId}`)
   }
+})
+
+test('[App][import-preview-details] terms helper uses semantic term descriptions', async () => {
+  const source = await readFile(appPath, 'utf8')
+  const termsHelperMatch = source.match(/<dl[\s\S]*id="import-preview-terms-helper"[\s\S]*?<\/dl>/)
+
+  assert.ok(termsHelperMatch, 'import preview terms helper should render as a dl, not punctuation-separated paragraph text')
+  const termsHelperSource = termsHelperMatch[0]
+  assert.match(termsHelperSource, /aria-label="差分用語の説明"/, 'terms helper dl should expose an accessible label')
+  assert.match(termsHelperSource, /<dt>削除予定<\/dt>[\s\S]*<dd>現在DBにあるが、インポート後データに含まれない項目<\/dd>/, '削除予定 should be paired with its definition')
+  assert.match(termsHelperSource, /<dt>正規化除外<\/dt>[\s\S]*<dd>インポートJSON内で同一タグTop3に収まらず取り込まれない項目<\/dd>/, '正規化除外 should be paired with its definition')
+  assert.doesNotMatch(termsHelperSource, /\s\/\s/, 'terms helper should not separate definitions with a slash')
 })
 
 test('[App][config-quality] full verification runs import preview detail helper contract', async () => {

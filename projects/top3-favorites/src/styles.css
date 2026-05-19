@@ -94,6 +94,11 @@ details[open] summary::after { content: '閉じる'; color: #6b7280; }
 .import-preview-detail-heading, .import-preview-detail-more { margin: 0; }
 .import-preview-detail-list ul { display: grid; gap: 2px; }
 .import-preview-detail-list li::before { content: '・'; }
+.import-preview-terms-list { display: grid; gap: 3px; }
+.import-preview-terms-list div { display: grid; grid-template-columns: auto 1fr; gap: 4px; }
+.import-preview-terms-list dt { font-weight: 800; }
+.import-preview-terms-list dt::after { content: ':'; }
+.import-preview-terms-list dd { margin: 0; }
 .import-preview-reason-list { display: grid; gap: 3px; }
 .import-preview-reason-heading, .import-preview-reason-more { margin: 0; }
 .import-preview-reason-list ul { display: grid; gap: 2px; }
