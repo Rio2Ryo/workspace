@@ -33,15 +33,20 @@ test('excluded store names preview includes tag context when multiple themes exc
   const names = importPreviewExcludedNames(page)
   await expect(names).toHaveAttribute('data-excluded-name-count', '2')
   await expect(names).toHaveAttribute('data-excluded-name-labels', 'カフェラテ: 同名店|つけ麺: 同名店')
-  await expect(names).toHaveText('正規化除外予定の店舗: カフェラテ: 同名店, つけ麺: 同名店')
+  await expect(names).toHaveAttribute('data-excluded-name-reason-labels', 'カフェラテ: 同名店（カフェラテでTop3外: 4位相当）|つけ麺: 同名店（つけ麺でTop3外: 4位相当）')
+  await expect(names).toHaveText('正規化除外予定の店舗: カフェラテ: 同名店（カフェラテでTop3外: 4位相当）, つけ麺: 同名店（つけ麺でTop3外: 4位相当）')
   await expect(importPreviewLive(page)).toContainText('正規化除外2件（例: カフェラテ: 同名店）')
   await expect(importPreviewExcludedDetails(page)).toHaveText(
     '除外理由: ・カフェラテ: 同名店（カフェラテでTop3外: 4位相当） / ・つけ麺: 同名店（つけ麺でTop3外: 4位相当）',
   )
 
-  const summary = await parseImportPreviewSummary<{ excludedDetailLabels: string[] }>(importPreviewSummary(page))
+  const summary = await parseImportPreviewSummary<{ excludedDetailLabels: string[]; excludedNameReasonLabels: string[] }>(importPreviewSummary(page))
   expect(summary.excludedDetailLabels).toEqual([
     'カフェラテ: 同名店',
     'つけ麺: 同名店',
+  ])
+  expect(summary.excludedNameReasonLabels).toEqual([
+    'カフェラテ: 同名店（カフェラテでTop3外: 4位相当）',
+    'つけ麺: 同名店（つけ麺でTop3外: 4位相当）',
   ])
 })

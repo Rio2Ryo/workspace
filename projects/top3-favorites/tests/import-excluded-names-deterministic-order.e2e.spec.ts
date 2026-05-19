@@ -31,5 +31,11 @@ test('import preview shows excluded store names in deterministic sorted order', 
   await expectImportPreviewImpactMath(page, { added: 3, kept: 0, removed: 0, excluded: 2 })
 
   // Excluded names should be deterministic (ja locale sort), not input-order dependent
-  await expect(importPreviewExcludedNames(page)).toHaveText('正規化除外予定の店舗: Y店, Z店')
+  await expect(importPreviewExcludedNames(page)).toHaveText(
+    '正規化除外予定の店舗: Y店（カフェラテでTop3外: 4位相当）, Z店（カフェラテでTop3外: 5位相当）',
+  )
+  await expect(importPreviewExcludedNames(page)).toHaveAttribute(
+    'data-excluded-name-reason-labels',
+    'Y店（カフェラテでTop3外: 4位相当）|Z店（カフェラテでTop3外: 5位相当）',
+  )
 })

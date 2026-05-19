@@ -1,6 +1,7 @@
 import { expect, test } from '@playwright/test'
 import {
   importPreviewExcludedDetails,
+  importPreviewExcludedNames,
   importPreviewSummary,
   parseImportPreviewSummary,
   resetItemsByReplace,
@@ -23,6 +24,10 @@ test('import preview explains why each excluded store will not be imported', asy
   ]
 
   await uploadJsonImportFile(page, 'excluded-reasons.json', payload)
+
+  const names = importPreviewExcludedNames(page)
+  await expect(names).toHaveText('正規化除外予定の店舗: D店（カフェラテでTop3外: 4位相当）')
+  await expect(names).toHaveAttribute('data-excluded-name-reason-labels', 'D店（カフェラテでTop3外: 4位相当）')
 
   const details = importPreviewExcludedDetails(page)
   await expect(details).toBeVisible()
