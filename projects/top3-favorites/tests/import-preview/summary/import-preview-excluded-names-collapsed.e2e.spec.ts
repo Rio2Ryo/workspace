@@ -4,6 +4,7 @@ import {
   importPreviewToggleExcludedNames,
   resetItemsByReplace,
   uploadJsonImportFile,
+  importPreviewListItems,
 } from '../../e2e-helpers'
 
 test.beforeEach(async ({ request }) => {
@@ -30,7 +31,7 @@ test('excluded store names preview collapses long lists and can be expanded', as
   await expect(names).toHaveAttribute('aria-label', 'Top3外で正規化除外予定の店舗名プレビュー')
   await expect(names).toHaveAttribute('data-excluded-name-count', '4')
   await expect(names.getByText('正規化除外予定の店舗:')).toBeVisible()
-  await expect(names.getByRole('listitem')).toHaveText([
+  await expect(importPreviewListItems(names)).toHaveText([
     'B店（カフェラテでTop3外: 6位相当）',
     'C店（カフェラテでTop3外: 7位相当）',
     'F店（カフェラテでTop3外: 4位相当）',

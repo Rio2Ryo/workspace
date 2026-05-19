@@ -5,6 +5,7 @@ import {
   importPreviewNormalization,
   resetItemsByReplace,
   uploadJsonImportFile,
+  importPreviewListItems,
 } from './e2e-helpers'
 
 test.beforeEach(async ({ request }) => {
@@ -33,7 +34,7 @@ test('import preview shows excluded store names in deterministic sorted order', 
   // Excluded names should be deterministic (ja locale sort), not input-order dependent
   const excludedNames = importPreviewExcludedNames(page)
   await expect(excludedNames.getByText('正規化除外予定の店舗:')).toBeVisible()
-  await expect(excludedNames.getByRole('listitem')).toHaveText([
+  await expect(importPreviewListItems(excludedNames)).toHaveText([
     'Y店（カフェラテでTop3外: 4位相当）',
     'Z店（カフェラテでTop3外: 5位相当）',
   ])

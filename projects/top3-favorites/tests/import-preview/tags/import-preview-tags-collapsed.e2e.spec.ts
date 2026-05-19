@@ -1,5 +1,7 @@
 import { expect, test } from '@playwright/test'
-import { importPreviewImpactTags, resetItemsByReplace, uploadJsonImportFile } from '../../e2e-helpers'
+import { importPreviewImpactTags, resetItemsByReplace, uploadJsonImportFile,
+  importPreviewListItems,
+} from '../../e2e-helpers'
 
 test.beforeEach(async ({ request }) => {
   await resetItemsByReplace(request)
@@ -22,6 +24,6 @@ test('impact tags are collapsed when many tags are affected', async ({ page }) =
 
   const tags = importPreviewImpactTags(page)
   await expect(tags).toContainText('影響タグ: 5件')
-  await expect(tags.getByRole('listitem')).toHaveText(['Aタグ', 'Bタグ', 'Cタグ', 'Dタグ', 'Eタグ'])
+  await expect(importPreviewListItems(tags)).toHaveText(['Aタグ', 'Bタグ', 'Cタグ', 'Dタグ', 'Eタグ'])
   await expect(tags).toContainText('ほか1件')
 })

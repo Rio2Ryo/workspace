@@ -4,6 +4,7 @@ import {
   importPreviewToggleImpactTags,
   resetItemsByReplace,
   uploadJsonImportFile,
+  importPreviewListItems,
 } from '../../e2e-helpers'
 
 test.beforeEach(async ({ request }) => {
@@ -27,17 +28,17 @@ test('impact tags can be expanded to show all tags and collapsed back', async ({
 
   const tags = importPreviewImpactTags(page)
   await expect(tags).toContainText('ほか1件')
-  await expect(tags.getByRole('listitem')).toHaveText(['Aタグ', 'Bタグ', 'Cタグ', 'Dタグ', 'Eタグ'])
+  await expect(importPreviewListItems(tags)).toHaveText(['Aタグ', 'Bタグ', 'Cタグ', 'Dタグ', 'Eタグ'])
 
   const toggle = importPreviewToggleImpactTags(page)
   await expect(toggle).toBeVisible()
   await toggle.click()
 
-  await expect(tags.getByRole('listitem')).toHaveText(['Aタグ', 'Bタグ', 'Cタグ', 'Dタグ', 'Eタグ', 'Fタグ'])
+  await expect(importPreviewListItems(tags)).toHaveText(['Aタグ', 'Bタグ', 'Cタグ', 'Dタグ', 'Eタグ', 'Fタグ'])
   await expect(tags).not.toContainText('ほか1件')
   await expect(importPreviewToggleImpactTags(page)).toBeVisible()
 
   await importPreviewToggleImpactTags(page).click()
   await expect(tags).toContainText('ほか1件')
-  await expect(tags.getByRole('listitem')).toHaveText(['Aタグ', 'Bタグ', 'Cタグ', 'Dタグ', 'Eタグ'])
+  await expect(importPreviewListItems(tags)).toHaveText(['Aタグ', 'Bタグ', 'Cタグ', 'Dタグ', 'Eタグ'])
 })

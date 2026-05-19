@@ -5,6 +5,7 @@ import {
   resetItemsByReplace,
   saveSampleItems,
   uploadJsonImportFile,
+  importPreviewListItems,
 } from '../../e2e-helpers'
 
 function item(id: string, tag: string, name: string, rank = 1) {
@@ -47,5 +48,5 @@ test('import confirmation summarizes added removed kept items and tag impact', a
   await expect(preview).toContainText('追加1件 / 更新・保持1件 / 削除予定2件')
   const tags = importPreviewImpactTags(page)
   await expect(tags).toContainText('影響タグ: 3件')
-  await expect(tags.getByRole('listitem')).toHaveText(['カフェラテ', 'つけ麺', 'プリン'])
+  await expect(importPreviewListItems(tags)).toHaveText(['カフェラテ', 'つけ麺', 'プリン'])
 })

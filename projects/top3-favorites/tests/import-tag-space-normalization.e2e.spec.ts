@@ -9,6 +9,7 @@ import {
   parseImportPreviewSummary,
   resetItemsByReplace,
   uploadJsonImportFile,
+  importPreviewListItems,
 } from './e2e-helpers'
 
 test.beforeEach(async ({ request }) => {
@@ -32,7 +33,7 @@ test('import normalizes visually equivalent tag spaces before Top3 truncation', 
   await expect(importPreviewNormalization(page)).toHaveText('同一タグはTop3に正規化: 4件中3件を反映予定')
   const excludedNames = importPreviewExcludedNames(page)
   await expect(excludedNames.getByText('正規化除外予定の店舗:')).toBeVisible()
-  await expect(excludedNames.getByRole('listitem')).toHaveText('D（カフェ ラテでTop3外: 4位相当）')
+  await expect(importPreviewListItems(excludedNames)).toHaveText('D（カフェ ラテでTop3外: 4位相当）')
   await expect(excludedNames).toHaveAttribute('data-excluded-name-reason-labels', 'D（カフェ ラテでTop3外: 4位相当）')
 
   const summary = await parseImportPreviewSummary<{ tags: string[]; excludedNames: string[] }>(importPreviewSummary(page))

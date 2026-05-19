@@ -324,6 +324,10 @@ export function importPreviewExcludedNameVariants(page: Page): Locator {
   return page.getByTestId('import-preview-excluded-name-variants')
 }
 
+export function importPreviewListItems(section: Locator): Locator {
+  return section.getByRole('listitem')
+}
+
 export function importPreviewToggleExcludedNames(page: Page): Locator {
   return page.getByTestId('import-preview-toggle-excluded-names')
 }

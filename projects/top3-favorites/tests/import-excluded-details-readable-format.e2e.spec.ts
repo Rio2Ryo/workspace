@@ -1,5 +1,7 @@
 import { expect, test } from '@playwright/test'
-import { importPreviewExcludedDetails, resetItemsByReplace, uploadJsonImportFile } from './e2e-helpers'
+import { importPreviewExcludedDetails, resetItemsByReplace, uploadJsonImportFile,
+  importPreviewListItems,
+} from './e2e-helpers'
 
 test.beforeEach(async ({ request }) => {
   await resetItemsByReplace(request)
@@ -21,7 +23,7 @@ test('excluded details are rendered in a readable bullet-like format', async ({ 
 
   const details = importPreviewExcludedDetails(page)
   await expect(details).toHaveAttribute('aria-label', 'Top3外で正規化除外された理由')
-  await expect(details.getByRole('listitem')).toHaveCount(2)
-  await expect(details.getByRole('listitem').nth(0)).toHaveText('D店（カフェラテでTop3外: 4位相当）')
-  await expect(details.getByRole('listitem').nth(1)).toHaveText('E店（カフェラテでTop3外: 5位相当）')
+  await expect(importPreviewListItems(details)).toHaveCount(2)
+  await expect(importPreviewListItems(details).nth(0)).toHaveText('D店（カフェラテでTop3外: 4位相当）')
+  await expect(importPreviewListItems(details).nth(1)).toHaveText('E店（カフェラテでTop3外: 5位相当）')
 })

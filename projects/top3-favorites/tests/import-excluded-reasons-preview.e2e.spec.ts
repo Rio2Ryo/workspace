@@ -6,6 +6,7 @@ import {
   parseImportPreviewSummary,
   resetItemsByReplace,
   uploadJsonImportFile,
+  importPreviewListItems,
 } from './e2e-helpers'
 
 test.beforeEach(async ({ request }) => {
@@ -27,13 +28,13 @@ test('import preview explains why each excluded store will not be imported', asy
 
   const names = importPreviewExcludedNames(page)
   await expect(names.getByText('正規化除外予定の店舗:')).toBeVisible()
-  await expect(names.getByRole('listitem')).toHaveText('D店（カフェラテでTop3外: 4位相当）')
+  await expect(importPreviewListItems(names)).toHaveText('D店（カフェラテでTop3外: 4位相当）')
   await expect(names).toHaveAttribute('data-excluded-name-reason-labels', 'D店（カフェラテでTop3外: 4位相当）')
 
   const details = importPreviewExcludedDetails(page)
   await expect(details).toBeVisible()
   await expect(details).toHaveAttribute('aria-label', 'Top3外で正規化除外された理由')
-  await expect(details.getByRole('listitem')).toHaveText('D店（カフェラテでTop3外: 4位相当）')
+  await expect(importPreviewListItems(details)).toHaveText('D店（カフェラテでTop3外: 4位相当）')
 
   const summary = await parseImportPreviewSummary<{ excludedDetails: unknown[] }>(importPreviewSummary(page))
   expect(summary.excludedDetails).toEqual([

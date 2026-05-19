@@ -6,6 +6,7 @@ import {
   parseImportPreviewSummary,
   resetItemsByReplace,
   uploadJsonImportFile,
+  importPreviewListItems,
 } from '../../e2e-helpers'
 
 test.beforeEach(async ({ request }) => {
@@ -34,7 +35,7 @@ test('excluded store names add tag context for visually equivalent full-width an
   await expect(names).toHaveAttribute('data-excluded-name-labels', 'カフェラテ: Cafe K|プリン: Ｃａｆｅ　Ｋ')
   await expect(names).toHaveAttribute('data-excluded-name-reason-labels', 'カフェラテ: Cafe K（カフェラテでTop3外: 4位相当）|プリン: Ｃａｆｅ　Ｋ（プリンでTop3外: 4位相当）')
   await expect(names.getByText('正規化除外予定の店舗:')).toBeVisible()
-  await expect(names.getByRole('listitem')).toHaveText([
+  await expect(importPreviewListItems(names)).toHaveText([
     'カフェラテ: Cafe K（カフェラテでTop3外: 4位相当）',
     'プリン: Ｃａｆｅ　Ｋ（プリンでTop3外: 4位相当）',
   ])

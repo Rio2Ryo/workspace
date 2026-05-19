@@ -7,6 +7,7 @@ import {
   resetItemsByReplace,
   saveSampleItems,
   uploadJsonImportFile,
+  importPreviewListItems,
 } from './e2e-helpers'
 
 test.beforeEach(async ({ request }) => {
@@ -58,5 +59,5 @@ test('import preview exposes a consistent summary JSON for QA assertions', async
 
   const excludedNames = importPreviewExcludedNames(page)
   await expect(excludedNames.getByText('正規化除外予定の店舗:')).toBeVisible()
-  await expect(excludedNames.getByRole('listitem')).toHaveText('New 3（カフェラテでTop3外: 4位相当）')
+  await expect(importPreviewListItems(excludedNames)).toHaveText('New 3（カフェラテでTop3外: 4位相当）')
 })

@@ -1,5 +1,7 @@
 import { expect, test } from '@playwright/test'
-import { importPreviewImpactTags, resetItemsByReplace, uploadJsonImportFile } from '../../e2e-helpers'
+import { importPreviewImpactTags, resetItemsByReplace, uploadJsonImportFile,
+  importPreviewListItems,
+} from '../../e2e-helpers'
 
 test.beforeEach(async ({ request }) => {
   await resetItemsByReplace(request)
@@ -20,5 +22,5 @@ test('import preview shows impacted tags in deterministic sorted order', async (
   const tags = importPreviewImpactTags(page)
   await expect(tags).toHaveAttribute('data-impact-tag-count', '3')
   await expect(tags).toHaveAttribute('data-impact-tags', 'カフェラテ|つけ麺|プリン')
-  await expect(tags.getByRole('listitem')).toHaveText(['カフェラテ', 'つけ麺', 'プリン'])
+  await expect(importPreviewListItems(tags)).toHaveText(['カフェラテ', 'つけ麺', 'プリン'])
 })
