@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test'
-import { uploadJsonImportFile, resetItemsByReplace, expectOperationAlert } from './e2e-helpers'
+import { uploadJsonImportFile, resetItemsByReplace, expectOperationAlert , importPreviewSummary} from './e2e-helpers'
 
 test.beforeEach(async ({ request }) => {
   await resetItemsByReplace(request)
@@ -19,5 +19,5 @@ test('import validation error identifies the first invalid row and field for qui
   await expectOperationAlert(page, 
     'インポート失敗: ファイル「invalid-import-field-details.json」の2件目 / フィールド: tag / 修正: タグを入力してください。既存データは保持しました。',
   )
-  await expect(page.getByTestId('import-preview-summary')).toHaveCount(0)
+  await expect(importPreviewSummary(page)).toHaveCount(0)
 })

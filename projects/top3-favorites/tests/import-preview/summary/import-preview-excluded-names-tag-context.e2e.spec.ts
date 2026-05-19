@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test'
-import { uploadJsonImportFile, parseImportPreviewSummary, resetItemsByReplace , importPreviewExcludedNames, importPreviewExcludedDetails} from '../../e2e-helpers'
+import { uploadJsonImportFile, parseImportPreviewSummary, resetItemsByReplace , importPreviewExcludedNames, importPreviewExcludedDetails, importPreviewSummary} from '../../e2e-helpers'
 
 test.beforeEach(async ({ request }) => {
   await resetItemsByReplace(request)
@@ -31,7 +31,7 @@ test('excluded store names preview includes tag context when multiple themes exc
     '除外理由: ・カフェラテ: 同名店（カフェラテでTop3外: 4位相当） / ・つけ麺: 同名店（つけ麺でTop3外: 4位相当）',
   )
 
-  const summary = await parseImportPreviewSummary<{ excludedDetailLabels: string[] }>(page.getByTestId('import-preview-summary'))
+  const summary = await parseImportPreviewSummary<{ excludedDetailLabels: string[] }>(importPreviewSummary(page))
   expect(summary.excludedDetailLabels).toEqual([
     'カフェラテ: 同名店',
     'つけ麺: 同名店',

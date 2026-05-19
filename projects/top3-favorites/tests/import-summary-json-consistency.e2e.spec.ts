@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test'
-import { uploadJsonImportFile, parseImportPreviewSummary, resetItemsByReplace, saveSampleItems, fetchItems , importPreviewExcludedNames} from './e2e-helpers'
+import { uploadJsonImportFile, parseImportPreviewSummary, resetItemsByReplace, saveSampleItems, fetchItems , importPreviewExcludedNames, importPreviewSummary} from './e2e-helpers'
 
 test.beforeEach(async ({ request }) => {
   await resetItemsByReplace(request)
@@ -35,7 +35,7 @@ test('import preview exposes a consistent summary JSON for QA assertions', async
     tags: string[]
     excludedNames: string[]
     excludedNameLabels: string[]
-  }>(page.getByTestId('import-preview-summary'))
+  }>(importPreviewSummary(page))
 
   expect(summary.before).toBe(3)
   expect(summary.after).toBe(4)

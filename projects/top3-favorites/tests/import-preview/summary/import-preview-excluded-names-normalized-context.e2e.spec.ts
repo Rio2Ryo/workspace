@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test'
-import { uploadJsonImportFile, parseImportPreviewSummary, resetItemsByReplace , importPreviewExcludedNames, importPreviewExcludedNameVariants} from '../../e2e-helpers'
+import { uploadJsonImportFile, parseImportPreviewSummary, resetItemsByReplace , importPreviewExcludedNames, importPreviewExcludedNameVariants, importPreviewSummary} from '../../e2e-helpers'
 
 test.beforeEach(async ({ request }) => {
   await resetItemsByReplace(request)
@@ -34,7 +34,7 @@ test('excluded store names add tag context for visually equivalent full-width an
   const summary = await parseImportPreviewSummary<{
     excludedDetailLabels: string[]
     normalizedExcludedNameGroups: Array<{ key: string; names: string[]; labels: string[] }>
-  }>(page.getByTestId('import-preview-summary'))
+  }>(importPreviewSummary(page))
   expect(summary.excludedDetailLabels).toEqual([
     'カフェラテ: Cafe K',
     'プリン: Ｃａｆｅ　Ｋ',
