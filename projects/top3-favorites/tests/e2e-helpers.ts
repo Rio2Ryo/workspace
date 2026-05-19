@@ -317,6 +317,10 @@ export function importValidationFieldSummary(page: Page): Locator {
   return page.getByTestId('import-validation-field-summary')
 }
 
+export function importValidationFieldSummaryItems(page: Page): Locator {
+  return importValidationFieldSummary(page).locator('li span')
+}
+
 export function importValidationFieldFilter(page: Page, field: string): Locator {
   return importValidationFieldSummary(page).getByRole('button', { name: `${field}の修正対象だけ表示` })
 }

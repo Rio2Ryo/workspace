@@ -9,6 +9,7 @@ import {
   importValidationFieldClear,
   importValidationFieldFilter,
   importValidationFieldSummary,
+  importValidationFieldSummaryItems,
   importValidationFilteredRepairStatus,
   importValidationDetailTerms,
   importValidationDetailValues,
@@ -68,7 +69,7 @@ test('import validation error identifies the first invalid row and field for qui
   await expect(importValidationRepairHeading(page)).toBeVisible()
   const fieldSummary = importValidationFieldSummary(page)
   await expect(fieldSummary).toBeVisible()
-  await expect(fieldSummary.locator('li span')).toHaveText(['tag: 1件', 'name: 1件'])
+  await expect(importValidationFieldSummaryItems(page)).toHaveText(['tag: 1件', 'name: 1件'])
   await expect(importValidationRepairItems(page)).toHaveText([
     '2件目 / $.items[1].tag / tag / タグを入力してください。',
     '3件目 / $.items[2].name / name / 店舗名を入力してください。',
@@ -99,7 +100,7 @@ test('import validation field summary prioritizes repeated fields over first-see
   await expectOperationAlert(page,
     'インポート失敗: ファイル「invalid-import-field-priority.json」の1件目 / フィールド: name / 修正: 店舗名を入力してください。既存データは保持しました。',
   )
-  await expect(importValidationFieldSummary(page).locator('li span')).toHaveText(['tag: 2件', 'name: 1件'])
+  await expect(importValidationFieldSummaryItems(page)).toHaveText(['tag: 2件', 'name: 1件'])
 })
 
 test('import validation repair list collapses long all-issue lists and can expand back', async ({ page }) => {
