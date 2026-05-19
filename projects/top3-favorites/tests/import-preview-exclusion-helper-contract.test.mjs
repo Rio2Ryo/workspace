@@ -24,6 +24,8 @@ const forbiddenTestIds = [
 ]
 
 const forbiddenButtonNames = [
+  ['除外店舗名を全件表示', 'excluded names show button'],
+  ['除外店舗名を折りたたむ', 'excluded names hide button'],
   ['除外理由を全件表示', 'excluded details show button'],
   ['除外理由を折りたたむ', 'excluded details hide button'],
 ]
@@ -69,6 +71,14 @@ test('[E2E-Helper][import-preview-exclusions] contract catches excluded-detail t
     directForbiddenButtonNames("await page.getByRole('button', { name: '除外理由を全件表示' }).click()\nawait page.getByRole('button', { name: '除外理由を折りたたむ' }).click()"),
     ['excluded details show button', 'excluded details hide button'],
     'contract should catch direct excluded-detail toggle accessible names',
+  )
+})
+
+test('[E2E-Helper][import-preview-exclusions] contract catches excluded-name toggle copy', () => {
+  assert.deepEqual(
+    directForbiddenButtonNames("await page.getByRole('button', { name: '除外店舗名を全件表示' }).click()\nawait page.getByRole('button', { name: '除外店舗名を折りたたむ' }).click()"),
+    ['excluded names show button', 'excluded names hide button'],
+    'contract should catch direct excluded-name toggle accessible names',
   )
 })
 
