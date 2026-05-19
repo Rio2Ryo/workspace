@@ -1,8 +1,8 @@
 import { expect, test } from '@playwright/test'
 import {
+  cancelImportAndWaitForStatus,
   editSaveButton,
   expectOperationStatus,
-  importCancelButton,
   importPreviewPanel,
   itemEditButton,
   rankedItemSummary,
@@ -38,7 +38,7 @@ test('pending import preview blocks edit until user cancels the import context',
   await rankedItemSummary(page, 1, 'Edit Target').click()
   await expect(itemEditButton(page, 'Edit Target')).toBeDisabled()
 
-  await importCancelButton(page).click()
+  await cancelImportAndWaitForStatus(page, 'インポートをキャンセルしました。')
   await itemEditButton(page, 'Edit Target').click()
   await expect(editSaveButton(page)).toBeVisible()
   await expect(importPreviewPanel(page)).toHaveCount(0)

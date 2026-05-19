@@ -87,42 +87,13 @@ function collectImportConfirmRaceOffenders(spec, source) {
   return offenders
 }
 
-function collectImportCancelRaceOffenders(spec, source) {
-  const riskyNextActions = [
-    'uploadJsonImportFile(',
-    'jsonImportButton(page).click()',
-    "request.get('/api/items'",
-    'request.get("/api/items"',
-    'page.reload(',
-    'downloadJsonExport(',
-    'page.waitForEvent(',
-  ]
+function collectRawImportCancelClickOffenders(spec, source) {
   const offenders = []
   const cancelClickPattern = /await\s+importCancelButton\(page\)\.click\(\)/g
-  const matches = [...source.matchAll(cancelClickPattern)]
 
-  for (const match of matches) {
-    const start = match.index + match[0].length
-    const nextImportPreviewActionIndexes = [
-      source.indexOf('importCancelButton(page).click()', start),
-      source.indexOf('importConfirmButton(page).click()', start),
-      source.indexOf('registrationSaveButton(page).click()', start),
-      source.indexOf('editSaveButton(page).click()', start),
-    ].filter((index) => index !== -1)
-    const end = nextImportPreviewActionIndexes.length > 0 ? Math.min(...nextImportPreviewActionIndexes) : undefined
-    const block = source.slice(start, end)
-    const statusIndex = block.indexOf('expectOperationStatus(page,')
-    const riskyAction = riskyNextActions.find((token) => block.includes(token))
-
-    if (!riskyAction) {
-      continue
-    }
-    if (statusIndex !== -1 && statusIndex < block.indexOf(riskyAction)) {
-      continue
-    }
-
+  for (const match of source.matchAll(cancelClickPattern)) {
     const line = source.slice(0, match.index).split('\n').length
-    offenders.push(`${spec}:${line}: wait for expectOperationStatus(page, ...) before ${riskyAction}`)
+    offenders.push(`${spec}:${line}: use cancelImportAndWaitForStatus(page, expectedStatus) instead of raw importCancelButton(page).click()`)
   }
 
   return offenders
@@ -160,8 +131,11 @@ test('[E2E-Helper][import-preview-actions] helpers own import preview action acc
 
   assert.match(source, /export function importConfirmButton/, 'tests/e2e-helpers.ts should export importConfirmButton')
   assert.match(source, /export function importCancelButton/, 'tests/e2e-helpers.ts should export importCancelButton')
+  assert.match(source, /export async function confirmImportAndWaitForStatus/, 'tests/e2e-helpers.ts should export confirmImportAndWaitForStatus')
+  assert.match(source, /export async function cancelImportAndWaitForStatus/, 'tests/e2e-helpers.ts should export cancelImportAndWaitForStatus')
   assert.match(source, /name:\s*['"]この内容でインポート['"]/, 'importConfirmButton should own the confirm accessible name')
   assert.match(source, /name:\s*['"]インポートをキャンセル['"]/, 'importCancelButton should own the cancel accessible name')
+  assert.match(source, /await importCancelButton\(page\)\.click\(\)[\s\S]*await expectOperationStatus\(page, text\)/, 'cancelImportAndWaitForStatus should click cancel and wait for the cancel live-region')
 })
 
 test('[E2E-Helper][import-preview-actions] risky post-import-confirm workflows wait for import completion', async () => {
@@ -180,18 +154,21 @@ test('[E2E-Helper][import-preview-actions] risky post-import-confirm workflows w
   )
 })
 
-test('[E2E-Helper][import-preview-actions] risky post-import-cancel workflows wait for cancel completion', async () => {
+test('[E2E-Helper][import-preview-actions] import cancel workflows use completion helper', async () => {
   const offenders = []
   const specs = await listE2eSpecs(testsRoot)
 
   for (const spec of specs) {
     const source = await readFile(new URL(spec, `${root}/`), 'utf8')
-    offenders.push(...collectImportCancelRaceOffenders(spec, source))
+    offenders.push(...collectRawImportCancelClickOffenders(spec, source))
+    if (source.includes('cancelImportAndWaitForStatus(') && !importsHelper(source, 'cancelImportAndWaitForStatus')) {
+      offenders.push(`${spec}: cancelImportAndWaitForStatus call without named import`)
+    }
   }
 
   assert.deepEqual(
     offenders.sort(),
     [],
-    `E2E specs that cancel an import preview and then start another workflow should wait for the cancel live-region first: ${offenders.join(', ')}`,
+    `E2E specs that cancel an import preview should wait through cancelImportAndWaitForStatus(page, expectedStatus): ${offenders.join(', ')}`,
   )
 })

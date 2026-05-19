@@ -1,10 +1,10 @@
 import { expect, test } from '@playwright/test'
 import {
+  cancelImportAndWaitForStatus,
   confirmImportAndWaitForStatus,
   expectImportPreviewCounts,
   expectOperationStatus,
   fetchItems,
-  importCancelButton,
   rankedItemSummary,
   resetItemsByReplace,
   saveSampleItems,
@@ -46,8 +46,7 @@ test('import shows a confirmation preview before replacing existing data', async
   const beforeConfirm = await fetchItems<{ items: { name: string }[] }>(request)
   expect(beforeConfirm.items.map((saved) => saved.name).sort()).toEqual(['Solito MAGO', 'T-SITEのカフェ', 'とみ田'].sort())
 
-  await importCancelButton(page).click()
-  await expectOperationStatus(page, 'インポートをキャンセルしました。')
+  await cancelImportAndWaitForStatus(page, 'インポートをキャンセルしました。')
   await expect(rankedItemSummary(page, 1, 'Solito MAGO')).toBeVisible()
 
   await uploadJsonImportFile(page, 'preview-import.json', replacement)
