@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test'
-import { sampleSaveButton, jsonExportButton, itemEditButton, uploadJsonImportFile, resetItemsByReplace, itemDeleteButton, importCancelButton, importConfirmButton, registrationSaveButton, expectOperationStatus, registrationRankButton, registrationLocationField, registrationMemoField, registrationNameField, registrationTagField } from '../../e2e-helpers'
+import { sampleSaveButton, jsonExportButton, itemEditButton, uploadJsonImportFile, resetItemsByReplace, itemDeleteButton, importCancelButton, importConfirmButton, registrationSaveButton, expectOperationStatus, registrationRankButton, registrationLocationField, registrationMemoField, registrationNameField, registrationTagField , importPreviewPanel} from '../../e2e-helpers'
 
 test.beforeEach(async ({ request }) => {
   await resetItemsByReplace(request)
@@ -22,7 +22,7 @@ test('pending import preview enforces operation guards across registration/searc
 
   await uploadJsonImportFile(page, 'pending.json', payload)
 
-  await expect(page.getByLabel('インポート確認')).toBeVisible()
+  await expect(importPreviewPanel(page)).toBeVisible()
   await expect(page.getByTestId('import-lock-hint')).toBeVisible()
 
   // registration form locks

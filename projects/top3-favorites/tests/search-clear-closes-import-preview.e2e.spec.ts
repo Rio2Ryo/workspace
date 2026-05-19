@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test'
-import { tagFilterButton, clearSearchTagFilter, uploadJsonImportFile, resetItemsByReplace, registrationSaveButton, expectOperationStatus, searchSection as searchSectionLocator, registrationLocationField, registrationNameField, registrationTagField } from './e2e-helpers'
+import { tagFilterButton, clearSearchTagFilter, uploadJsonImportFile, resetItemsByReplace, registrationSaveButton, expectOperationStatus, searchSection as searchSectionLocator, registrationLocationField, registrationNameField, registrationTagField , importPreviewPanel} from './e2e-helpers'
 
 test.beforeEach(async ({ request }) => {
   await resetItemsByReplace(request)
@@ -19,11 +19,11 @@ test('clearing search tag closes pending import preview to keep search context c
     { id: 'imp-1', tag: 'プリン', location: '浅草', name: 'Pending A', rank: 1, memo: '', mapsUrl: '', placeId: '', createdAt: now, updatedAt: now },
   ]
   await uploadJsonImportFile(page, 'pending.json', payload)
-  await expect(page.getByLabel('インポート確認')).toBeVisible()
+  await expect(importPreviewPanel(page)).toBeVisible()
 
   const searchSection = searchSectionLocator(page)
   await tagFilterButton(searchSection as searchSectionLocator, 'カフェラテ').click()
   await clearSearchTagFilter(searchSection)
 
-  await expect(page.getByLabel('インポート確認')).toHaveCount(0)
+  await expect(importPreviewPanel(page)).toHaveCount(0)
 })

@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test'
-import { uploadJsonImportFile, resetItemsByReplace, registrationLocationField, registrationMemoField, registrationNameField, registrationRankButton, registrationTagField } from './e2e-helpers'
+import { uploadJsonImportFile, resetItemsByReplace, registrationLocationField, registrationMemoField, registrationNameField, registrationRankButton, registrationTagField , importPreviewPanel} from './e2e-helpers'
 
 test.beforeEach(async ({ request }) => {
   await resetItemsByReplace(request)
@@ -15,7 +15,7 @@ test('registration form inputs are locked while import preview is active', async
 
   await uploadJsonImportFile(page, 'pending.json', payload)
 
-  await expect(page.getByLabel('インポート確認')).toBeVisible()
+  await expect(importPreviewPanel(page)).toBeVisible()
   await expect(page.getByTestId('import-lock-hint')).toBeVisible()
 
   await expect(registrationTagField(page)).toBeDisabled()

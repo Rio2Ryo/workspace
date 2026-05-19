@@ -219,6 +219,10 @@ export function importCancelButton(page: Page): Locator {
   return page.getByRole('button', { name: 'インポートをキャンセル' })
 }
 
+export function importPreviewPanel(page: Page): Locator {
+  return page.getByLabel('インポート確認')
+}
+
 export function importPreviewSummary(page: Page): Locator {
   return page.getByTestId('import-preview-summary')
 }

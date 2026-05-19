@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test'
-import { uploadJsonImportFile, resetItemsByReplace , jsonImportButton, importPreviewSummary} from './e2e-helpers'
+import { uploadJsonImportFile, resetItemsByReplace , jsonImportButton, importPreviewSummary, importPreviewPanel} from './e2e-helpers'
 
 test.beforeEach(async ({ request }) => {
   await resetItemsByReplace(request)
@@ -17,12 +17,12 @@ test('pending import preview stays visible while choosing another JSON and then 
   ]
   await uploadJsonImportFile(page, 'preview-a.json', firstPayload)
 
-  await expect(page.getByLabel('インポート確認')).toBeVisible()
+  await expect(importPreviewPanel(page)).toBeVisible()
   await expect(page.getByTestId('import-preview-replace-hint')).toContainText('別ファイルを選ぶと現在のプレビューを置き換えます')
   await expect(importPreviewSummary(page)).toContainText('preview-a.json')
 
   await jsonImportButton(page).click()
-  await expect(page.getByLabel('インポート確認')).toBeVisible()
+  await expect(importPreviewPanel(page)).toBeVisible()
   await expect(importPreviewSummary(page)).toContainText('preview-a.json')
 
   await uploadJsonImportFile(page, 'preview-b.json', secondPayload)

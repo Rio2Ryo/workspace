@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test'
-import { tagFilterButton, itemEditButton, editSaveButton, clearSearchTagFilter, uploadJsonImportFile, resetItemsByReplace, jsonImportButton, registrationSaveButton, expectOperationStatus, searchSection as searchSectionLocator, registrationLocationField, registrationNameField, registrationTagField } from './e2e-helpers'
+import { tagFilterButton, itemEditButton, editSaveButton, clearSearchTagFilter, uploadJsonImportFile, resetItemsByReplace, jsonImportButton, registrationSaveButton, expectOperationStatus, searchSection as searchSectionLocator, registrationLocationField, registrationNameField, registrationTagField , importPreviewPanel} from './e2e-helpers'
 
 test.beforeEach(async ({ request }) => {
   await resetItemsByReplace(request)
@@ -23,19 +23,19 @@ test('context transition matrix keeps only one active workflow context', async (
 
   // baseline: import preview visible
   await uploadJsonImportFile(page, 'pending.json', payload)
-  await expect(page.getByLabel('インポート確認')).toBeVisible()
+  await expect(importPreviewPanel(page)).toBeVisible()
 
   // search select should close import preview
   await tagFilterButton(searchSection as searchSectionLocator, 'カフェラテ').click()
-  await expect(page.getByLabel('インポート確認')).toHaveCount(0)
+  await expect(importPreviewPanel(page)).toHaveCount(0)
 
   // make import preview visible again
   await uploadJsonImportFile(page, 'pending-again.json', payload)
-  await expect(page.getByLabel('インポート確認')).toBeVisible()
+  await expect(importPreviewPanel(page)).toBeVisible()
 
   // search clear should also close import preview
   await clearSearchTagFilter(searchSection)
-  await expect(page.getByLabel('インポート確認')).toHaveCount(0)
+  await expect(importPreviewPanel(page)).toHaveCount(0)
 
   // open edit context
   await page.getByText('1位: Context Base').click()

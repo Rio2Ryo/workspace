@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test'
-import {uploadJsonImportFile, resetItemsByReplace, registrationSaveButton, expectOperationStatus, expectOperationAlert, registrationLocationField, registrationNameField, registrationTagField, fetchItems, confirmImportAndWaitForStatus} from './e2e-helpers'
+import {uploadJsonImportFile, resetItemsByReplace, registrationSaveButton, expectOperationStatus, expectOperationAlert, registrationLocationField, registrationNameField, registrationTagField, fetchItems, confirmImportAndWaitForStatus, importPreviewPanel} from './e2e-helpers'
 
 test.beforeEach(async ({ request }) => {
   await resetItemsByReplace(request)
@@ -47,7 +47,7 @@ test('import fail-closed matrix: all invalid inputs keep existing data and clear
     await uploadJsonImportFile(page, c.name, c.body)
 
     await expectOperationAlert(page, c.expected)
-    await expect(page.getByLabel('インポート確認')).toHaveCount(0)
+    await expect(importPreviewPanel(page)).toHaveCount(0)
 
     const apiData = await fetchItems<{ items: { name: string }[] }>(request)
     expect(apiData.items).toHaveLength(1)
@@ -61,14 +61,14 @@ test('import fail-closed matrix: all invalid inputs keep existing data and clear
   ]
 
   await uploadJsonImportFile(page, 'valid-first.json', validItems)
-  await expect(page.getByLabel('インポート確認')).toBeVisible()
+  await expect(importPreviewPanel(page)).toBeVisible()
 
   await uploadJsonImportFile(page, 'invalid-middle.json', '{"broken": ')
   await expectOperationAlert(page, /ファイル「invalid-middle\.json」のJSON構文を解析できません/)
-  await expect(page.getByLabel('インポート確認')).toHaveCount(0)
+  await expect(importPreviewPanel(page)).toHaveCount(0)
 
   await uploadJsonImportFile(page, 'valid-last.json', validItems)
-  await expect(page.getByLabel('インポート確認')).toBeVisible()
+  await expect(importPreviewPanel(page)).toBeVisible()
   await confirmImportAndWaitForStatus(page, 'インポート成功: 2件を反映しました。')
 
   const finalApiData = await fetchItems<{ items: { name: string }[] }>(request)
