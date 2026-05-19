@@ -323,20 +323,20 @@ const rawManualAutomatedLinkContracts = {
       message: 'manual checklist should connect import preview impacted-tag collapse/expand behavior to child-level automated specs',
     },
     {
-      pattern: /terms（差分用語説明）[\s\S]*初期状態では差分用語説明は非表示[\s\S]*`差分用語の詳細説明を表示`[\s\S]*自動確認: `tests\/import-preview\/terms\/import-preview-terms-helper-toggle\.e2e\.spec\.ts`、`tests\/import-preview\/terms\/import-preview-terms-helper-text\.e2e\.spec\.ts`、`tests\/import-preview\/terms\/import-preview-terms-helper-toggle-a11y\.e2e\.spec\.ts`/,
-      message: 'manual checklist should connect import preview terms helper behavior to automated specs',
+      pattern: /terms（差分用語説明）[\s\S]*初期状態では差分用語説明は非表示[\s\S]*自動確認: `tests\/import-preview\/terms\/import-preview-terms-helper-toggle\.e2e\.spec\.ts`[\s\S]*`差分用語の詳細説明を表示`[\s\S]*自動確認: `tests\/import-preview\/terms\/import-preview-terms-helper-text\.e2e\.spec\.ts`(?:、| と )`tests\/import-preview\/terms\/import-preview-terms-helper-toggle-a11y\.e2e\.spec\.ts`/,
+      message: 'manual checklist should connect import preview terms helper behavior to child-level automated specs',
     },
     {
-      pattern: /naming（a11y命名）[\s\S]*aria-label` は `インポート詳細:`[\s\S]*aria-expanded` が開閉に応じて更新される[\s\S]*自動確認: `tests\/import-preview\/naming\/import-preview-toggle-aria-label-consistency\.e2e\.spec\.ts`、`tests\/import-preview\/naming\/import-preview-toggle-testid-contract\.e2e\.spec\.ts`、`tests\/import-preview\/summary\/import-preview-expand-toggles-a11y\.e2e\.spec\.ts`/,
-      message: 'manual checklist should connect import preview toggle naming/a11y behavior to automated specs',
+      pattern: /naming（a11y命名）[\s\S]*aria-label` は `インポート詳細:`[\s\S]*自動確認: `tests\/import-preview\/naming\/import-preview-toggle-aria-label-consistency\.e2e\.spec\.ts`(?:、| と )`tests\/import-preview\/naming\/import-preview-toggle-testid-contract\.e2e\.spec\.ts`[\s\S]*aria-expanded` が開閉に応じて更新される[\s\S]*自動確認: `tests\/import-preview\/summary\/import-preview-expand-toggles-a11y\.e2e\.spec\.ts`/,
+      message: 'manual checklist should connect import preview toggle naming/a11y behavior to child-level automated specs',
     },
     {
       pattern: /naming（a11y命名）[\s\S]*インポート確認中は登録保存・サンプル保存・JSONエクスポート・既存Top3の編集\/削除が無効化され、無効理由がアクセシブル説明として読める[\s\S]*自動確認:[\s\S]*`tests\/import-preview\/summary\/import-preview-operation-guards-matrix\.e2e\.spec\.ts`/,
       message: 'manual checklist should connect pending import operation-lock disabled reasons to the automated operation guard spec',
     },
     {
-      pattern: /summary（件数サマリ）[\s\S]*`現在N件 → インポート後M件`[\s\S]*差分なし（このインポートでデータ変更はありません）[\s\S]*`tests\/import-preview\/summary\/import-preview-summary\.e2e\.spec\.ts`[\s\S]*`tests\/import-preview\/summary\/import-preview-math-consistency\.e2e\.spec\.ts`/,
-      message: 'manual checklist should connect import preview summary/no-change behavior to automated specs',
+      pattern: /summary（件数サマリ）[\s\S]*`現在N件 → インポート後M件`[\s\S]*自動確認: `tests\/import-preview\/summary\/import-preview-summary\.e2e\.spec\.ts`、`tests\/import-preview\/summary\/import-preview-math-consistency\.e2e\.spec\.ts`[\s\S]*差分なし（このインポートでデータ変更はありません）[\s\S]*自動確認: `tests\/import-no-change-badge\.e2e\.spec\.ts`、`tests\/import-preview\/live\/import-preview-live-summary-concise\.e2e\.spec\.ts`/,
+      message: 'manual checklist should connect import preview summary/no-change behavior to child-level automated specs',
     },
     {
       pattern: /summary（件数サマリ）[\s\S]*正規化除外がある時は `正規化除外予定の店舗: 店名（タグ名でTop3外: N位相当）` が表示される[\s\S]*`tests\/import-excluded-reasons-preview\.e2e\.spec\.ts`[\s\S]*`tests\/import-preview\/summary\/import-preview-excluded-names-normalized-context\.e2e\.spec\.ts`[\s\S]*`tests\/import-preview\/summary\/import-preview-excluded-names-tag-context\.e2e\.spec\.ts`[\s\S]*正規化除外予定の店舗が多い場合、先頭表示 \+ `ほかN件`[\s\S]*`tests\/import-preview\/summary\/import-preview-excluded-names-collapsed\.e2e\.spec\.ts`[\s\S]*`除外店舗名を全件表示` \/ `除外店舗名を折りたたむ`[\s\S]*`tests\/import-preview\/summary\/import-preview-expand-toggles-a11y\.e2e\.spec\.ts`/,

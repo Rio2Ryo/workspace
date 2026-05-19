@@ -1473,6 +1473,60 @@ test('[Manual][automation-link] import preview tags child items have direct auto
   }
 })
 
+test('[Manual][automation-link] import preview terms child items have direct automated links', async () => {
+  const markdown = await readFile(new URL('docs/MANUAL_TEST_CHECKLIST.md', `${root}/`), 'utf8')
+  const childContracts = [
+    {
+      item: '初期状態では差分用語説明は非表示',
+      specs: ['tests/import-preview/terms/import-preview-terms-helper-toggle.e2e.spec.ts'],
+    },
+    {
+      item: '`差分用語の詳細説明を表示` で開き、`削除予定` と `正規化除外` の意味差が読める',
+      specs: [
+        'tests/import-preview/terms/import-preview-terms-helper-text.e2e.spec.ts',
+        'tests/import-preview/terms/import-preview-terms-helper-toggle-a11y.e2e.spec.ts',
+      ],
+    },
+  ]
+
+  for (const { item, specs } of childContracts) {
+    const block = manualChecklistItemBlock(markdown, item)
+    assert.match(block, /自動確認:/, contractMessage({ scope: 'Manual', rule: 'import preview terms child checklist item has direct automated link', expected: item, fix: 'add an indented 自動確認 line directly under this import preview terms manual checklist item' }))
+    for (const spec of specs) {
+      assert.ok(block.includes(`\`${spec}\``), contractMessage({ scope: 'Manual', rule: 'import preview terms child checklist item cites authoritative spec', expected: spec, fix: 'add the focused terms E2E path to the child item 自動確認 line' }))
+    }
+  }
+})
+
+test('[Manual][automation-link] import preview naming child items have direct automated links', async () => {
+  const markdown = await readFile(new URL('docs/MANUAL_TEST_CHECKLIST.md', `${root}/`), 'utf8')
+  const childContracts = [
+    {
+      item: 'import preview 内トグルの `aria-label` は `インポート詳細:` プレフィックスで統一され、パネル本体の `インポート確認` ラベルと衝突しない',
+      specs: [
+        'tests/import-preview/naming/import-preview-toggle-aria-label-consistency.e2e.spec.ts',
+        'tests/import-preview/naming/import-preview-toggle-testid-contract.e2e.spec.ts',
+      ],
+    },
+    {
+      item: 'トグルは `aria-expanded` が開閉に応じて更新される',
+      specs: ['tests/import-preview/summary/import-preview-expand-toggles-a11y.e2e.spec.ts'],
+    },
+    {
+      item: 'インポート確認中は登録保存・サンプル保存・JSONエクスポート・既存Top3の編集/削除が無効化され、無効理由がアクセシブル説明として読める',
+      specs: ['tests/import-preview/summary/import-preview-operation-guards-matrix.e2e.spec.ts'],
+    },
+  ]
+
+  for (const { item, specs } of childContracts) {
+    const block = manualChecklistItemBlock(markdown, item)
+    assert.match(block, /自動確認:/, contractMessage({ scope: 'Manual', rule: 'import preview naming child checklist item has direct automated link', expected: item, fix: 'add an indented 自動確認 line directly under this import preview naming manual checklist item' }))
+    for (const spec of specs) {
+      assert.ok(block.includes(`\`${spec}\``), contractMessage({ scope: 'Manual', rule: 'import preview naming child checklist item cites authoritative spec', expected: spec, fix: 'add the focused naming/summary E2E path to the child item 自動確認 line' }))
+    }
+  }
+})
+
 test('[Manual][automation-link] import preview summary child items have direct automated links', async () => {
   const markdown = await readFile(new URL('docs/MANUAL_TEST_CHECKLIST.md', `${root}/`), 'utf8')
   const childContracts = [

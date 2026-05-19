@@ -133,14 +133,17 @@
 
 #### 4.2.4 terms（差分用語説明）
 - [ ] 初期状態では差分用語説明は非表示
+  - 自動確認: `tests/import-preview/terms/import-preview-terms-helper-toggle.e2e.spec.ts` が差分用語説明の初期非表示を検証する
 - [ ] `差分用語の詳細説明を表示` で開き、`削除予定` と `正規化除外` の意味差が読める
-  - 自動確認: `tests/import-preview/terms/import-preview-terms-helper-toggle.e2e.spec.ts`、`tests/import-preview/terms/import-preview-terms-helper-text.e2e.spec.ts`、`tests/import-preview/terms/import-preview-terms-helper-toggle-a11y.e2e.spec.ts` が用語説明の初期非表示・説明文・a11yトグルを検証する
+  - 自動確認: `tests/import-preview/terms/import-preview-terms-helper-text.e2e.spec.ts`、`tests/import-preview/terms/import-preview-terms-helper-toggle-a11y.e2e.spec.ts` が用語説明の説明文・a11yトグルを検証する
 
 #### 4.2.5 naming（a11y命名）
 - [ ] import preview 内トグルの `aria-label` は `インポート詳細:` プレフィックスで統一され、パネル本体の `インポート確認` ラベルと衝突しない
+  - 自動確認: `tests/import-preview/naming/import-preview-toggle-aria-label-consistency.e2e.spec.ts`、`tests/import-preview/naming/import-preview-toggle-testid-contract.e2e.spec.ts` がトグル命名とtestid名前空間の衝突回避を検証する
 - [ ] トグルは `aria-expanded` が開閉に応じて更新される
+  - 自動確認: `tests/import-preview/summary/import-preview-expand-toggles-a11y.e2e.spec.ts` が各トグルのaria-expanded更新を検証する
 - [ ] インポート確認中は登録保存・サンプル保存・JSONエクスポート・既存Top3の編集/削除が無効化され、無効理由がアクセシブル説明として読める
-  - 自動確認: `tests/import-preview/naming/import-preview-toggle-aria-label-consistency.e2e.spec.ts`、`tests/import-preview/naming/import-preview-toggle-testid-contract.e2e.spec.ts`、`tests/import-preview/summary/import-preview-expand-toggles-a11y.e2e.spec.ts`、`tests/import-preview/summary/import-preview-operation-guards-matrix.e2e.spec.ts` がトグル命名・testid・aria-expanded・確認中の操作ロック説明を検証する
+  - 自動確認: `tests/import-preview/summary/import-preview-operation-guards-matrix.e2e.spec.ts` が確認中の操作ロックと無効理由のアクセシブル説明を検証する
 
 #### 4.2.6 summary（件数サマリ）
 - [ ] `現在N件 → インポート後M件` と影響サマリ（追加/保持/削除予定/正規化除外）が表示される
@@ -153,7 +156,6 @@
   - 自動確認: `tests/import-preview/summary/import-preview-excluded-names-collapsed.e2e.spec.ts` が先頭表示と `ほかN件` の折りたたみ表示を検証する
 - [ ] `除外店舗名を全件表示` / `除外店舗名を折りたたむ` で開閉できる
   - 自動確認: `tests/import-preview/summary/import-preview-excluded-names-collapsed.e2e.spec.ts`、`tests/import-preview/summary/import-preview-expand-toggles-a11y.e2e.spec.ts` が除外店舗名の開閉とaria-expandedを検証する
-  - 自動確認: `tests/import-preview/summary/import-preview-summary.e2e.spec.ts`、`tests/import-preview/summary/import-preview-math-consistency.e2e.spec.ts` が件数サマリ・数式整合を検証する
 
 ---
 
