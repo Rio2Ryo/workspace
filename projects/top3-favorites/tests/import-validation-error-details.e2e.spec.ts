@@ -9,8 +9,13 @@ import {
   importValidationFieldClear,
   importValidationFieldFilter,
   importValidationFieldSummary,
+  importValidationFilteredRepairStatus,
+  importValidationRepairItems,
   importValidationShowAllRepairs,
   importValidationCollapseRepairs,
+  importValidationCollapsedRepairStatus,
+  importValidationExpandedRepairStatus,
+  importValidationAnyRepairStatus,
   resetItemsByReplace,
   uploadJsonImportFile,
 } from './e2e-helpers'
@@ -61,7 +66,7 @@ test('import validation error identifies the first invalid row and field for qui
   const fieldSummary = importValidationFieldSummary(page)
   await expect(fieldSummary).toBeVisible()
   await expect(fieldSummary.locator('li span')).toHaveText(['tag: 1件', 'name: 1件'])
-  await expect(details.locator('.import-validation-error-list ol li')).toHaveText([
+  await expect(importValidationRepairItems(page)).toHaveText([
     '2件目 / $.items[1].tag / tag / タグを入力してください。',
     '3件目 / $.items[2].name / name / 店舗名を入力してください。',
   ])
@@ -113,21 +118,20 @@ test('import validation repair list collapses long all-issue lists and can expan
 
   await uploadJsonImportFile(page, 'invalid-import-long-repair-list.json', invalidItems)
 
-  const details = importValidationErrorDetails(page)
-  await expect(details.getByText('表示中: 先頭5件（ほか3件）')).toBeVisible()
-  await expect(details.locator('.import-validation-error-list ol li')).toHaveCount(5)
-  await expect(details.locator('.import-validation-error-list ol li').last()).toHaveText(
+  await expect(importValidationCollapsedRepairStatus(page, 5, 3)).toBeVisible()
+  await expect(importValidationRepairItems(page)).toHaveCount(5)
+  await expect(importValidationRepairItems(page).last()).toHaveText(
     '5件目 / $.items[4].name / name / 店舗名を入力してください。',
   )
   await importValidationShowAllRepairs(page).click()
-  await expect(details.getByText('表示中: 全8件')).toBeVisible()
-  await expect(details.locator('.import-validation-error-list ol li')).toHaveCount(8)
-  await expect(details.locator('.import-validation-error-list ol li').last()).toHaveText(
+  await expect(importValidationExpandedRepairStatus(page, 8)).toBeVisible()
+  await expect(importValidationRepairItems(page)).toHaveCount(8)
+  await expect(importValidationRepairItems(page).last()).toHaveText(
     '8件目 / $.items[7].name / name / 店舗名を入力してください。',
   )
   await importValidationCollapseRepairs(page).click()
-  await expect(details.getByText('表示中: 先頭5件（ほか3件）')).toBeVisible()
-  await expect(details.locator('.import-validation-error-list ol li')).toHaveCount(5)
+  await expect(importValidationCollapsedRepairStatus(page, 5, 3)).toBeVisible()
+  await expect(importValidationRepairItems(page)).toHaveCount(5)
 })
 
 test('import validation field summary filters the repair list to the selected repeated field', async ({ page }) => {
@@ -153,15 +157,14 @@ test('import validation field summary filters the repair list to the selected re
 
   await uploadJsonImportFile(page, 'invalid-import-field-filter.json', invalidItems)
 
-  const details = importValidationErrorDetails(page)
-  await expect(details.locator('.import-validation-error-list ol li')).toHaveText([
+  await expect(importValidationRepairItems(page)).toHaveText([
     '1件目 / $.items[0].name / name / 店舗名を入力してください。',
     '2件目 / $.items[1].tag / tag / タグを入力してください。',
     '3件目 / $.items[2].tag / tag / タグを入力してください。',
   ])
   await importValidationFieldFilter(page, 'tag').click()
-  await expect(details.getByText('表示中: tag の修正対象2件')).toBeVisible()
-  await expect(details.locator('.import-validation-error-list ol li')).toHaveText([
+  await expect(importValidationFilteredRepairStatus(page, 'tag', 2)).toBeVisible()
+  await expect(importValidationRepairItems(page)).toHaveText([
     '2件目 / $.items[1].tag / tag / タグを入力してください。',
     '3件目 / $.items[2].tag / tag / タグを入力してください。',
   ])
@@ -174,13 +177,13 @@ test('import validation field summary filters the repair list to the selected re
     '2件目 / $.items[1].tag / tag / タグを入力してください。\n3件目 / $.items[2].tag / tag / タグを入力してください。',
   )
   await importValidationFieldFilter(page, 'name').click()
-  await expect(details.getByText('表示中: name の修正対象1件')).toBeVisible()
-  await expect(details.locator('.import-validation-error-list ol li')).toHaveText([
+  await expect(importValidationFilteredRepairStatus(page, 'name', 1)).toBeVisible()
+  await expect(importValidationRepairItems(page)).toHaveText([
     '1件目 / $.items[0].name / name / 店舗名を入力してください。',
   ])
   await importValidationFieldClear(page).click()
-  await expect(details.getByText(/^表示中:/)).toHaveCount(0)
-  await expect(details.locator('.import-validation-error-list ol li')).toHaveText([
+  await expect(importValidationAnyRepairStatus(page)).toHaveCount(0)
+  await expect(importValidationRepairItems(page)).toHaveText([
     '1件目 / $.items[0].name / name / 店舗名を入力してください。',
     '2件目 / $.items[1].tag / tag / タグを入力してください。',
     '3件目 / $.items[2].tag / tag / タグを入力してください。',

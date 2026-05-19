@@ -333,6 +333,26 @@ export function importValidationCollapseRepairs(page: Page): Locator {
   return importValidationErrorDetails(page).getByRole('button', { name: '修正対象を折りたたむ' })
 }
 
+export function importValidationRepairItems(page: Page): Locator {
+  return importValidationErrorDetails(page).locator('.import-validation-error-list ol li')
+}
+
+export function importValidationCollapsedRepairStatus(page: Page, visibleCount: number, remainingCount: number): Locator {
+  return importValidationErrorDetails(page).getByText(`表示中: 先頭${visibleCount}件（ほか${remainingCount}件）`)
+}
+
+export function importValidationExpandedRepairStatus(page: Page, totalCount: number): Locator {
+  return importValidationErrorDetails(page).getByText(`表示中: 全${totalCount}件`)
+}
+
+export function importValidationFilteredRepairStatus(page: Page, field: string, count: number): Locator {
+  return importValidationErrorDetails(page).getByText(`表示中: ${field} の修正対象${count}件`)
+}
+
+export function importValidationAnyRepairStatus(page: Page): Locator {
+  return importValidationErrorDetails(page).getByText(/^表示中:/)
+}
+
 export function importPreviewNormalization(page: Page): Locator {
   return page.getByTestId('import-preview-normalization')
 }
