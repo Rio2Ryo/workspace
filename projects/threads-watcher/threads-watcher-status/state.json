@@ -5,7 +5,7 @@
     "@bmw_intokyo"
   ],
   "last_check": {
-    "checked_at": "2026-05-19T14:59:39Z",
+    "checked_at": "2026-05-19T15:02:20Z",
     "found_count": 15,
     "new_count": 0,
     "status": "ok",
@@ -546,12 +546,12 @@
   "recent_stats_by_window": {
     "1": {
       "window_hours": 1,
-      "total": 42,
+      "total": 43,
       "ok": 14,
-      "partial_error": 28,
+      "partial_error": 29,
       "error": 0,
       "other": 0,
-      "success_rate": 0.3333333333333333
+      "success_rate": 0.32558139534883723
     },
     "24": {
       "window_hours": 24,
@@ -564,20 +564,20 @@
     },
     "168": {
       "window_hours": 168,
-      "total": 2124,
-      "ok": 1685,
-      "partial_error": 438,
+      "total": 2126,
+      "ok": 1686,
+      "partial_error": 439,
       "error": 1,
       "other": 0,
-      "success_rate": 0.7933145009416196
+      "success_rate": 0.793038570084666
     }
   },
   "sync_state": {
-    "cursor": 60,
+    "cursor": 63,
     "db_max": 63,
-    "delta": 3,
+    "delta": 0,
     "cursor_file_exists": true
   },
   "dry_run_alert": null,
-  "snapshot_generated_at": "2026-05-19T14:59:40Z"
+  "snapshot_generated_at": "2026-05-19T15:02:20Z"
 }

@@ -1,19 +1,11 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!--
-  launchd entry for sync.py — Threads-watcher snapshot sync.
-  ACTIVATED IN DRY-RUN MODE (no --confirm, no --enable-push).
+  launchd entry for publish-if-delta.sh — Threads-watcher public sync.
+  LIVE MODE: when SQLite has unpublished posts, this commits/pushes the
+  snapshot and runs vercel --prod so the public URL stays fresh.
 
-  Why this is safe to activate without explicit approval:
-    - Default behaviour writes ONLY to logs/sync.{out,err}.log.
-    - No git commits, no pushes, no DB writes.
-    - sync.py's own guard layer (--confirm gates commits, --enable-push
-      gates pushes) is the source of truth — this plist just runs the
-      script periodically with no write flags.
-
-  Operator promotion to real syncing (after dry-run logs look healthy):
-    Edit the ProgramArguments array below to uncomment --confirm
-    (commits enabled) and optionally --enable-push (pushes enabled).
-    Then `launchctl unload -w && launchctl load -w`.
+  publish-if-delta.sh first checks DB max(posts.id) vs .sync_cursor and
+  exits without git/Vercel writes when there is no delta.
 
   Install location:
     ~/Library/LaunchAgents/com.shiro.threads-watcher-sync.plist
@@ -29,9 +21,9 @@
     tail -f logs/sync.out.log
 
   Defaults:
-    - 30-minute StartInterval
-    - RunAtLoad=false (no immediate fire at install)
-    - logs to logs/sync.{out,err}.log (no rotation)
+    - 5-minute StartInterval
+    - RunAtLoad=true (publish any already-captured delta immediately)
+    - logs to logs/publish.log and logs/sync.log
 
   Supersedes com.shiro.threads-watcher-sync.plist.example. The .example
   is kept for reference; this file is the live, agent-activatable
@@ -45,20 +37,7 @@
 
   <key>ProgramArguments</key>
   <array>
-    <string>/opt/homebrew/bin/python3</string>
-    <string>/Users/umi/.openclaw/workspace/projects/threads-watcher/sync.py</string>
-    <!-- DRY-RUN. Uncomment these to promote to live commits / pushes:   -->
-    <!-- <string>--confirm</string>     -->
-    <!-- <string>--enable-push</string> -->
-
-    <!-- Log rotation: cap sync.log at 1 MB with 5 backups = 5 MB
-         ceiling. At observed ~5 KB/day cadence this rotates roughly
-         twice a year; safety net for a future loglevel bump. Code
-         shipped in 9a0f888; this activates it. -->
-    <string>--max-log-bytes</string>
-    <string>1048576</string>
-    <string>--log-backup-count</string>
-    <string>5</string>
+    <string>/Users/umi/.openclaw/workspace/projects/threads-watcher/publish-if-delta.sh</string>
   </array>
 
   <key>EnvironmentVariables</key>
@@ -68,10 +47,10 @@
   </dict>
 
   <key>StartInterval</key>
-  <integer>1800</integer>
+  <integer>300</integer>
 
   <key>RunAtLoad</key>
-  <false/>
+  <true/>
 
   <!-- StandardOutPath DELIBERATELY OMITTED.
        sync.py writes nothing to stdout — all logging flows through
@@ -90,7 +69,7 @@
        is ~11KB on a running install). Don't generalise this
        deletion. -->
   <key>StandardErrorPath</key>
-  <string>/Users/umi/.openclaw/workspace/projects/threads-watcher/logs/sync.err.log</string>
+  <string>/Users/umi/.openclaw/workspace/projects/threads-watcher/logs/publish.err.log</string>
 
   <key>WorkingDirectory</key>
   <string>/Users/umi/.openclaw/workspace/projects/threads-watcher</string>

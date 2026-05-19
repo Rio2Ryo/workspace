@@ -11,7 +11,7 @@ key surfaces immediately:
 
   1. com.shiro.threads-watcher-sync.plist MUST NOT carry
      StandardOutPath. If a real stdout consumer ever lands in
-     sync.py, this test should be updated alongside the code change
+     publish-if-delta.sh, this test should be updated alongside the code change
      (intentional, not silent).
 
   2. com.shiro.threads-watcher-auto-restart.plist MUST keep
@@ -71,9 +71,9 @@ def test_sync_plist_does_not_declare_stdout_path():
 def test_sync_plist_keeps_stderr_path_for_python_tracebacks():
     plist = _load(SYNC_PLIST)
     err_path = plist.get("StandardErrorPath", "")
-    assert err_path.endswith("/logs/sync.err.log"), (
-        "Uncaught Python tracebacks / import failures bypass TeeLogger "
-        "entirely (they fire before main() runs). Removing this key "
+    assert err_path.endswith("/logs/publish.err.log"), (
+        "Uncaught shell/Python failures may bypass the in-script loggers. "
+        "Removing this key "
         "loses crash visibility. Post-TeeLogger-double-write-fix the "
         "stream is now mostly empty in healthy operation — that's "
         "expected and intentional."
@@ -98,52 +98,34 @@ def test_both_plists_validate_as_well_formed_xml():
     _load(AUTO_RESTART_PLIST)  # raises if malformed
 
 
-def test_sync_plist_program_arguments_invoke_sync_py():
+def test_sync_plist_program_arguments_invoke_publish_if_delta():
     # Pin the basic invocation shape so a refactor that drops the
-    # sync.py argument (or accidentally swaps to watcher.py) fails
+    # publish wrapper (or accidentally swaps to watcher.py) fails
     # immediately rather than at the next launchd tick.
     plist = _load(SYNC_PLIST)
     args = plist.get("ProgramArguments", [])
-    assert any(a.endswith("sync.py") for a in args), (
-        f"sync plist must invoke sync.py; got args={args}"
+    assert any(a.endswith("publish-if-delta.sh") for a in args), (
+        f"sync plist must invoke publish-if-delta.sh; got args={args}"
     )
 
 
-def test_sync_plist_dry_run_default_no_confirm_no_push():
-    # The plist defaults to DRY-RUN (no --confirm, no --enable-push)
-    # per its header comment. Pin so a future agent doesn't silently
-    # promote to live by forgetting to comment the strings back out.
+def test_sync_plist_runs_live_publish_wrapper_only():
+    # The wrapper is the safety boundary: it checks DB delta first, then
+    # runs sync.py --confirm --enable-push and deploy.sh only when needed.
+    # Keep raw sync.py flags out of the plist so launchd has one clear
+    # operational path.
     plist = _load(SYNC_PLIST)
     args = plist.get("ProgramArguments", [])
-    # XML comments are stripped by plistlib — uncommented strings
-    # would show up as bare elements in the array.
-    assert "--confirm" not in args, (
-        "Sync plist defaulted to LIVE mode (--confirm present in "
-        "ProgramArguments). Promote with intent; update this test "
-        "alongside the plist."
-    )
+    assert len(args) == 1
+    assert args[0].endswith("publish-if-delta.sh")
+    assert "--confirm" not in args
     assert "--enable-push" not in args
 
 
-def test_sync_plist_activates_log_rotation():
-    # Rotation code shipped in sync.py (9a0f888) with default
-    # max_bytes=0 (= no rotation, back-compat). The plist must
-    # ACTIVATE it by passing --max-log-bytes — otherwise the
-    # well-tested rotation primitive sits dormant forever.
+def test_sync_plist_uses_five_minute_run_at_load_publish_cycle():
+    # Public status should not wait 30 minutes or stay stale until manual
+    # intervention. The wrapper exits quickly when there is no DB delta,
+    # so a 5-minute cadence is cheap and keeps operator UI fresh.
     plist = _load(SYNC_PLIST)
-    args = plist.get("ProgramArguments", [])
-    assert "--max-log-bytes" in args, (
-        "Sync plist must enable log rotation. The TeeLogger default "
-        "is max_bytes=0 (no rotation); the plist is the only place "
-        "we actively bound the on-disk growth."
-    )
-    # Following the --max-log-bytes flag, expect a sensible positive
-    # integer (catches `0` or accidental string typos).
-    idx = args.index("--max-log-bytes")
-    assert idx + 1 < len(args)
-    value = int(args[idx + 1])
-    assert value > 0
-    # Sanity ceiling: 100 MB is way past any reasonable single-file
-    # log size. A value above that almost certainly indicates a
-    # missed unit conversion (e.g., 1048576 vs 1073741824).
-    assert value <= 100 * 1024 * 1024
+    assert plist.get("StartInterval") == 300
+    assert plist.get("RunAtLoad") is True
