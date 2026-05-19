@@ -1,6 +1,6 @@
 import { expect, test } from '@playwright/test'
 import {
-  editSaveButton,
+  saveEditAndWaitForStatus,
   editTagField,
   expectOperationStatus,
   itemEditButton,
@@ -46,8 +46,7 @@ test('editing last item tag clears stale selected filter so remaining data is vi
   await itemEditButton(searchSection as searchSectionLocator, 'Move Me').click()
 
   await editTagField(page).fill('移動先タグ')
-  await editSaveButton(page).click()
-  await expectOperationStatus(page, '編集を保存しました。')
+  await saveEditAndWaitForStatus(page, '編集を保存しました。')
 
   // stale filter should be cleared because 元タグ no longer exists
   await expect(searchClearButton(searchSection)).not.toBeVisible()

@@ -7,13 +7,13 @@ import {
   editSaveButton,
   editTagField,
   expectOperationAlert,
-  expectOperationStatus,
   fetchItems,
   itemEditButton,
   operationAlert,
   rankedItemSummary,
   rankedItemSummaryByName,
   resetItemsByReplace,
+  saveEditAndWaitForStatus,
   saveSampleItems,
 } from './e2e-helpers'
 
@@ -35,8 +35,7 @@ test('edit form fields have accessible names and save edited Top3 data', async (
   await expect(editMemoField(page)).toBeVisible()
 
   await nameField.fill('Solito MAGO Edited')
-  await editSaveButton(page).click()
-  await expectOperationStatus(page, '編集を保存しました。')
+  await saveEditAndWaitForStatus(page, '編集を保存しました。')
 
   await expect(rankedItemSummaryByName(page, 'Solito MAGO Edited')).toBeVisible()
 

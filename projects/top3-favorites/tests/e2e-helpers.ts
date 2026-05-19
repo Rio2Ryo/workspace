@@ -194,6 +194,11 @@ export function editSaveButton(page: Page): Locator {
   return page.getByRole('button', { name: '編集を保存' })
 }
 
+export async function saveEditAndWaitForStatus(page: Page, text: string | RegExp): Promise<void> {
+  await editSaveButton(page).click()
+  await expectOperationStatus(page, text)
+}
+
 export function editCancelButton(page: Page): Locator {
   return page.getByRole('button', { name: '編集をキャンセル' })
 }

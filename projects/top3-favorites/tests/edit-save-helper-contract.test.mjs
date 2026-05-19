@@ -31,6 +31,10 @@ function sourceImportsEditSaveHelper(source) {
   return /import \{[^}]*editSaveButton[^}]*\} from '(?:\.\/|\.\.\/)*e2e-helpers'/.test(source)
 }
 
+function sourceImportsSaveEditCompletionHelper(source) {
+  return /import \{[^}]*saveEditAndWaitForStatus[^}]*\} from '(?:\.\/|\.\.\/)*e2e-helpers'/.test(source)
+}
+
 function sourceUsesDirectEditSaveButton(source) {
   return /getByRole\(['"]button['"],\s*\{\s*name:\s*['"]編集を保存['"]\s*\}\)/.test(source)
 }
@@ -68,6 +72,18 @@ function collectEditSaveRaceOffenders(spec, source) {
   return offenders
 }
 
+function collectRawSuccessfulEditSaveClickOffenders(spec, source) {
+  const offenders = []
+  const rawSuccessPattern = /await\s+editSaveButton\(page\)\.click\(\)\s*\n\s*await\s+expectOperationStatus\(page,/g
+
+  for (const match of source.matchAll(rawSuccessPattern)) {
+    const line = source.slice(0, match.index).split('\n').length
+    offenders.push(`${spec}:${line}: use saveEditAndWaitForStatus(page, expectedStatus) instead of raw editSaveButton(page).click() + expectOperationStatus`)
+  }
+
+  return offenders
+}
+
 test('[E2E-Helper][edit-save] E2E specs use shared edit save button locator', async () => {
   const offenders = []
   const specs = await listE2eSpecs(testsRoot)
@@ -100,6 +116,36 @@ test('[E2E-Helper][edit-save] helper owns edit save button accessible name', asy
 
   assert.match(source, /export function editSaveButton/, 'tests/e2e-helpers.ts should export editSaveButton')
   assert.match(source, /getByRole\(['"]button['"],\s*\{\s*name:\s*['"]編集を保存['"]\s*\}\)/, 'editSaveButton should own the edit save button accessible name')
+})
+
+test('[E2E-Helper][edit-save] helper owns successful edit save click and status wait', async () => {
+  const source = await readFile(helperPath, 'utf8')
+
+  assert.match(
+    source,
+    /export async function saveEditAndWaitForStatus\(\s*page: Page,\s*text: string \| RegExp\s*\): Promise<void> \{[\s\S]*?await editSaveButton\(page\)\.click\(\)[\s\S]*?await expectOperationStatus\(page, text\)[\s\S]*?\}/,
+    'tests/e2e-helpers.ts should expose saveEditAndWaitForStatus(page, text) that owns successful edit click + operation status wait',
+  )
+})
+
+test('[E2E-Helper][edit-save] successful edit workflows use completion helper', async () => {
+  const offenders = []
+  const specs = await listE2eSpecs(testsRoot)
+
+  for (const spec of specs) {
+    const specUrl = new URL(spec, `${root}/`)
+    const source = await readFile(specUrl, 'utf8')
+    offenders.push(...collectRawSuccessfulEditSaveClickOffenders(spec, source))
+    if (/saveEditAndWaitForStatus\(/.test(source) && !sourceImportsSaveEditCompletionHelper(source)) {
+      offenders.push(`${relativePath(specUrl)}: saveEditAndWaitForStatus helper call without named import`)
+    }
+  }
+
+  assert.deepEqual(
+    offenders.sort(),
+    [],
+    `Successful edit-save E2E flows should use the shared completion helper: ${offenders.join(', ')}`,
+  )
 })
 
 test('[E2E-Helper][edit-save] risky post-edit workflows wait for save completion', async () => {

@@ -1,6 +1,6 @@
 import { expect, test } from '@playwright/test'
 import {
-  editSaveButton,
+  saveEditAndWaitForStatus,
   editTagField,
   expectOperationStatus,
   itemEditButton,
@@ -34,8 +34,7 @@ test('editing item tag move keeps registration tag in sync with active search ta
   await itemEditButton(searchSection as searchSectionLocator, 'Move Me').click()
 
   await editTagField(page).fill('移動先タグ')
-  await editSaveButton(page).click()
-  await expectOperationStatus(page, '編集を保存しました。')
+  await saveEditAndWaitForStatus(page, '編集を保存しました。')
 
   // Search filter is auto-cleared by current behavior; registration tag should also reflect active state
   await expect(searchClearButton(searchSection)).not.toBeVisible()

@@ -1,8 +1,7 @@
 import { expect, test } from '@playwright/test'
 import {
   editRankButton,
-  editSaveButton,
-  expectOperationStatus,
+  saveEditAndWaitForStatus,
   itemEditButton,
   rankedItemSummary,
   registrationRankButton,
@@ -27,8 +26,6 @@ test('new and edit rank pickers have context-specific accessible names', async (
   const editThird = editRankButton(page, 3)
   await expect(editThird).toBeVisible()
   await editThird.click()
-  await editSaveButton(page).click()
-
-  await expectOperationStatus(page, '編集を保存しました。')
+  await saveEditAndWaitForStatus(page, '編集を保存しました。')
   await expect(rankedItemSummary(page, 3, 'Solito MAGO')).toBeVisible()
 })
