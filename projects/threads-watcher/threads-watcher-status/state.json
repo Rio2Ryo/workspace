@@ -1,14 +1,70 @@
 {
-  "handle": "@hal.lifedesign",
+  "handle": "@hal.lifedesign, @bmw_intokyo",
+  "handles": [
+    "@hal.lifedesign",
+    "@bmw_intokyo"
+  ],
   "last_check": {
-    "checked_at": "2026-05-18T23:27:55Z",
-    "found_count": 15,
-    "new_count": 0,
+    "checked_at": "2026-05-19T00:06:02Z",
+    "found_count": 4,
+    "new_count": 4,
     "status": "ok",
     "error": null
   },
-  "saved_count": 22,
+  "saved_count": 26,
   "posts": [
+    {
+      "handle": "@bmw_intokyo",
+      "post_id": "DYbNd2CCZyT",
+      "post_url": "https://www.threads.com/@bmw_intokyo/post/DYbNd2CCZyT",
+      "first_seen_at": "2026-05-19T00:05:57Z",
+      "captured_at": "2026-05-19T00:06:02Z",
+      "screenshot_size_bytes": 311830,
+      "screenshot_width": 1280,
+      "screenshot_height": 1800,
+      "post_text": "ブラック企業の社長よ 社員にお情けでいてもらって嬉しい？ 訳分からんことばっか言って 誰もお前のことなんかみてない 誰もお前のこと好きじゃない 本当に困った時に誰も助けてくれない 脅ししかできず 幸せになれる組織構造を作っていけないやつが 社員を幸せにさせれるわけないだろう 今は取り繕えてると思っても そんな覚悟で2年3年といれるわけないだろう",
+      "posted_at": "2026-05-17T03:45:19.000Z",
+      "screenshot_path": "screenshots/bmw_intokyo/DYbNd2CCZyT__20260519T000602Z.png"
+    },
+    {
+      "handle": "@bmw_intokyo",
+      "post_id": "DYa4StZk26D",
+      "post_url": "https://www.threads.com/@bmw_intokyo/post/DYa4StZk26D",
+      "first_seen_at": "2026-05-19T00:05:53Z",
+      "captured_at": "2026-05-19T00:05:57Z",
+      "screenshot_size_bytes": 70063,
+      "screenshot_width": 1280,
+      "screenshot_height": 2012,
+      "post_text": "失うの怖いよね 結局は自己中の独りよがりなのよ そこが解消されたってだけで 何だってできる はやくブラック企業やめてください",
+      "posted_at": "2026-05-17T00:40:18.000Z",
+      "screenshot_path": "screenshots/bmw_intokyo/DYa4StZk26D__20260519T000557Z.png"
+    },
+    {
+      "handle": "@bmw_intokyo",
+      "post_id": "DYZqOtBiYmD",
+      "post_url": "https://www.threads.com/@bmw_intokyo/post/DYZqOtBiYmD",
+      "first_seen_at": "2026-05-19T00:05:48Z",
+      "captured_at": "2026-05-19T00:05:53Z",
+      "screenshot_size_bytes": 145182,
+      "screenshot_width": 1280,
+      "screenshot_height": 1800,
+      "post_text": "恐怖は人をだめにする",
+      "posted_at": "2026-05-16T13:18:11.000Z",
+      "screenshot_path": "screenshots/bmw_intokyo/DYZqOtBiYmD__20260519T000553Z.png"
+    },
+    {
+      "handle": "@bmw_intokyo",
+      "post_id": "DYZp0pIiVhC",
+      "post_url": "https://www.threads.com/@bmw_intokyo/post/DYZp0pIiVhC",
+      "first_seen_at": "2026-05-19T00:05:44Z",
+      "captured_at": "2026-05-19T00:05:48Z",
+      "screenshot_size_bytes": 395812,
+      "screenshot_width": 1280,
+      "screenshot_height": 1800,
+      "post_text": "ビジネス用のバレンシアガのロデオのバッグも飽きたから新しいのにするか ボッテガのトートもいい感じ ヴィトンはスピーディ以外微妙だから普段使いやな",
+      "posted_at": "2026-05-16T13:14:37.000Z",
+      "screenshot_path": "screenshots/bmw_intokyo/DYZp0pIiVhC__20260519T000548Z.png"
+    },
     {
       "handle": "@hal.lifedesign",
       "post_id": "DYfpBYukpHp",
@@ -298,12 +354,12 @@
   ],
   "recent_stats": {
     "window_hours": 24,
-    "total": 789,
-    "ok": 749,
+    "total": 778,
+    "ok": 738,
     "partial_error": 40,
     "error": 0,
     "other": 0,
-    "success_rate": 0.9493029150823827
+    "success_rate": 0.9485861182519281
   },
   "recent_stats_by_window": {
     "1": {
@@ -317,12 +373,12 @@
     },
     "24": {
       "window_hours": 24,
-      "total": 789,
-      "ok": 749,
+      "total": 778,
+      "ok": 738,
       "partial_error": 40,
       "error": 0,
       "other": 0,
-      "success_rate": 0.9493029150823827
+      "success_rate": 0.9485861182519281
     },
     "168": {
       "window_hours": 168,
@@ -336,10 +392,14 @@
   },
   "sync_state": {
     "cursor": 45,
-    "db_max": 45,
-    "delta": 0,
+    "db_max": 49,
+    "delta": 4,
     "cursor_file_exists": true
   },
-  "dry_run_alert": null,
-  "snapshot_generated_at": "2026-05-18T23:54:44Z"
+  "dry_run_alert": {
+    "pending_ticks": 3,
+    "since": "2026-05-18T23:46:27Z",
+    "delta": 3
+  },
+  "snapshot_generated_at": "2026-05-19T00:06:52Z"
 }
