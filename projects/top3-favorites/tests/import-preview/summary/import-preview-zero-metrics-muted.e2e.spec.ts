@@ -8,7 +8,6 @@ test.beforeEach(async ({ request }) => {
 test('zero-value impact metric is marked as muted for quick visual scan', async ({ page, request }) => {
   await page.goto('/')
   await saveSampleItems(page)
-  await expect(page.getByRole('status')).toContainText('サンプルをDBに保存しました。')
 
   // Re-import the exact same payload: added=0, kept=3, removed=0
   const current = (await request.get('/api/items').then((res) => res.json())) as { items: unknown[] }

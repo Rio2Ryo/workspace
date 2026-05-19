@@ -8,7 +8,6 @@ test.beforeEach(async ({ request }) => {
 test('impact terms helper is collapsed by default and can be expanded/collapsed', async ({ page }) => {
   await page.goto('/')
   await saveSampleItems(page)
-  await expect(page.getByRole('status')).toContainText('サンプルをDBに保存しました。')
 
   const now = new Date().toISOString()
   const payload = [

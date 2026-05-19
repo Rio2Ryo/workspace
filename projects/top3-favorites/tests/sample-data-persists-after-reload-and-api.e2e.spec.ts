@@ -9,7 +9,6 @@ test('sample data seed remains after reload and is reflected in API data', async
   await page.goto('/')
 
   await saveSampleItems(page)
-  await expect(page.getByRole('status')).toContainText('サンプルをDBに保存しました。')
 
   const searchSection = page.locator('section.card').filter({ has: page.getByRole('heading', { name: '探す' }) })
   await expect(searchSection.getByText(/1位:\s*Solito MAGO/)).toBeVisible()

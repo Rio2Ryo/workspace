@@ -10,7 +10,6 @@ test('import preview explains difference between 削除予定 and 正規化除�
 
   // seed current items so removed count can happen
   await saveSampleItems(page)
-  await expect(page.getByRole('status')).toContainText('サンプルをDBに保存しました。')
 
   const now = new Date().toISOString()
   const payload = [

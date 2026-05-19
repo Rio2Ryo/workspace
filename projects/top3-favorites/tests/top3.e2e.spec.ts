@@ -16,7 +16,6 @@ test('sample data can be saved, searched, and ranked through the real UI/API', a
   await expect(page.locator('.status', { hasText: 'DB保存' })).toBeVisible()
 
   await saveSampleItems(page)
-  await expect(page.getByText('サンプルをDBに保存しました。')).toBeVisible()
   await expect(page.getByRole('heading', { name: 'カフェラテ' })).toBeVisible()
   await expect(page.getByText(/\d位: Solito MAGO/)).toBeVisible()
   await expect(page.getByText(/\d位: T-SITEのカフェ/)).toBeVisible()
@@ -32,7 +31,6 @@ test('sample data can be saved, searched, and ranked through the real UI/API', a
 test('adding a new first place rebalances the same tag to top 3', async ({ page }) => {
   await page.goto('/')
   await saveSampleItems(page)
-  await expect(page.getByText('サンプルをDBに保存しました。')).toBeVisible()
   await expect(page.getByText(/\d位: Solito MAGO/)).toBeVisible()
   await expect(page.getByText(/\d位: T-SITEのカフェ/)).toBeVisible()
 

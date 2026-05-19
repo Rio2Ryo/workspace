@@ -8,7 +8,6 @@ test.beforeEach(async ({ request }) => {
 test('edit form fields have accessible names and save edited Top3 data', async ({ page }) => {
   await page.goto('/')
   await saveSampleItems(page)
-  await expect(page.getByRole('status')).toContainText('サンプルをDBに保存しました。')
 
   await page.getByText(/\d位: Solito MAGO/).first().click()
   await itemEditButton(page, /編集$/).click()
@@ -31,7 +30,6 @@ test('edit form fields have accessible names and save edited Top3 data', async (
 test('edit form validates required fields before saving', async ({ page }) => {
   await page.goto('/')
   await saveSampleItems(page)
-  await expect(page.getByRole('status')).toContainText('サンプルをDBに保存しました。')
 
   await page.getByText(/\d位: Solito MAGO/).first().click()
   await itemEditButton(page, /編集$/).click()

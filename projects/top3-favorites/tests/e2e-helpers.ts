@@ -12,8 +12,12 @@ export async function resetItemsByDelete(request: APIRequestContext) {
 }
 
 
+export function sampleSaveButton(page: Page): Locator {
+  return page.getByRole('button', { name: 'サンプルをDB保存' })
+}
+
 export async function clickSampleSaveButton(page: Page): Promise<void> {
-  await page.getByRole('button', { name: 'サンプルをDB保存' }).click()
+  await sampleSaveButton(page).click()
 }
 
 export async function saveSampleItems(page: Page): Promise<void> {

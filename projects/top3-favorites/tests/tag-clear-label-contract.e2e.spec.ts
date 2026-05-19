@@ -9,7 +9,6 @@ test('tag filter clear action is exposed as クリア and resets list to all ite
   await page.goto('/')
 
   await saveSampleItems(page)
-  await expect(page.getByText('サンプルをDBに保存しました。')).toBeVisible()
 
   const searchSection = page.locator('section.card').filter({ has: page.getByRole('heading', { name: '探す' }) })
   await tagFilterButton(searchSection, 'カフェラテ').first().click()

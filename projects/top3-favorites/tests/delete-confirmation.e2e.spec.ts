@@ -8,7 +8,6 @@ test.beforeEach(async ({ request }) => {
 test('delete asks for confirmation and cancel keeps the item', async ({ page }) => {
   await page.goto('/')
   await saveSampleItems(page)
-  await expect(page.getByText('サンプルをDBに保存しました。')).toBeVisible()
 
   const target = page.getByText('1位: Solito MAGO')
   await expect(target).toBeVisible()
@@ -24,7 +23,6 @@ test('delete asks for confirmation and cancel keeps the item', async ({ page }) 
 test('delete confirmation accept removes the item', async ({ page }) => {
   await page.goto('/')
   await saveSampleItems(page)
-  await expect(page.getByText('サンプルをDBに保存しました。')).toBeVisible()
 
   const target = page.getByText('1位: Solito MAGO')
   await target.click()

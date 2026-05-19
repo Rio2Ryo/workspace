@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test'
-import { jsonExportButton, tagFilterButton, uploadJsonImportFile, parseDownloadedJsonFile, resetItemsByReplace, downloadJsonExport, saveSampleItems, jsonImportButton, importConfirmButton } from './e2e-helpers'
+import { sampleSaveButton, jsonExportButton, tagFilterButton, uploadJsonImportFile, parseDownloadedJsonFile, resetItemsByReplace, downloadJsonExport, saveSampleItems, jsonImportButton, importConfirmButton } from './e2e-helpers'
 
 test.beforeEach(async ({ request }) => {
   await resetItemsByReplace(request)
@@ -7,9 +7,8 @@ test.beforeEach(async ({ request }) => {
 
 test('json import/export UI exists and invalid import keeps existing data', async ({ page }) => {
   await page.goto('/')
-  await expect(page.getByRole('button', { name: 'サンプルをDB保存' })).toBeVisible()
+  await expect(sampleSaveButton(page)).toBeVisible()
   await saveSampleItems(page)
-  await expect(page.getByText('サンプルをDBに保存しました。')).toBeVisible()
 
   // Export / Import buttons should exist
   await expect(jsonExportButton(page)).toBeVisible()
@@ -25,7 +24,6 @@ test('json import/export UI exists and invalid import keeps existing data', asyn
 test('exported JSON can be downloaded and imported back through the confirmation preview', async ({ page, request }) => {
   await page.goto('/')
   await saveSampleItems(page)
-  await expect(page.getByText('サンプルをDBに保存しました。')).toBeVisible()
 
   const download = await downloadJsonExport(page)
   const { filename, raw: exportedText, parsed: exportedItems } = await parseDownloadedJsonFile<Array<{ name: string }>>(download)
@@ -49,7 +47,6 @@ test('exported JSON can be downloaded and imported back through the confirmation
 test('valid import clears stale tag filters so imported data is immediately visible', async ({ page }) => {
   await page.goto('/')
   await saveSampleItems(page)
-  await expect(page.getByText('サンプルをDBに保存しました。')).toBeVisible()
 
   const searchSection = page.locator('section.card').filter({ has: page.getByRole('heading', { name: '探す' }) })
   await tagFilterButton(searchSection, 'カフェラテ').click()

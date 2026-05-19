@@ -29,11 +29,15 @@ function relativePath(url) {
 }
 
 function sourceImportsSampleHelper(source) {
-  return /import \{[^}]*(?:saveSampleItems|clickSampleSaveButton)[^}]*\} from '(?:\.\/|\.\.\/)*e2e-helpers'/.test(source)
+  return /import \{[^}]*(?:saveSampleItems|clickSampleSaveButton|sampleSaveButton)[^}]*\} from '(?:\.\/|\.\.\/)*e2e-helpers'/.test(source)
 }
 
-function sourceUsesDirectSampleSave(source) {
-  return /getByRole\(['"]button['"],\s*\{\s*name:\s*['"]サンプルをDB保存['"]\s*\}\)\.click\(\)/.test(source)
+function sourceUsesDirectSampleSaveButtonLocator(source) {
+  return /getByRole\(['"]button['"],\s*\{\s*name:\s*['"]サンプルをDB保存['"]\s*\}\)/.test(source)
+}
+
+function sourceUsesDirectSampleSaveSuccessAssertion(source) {
+  return /サンプルをDBに保存しました。/.test(source)
 }
 
 test('[E2E-Helper][sample-data] E2E specs save sample data through shared helper', async () => {
@@ -45,11 +49,15 @@ test('[E2E-Helper][sample-data] E2E specs save sample data through shared helper
   for (const spec of specs) {
     const specUrl = new URL(spec, `${root}/`)
     const source = await readFile(specUrl, 'utf8')
-    const usesSampleHelper = /(?:saveSampleItems|clickSampleSaveButton)\(/.test(source)
-    const usesDirectSampleSave = sourceUsesDirectSampleSave(source)
+    const usesSampleHelper = /(?:saveSampleItems|clickSampleSaveButton|sampleSaveButton)\(/.test(source)
+    const usesDirectSampleSaveButtonLocator = sourceUsesDirectSampleSaveButtonLocator(source)
+    const usesDirectSampleSaveSuccessAssertion = sourceUsesDirectSampleSaveSuccessAssertion(source)
 
-    if (usesDirectSampleSave) {
-      offenders.push(`${relativePath(specUrl)}: direct sample save button click`)
+    if (usesDirectSampleSaveButtonLocator) {
+      offenders.push(`${relativePath(specUrl)}: direct sample save button locator`)
+    }
+    if (usesDirectSampleSaveSuccessAssertion) {
+      offenders.push(`${relativePath(specUrl)}: direct sample save success assertion`)
     }
     if (usesSampleHelper && !sourceImportsSampleHelper(source)) {
       offenders.push(`${relativePath(specUrl)}: helper call without named import`)
@@ -66,9 +74,11 @@ test('[E2E-Helper][sample-data] E2E specs save sample data through shared helper
 test('[E2E-Helper][sample-data] helper owns sample save button and status mechanics', async () => {
   const source = await readFile(helperPath, 'utf8')
 
+  assert.match(source, /export function sampleSaveButton/, 'tests/e2e-helpers.ts should export sampleSaveButton for visibility/disabled assertions')
   assert.match(source, /export async function clickSampleSaveButton/, 'tests/e2e-helpers.ts should export clickSampleSaveButton for failure-path tests')
   assert.match(source, /export async function saveSampleItems/, 'tests/e2e-helpers.ts should export saveSampleItems')
-  assert.match(source, /getByRole\(['"]button['"],\s*\{\s*name:\s*['"]サンプルをDB保存['"]\s*\}\)\.click\(\)/, 'clickSampleSaveButton should own the sample save button accessible name')
+  assert.match(source, /getByRole\(['"]button['"],\s*\{\s*name:\s*['"]サンプルをDB保存['"]\s*\}\)/, 'sampleSaveButton should own the sample save button accessible name')
+  assert.match(source, /clickSampleSaveButton[\s\S]*sampleSaveButton\(page\)\.click\(\)/, 'clickSampleSaveButton should reuse sampleSaveButton')
   assert.match(source, /saveSampleItems[\s\S]*clickSampleSaveButton\(page\)/, 'saveSampleItems should reuse the lower-level click helper')
   assert.match(source, /getByRole\(['"]status['"]\)[\s\S]*サンプルをDBに保存しました。/, 'saveSampleItems should assert the user-visible success status')
 })

@@ -8,7 +8,6 @@ test.beforeEach(async ({ request }) => {
 test('import rejects rank out of range and keeps existing data (fail-closed)', async ({ page }) => {
   await page.goto('/')
   await saveSampleItems(page)
-  await expect(page.getByText('サンプルをDBに保存しました。')).toBeVisible()
   await expect(page.getByText('1位: Solito MAGO')).toBeVisible()
 
   const invalidItems = [
@@ -35,7 +34,6 @@ test('import rejects rank out of range and keeps existing data (fail-closed)', a
 test('import rejects duplicate ids with a clear message and keeps existing data', async ({ page }) => {
   await page.goto('/')
   await saveSampleItems(page)
-  await expect(page.getByText('サンプルをDBに保存しました。')).toBeVisible()
   await expect(page.getByText('1位: Solito MAGO')).toBeVisible()
 
   const duplicateItems = [

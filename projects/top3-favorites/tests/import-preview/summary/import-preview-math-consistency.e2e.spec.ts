@@ -8,7 +8,6 @@ test.beforeEach(async ({ request }) => {
 test('import confirmation math is consistent for added/kept/removed/excluded counters', async ({ page, request }) => {
   await page.goto('/')
   await saveSampleItems(page)
-  await expect(page.getByRole('status')).toContainText('サンプルをDBに保存しました。')
 
   const current = (await request.get('/api/items').then((res) => res.json())) as {
     items: Array<{ id: string }>

@@ -12,7 +12,6 @@ test.beforeEach(async ({ request }) => {
 test('exported JSON file has valid item shape and can be imported back through the UI', async ({ page, request }) => {
   await page.goto('/')
   await saveSampleItems(page)
-  await expect(page.getByText('サンプルをDBに保存しました。')).toBeVisible()
 
   const download = await downloadJsonExport(page)
   const { filename, raw, parsed } = await parseDownloadedJsonFile<unknown>(download)

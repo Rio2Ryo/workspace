@@ -8,7 +8,6 @@ test.beforeEach(async ({ request }) => {
 test('impact direction metrics expose explicit aria-labels for screen readers', async ({ page, request }) => {
   await page.goto('/')
   await saveSampleItems(page)
-  await expect(page.getByRole('status')).toContainText('サンプルをDBに保存しました。')
 
   const current = (await request.get('/api/items').then((res) => res.json())) as { items: Array<{ id: string }> }
   const keepId = current.items[0].id

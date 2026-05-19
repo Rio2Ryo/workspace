@@ -8,7 +8,6 @@ test.beforeEach(async ({ request }) => {
 test('import preview shows explicit no-change badge when payload matches current data', async ({ page, request }) => {
   await page.goto('/')
   await saveSampleItems(page)
-  await expect(page.getByRole('status')).toContainText('サンプルをDBに保存しました。')
 
   const current = (await request.get('/api/items').then((res) => res.json())) as { items: unknown[] }
 

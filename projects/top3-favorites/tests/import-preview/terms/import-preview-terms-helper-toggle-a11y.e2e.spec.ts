@@ -8,7 +8,6 @@ test.beforeEach(async ({ request }) => {
 test('terms helper toggle exposes aria-expanded and aria-controls correctly', async ({ page }) => {
   await page.goto('/')
   await saveSampleItems(page)
-  await expect(page.getByRole('status')).toContainText('サンプルをDBに保存しました。')
 
   const now = new Date().toISOString()
   const payload = [

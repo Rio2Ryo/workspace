@@ -8,7 +8,6 @@ test.beforeEach(async ({ request }) => {
 test('live summary is concise and mentions only changed elements', async ({ page, request }) => {
   await page.goto('/')
   await saveSampleItems(page)
-  await expect(page.getByRole('status')).toContainText('サンプルをDBに保存しました。')
   const live = page.getByTestId('import-preview-live')
 
   // No-change case: same data re-import

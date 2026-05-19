@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test'
-import { jsonExportButton, itemEditButton, uploadJsonImportFile, resetItemsByReplace, itemDeleteButton, importCancelButton, importConfirmButton, registrationSaveButton } from '../../e2e-helpers'
+import { sampleSaveButton, jsonExportButton, itemEditButton, uploadJsonImportFile, resetItemsByReplace, itemDeleteButton, importCancelButton, importConfirmButton, registrationSaveButton } from '../../e2e-helpers'
 
 test.beforeEach(async ({ request }) => {
   await resetItemsByReplace(request)
@@ -35,7 +35,7 @@ test('pending import preview enforces operation guards across registration/searc
 
   // save/sample/export locks
   await expect(registrationSaveButton(page)).toBeDisabled()
-  await expect(page.getByRole('button', { name: 'サンプルをDB保存' })).toBeDisabled()
+  await expect(sampleSaveButton(page)).toBeDisabled()
   await expect(jsonExportButton(page)).toBeDisabled()
   await expect(page.getByTestId('import-export-lock-hint')).toHaveText('インポート確認中のため、現在DBのJSONエクスポートは一時停止中です。')
 

@@ -8,7 +8,6 @@ test.beforeEach(async ({ request }) => {
 test('importing broken JSON shows parse error and keeps existing data (fail-closed)', async ({ page }) => {
   await page.goto('/')
   await saveSampleItems(page)
-  await expect(page.getByRole('status')).toContainText('サンプルをDBに保存しました。')
 
   await uploadJsonImportFile(page, 'broken.json', '{"items":[')
 

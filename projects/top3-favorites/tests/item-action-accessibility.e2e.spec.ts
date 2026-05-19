@@ -8,7 +8,6 @@ test.beforeEach(async ({ request }) => {
 test('item edit and delete actions include the item name in their accessible labels', async ({ page }) => {
   await page.goto('/')
   await saveSampleItems(page)
-  await expect(page.getByText('サンプルをDBに保存しました。')).toBeVisible()
 
   await page.getByText('1位: Solito MAGO').click()
 

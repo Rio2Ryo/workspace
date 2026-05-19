@@ -24,7 +24,6 @@ test.beforeEach(async ({ request }) => {
 test('import confirmation summarizes added removed kept items and tag impact', async ({ page }) => {
   await page.goto('/')
   await saveSampleItems(page)
-  await expect(page.getByText('サンプルをDBに保存しました。')).toBeVisible()
 
   const replacement = [
     item('same-id', 'カフェラテ', 'Kept Latte'),

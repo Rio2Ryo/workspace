@@ -8,7 +8,6 @@ test.beforeEach(async ({ request }) => {
 test('import impact metrics show directional signs (+ / ± / -)', async ({ page, request }) => {
   await page.goto('/')
   await saveSampleItems(page)
-  await expect(page.getByRole('status')).toContainText('サンプルをDBに保存しました。')
 
   const current = (await request.get('/api/items').then((res) => res.json())) as { items: Array<{ id: string }> }
   const keepId = current.items[0].id

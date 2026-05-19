@@ -9,7 +9,6 @@ test('success and error feedback are exposed through accessible live regions', a
   await page.goto('/')
 
   await saveSampleItems(page)
-  await expect(page.getByRole('status')).toContainText('サンプルをDBに保存しました。')
 
   await uploadJsonImportFile(page, 'invalid-shape.json', '{"foo":1}')
 

@@ -24,7 +24,6 @@ test.beforeEach(async ({ request }) => {
 test('import shows a confirmation preview before replacing existing data', async ({ page, request }) => {
   await page.goto('/')
   await saveSampleItems(page)
-  await expect(page.getByText('サンプルをDBに保存しました。')).toBeVisible()
   await expect(page.getByText('1位: Solito MAGO')).toBeVisible()
 
   const replacement = [item('preview-1', 'プリン', 'Preview Pudding')]

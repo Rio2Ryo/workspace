@@ -8,7 +8,6 @@ test.beforeEach(async ({ request }) => {
 test('import rejects whitespace-only required fields with clear validation message', async ({ page }) => {
   await page.goto('/')
   await saveSampleItems(page)
-  await expect(page.getByText('サンプルをDBに保存しました。')).toBeVisible()
 
   const now = new Date().toISOString()
   const invalidItems = [
