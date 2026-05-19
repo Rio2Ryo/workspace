@@ -4,6 +4,7 @@ import test from 'node:test'
 
 const root = new URL('..', import.meta.url)
 const helperPath = new URL('tests/e2e-helpers.ts', `${root}/`)
+const appPath = new URL('src/App.tsx', `${root}/`)
 const testsRoot = new URL('tests/', `${root}/`)
 const importPreviewRoot = new URL('tests/import-preview/', `${root}/`)
 
@@ -148,6 +149,18 @@ test('[E2E-Helper][import-file] all E2E specs share JSON import upload mechanics
     [],
     `E2E specs should use uploadJsonImportFile() for JSON import setup instead of duplicating selectors, MIME type, and buffers: ${offenders.join(', ')}`,
   )
+})
+
+test('[E2E-Helper][import-file] import validation errors expose structured repair details', async () => {
+  const appSource = await readFile(appPath, 'utf8')
+  const validationSpec = await readFile(new URL('tests/import-validation-error-details.e2e.spec.ts', `${root}/`), 'utf8')
+
+  assert.match(appSource, /type ImportValidationIssue = \{[\s\S]*filename: string[\s\S]*row: string[\s\S]*field: string[\s\S]*fix: string[\s\S]*message: string[\s\S]*\}/, 'App should keep structured import validation issue data instead of only a joined error sentence')
+  assert.match(appSource, /data-testid="import-validation-error-details"/, 'App should render a dedicated validation repair details block')
+  assert.match(appSource, /<dl[\s\S]*aria-label="インポートエラーの修正情報"/, 'App should expose import validation repair details as a labelled description list')
+  assert.match(appSource, /<dt>ファイル<\/dt>[\s\S]*<dt>行<\/dt>[\s\S]*<dt>フィールド<\/dt>[\s\S]*<dt>修正<\/dt>/, 'App should keep file, row, field, and fix as separate term labels')
+  assert.match(validationSpec, /getByTestId\('import-validation-error-details'\)/, 'E2E should verify the structured import validation details block')
+  assert.match(validationSpec, /locator\('dt'\)\)\.toHaveText\(\['ファイル', '行', 'フィールド', '修正'\]\)/, 'E2E should verify the term labels, not just the joined alert text')
 })
 
 test('[E2E-Helper][import-file] uploadJsonImportFile helper owns selector/mime/buffer mechanics', async () => {

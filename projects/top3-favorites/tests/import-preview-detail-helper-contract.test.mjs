@@ -120,7 +120,7 @@ test('[E2E-Helper][import-preview-details] helpers own direction/tag/terms test 
 
 test('[App][import-preview-details] terms helper uses semantic term descriptions', async () => {
   const source = await readFile(appPath, 'utf8')
-  const termsHelperMatch = source.match(/<dl[\s\S]*id="import-preview-terms-helper"[\s\S]*?<\/dl>/)
+  const termsHelperMatch = source.match(/<dl\s+[^>]*id="import-preview-terms-helper"[\s\S]*?<\/dl>/)
 
   assert.ok(termsHelperMatch, 'import preview terms helper should render as a dl, not punctuation-separated paragraph text')
   const termsHelperSource = termsHelperMatch[0]

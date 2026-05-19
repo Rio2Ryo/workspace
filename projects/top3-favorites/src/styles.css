@@ -105,6 +105,12 @@ details[open] summary::after { content: '閉じる'; color: #6b7280; }
 .import-preview-reason-list li::before { content: '・'; }
 .empty { margin: 12px 0 0; }
 .error { color: #b91c1c; font-size: 13px; font-weight: 800; margin: 0; }
+.error p { margin: 0; }
+.import-validation-error-details { display: grid; gap: 3px; margin: 6px 0 0; color: #7f1d1d; }
+.import-validation-error-details div { display: grid; grid-template-columns: auto 1fr; gap: 4px; }
+.import-validation-error-details dt { font-weight: 900; }
+.import-validation-error-details dt::after { content: ':'; }
+.import-validation-error-details dd { margin: 0; font-weight: 700; }
 .notice { color: #166534; font-size: 13px; font-weight: 800; margin: 0; }
 
 .impact-plus { color: #1d4ed8; font-weight: 700; }

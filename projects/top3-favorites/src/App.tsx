@@ -43,6 +43,14 @@ type PendingImport = {
   excludedDetails: ImportExcludedDetail[]
 }
 
+type ImportValidationIssue = {
+  filename: string
+  row: string
+  field: string
+  fix: string
+  message: string
+}
+
 const initialDraft: Draft = {
   tag: 'カフェラテ',
   location: '',
@@ -106,10 +114,16 @@ function rankItems(items: FavoriteItem[], target?: FavoriteItem): FavoriteItem[]
     .slice(0, 3)
 }
 
-function importItemValidationError(value: unknown, index: number, filename: string): string | null {
+function importItemValidationIssue(value: unknown, index: number, filename: string): ImportValidationIssue | null {
   const row = `${index + 1}件目`
   const prefix = `ファイル「${filename}」の${row}`
-  const detail = (field: string, fix: string) => `${prefix} / フィールド: ${field} / 修正: ${fix}`
+  const detail = (field: string, fix: string): ImportValidationIssue => ({
+    filename,
+    row,
+    field,
+    fix,
+    message: `${prefix} / フィールド: ${field} / 修正: ${fix}`,
+  })
   if (!value || typeof value !== 'object') return detail('item', '各行をオブジェクト形式にしてください。')
   const o = value as Record<string, unknown>
 
@@ -295,6 +309,7 @@ export function App() {
   const [notice, setNotice] = useState('')
   const [loadError, setLoadError] = useState(false)
   const [pendingImport, setPendingImport] = useState<PendingImport | null>(null)
+  const [importValidationIssue, setImportValidationIssue] = useState<ImportValidationIssue | null>(null)
   const [isImpactTagsExpanded, setIsImpactTagsExpanded] = useState(false)
   const [isExcludedNamesExpanded, setIsExcludedNamesExpanded] = useState(false)
   const [isExcludedDetailsExpanded, setIsExcludedDetailsExpanded] = useState(false)
@@ -304,6 +319,7 @@ export function App() {
   const clearFeedback = (options?: { pendingImport?: boolean }) => {
     setError('')
     setNotice('')
+    setImportValidationIssue(null)
     if (options?.pendingImport) {
       setPendingImport(null)
       setIsImpactTagsExpanded(false)
@@ -609,11 +625,12 @@ export function App() {
         setPendingImport(null)
         return
       }
-      const importValidationError = parsed
-        .map((item, index) => importItemValidationError(item, index, file.name))
-        .find((message): message is string => Boolean(message))
-      if (importValidationError) {
-        setError(`インポート失敗: ${importValidationError}既存データは保持しました。`)
+      const importValidationIssue = parsed
+        .map((item, index) => importItemValidationIssue(item, index, file.name))
+        .find((issue): issue is ImportValidationIssue => Boolean(issue))
+      if (importValidationIssue) {
+        setError(`インポート失敗: ${importValidationIssue.message}既存データは保持しました。`)
+        setImportValidationIssue(importValidationIssue)
         setNotice('')
         setPendingImport(null)
         return
@@ -621,6 +638,7 @@ export function App() {
       const duplicateImportError = duplicateImportIdError(parsed as FavoriteItem[], file.name)
       if (duplicateImportError) {
         setError(`インポート失敗: ${duplicateImportError}既存データは保持しました。`)
+        setImportValidationIssue(null)
         setNotice('')
         setPendingImport(null)
         return
@@ -646,6 +664,7 @@ export function App() {
         excludedNameReasonLabels,
         excludedDetails: analyzed.excludedDetails,
       })
+      setImportValidationIssue(null)
       setIsImpactTagsExpanded(false)
       setIsExcludedNamesExpanded(false)
       setIsExcludedDetailsExpanded(false)
@@ -658,6 +677,7 @@ export function App() {
       } else {
         setError('インポート失敗: JSONの読み取りに失敗しました。既存データは保持しました。')
       }
+      setImportValidationIssue(null)
       setNotice('')
       setPendingImport(null)
     }
@@ -843,7 +863,35 @@ export function App() {
         <div className="row feedback">
           <button className="ghost" onClick={addSamples} disabled={isSaving || !!pendingImport} aria-describedby={importLockDescriptionId}>サンプルをDB保存</button>
           {loadError && <button className="ghost" onClick={retryLoadItems} disabled={isLoading}>データを再読み込み</button>}
-          {error && <p className="error" role="alert">{error}</p>}
+          {error && (
+            <div className="error" role="alert">
+              <p>{error}</p>
+              {importValidationIssue && error.includes(importValidationIssue.message) && (
+                <dl
+                  className="import-validation-error-details"
+                  data-testid="import-validation-error-details"
+                  aria-label="インポートエラーの修正情報"
+                >
+                  <div>
+                    <dt>ファイル</dt>
+                    <dd>{importValidationIssue.filename}</dd>
+                  </div>
+                  <div>
+                    <dt>行</dt>
+                    <dd>{importValidationIssue.row}</dd>
+                  </div>
+                  <div>
+                    <dt>フィールド</dt>
+                    <dd>{importValidationIssue.field}</dd>
+                  </div>
+                  <div>
+                    <dt>修正</dt>
+                    <dd>{importValidationIssue.fix}</dd>
+                  </div>
+                </dl>
+              )}
+            </div>
+          )}
           {notice && <p className="notice" role="status" aria-live="polite">{notice}</p>}
         </div>
       </section>
