@@ -142,9 +142,12 @@
 - [ ] `現在N件 → インポート後M件` と影響サマリ（追加/保持/削除予定/正規化除外）が表示される
 - [ ] 同一JSON再インポート時に `差分なし（このインポートでデータ変更はありません）` が表示される
 - [ ] 正規化除外がある時は `正規化除外予定の店舗: 店名` が表示される
+  - 自動確認: `tests/import-preview/summary/import-preview-excluded-names-normalized-context.e2e.spec.ts`、`tests/import-preview/summary/import-preview-excluded-names-tag-context.e2e.spec.ts` が正規化除外予定の店舗名と正規化/タグ文脈の表示を検証する
 - [ ] 正規化除外予定の店舗が多い場合、先頭表示 + `ほかN件` で折りたたまれる
+  - 自動確認: `tests/import-preview/summary/import-preview-excluded-names-collapsed.e2e.spec.ts` が先頭表示と `ほかN件` の折りたたみ表示を検証する
 - [ ] `除外店舗名を全件表示` / `除外店舗名を折りたたむ` で開閉できる
-  - 自動確認: `tests/import-preview/summary/import-preview-summary.e2e.spec.ts`、`tests/import-preview/summary/import-preview-math-consistency.e2e.spec.ts`、`tests/import-preview/summary/import-preview-excluded-names-collapsed.e2e.spec.ts`、`tests/import-preview/summary/import-preview-excluded-names-normalized-context.e2e.spec.ts`、`tests/import-preview/summary/import-preview-excluded-names-tag-context.e2e.spec.ts` が件数サマリ・数式整合・除外名表示/折りたたみ/タグ文脈を検証する
+  - 自動確認: `tests/import-preview/summary/import-preview-excluded-names-collapsed.e2e.spec.ts`、`tests/import-preview/summary/import-preview-expand-toggles-a11y.e2e.spec.ts` が除外店舗名の開閉とaria-expandedを検証する
+  - 自動確認: `tests/import-preview/summary/import-preview-summary.e2e.spec.ts`、`tests/import-preview/summary/import-preview-math-consistency.e2e.spec.ts` が件数サマリ・数式整合を検証する
 
 ---
 

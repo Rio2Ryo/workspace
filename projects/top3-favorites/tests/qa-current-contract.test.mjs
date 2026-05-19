@@ -1380,6 +1380,45 @@ test('[Manual][a11y] manual checklist uses current normalization-exclusion store
   )
 })
 
+function manualChecklistItemBlock(markdown, itemText) {
+  const itemIndex = markdown.indexOf(`- [ ] ${itemText}`)
+  assert.notEqual(itemIndex, -1, contractMessage({ scope: 'Manual', rule: 'manual checklist item exists', expected: itemText, fix: 'restore the exact manual checklist item before validating its automated link' }))
+  const nextItemIndex = markdown.indexOf('\n- [ ] ', itemIndex + 1)
+  return nextItemIndex === -1 ? markdown.slice(itemIndex) : markdown.slice(itemIndex, nextItemIndex)
+}
+
+test('[Manual][automation-link] normalization-exclusion store-name preview items have child-specific automated links', async () => {
+  const markdown = await readFile(new URL('docs/MANUAL_TEST_CHECKLIST.md', `${root}/`), 'utf8')
+  const childContracts = [
+    {
+      item: '正規化除外がある時は `正規化除外予定の店舗: 店名` が表示される',
+      specs: [
+        'tests/import-preview/summary/import-preview-excluded-names-normalized-context.e2e.spec.ts',
+        'tests/import-preview/summary/import-preview-excluded-names-tag-context.e2e.spec.ts',
+      ],
+    },
+    {
+      item: '正規化除外予定の店舗が多い場合、先頭表示 + `ほかN件` で折りたたまれる',
+      specs: ['tests/import-preview/summary/import-preview-excluded-names-collapsed.e2e.spec.ts'],
+    },
+    {
+      item: '`除外店舗名を全件表示` / `除外店舗名を折りたたむ` で開閉できる',
+      specs: [
+        'tests/import-preview/summary/import-preview-excluded-names-collapsed.e2e.spec.ts',
+        'tests/import-preview/summary/import-preview-expand-toggles-a11y.e2e.spec.ts',
+      ],
+    },
+  ]
+
+  for (const { item, specs } of childContracts) {
+    const block = manualChecklistItemBlock(markdown, item)
+    assert.match(block, /自動確認:/, contractMessage({ scope: 'Manual', rule: 'child checklist item has direct automated link', expected: item, fix: 'add an indented 自動確認 line directly under this manual checklist item' }))
+    for (const spec of specs) {
+      assert.ok(block.includes(`\`${spec}\``), contractMessage({ scope: 'Manual', rule: 'child checklist item cites authoritative spec', expected: spec, fix: 'add the focused E2E path to the child item 自動確認 line' }))
+    }
+  }
+})
+
 test('[Manual][automation-link] manual checklist marks browser-console, API-failure, and import/export checks as automated where possible', async () => {
   const markdown = await readFile(new URL('docs/MANUAL_TEST_CHECKLIST.md', `${root}/`), 'utf8')
   const coverageDoc = await readFile(new URL('docs/AUTOMATED_QA_COVERAGE.md', `${root}/`), 'utf8')
