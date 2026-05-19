@@ -49,6 +49,7 @@ type ImportValidationIssue = {
   field: string
   fix: string
   message: string
+  totalIssues: number
 }
 
 const initialDraft: Draft = {
@@ -123,6 +124,7 @@ function importItemValidationIssue(value: unknown, index: number, filename: stri
     field,
     fix,
     message: `${prefix} / フィールド: ${field} / 修正: ${fix}`,
+    totalIssues: 1,
   })
   if (!value || typeof value !== 'object') return detail('item', '各行をオブジェクト形式にしてください。')
   const o = value as Record<string, unknown>
@@ -625,12 +627,14 @@ export function App() {
         setPendingImport(null)
         return
       }
-      const importValidationIssue = parsed
+      const importValidationIssues = parsed
         .map((item, index) => importItemValidationIssue(item, index, file.name))
-        .find((issue): issue is ImportValidationIssue => Boolean(issue))
+        .filter((issue): issue is ImportValidationIssue => Boolean(issue))
+      const importValidationIssue = importValidationIssues[0]
       if (importValidationIssue) {
-        setError(`インポート失敗: ${importValidationIssue.message}既存データは保持しました。`)
-        setImportValidationIssue(importValidationIssue)
+        const issueWithCount = { ...importValidationIssue, totalIssues: importValidationIssues.length }
+        setError(`インポート失敗: ${issueWithCount.message}既存データは保持しました。`)
+        setImportValidationIssue(issueWithCount)
         setNotice('')
         setPendingImport(null)
         return
@@ -887,6 +891,13 @@ export function App() {
                   <div>
                     <dt>修正</dt>
                     <dd>{importValidationIssue.fix}</dd>
+                  </div>
+                  <div>
+                    <dt>検出件数</dt>
+                    <dd>
+                      合計{importValidationIssue.totalIssues}件
+                      {importValidationIssue.totalIssues > 1 ? `（ほか${importValidationIssue.totalIssues - 1}件も修正してください）` : ''}
+                    </dd>
                   </div>
                 </dl>
               )}
