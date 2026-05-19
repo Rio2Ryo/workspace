@@ -610,6 +610,17 @@ export function App() {
     }
   }
 
+  const copyImportExcludedNames = async () => {
+    if (!pendingImport) return
+    const labels = pendingImport.excludedNameReasonLabels.join('\n')
+    try {
+      await navigator.clipboard.writeText(labels)
+      setNotice('正規化除外店舗一覧をコピーしました。')
+    } catch {
+      setNotice('正規化除外店舗一覧をコピーできませんでした。画面上の店舗名を手動でコピーしてください。')
+    }
+  }
+
   const exportJson = () => {
     const blob = new Blob([JSON.stringify(items, null, 2)], { type: 'application/json' })
     const url = URL.createObjectURL(blob)
@@ -1004,6 +1015,7 @@ export function App() {
                       {excludedNamesPreview.hiddenCount > 0 && (
                         <p className="import-preview-detail-more">ほか{excludedNamesPreview.hiddenCount}件</p>
                       )}
+                      <button className="ghost small" type="button" onClick={copyImportExcludedNames}>正規化除外店舗一覧をコピー</button>
                     </div>
                     {normalizedExcludedNameGroups.length > 0 && (
                       <p

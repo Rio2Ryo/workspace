@@ -374,6 +374,10 @@ export function importPreviewExcludedNameVariants(page: Page): Locator {
   return page.getByTestId('import-preview-excluded-name-variants')
 }
 
+export function importPreviewCopyExcludedNames(page: Page): Locator {
+  return page.getByRole('button', { name: '正規化除外店舗一覧をコピー' })
+}
+
 export function importPreviewListItems(section: Locator): Locator {
   return section.getByRole('listitem')
 }
