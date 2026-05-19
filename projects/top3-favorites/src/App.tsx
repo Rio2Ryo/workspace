@@ -610,6 +610,19 @@ export function App() {
     }
   }
 
+  const copyImportValidationRepairs = async () => {
+    if (!importValidationIssue) return
+    const repairs = importValidationIssue.relatedIssues
+      .map((issue) => `${issue.row} / ${issue.path} / ${issue.field} / ${issue.fix}`)
+      .join('\n')
+    try {
+      await navigator.clipboard.writeText(repairs)
+      setNotice('修正対象一覧をコピーしました。')
+    } catch {
+      setNotice('修正対象一覧をコピーできませんでした。画面上の修正対象を手動でコピーしてください。')
+    }
+  }
+
   const copyImportExcludedNames = async () => {
     if (!pendingImport) return
     const labels = pendingImport.excludedNameReasonLabels.join('\n')
@@ -966,6 +979,7 @@ export function App() {
                     <div className="import-validation-error-list">
                       <p className="hint compact">検出した修正対象</p>
                       <button className="ghost" type="button" onClick={copyImportValidationPaths}>JSONパス一覧をコピー</button>
+                      <button className="ghost" type="button" onClick={copyImportValidationRepairs}>修正対象一覧をコピー</button>
                       <ol>
                         {importValidationIssue.relatedIssues.map((issue) => (
                           <li key={`${issue.row}-${issue.path}-${issue.field}`}>{issue.row} / {issue.path} / {issue.field} / {issue.fix}</li>

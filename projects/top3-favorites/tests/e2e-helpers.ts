@@ -305,6 +305,14 @@ export function importValidationErrorDetails(page: Page): Locator {
   return page.getByTestId('import-validation-error-details')
 }
 
+export function importValidationCopyJsonPaths(page: Page): Locator {
+  return importValidationErrorDetails(page).getByRole('button', { name: 'JSONパス一覧をコピー' })
+}
+
+export function importValidationCopyRepairList(page: Page): Locator {
+  return importValidationErrorDetails(page).getByRole('button', { name: '修正対象一覧をコピー' })
+}
+
 export function importPreviewNormalization(page: Page): Locator {
   return page.getByTestId('import-preview-normalization')
 }

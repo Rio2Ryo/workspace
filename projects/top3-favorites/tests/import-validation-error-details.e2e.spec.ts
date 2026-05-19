@@ -3,6 +3,8 @@ import {
   expectOperationAlert,
   expectOperationStatus,
   importPreviewSummary,
+  importValidationCopyJsonPaths,
+  importValidationCopyRepairList,
   importValidationErrorDetails,
   resetItemsByReplace,
   uploadJsonImportFile,
@@ -20,6 +22,7 @@ test('import validation error identifies the first invalid row and field for qui
       value: {
         writeText: async (text: string) => {
           window.localStorage.setItem('last-copied-import-validation-paths', text)
+          window.localStorage.setItem('last-copied-import-validation-repairs', text)
         },
       },
     })
@@ -54,8 +57,13 @@ test('import validation error identifies the first invalid row and field for qui
     '2件目 / $.items[1].tag / tag / タグを入力してください。',
     '3件目 / $.items[2].name / name / 店舗名を入力してください。',
   ])
-  await details.getByRole('button', { name: 'JSONパス一覧をコピー' }).click()
+  await importValidationCopyJsonPaths(page).click()
   await expectOperationStatus(page, 'JSONパス一覧をコピーしました。')
   await expect.poll(() => page.evaluate(() => window.localStorage.getItem('last-copied-import-validation-paths'))).toBe('$.items[1].tag\n$.items[2].name')
+  await importValidationCopyRepairList(page).click()
+  await expectOperationStatus(page, '修正対象一覧をコピーしました。')
+  await expect.poll(() => page.evaluate(() => window.localStorage.getItem('last-copied-import-validation-repairs'))).toBe(
+    '2件目 / $.items[1].tag / tag / タグを入力してください。\n3件目 / $.items[2].name / name / 店舗名を入力してください。',
+  )
   await expect(importPreviewSummary(page)).toHaveCount(0)
 })
