@@ -37,5 +37,10 @@ test('import validation error identifies the first invalid row and field for qui
     'タグを入力してください。',
     '合計2件（ほか1件も修正してください）',
   ])
+  await expect(details.getByText('検出した修正対象')).toBeVisible()
+  await expect(details.locator('li')).toHaveText([
+    '2件目 / tag / タグを入力してください。',
+    '3件目 / name / 店舗名を入力してください。',
+  ])
   await expect(importPreviewSummary(page)).toHaveCount(0)
 })

@@ -50,6 +50,7 @@ type ImportValidationIssue = {
   fix: string
   message: string
   totalIssues: number
+  relatedIssues: Array<Pick<ImportValidationIssue, 'row' | 'field' | 'fix'>>
 }
 
 const initialDraft: Draft = {
@@ -125,6 +126,7 @@ function importItemValidationIssue(value: unknown, index: number, filename: stri
     fix,
     message: `${prefix} / フィールド: ${field} / 修正: ${fix}`,
     totalIssues: 1,
+    relatedIssues: [{ row, field, fix }],
   })
   if (!value || typeof value !== 'object') return detail('item', '各行をオブジェクト形式にしてください。')
   const o = value as Record<string, unknown>
@@ -632,7 +634,11 @@ export function App() {
         .filter((issue): issue is ImportValidationIssue => Boolean(issue))
       const importValidationIssue = importValidationIssues[0]
       if (importValidationIssue) {
-        const issueWithCount = { ...importValidationIssue, totalIssues: importValidationIssues.length }
+        const issueWithCount = {
+          ...importValidationIssue,
+          totalIssues: importValidationIssues.length,
+          relatedIssues: importValidationIssues.map(({ row, field, fix }) => ({ row, field, fix })),
+        }
         setError(`インポート失敗: ${issueWithCount.message}既存データは保持しました。`)
         setImportValidationIssue(issueWithCount)
         setNotice('')
@@ -871,35 +877,47 @@ export function App() {
             <div className="error" role="alert">
               <p>{error}</p>
               {importValidationIssue && error.includes(importValidationIssue.message) && (
-                <dl
+                <div
                   className="import-validation-error-details"
                   data-testid="import-validation-error-details"
                   aria-label="インポートエラーの修正情報"
                 >
-                  <div>
-                    <dt>ファイル</dt>
-                    <dd>{importValidationIssue.filename}</dd>
-                  </div>
-                  <div>
-                    <dt>行</dt>
-                    <dd>{importValidationIssue.row}</dd>
-                  </div>
-                  <div>
-                    <dt>フィールド</dt>
-                    <dd>{importValidationIssue.field}</dd>
-                  </div>
-                  <div>
-                    <dt>修正</dt>
-                    <dd>{importValidationIssue.fix}</dd>
-                  </div>
-                  <div>
-                    <dt>検出件数</dt>
-                    <dd>
-                      合計{importValidationIssue.totalIssues}件
-                      {importValidationIssue.totalIssues > 1 ? `（ほか${importValidationIssue.totalIssues - 1}件も修正してください）` : ''}
-                    </dd>
-                  </div>
-                </dl>
+                  <dl>
+                    <div>
+                      <dt>ファイル</dt>
+                      <dd>{importValidationIssue.filename}</dd>
+                    </div>
+                    <div>
+                      <dt>行</dt>
+                      <dd>{importValidationIssue.row}</dd>
+                    </div>
+                    <div>
+                      <dt>フィールド</dt>
+                      <dd>{importValidationIssue.field}</dd>
+                    </div>
+                    <div>
+                      <dt>修正</dt>
+                      <dd>{importValidationIssue.fix}</dd>
+                    </div>
+                    <div>
+                      <dt>検出件数</dt>
+                      <dd>
+                        合計{importValidationIssue.totalIssues}件
+                        {importValidationIssue.totalIssues > 1 ? `（ほか${importValidationIssue.totalIssues - 1}件も修正してください）` : ''}
+                      </dd>
+                    </div>
+                  </dl>
+                  {importValidationIssue.relatedIssues.length > 1 && (
+                    <div className="import-validation-error-list">
+                      <p className="hint compact">検出した修正対象</p>
+                      <ol>
+                        {importValidationIssue.relatedIssues.map((issue) => (
+                          <li key={`${issue.row}-${issue.field}`}>{issue.row} / {issue.field} / {issue.fix}</li>
+                        ))}
+                      </ol>
+                    </div>
+                  )}
+                </div>
               )}
             </div>
           )}
