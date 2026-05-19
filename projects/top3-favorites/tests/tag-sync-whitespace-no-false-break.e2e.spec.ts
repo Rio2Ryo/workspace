@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test'
-import { tagFilterButton, resetItemsByReplace, registrationSaveButton, operationStatus, expectOperationStatus, searchSection as searchSectionLocator } from './e2e-helpers'
+import { tagFilterButton, resetItemsByReplace, registrationSaveButton, operationStatus, expectOperationStatus, searchSection as searchSectionLocator, registrationLocationField, registrationNameField, registrationTagField } from './e2e-helpers'
 
 test.beforeEach(async ({ request }) => {
   await resetItemsByReplace(request)
@@ -8,9 +8,9 @@ test.beforeEach(async ({ request }) => {
 test('typing same tag with trailing whitespace does not falsely break sync', async ({ page }) => {
   await page.goto('/')
 
-  await page.getByLabel('タグ', { exact: true }).fill('カフェラテ')
-  await page.getByLabel('場所', { exact: true }).fill('柏の葉')
-  await page.getByLabel('店舗名', { exact: true }).fill('Whitespace Sync')
+  await registrationTagField(page).fill('カフェラテ')
+  await registrationLocationField(page).fill('柏の葉')
+  await registrationNameField(page).fill('Whitespace Sync')
   await registrationSaveButton(page).click()
   await expectOperationStatus(page, 'カフェラテ の1位に保存しました。')
 
@@ -18,7 +18,7 @@ test('typing same tag with trailing whitespace does not falsely break sync', asy
   await tagFilterButton(searchSection as searchSectionLocator, 'カフェラテ').click()
   await expect(page.getByTestId('tag-sync-status')).toHaveCount(1)
 
-  await page.getByLabel('タグ', { exact: true }).fill('カフェラテ ')
+  await registrationTagField(page).fill('カフェラテ ')
 
   // still considered same tag context, so sync remains and no break notice
   await expect(page.getByTestId('tag-sync-status')).toHaveCount(1)

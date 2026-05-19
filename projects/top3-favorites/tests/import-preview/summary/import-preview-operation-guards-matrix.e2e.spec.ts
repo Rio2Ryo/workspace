@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test'
-import { sampleSaveButton, jsonExportButton, itemEditButton, uploadJsonImportFile, resetItemsByReplace, itemDeleteButton, importCancelButton, importConfirmButton, registrationSaveButton, expectOperationStatus, registrationRankButton } from '../../e2e-helpers'
+import { sampleSaveButton, jsonExportButton, itemEditButton, uploadJsonImportFile, resetItemsByReplace, itemDeleteButton, importCancelButton, importConfirmButton, registrationSaveButton, expectOperationStatus, registrationRankButton, registrationLocationField, registrationMemoField, registrationNameField, registrationTagField } from '../../e2e-helpers'
 
 test.beforeEach(async ({ request }) => {
   await resetItemsByReplace(request)
@@ -9,9 +9,9 @@ test('pending import preview enforces operation guards across registration/searc
   await page.goto('/')
 
   // seed one item so edit/delete actions are rendered
-  await page.getByLabel('タグ', { exact: true }).fill('カフェラテ')
-  await page.getByLabel('場所', { exact: true }).fill('柏の葉')
-  await page.getByLabel('店舗名', { exact: true }).fill('Guard Seed')
+  await registrationTagField(page).fill('カフェラテ')
+  await registrationLocationField(page).fill('柏の葉')
+  await registrationNameField(page).fill('Guard Seed')
   await registrationSaveButton(page).click()
   await expectOperationStatus(page, 'カフェラテ の1位に保存しました。')
 
@@ -26,10 +26,10 @@ test('pending import preview enforces operation guards across registration/searc
   await expect(page.getByTestId('import-lock-hint')).toBeVisible()
 
   // registration form locks
-  await expect(page.getByLabel('タグ', { exact: true })).toBeDisabled()
-  await expect(page.getByLabel('場所', { exact: true })).toBeDisabled()
-  await expect(page.getByLabel('店舗名', { exact: true })).toBeDisabled()
-  await expect(page.getByLabel('メモ', { exact: true })).toBeDisabled()
+  await expect(registrationTagField(page)).toBeDisabled()
+  await expect(registrationLocationField(page)).toBeDisabled()
+  await expect(registrationNameField(page)).toBeDisabled()
+  await expect(registrationMemoField(page)).toBeDisabled()
   await expect(registrationRankButton(page, 1)).toBeDisabled()
   await expect(registrationRankButton(page, 2)).toBeDisabled()
   await expect(registrationRankButton(page, 3)).toBeDisabled()

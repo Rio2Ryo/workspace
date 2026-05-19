@@ -64,6 +64,23 @@ export function tagFilterButton(scope: Page | Locator, tag: string): Locator {
   return scope.getByRole('button', { name })
 }
 
+
+export function registrationTagField(page: Page): Locator {
+  return page.getByRole('combobox', { name: 'タグ' })
+}
+
+export function registrationLocationField(page: Page): Locator {
+  return page.getByRole('textbox', { name: '場所' })
+}
+
+export function registrationNameField(page: Page): Locator {
+  return page.getByRole('textbox', { name: '店舗名' })
+}
+
+export function registrationMemoField(page: Page): Locator {
+  return page.getByRole('textbox', { name: 'メモ' })
+}
+
 export function registrationSaveButton(page: Page): Locator {
   return page.getByRole('button', { name: 'DBに保存' })
 }

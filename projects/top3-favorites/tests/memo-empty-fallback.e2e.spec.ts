@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test'
-import { resetItemsByReplace, registrationSaveButton, registrationRankButton } from './e2e-helpers'
+import { resetItemsByReplace, registrationSaveButton, registrationRankButton, registrationLocationField, registrationMemoField, registrationNameField, registrationTagField } from './e2e-helpers'
 
 test.beforeEach(async ({ request }) => {
   await resetItemsByReplace(request)
@@ -8,10 +8,10 @@ test.beforeEach(async ({ request }) => {
 test('item with empty memo shows fallback text （メモなし） in details', async ({ page }) => {
   await page.goto('/')
 
-  await page.getByLabel('タグ', { exact: true }).fill('カフェ')
-  await page.getByLabel('場所', { exact: true }).fill('渋谷')
-  await page.getByLabel('店舗名', { exact: true }).fill('茶亭')
-  await page.getByLabel('メモ', { exact: true }).fill('')
+  await registrationTagField(page).fill('カフェ')
+  await registrationLocationField(page).fill('渋谷')
+  await registrationNameField(page).fill('茶亭')
+  await registrationMemoField(page).fill('')
   await registrationRankButton(page, 2).click()
   await registrationSaveButton(page).click()
 

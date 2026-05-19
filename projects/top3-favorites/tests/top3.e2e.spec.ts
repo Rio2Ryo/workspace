@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test'
-import { resetItemsByReplace, saveSampleItems, registrationSaveButton, expectOperationStatus, registrationRankButton, searchSection as searchSectionLocator, searchInput } from './e2e-helpers'
+import { resetItemsByReplace, saveSampleItems, registrationSaveButton, expectOperationStatus, registrationRankButton, searchSection as searchSectionLocator, searchInput, registrationLocationField, registrationMemoField, registrationNameField, registrationTagField } from './e2e-helpers'
 
 test.beforeEach(async ({ request }) => {
   await resetItemsByReplace(request)
@@ -34,10 +34,10 @@ test('adding a new first place rebalances the same tag to top 3', async ({ page 
   await expect(page.getByText(/\d位: Solito MAGO/)).toBeVisible()
   await expect(page.getByText(/\d位: T-SITEのカフェ/)).toBeVisible()
 
-  await page.getByLabel('タグ', { exact: true }).fill('カフェラテ')
-  await page.getByLabel('場所', { exact: true }).fill('柏の葉')
-  await page.getByLabel('店舗名', { exact: true }).fill('New Coffee')
-  await page.getByLabel('メモ', { exact: true }).fill('検証用の新1位')
+  await registrationTagField(page).fill('カフェラテ')
+  await registrationLocationField(page).fill('柏の葉')
+  await registrationNameField(page).fill('New Coffee')
+  await registrationMemoField(page).fill('検証用の新1位')
   await registrationRankButton(page, 1).click()
   await registrationSaveButton(page).click()
 

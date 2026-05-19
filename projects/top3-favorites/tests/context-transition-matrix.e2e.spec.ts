@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test'
-import { tagFilterButton, itemEditButton, editSaveButton, clearSearchTagFilter, uploadJsonImportFile, resetItemsByReplace, jsonImportButton, registrationSaveButton, expectOperationStatus, searchSection as searchSectionLocator } from './e2e-helpers'
+import { tagFilterButton, itemEditButton, editSaveButton, clearSearchTagFilter, uploadJsonImportFile, resetItemsByReplace, jsonImportButton, registrationSaveButton, expectOperationStatus, searchSection as searchSectionLocator, registrationLocationField, registrationNameField, registrationTagField } from './e2e-helpers'
 
 test.beforeEach(async ({ request }) => {
   await resetItemsByReplace(request)
@@ -9,9 +9,9 @@ test('context transition matrix keeps only one active workflow context', async (
   await page.goto('/')
 
   // seed search/edit target
-  await page.getByLabel('タグ', { exact: true }).fill('カフェラテ')
-  await page.getByLabel('場所', { exact: true }).fill('柏の葉')
-  await page.getByLabel('店舗名', { exact: true }).fill('Context Base')
+  await registrationTagField(page).fill('カフェラテ')
+  await registrationLocationField(page).fill('柏の葉')
+  await registrationNameField(page).fill('Context Base')
   await registrationSaveButton(page).click()
   await expectOperationStatus(page, 'カフェラテ の1位に保存しました。')
 

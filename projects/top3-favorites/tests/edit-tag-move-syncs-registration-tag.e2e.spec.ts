@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test'
-import { tagFilterButton, searchClearButton, itemEditButton, editSaveButton, resetItemsByReplace, registrationSaveButton, expectOperationStatus, searchSection as searchSectionLocator, editTagField } from './e2e-helpers'
+import { tagFilterButton, searchClearButton, itemEditButton, editSaveButton, resetItemsByReplace, registrationSaveButton, expectOperationStatus, searchSection as searchSectionLocator, editTagField, registrationLocationField, registrationNameField, registrationTagField } from './e2e-helpers'
 
 test.beforeEach(async ({ request }) => {
   await resetItemsByReplace(request)
@@ -8,9 +8,9 @@ test.beforeEach(async ({ request }) => {
 test('editing item tag move keeps registration tag in sync with active search tag state', async ({ page }) => {
   await page.goto('/')
 
-  await page.getByLabel('タグ', { exact: true }).fill('元タグ')
-  await page.getByLabel('場所', { exact: true }).fill('柏')
-  await page.getByLabel('店舗名', { exact: true }).fill('Move Me')
+  await registrationTagField(page).fill('元タグ')
+  await registrationLocationField(page).fill('柏')
+  await registrationNameField(page).fill('Move Me')
   await registrationSaveButton(page).click()
   await expectOperationStatus(page, '元タグ の1位に保存しました。')
 
@@ -25,5 +25,5 @@ test('editing item tag move keeps registration tag in sync with active search ta
 
   // Search filter is auto-cleared by current behavior; registration tag should also reflect active state
   await expect(searchClearButton(searchSection)).not.toBeVisible()
-  await expect(page.getByLabel('タグ', { exact: true })).toHaveValue('')
+  await expect(registrationTagField(page)).toHaveValue('')
 })

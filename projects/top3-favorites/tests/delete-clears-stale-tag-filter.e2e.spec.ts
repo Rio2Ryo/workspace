@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test'
-import { tagFilterButton, searchClearButton, acceptNextDeleteDialog, resetItemsByReplace, itemDeleteButton, registrationSaveButton, expectOperationStatus, searchSection as searchSectionLocator } from './e2e-helpers'
+import { tagFilterButton, searchClearButton, acceptNextDeleteDialog, resetItemsByReplace, itemDeleteButton, registrationSaveButton, expectOperationStatus, searchSection as searchSectionLocator, registrationLocationField, registrationNameField, registrationTagField } from './e2e-helpers'
 
 test.beforeEach(async ({ request }) => {
   await resetItemsByReplace(request)
@@ -9,15 +9,15 @@ test('deleting the last item in selected tag clears stale tag filter and keeps r
   await page.goto('/')
 
   // Seed two tags via real UI
-  await page.getByLabel('タグ', { exact: true }).fill('削除対象タグ')
-  await page.getByLabel('場所', { exact: true }).fill('柏')
-  await page.getByLabel('店舗名', { exact: true }).fill('Delete Me')
+  await registrationTagField(page).fill('削除対象タグ')
+  await registrationLocationField(page).fill('柏')
+  await registrationNameField(page).fill('Delete Me')
   await registrationSaveButton(page).click()
   await expectOperationStatus(page, '削除対象タグ の1位に保存しました。')
 
-  await page.getByLabel('タグ', { exact: true }).fill('残すタグ')
-  await page.getByLabel('場所', { exact: true }).fill('松戸')
-  await page.getByLabel('店舗名', { exact: true }).fill('Keep Me')
+  await registrationTagField(page).fill('残すタグ')
+  await registrationLocationField(page).fill('松戸')
+  await registrationNameField(page).fill('Keep Me')
   await registrationSaveButton(page).click()
   await expectOperationStatus(page, '残すタグ の1位に保存しました。')
 

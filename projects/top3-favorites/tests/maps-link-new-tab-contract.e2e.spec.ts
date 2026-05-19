@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test'
-import { resetItemsByReplace, registrationSaveButton, expectOperationStatus, registrationRankButton } from './e2e-helpers'
+import { resetItemsByReplace, registrationSaveButton, expectOperationStatus, registrationRankButton, registrationLocationField, registrationMemoField, registrationNameField, registrationTagField } from './e2e-helpers'
 
 test.beforeEach(async ({ request }) => {
   await resetItemsByReplace(request)
@@ -8,10 +8,10 @@ test.beforeEach(async ({ request }) => {
 test('maps link opens in a new tab with safe rel attributes', async ({ page }) => {
   await page.goto('/')
 
-  await page.getByLabel('タグ', { exact: true }).fill('カフェラテ')
-  await page.getByLabel('場所', { exact: true }).fill('柏の葉')
-  await page.getByLabel('店舗名', { exact: true }).fill('Solito MAGO')
-  await page.getByLabel('メモ', { exact: true }).fill('maps attr contract')
+  await registrationTagField(page).fill('カフェラテ')
+  await registrationLocationField(page).fill('柏の葉')
+  await registrationNameField(page).fill('Solito MAGO')
+  await registrationMemoField(page).fill('maps attr contract')
   await registrationRankButton(page, 1).click()
   await registrationSaveButton(page).click()
 

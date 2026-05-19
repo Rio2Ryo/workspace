@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test'
-import { jsonExportButton, resetItemsByReplace, registrationSaveButton, expectOperationStatus, registrationRankButton } from './e2e-helpers'
+import { jsonExportButton, resetItemsByReplace, registrationSaveButton, expectOperationStatus, registrationRankButton, registrationLocationField, registrationNameField, registrationTagField } from './e2e-helpers'
 
 test.beforeEach(async ({ request }) => {
   await resetItemsByReplace(request)
@@ -12,9 +12,9 @@ test('JSON export is disabled when there are no items, and enabled after adding 
   await expect(exportButton).toBeDisabled()
   await expect(exportButton).toHaveAccessibleDescription('エクスポート対象データがありません。まず1件以上保存してください。')
 
-  await page.getByLabel('タグ', { exact: true }).fill('カフェ')
-  await page.getByLabel('場所', { exact: true }).fill('渋谷')
-  await page.getByLabel('店舗名', { exact: true }).fill('茶亭')
+  await registrationTagField(page).fill('カフェ')
+  await registrationLocationField(page).fill('渋谷')
+  await registrationNameField(page).fill('茶亭')
   await registrationRankButton(page, 1).click()
   await registrationSaveButton(page).click()
 

@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test'
-import { resetItemsByReplace, registrationSaveButton, expectOperationStatus, registrationRankButton } from './e2e-helpers'
+import { resetItemsByReplace, registrationSaveButton, expectOperationStatus, registrationRankButton, registrationLocationField, registrationMemoField, registrationNameField, registrationTagField } from './e2e-helpers'
 
 test.beforeEach(async ({ request }) => {
   await resetItemsByReplace(request)
@@ -8,10 +8,10 @@ test.beforeEach(async ({ request }) => {
 test('maps link includes name location and tag in Google Maps search query', async ({ page }) => {
   await page.goto('/')
 
-  await page.getByLabel('タグ', { exact: true }).fill('検証タグ')
-  await page.getByLabel('場所', { exact: true }).fill('検証場所')
-  await page.getByLabel('店舗名', { exact: true }).fill('検証店')
-  await page.getByLabel('メモ', { exact: true }).fill('maps link e2e')
+  await registrationTagField(page).fill('検証タグ')
+  await registrationLocationField(page).fill('検証場所')
+  await registrationNameField(page).fill('検証店')
+  await registrationMemoField(page).fill('maps link e2e')
   await registrationRankButton(page, 1).click()
   await registrationSaveButton(page).click()
 

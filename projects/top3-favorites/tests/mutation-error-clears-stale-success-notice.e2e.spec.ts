@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test'
-import { acceptNextDeleteDialog, itemEditButton, editSaveButton, resetItemsByReplace, itemDeleteButton, registrationSaveButton, expectOperationStatus, expectOperationAlert } from './e2e-helpers'
+import { acceptNextDeleteDialog, itemEditButton, editSaveButton, resetItemsByReplace, itemDeleteButton, registrationSaveButton, expectOperationStatus, expectOperationAlert, registrationLocationField, registrationNameField, registrationTagField } from './e2e-helpers'
 
 test.beforeEach(async ({ request }) => {
   await resetItemsByReplace(request)
@@ -7,9 +7,9 @@ test.beforeEach(async ({ request }) => {
 
 async function seedOne(page: import('@playwright/test').Page, name: string) {
   await page.goto('/')
-  await page.getByLabel('タグ', { exact: true }).fill('カフェラテ')
-  await page.getByLabel('場所', { exact: true }).fill('柏の葉')
-  await page.getByLabel('店舗名', { exact: true }).fill(name)
+  await registrationTagField(page).fill('カフェラテ')
+  await registrationLocationField(page).fill('柏の葉')
+  await registrationNameField(page).fill(name)
   await registrationSaveButton(page).click()
   await expectOperationStatus(page, 'カフェラテ の1位に保存しました。')
 }

@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test'
-import { resetItemsByReplace, registrationSaveButton, expectOperationStatus, registrationRankButton } from './e2e-helpers'
+import { resetItemsByReplace, registrationSaveButton, expectOperationStatus, registrationRankButton, registrationLocationField, registrationNameField, registrationTagField } from './e2e-helpers'
 
 test.beforeEach(async ({ request }) => {
   await resetItemsByReplace(request)
@@ -8,9 +8,9 @@ test.beforeEach(async ({ request }) => {
 test('saving with rank 3 keeps the selected rank in API and list output', async ({ page, request }) => {
   await page.goto('/')
 
-  await page.getByLabel('タグ', { exact: true }).fill('ランチ')
-  await page.getByLabel('場所', { exact: true }).fill('松戸')
-  await page.getByLabel('店舗名', { exact: true }).fill('三番目食堂')
+  await registrationTagField(page).fill('ランチ')
+  await registrationLocationField(page).fill('松戸')
+  await registrationNameField(page).fill('三番目食堂')
   const rank3Button = registrationRankButton(page, 3)
   await rank3Button.click()
   await expect(rank3Button).toHaveClass(/active/)
