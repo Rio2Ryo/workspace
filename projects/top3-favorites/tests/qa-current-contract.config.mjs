@@ -331,7 +331,7 @@ const rawManualAutomatedLinkContracts = {
       message: 'manual checklist should connect import preview toggle naming/a11y behavior to automated specs',
     },
     {
-      pattern: /naming（a11y命名）[\s\S]*インポート確認中は登録保存・サンプル保存・JSONエクスポートが無効化され、無効理由がアクセシブル説明として読める[\s\S]*自動確認:[\s\S]*`tests\/import-preview\/summary\/import-preview-operation-guards-matrix\.e2e\.spec\.ts`/,
+      pattern: /naming（a11y命名）[\s\S]*インポート確認中は登録保存・サンプル保存・JSONエクスポート・既存Top3の編集\/削除が無効化され、無効理由がアクセシブル説明として読める[\s\S]*自動確認:[\s\S]*`tests\/import-preview\/summary\/import-preview-operation-guards-matrix\.e2e\.spec\.ts`/,
       message: 'manual checklist should connect pending import operation-lock disabled reasons to the automated operation guard spec',
     },
     {

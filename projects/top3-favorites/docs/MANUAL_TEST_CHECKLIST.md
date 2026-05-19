@@ -135,7 +135,7 @@
 #### 4.2.5 naming（a11y命名）
 - [ ] import preview 内トグルの `aria-label` は `インポート詳細:` プレフィックスで統一され、パネル本体の `インポート確認` ラベルと衝突しない
 - [ ] トグルは `aria-expanded` が開閉に応じて更新される
-- [ ] インポート確認中は登録保存・サンプル保存・JSONエクスポートが無効化され、無効理由がアクセシブル説明として読める
+- [ ] インポート確認中は登録保存・サンプル保存・JSONエクスポート・既存Top3の編集/削除が無効化され、無効理由がアクセシブル説明として読める
   - 自動確認: `tests/import-preview/naming/import-preview-toggle-aria-label-consistency.e2e.spec.ts`、`tests/import-preview/naming/import-preview-toggle-testid-contract.e2e.spec.ts`、`tests/import-preview/summary/import-preview-expand-toggles-a11y.e2e.spec.ts`、`tests/import-preview/summary/import-preview-operation-guards-matrix.e2e.spec.ts` がトグル命名・testid・aria-expanded・確認中の操作ロック説明を検証する
 
 #### 4.2.6 summary（件数サマリ）

@@ -45,7 +45,9 @@ test('pending import preview enforces operation guards across registration/searc
   // list actions lock
   await page.getByText('1位: Guard Seed').click()
   await expect(itemEditButton(page, 'Guard Seed')).toBeDisabled()
+  await expect(itemEditButton(page, 'Guard Seed')).toHaveAccessibleDescription('インポート確認中のため、既存Top3の編集・削除は一時停止中です。')
   await expect(itemDeleteButton(page, 'Guard Seed')).toBeDisabled()
+  await expect(itemDeleteButton(page, 'Guard Seed')).toHaveAccessibleDescription('インポート確認中のため、既存Top3の編集・削除は一時停止中です。')
   await expect(page.getByTestId('import-list-action-lock-hint')).toHaveText('インポート確認中のため、既存Top3の編集・削除は一時停止中です。')
 
   // import controls remain available to finish/cancel

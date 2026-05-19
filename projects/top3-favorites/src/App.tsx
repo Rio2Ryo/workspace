@@ -751,6 +751,7 @@ export function App() {
   }
 
   const importLockDescriptionId = pendingImport ? 'import-lock-hint' : undefined
+  const listActionLockDescriptionId = pendingImport ? 'import-list-action-lock-hint' : undefined
   const exportButtonDescriptionIds = [
     pendingImport ? 'import-export-lock-hint' : '',
     items.length === 0 ? 'export-empty-hint' : '',
@@ -1021,7 +1022,7 @@ export function App() {
         <TagPicker label="検索タグ選択" tags={tags} activeTag={selectedTag} selectedTag={selectedTag} onSelect={selectTag} onClear={clearSelectedTag} showClearButton={false} />
 
         {pendingImport && filteredGroups.length > 0 && (
-          <p className="hint compact" data-testid="import-list-action-lock-hint">
+          <p id="import-list-action-lock-hint" className="hint compact" data-testid="import-list-action-lock-hint">
             インポート確認中のため、既存Top3の編集・削除は一時停止中です。
           </p>
         )}
@@ -1046,8 +1047,8 @@ export function App() {
                           <p className="memo">{item.memo || '（メモなし）'}</p>
                           <div className="row no-margin">
                             <a href={buildMapsUrl(item)} target="_blank" rel="noreferrer">Mapsで開く</a>
-                            <button className="ghost" onClick={() => startEdit(item)} aria-label={`${item.name}を編集`} disabled={!!pendingImport}>編集</button>
-                            <button className="danger" onClick={() => removeItem(item)} aria-label={`${item.name}を削除`} disabled={!!pendingImport}>削除</button>
+                            <button className="ghost" onClick={() => startEdit(item)} aria-label={`${item.name}を編集`} disabled={!!pendingImport} aria-describedby={listActionLockDescriptionId}>編集</button>
+                            <button className="danger" onClick={() => removeItem(item)} aria-label={`${item.name}を削除`} disabled={!!pendingImport} aria-describedby={listActionLockDescriptionId}>削除</button>
                           </div>
                         </div>
                       </details>
