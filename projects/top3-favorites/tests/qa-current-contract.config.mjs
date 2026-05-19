@@ -287,6 +287,10 @@ const rawManualAutomatedLinkContracts = {
       message: 'manual checklist should connect JSON export success to both the automated import/export flow and the real download artifact roundtrip spec',
     },
     {
+      pattern: /JSONエクスポート対象0件[\s\S]*`JSONエクスポート` は無効化され、無効理由がボタンの説明として読める[\s\S]*自動確認: `tests\/export-disabled-when-empty\.e2e\.spec\.ts`/,
+      message: 'manual checklist should connect empty JSON export disabled reason to the automated export-disabled accessibility spec',
+    },
+    {
       pattern: /JSONインポート成功（正常データ）[\s\S]*自動確認: `tests\/import-export\.e2e\.spec\.ts`/,
       message: 'manual checklist should connect JSON import success to the automated import/export roundtrip spec',
     },

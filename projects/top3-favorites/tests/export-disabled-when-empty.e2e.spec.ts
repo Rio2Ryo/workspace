@@ -10,6 +10,7 @@ test('JSON export is disabled when there are no items, and enabled after adding 
 
   const exportButton = jsonExportButton(page)
   await expect(exportButton).toBeDisabled()
+  await expect(exportButton).toHaveAccessibleDescription('エクスポート対象データがありません。まず1件以上保存してください。')
 
   await page.getByLabel('タグ', { exact: true }).fill('カフェ')
   await page.getByLabel('場所', { exact: true }).fill('渋谷')

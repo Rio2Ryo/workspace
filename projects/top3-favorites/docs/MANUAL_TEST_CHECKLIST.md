@@ -83,6 +83,11 @@
   - 期待: `top3-favorites-*.json` がダウンロードされる
   - 自動確認: `tests/import-export.e2e.spec.ts` と `tests/export-download-roundtrip.e2e.spec.ts` が実ダウンロードファイル名・JSON内容・roundtrip素材としての再利用を検証する
 
+- [ ] **JSONエクスポート対象0件**
+  - 手順: データが0件の状態でトップ画面を開く
+  - 期待: `JSONエクスポート` は無効化され、無効理由がボタンの説明として読める
+  - 自動確認: `tests/export-disabled-when-empty.e2e.spec.ts` が0件時のボタン無効化・説明文・1件保存後の有効化を検証する
+
 - [ ] **JSONインポート成功（正常データ）**
   - 手順: エクスポートしたJSONを `JSONインポート` で読み込み、確認プレビューで反映する
   - 期待: 件数メッセージが表示され、一覧がJSON内容に置き換わる

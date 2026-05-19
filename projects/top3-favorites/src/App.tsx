@@ -750,6 +750,11 @@ export function App() {
     }
   }
 
+  const exportButtonDescriptionIds = [
+    pendingImport ? 'import-export-lock-hint' : '',
+    items.length === 0 ? 'export-empty-hint' : '',
+  ].filter(Boolean).join(' ') || undefined
+
   return (
     <main className="container">
       <header className="hero">
@@ -833,7 +838,7 @@ export function App() {
         <h2>データ管理</h2>
         <p className="hint">DBデータをJSONでエクスポート/インポートできます。</p>
         <div className="row">
-          <button onClick={exportJson} disabled={items.length === 0 || !!pendingImport}>JSONエクスポート</button>
+          <button onClick={exportJson} disabled={items.length === 0 || !!pendingImport} aria-describedby={exportButtonDescriptionIds}>JSONエクスポート</button>
           <button className="ghost" onClick={triggerImport}>JSONインポート</button>
           <input
             ref={fileRef}
@@ -844,8 +849,8 @@ export function App() {
           />
         </div>
         <p className="hint">インポートは全件バリデーション成功時のみ反映。失敗時は既存データ保持（fail-closed）。</p>
-        {pendingImport && <p className="hint compact" data-testid="import-export-lock-hint">インポート確認中のため、現在DBのJSONエクスポートは一時停止中です。</p>}
-        {items.length === 0 && <p className="hint compact">エクスポート対象データがありません。まず1件以上保存してください。</p>}
+        {pendingImport && <p id="import-export-lock-hint" className="hint compact" data-testid="import-export-lock-hint">インポート確認中のため、現在DBのJSONエクスポートは一時停止中です。</p>}
+        {items.length === 0 && <p id="export-empty-hint" className="hint compact">エクスポート対象データがありません。まず1件以上保存してください。</p>}
         {pendingImport && (
           <div className="preview-panel" aria-label="インポート確認" data-testid="import-preview-summary" data-summary-json={pendingImportSummary ? JSON.stringify(pendingImportSummary) : ''}>
             <div className="row between no-margin">
