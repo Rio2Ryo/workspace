@@ -57,6 +57,29 @@
     .post-time, .post-handle { color: var(--muted); font-family: ui-monospace, SFMono-Regular, Menlo, monospace; white-space: nowrap; padding-top: 2px; }
     .post-text { min-width: 0; white-space: pre-wrap; overflow-wrap: anywhere; line-height: 1.55; }
     .post-link { white-space: nowrap; padding-top: 2px; }
+    .tabs {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-bottom: 12px;
+    }
+    .tab-button {
+      border: 1px solid var(--border);
+      border-radius: 999px;
+      padding: 6px 12px;
+      background: var(--card);
+      color: var(--fg);
+      cursor: pointer;
+      font: inherit;
+      font-size: 12px;
+      white-space: nowrap;
+    }
+    .tab-button[aria-selected="true"] {
+      background: var(--fg);
+      color: var(--bg);
+      border-color: var(--fg);
+      font-weight: 600;
+    }
     .show-shot {
       border: 1px solid var(--border);
       border-radius: 999px;
@@ -158,6 +181,9 @@
 
     <section class="card">
       <div class="label" style="margin-bottom:8px">recent posts (newest first)</div>
+      <div class="tabs" id="handle-tabs" role="tablist" aria-label="表示するユーザー">
+        <button class="tab-button" type="button" role="tab" aria-selected="true">読み込み中</button>
+      </div>
       <ul id="posts"><li class="muted">loading…</li></ul>
     </section>
 
@@ -236,13 +262,24 @@
         }
 
         const ul = document.getElementById('posts');
+        const tabs = document.getElementById('handle-tabs');
         ul.innerHTML = '';
+        tabs.innerHTML = '';
         const posts = data.posts || (data.post_ids || []).slice().reverse().map((post_id) => ({ post_id }));
         if (!posts.length) {
           ul.innerHTML = '<li class="muted">no posts recorded yet</li>';
           return;
         }
-        const handle = (data.handle || '').replace(/^@/, '');
+        const handles = (Array.isArray(data.handles) && data.handles.length
+          ? data.handles
+          : [...new Set(posts.map((post) => post.handle).filter(Boolean))]
+        );
+        const handleCounts = posts.reduce((acc, post) => {
+          const h = post.handle || 'unknown';
+          acc[h] = (acc[h] || 0) + 1;
+          return acc;
+        }, {});
+        let activeHandle = 'all';
         const fmtTime = (iso) => {
           if (!iso) return '投稿時間不明';
           const d = new Date(iso);
@@ -258,7 +295,42 @@
           }, {});
           return `${parts.year}/${parts.month}/${parts.day} ${parts.hour}:${parts.minute} JST`;
         };
-        for (const post of posts) {
+
+        const postUrlFor = (post) => {
+          const h = (post.handle || data.handle || '').split(',')[0].trim().replace(/^@/, '');
+          return post.post_url || ('https://www.threads.com/@' + h + '/post/' + post.post_id);
+        };
+
+        const renderTabs = () => {
+          tabs.innerHTML = '';
+          const makeTab = (value, label, count) => {
+            const button = document.createElement('button');
+            button.type = 'button';
+            button.className = 'tab-button';
+            button.setAttribute('role', 'tab');
+            button.setAttribute('aria-selected', String(activeHandle === value));
+            button.textContent = `${label} (${count})`;
+            button.addEventListener('click', () => {
+              activeHandle = value;
+              renderTabs();
+              renderPosts();
+            });
+            tabs.appendChild(button);
+          };
+          makeTab('all', 'すべて', posts.length);
+          for (const h of handles) makeTab(h, h, handleCounts[h] || 0);
+        };
+
+        const renderPosts = () => {
+          ul.innerHTML = '';
+          const visiblePosts = activeHandle === 'all'
+            ? posts
+            : posts.filter((post) => post.handle === activeHandle);
+          if (!visiblePosts.length) {
+            ul.innerHTML = '<li class="muted">このユーザーの投稿はまだありません</li>';
+            return;
+          }
+          for (const post of visiblePosts) {
           const pid = post.post_id;
           const li = document.createElement('li');
           const row = document.createElement('div');
@@ -281,7 +353,7 @@
           row.appendChild(text);
 
           const a = document.createElement('a');
-          a.href = post.post_url || ('https://www.threads.com/@' + handle + '/post/' + pid);
+          a.href = postUrlFor(post);
           a.rel = 'noopener noreferrer';
           a.target = '_blank';
           a.className = 'post-link';
@@ -320,6 +392,9 @@
           li.appendChild(panel);
           ul.appendChild(li);
         }
+        };
+        renderTabs();
+        renderPosts();
       } catch (e) {
         document.getElementById('posts').innerHTML =
           '<li class="err">snapshot load failed: ' + (e && e.message || e) + '</li>';
