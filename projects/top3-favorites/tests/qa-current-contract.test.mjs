@@ -1397,9 +1397,23 @@ function manualChecklistItemBlock(markdown, itemText) {
   return nextItemIndex === -1 ? markdown.slice(itemIndex) : markdown.slice(itemIndex, nextItemIndex)
 }
 
-test('[Manual][automation-link] normalization-exclusion store-name preview items have child-specific automated links', async () => {
+test('[Manual][automation-link] import preview summary child items have direct automated links', async () => {
   const markdown = await readFile(new URL('docs/MANUAL_TEST_CHECKLIST.md', `${root}/`), 'utf8')
   const childContracts = [
+    {
+      item: '`現在N件 → インポート後M件` と影響サマリ（追加/保持/削除予定/正規化除外）が表示される',
+      specs: [
+        'tests/import-preview/summary/import-preview-summary.e2e.spec.ts',
+        'tests/import-preview/summary/import-preview-math-consistency.e2e.spec.ts',
+      ],
+    },
+    {
+      item: '同一JSON再インポート時に `差分なし（このインポートでデータ変更はありません）` が表示される',
+      specs: [
+        'tests/import-no-change-badge.e2e.spec.ts',
+        'tests/import-preview/live/import-preview-live-summary-concise.e2e.spec.ts',
+      ],
+    },
     {
       item: '正規化除外がある時は `正規化除外予定の店舗: 店名（タグ名でTop3外: N位相当）` が表示される',
       specs: [
