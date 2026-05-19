@@ -1,6 +1,7 @@
 import { expect, test } from '@playwright/test'
 import {
   acceptNextDeleteDialog,
+  editNameField,
   editSaveButton,
   expectOperationAlert,
   expectOperationStatus,
@@ -33,7 +34,7 @@ test('failed edit clears stale success notice and keeps edit draft for retry', a
 
   await rankedItemSummary(page, 1, 'Edit Base').click()
   await itemEditButton(page, 'Edit Base').click()
-  await page.getByLabel('編集 店舗名').fill('Edit Retry Candidate')
+  await editNameField(page).fill('Edit Retry Candidate')
 
   await page.route('**/api/items', async (route) => {
     if (route.request().method() === 'PUT') {
@@ -51,7 +52,7 @@ test('failed edit clears stale success notice and keeps edit draft for retry', a
 
   await expectOperationAlert(page, '編集APIが一時的に利用できません。')
   await expect(operationStatus(page)).toHaveCount(0)
-  await expect(page.getByLabel('編集 店舗名')).toHaveValue('Edit Retry Candidate')
+  await expect(editNameField(page)).toHaveValue('Edit Retry Candidate')
 })
 
 test('failed delete clears stale success notice and keeps item visible', async ({ page }) => {

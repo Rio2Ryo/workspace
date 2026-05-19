@@ -37,7 +37,16 @@ function editFormFieldHelpersUsed(source) {
 
 function sourceUsesDirectEditFormField(source) {
   return /getByRole\(['"](?:textbox|combobox)['"],\s*\{\s*name:\s*['"]編集 (?:店舗名|タグ|場所|メモ)['"]\s*\}\)/.test(source)
+    || /getByLabel\(['"]編集 (?:店舗名|タグ|場所|メモ)['"]/.test(source)
 }
+
+test('[E2E-Helper][edit-form-fields] contract detects direct label-based edit field locators', () => {
+  assert.equal(
+    sourceUsesDirectEditFormField("await page.getByLabel('編集 店舗名').fill('Direct label bypass')"),
+    true,
+    'direct getByLabel edit-field locators should be detected, not only getByRole',
+  )
+})
 
 test('[E2E-Helper][edit-form-fields] E2E specs use shared edit form field locators', async () => {
   const offenders = []
