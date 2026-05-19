@@ -629,9 +629,19 @@ export function App() {
 
   const selectedImportValidationFieldCount = visibleImportValidationIssues.length
 
+  const importValidationCopyTargetSummary = importValidationIssue
+    ? selectedImportValidationField
+      ? `${selectedImportValidationField} ${visibleImportValidationIssues.length}件 / 全${importValidationIssue.totalIssues}件`
+      : `全${importValidationIssue.totalIssues}件`
+    : ''
+
   const copyImportValidationPaths = async () => {
     if (!importValidationIssue) return
-    const paths = visibleImportValidationIssues.map((issue) => issue.path).join('\n')
+    const paths = [
+      `ファイル: ${importValidationIssue.filename}`,
+      `対象: ${importValidationCopyTargetSummary}`,
+      ...visibleImportValidationIssues.map((issue) => issue.path),
+    ].join('\n')
     try {
       await navigator.clipboard.writeText(paths)
       setNotice('JSONパス一覧をコピーしました。')
@@ -642,12 +652,9 @@ export function App() {
 
   const copyImportValidationRepairs = async () => {
     if (!importValidationIssue) return
-    const targetSummary = selectedImportValidationField
-      ? `${selectedImportValidationField} ${visibleImportValidationIssues.length}件 / 全${importValidationIssue.totalIssues}件`
-      : `全${importValidationIssue.totalIssues}件`
     const repairs = [
       `ファイル: ${importValidationIssue.filename}`,
-      `対象: ${targetSummary}`,
+      `対象: ${importValidationCopyTargetSummary}`,
       ...visibleImportValidationIssues.map((issue) => `${issue.row} / ${issue.path} / ${issue.field} / ${issue.fix}`),
     ].join('\n')
     try {

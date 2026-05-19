@@ -68,7 +68,9 @@ test('import validation error identifies the first invalid row and field for qui
   ])
   await importValidationCopyJsonPaths(page).click()
   await expectOperationStatus(page, 'JSONパス一覧をコピーしました。')
-  await expect.poll(() => readClipboardRecorder(page, 'last-copied-import-validation')).toBe('$.items[1].tag\n$.items[2].name')
+  await expect.poll(() => readClipboardRecorder(page, 'last-copied-import-validation')).toBe(
+    'ファイル: invalid-import-field-details.json\n対象: 全2件\n$.items[1].tag\n$.items[2].name',
+  )
   await importValidationCopyRepairList(page).click()
   await expectOperationStatus(page, '修正対象一覧をコピーしました。')
   await expect.poll(() => readClipboardRecorder(page, 'last-copied-import-validation')).toBe(
@@ -157,7 +159,9 @@ test('import validation field summary filters the repair list to the selected re
   ])
   await importValidationCopyJsonPaths(page).click()
   await expectOperationStatus(page, 'JSONパス一覧をコピーしました。')
-  await expect.poll(() => readClipboardRecorder(page, 'last-copied-import-validation')).toBe('$.items[1].tag\n$.items[2].tag')
+  await expect.poll(() => readClipboardRecorder(page, 'last-copied-import-validation')).toBe(
+    'ファイル: invalid-import-field-filter.json\n対象: tag 2件 / 全3件\n$.items[1].tag\n$.items[2].tag',
+  )
   await importValidationCopyRepairList(page).click()
   await expectOperationStatus(page, '修正対象一覧をコピーしました。')
   await expect.poll(() => readClipboardRecorder(page, 'last-copied-import-validation')).toBe(
