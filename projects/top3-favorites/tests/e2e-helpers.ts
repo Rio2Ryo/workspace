@@ -166,6 +166,11 @@ export function registrationSaveButton(page: Page): Locator {
   return page.getByRole('button', { name: 'DBに保存' })
 }
 
+export async function saveRegistrationAndWaitForStatus(page: Page, text: string | RegExp): Promise<void> {
+  await registrationSaveButton(page).click()
+  await expectOperationStatus(page, text)
+}
+
 export function registrationRankButton(page: Page, rank: 1 | 2 | 3): Locator {
   return page.getByRole('button', { name: `登録 ${rank}位に入れる` })
 }

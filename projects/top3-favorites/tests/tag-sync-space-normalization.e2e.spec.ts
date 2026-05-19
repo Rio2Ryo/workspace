@@ -3,11 +3,11 @@ import {
   expectOperationStatus,
   registrationLocationField,
   registrationNameField,
-  registrationSaveButton,
   registrationTagField,
   resetItemsByReplace,
   searchSection as searchSectionLocator,
   tagFilterButton,
+  saveRegistrationAndWaitForStatus,
 } from './e2e-helpers'
 
 test.beforeEach(async ({ request }) => {
@@ -20,8 +20,7 @@ test('tag sync should not break for semantically same tag with half/full width s
   await registrationTagField(page).fill('カフェ ラテ')
   await registrationLocationField(page).fill('柏の葉')
   await registrationNameField(page).fill('Space Normalize')
-  await registrationSaveButton(page).click()
-  await expectOperationStatus(page, 'カフェ ラテ の1位に保存しました。')
+  await saveRegistrationAndWaitForStatus(page, 'カフェ ラテ の1位に保存しました。')
 
   const searchSection = searchSectionLocator(page)
   await tagFilterButton(searchSection as searchSectionLocator, 'カフェ ラテ').click()

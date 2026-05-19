@@ -7,10 +7,10 @@ import {
   importPreviewPanel,
   registrationLocationField,
   registrationNameField,
-  registrationSaveButton,
   registrationTagField,
   resetItemsByReplace,
   uploadJsonImportFile,
+  saveRegistrationAndWaitForStatus,
 } from './e2e-helpers'
 
 test.beforeEach(async ({ request }) => {
@@ -24,8 +24,7 @@ test('import fail-closed matrix: all invalid inputs keep existing data and clear
   await registrationTagField(page).fill('カフェラテ')
   await registrationLocationField(page).fill('柏の葉')
   await registrationNameField(page).fill('Baseline Keep')
-  await registrationSaveButton(page).click()
-  await expectOperationStatus(page, 'カフェラテ の1位に保存しました。')
+  await saveRegistrationAndWaitForStatus(page, 'カフェラテ の1位に保存しました。')
 
   const now = new Date().toISOString()
 

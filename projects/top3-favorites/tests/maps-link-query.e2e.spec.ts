@@ -7,9 +7,9 @@ import {
   registrationMemoField,
   registrationNameField,
   registrationRankButton,
-  registrationSaveButton,
   registrationTagField,
   resetItemsByReplace,
+  saveRegistrationAndWaitForStatus,
 } from './e2e-helpers'
 
 test.beforeEach(async ({ request }) => {
@@ -24,9 +24,7 @@ test('maps link includes name location and tag in Google Maps search query', asy
   await registrationNameField(page).fill('検証店')
   await registrationMemoField(page).fill('maps link e2e')
   await registrationRankButton(page, 1).click()
-  await registrationSaveButton(page).click()
-
-  await expectOperationStatus(page, '検証タグ の1位に保存しました。')
+  await saveRegistrationAndWaitForStatus(page, '検証タグ の1位に保存しました。')
 
   await rankedItemSummary(page, 1, '検証店').click()
 

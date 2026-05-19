@@ -7,12 +7,12 @@ import {
   registrationMemoField,
   registrationNameField,
   registrationRankButton,
-  registrationSaveButton,
   registrationTagField,
   reloadPageAndWaitForSearchReady,
   resetItemsByReplace,
   searchSection as searchSectionLocator,
   tagHeading,
+  saveRegistrationAndWaitForStatus,
 } from './e2e-helpers'
 
 test.beforeEach(async ({ request }) => {
@@ -27,9 +27,7 @@ test('newly created item remains after reload and exists in API data', async ({ 
   await registrationNameField(page).fill('Persist New Item')
   await registrationMemoField(page).fill('reload persistence contract')
   await registrationRankButton(page, 2).click()
-  await registrationSaveButton(page).click()
-
-  await expectOperationStatus(page, '永続化タグ の2位に保存しました。')
+  await saveRegistrationAndWaitForStatus(page, '永続化タグ の2位に保存しました。')
 
   const searchSection = searchSectionLocator(page)
   await expect(rankedItemSummary(searchSection, 2, 'Persist New Item')).toBeVisible()

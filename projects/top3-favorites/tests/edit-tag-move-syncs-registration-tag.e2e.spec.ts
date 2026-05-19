@@ -7,12 +7,12 @@ import {
   rankedItemSummary,
   registrationLocationField,
   registrationNameField,
-  registrationSaveButton,
   registrationTagField,
   resetItemsByReplace,
   searchClearButton,
   searchSection as searchSectionLocator,
   tagFilterButton,
+  saveRegistrationAndWaitForStatus,
 } from './e2e-helpers'
 
 test.beforeEach(async ({ request }) => {
@@ -25,8 +25,7 @@ test('editing item tag move keeps registration tag in sync with active search ta
   await registrationTagField(page).fill('元タグ')
   await registrationLocationField(page).fill('柏')
   await registrationNameField(page).fill('Move Me')
-  await registrationSaveButton(page).click()
-  await expectOperationStatus(page, '元タグ の1位に保存しました。')
+  await saveRegistrationAndWaitForStatus(page, '元タグ の1位に保存しました。')
 
   const searchSection = searchSectionLocator(page)
   await tagFilterButton(searchSection as searchSectionLocator, '元タグ').click()

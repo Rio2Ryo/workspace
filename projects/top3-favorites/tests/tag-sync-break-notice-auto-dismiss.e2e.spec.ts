@@ -3,11 +3,11 @@ import {
   expectOperationStatus,
   registrationLocationField,
   registrationNameField,
-  registrationSaveButton,
   registrationTagField,
   resetItemsByReplace,
   searchSection as searchSectionLocator,
   tagFilterButton,
+  saveRegistrationAndWaitForStatus,
 } from './e2e-helpers'
 
 test.beforeEach(async ({ request }) => {
@@ -20,8 +20,7 @@ test('sync-break notice auto-dismisses after short duration', async ({ page }) =
   await registrationTagField(page).fill('カフェラテ')
   await registrationLocationField(page).fill('柏の葉')
   await registrationNameField(page).fill('Auto Dismiss')
-  await registrationSaveButton(page).click()
-  await expectOperationStatus(page, 'カフェラテ の1位に保存しました。')
+  await saveRegistrationAndWaitForStatus(page, 'カフェラテ の1位に保存しました。')
 
   const searchSection = searchSectionLocator(page)
   await tagFilterButton(searchSection as searchSectionLocator, 'カフェラテ').click()

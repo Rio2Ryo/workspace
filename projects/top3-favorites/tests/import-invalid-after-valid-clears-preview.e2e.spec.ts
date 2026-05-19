@@ -6,10 +6,10 @@ import {
   importPreviewPanel,
   registrationLocationField,
   registrationNameField,
-  registrationSaveButton,
   registrationTagField,
   resetItemsByReplace,
   uploadJsonImportFile,
+  saveRegistrationAndWaitForStatus,
 } from './e2e-helpers'
 
 test.beforeEach(async ({ request }) => {
@@ -23,8 +23,7 @@ test('invalid JSON after a valid import preview clears pending preview and keeps
   await registrationTagField(page).fill('カフェラテ')
   await registrationLocationField(page).fill('柏の葉')
   await registrationNameField(page).fill('Base Item')
-  await registrationSaveButton(page).click()
-  await expectOperationStatus(page, 'カフェラテ の1位に保存しました。')
+  await saveRegistrationAndWaitForStatus(page, 'カフェラテ の1位に保存しました。')
 
   const now = new Date().toISOString()
   const validItems = [

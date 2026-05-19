@@ -31,8 +31,33 @@ function importsRegistrationSaveButton(source) {
   return /import \{[^}]*registrationSaveButton[^}]*\} from ['"](?:\.\.?\/)*e2e-helpers['"]/.test(source)
 }
 
+function importsSaveRegistrationCompletionHelper(source) {
+  return /import \{[^}]*saveRegistrationAndWaitForStatus[^}]*\} from ['"](?:\.\.?\/)*e2e-helpers['"]/.test(source)
+}
+
 function sourceUsesDirectRegistrationSaveButton(source) {
   return /getByRole\(['"]button['"],\s*\{\s*name:\s*['"]DBに保存['"]\s*\}\)/.test(source)
+}
+
+function collectRawSuccessfulSaveClickOffenders(spec, source) {
+  const offenders = []
+  const saveClickPattern = /await\s+registrationSaveButton\(page\)\.click\(\)/g
+  const matches = [...source.matchAll(saveClickPattern)]
+
+  for (const match of matches) {
+    const start = match.index + match[0].length
+    const nextSaveIndex = source.indexOf('registrationSaveButton(page).click()', start)
+    const block = source.slice(start, nextSaveIndex === -1 ? undefined : nextSaveIndex)
+
+    if (!/expectOperationStatus\(page,\s*['"][^'"]*保存しました。['"]\)/.test(block)) {
+      continue
+    }
+
+    const line = source.slice(0, match.index).split('\n').length
+    offenders.push(`${spec}:${line}: use saveRegistrationAndWaitForStatus(page, expectedStatus) for successful registration saves`)
+  }
+
+  return offenders
 }
 
 function collectSaveRaceOffenders(spec, source) {
@@ -104,6 +129,36 @@ test('[E2E-Helper][registration-save] helper owns registration save accessible-n
   assert.match(source, /getByRole\(['"]button['"],\s*\{\s*name:\s*['"]DBに保存['"]\s*\}\)/, 'registrationSaveButton should return the shared button locator')
 })
 
+test('[E2E-Helper][registration-save] helper owns successful registration save completion wait', async () => {
+  const source = await readFile(helperPath, 'utf8')
+
+  assert.match(source, /export async function saveRegistrationAndWaitForStatus\(\s*page: Page,\s*text: string \| RegExp,?\s*\): Promise<void>/, 'tests/e2e-helpers.ts should export saveRegistrationAndWaitForStatus(page, text)')
+  assert.match(source, /saveRegistrationAndWaitForStatus[\s\S]*registrationSaveButton\(page\)\.click\(\)/, 'saveRegistrationAndWaitForStatus should click through the shared registrationSaveButton locator')
+  assert.match(source, /saveRegistrationAndWaitForStatus[\s\S]*expectOperationStatus\(page, text\)/, 'saveRegistrationAndWaitForStatus should wait for the success live-region')
+})
+
+test('[E2E-Helper][registration-save] successful registration saves use completion helper', async () => {
+  const offenders = []
+  const specs = await listE2eSpecs(testsRoot)
+
+  for (const spec of specs) {
+    const specUrl = new URL(spec, `${root}/`)
+    const source = await readFile(specUrl, 'utf8')
+    const usesCompletionHelper = /saveRegistrationAndWaitForStatus\(/.test(source)
+
+    offenders.push(...collectRawSuccessfulSaveClickOffenders(spec, source))
+    if (usesCompletionHelper && !importsSaveRegistrationCompletionHelper(source)) {
+      offenders.push(`${spec}: saveRegistrationAndWaitForStatus call without named import`)
+    }
+  }
+
+  assert.deepEqual(
+    offenders.sort(),
+    [],
+    `Successful registration save E2E flows should use saveRegistrationAndWaitForStatus() so click and status wait cannot drift: ${offenders.join(', ')}`,
+  )
+})
+
 test('[E2E-Helper][registration-save] risky post-save workflows wait for save completion', async () => {
   const offenders = []
   const specs = await listE2eSpecs(testsRoot)
@@ -124,6 +179,6 @@ test('[E2E-Helper][registration-save] import-invalid-after-valid waits for save 
   const specUrl = new URL('tests/import-invalid-after-valid-clears-preview.e2e.spec.ts', `${root}/`)
   const source = await readFile(specUrl, 'utf8')
 
-  assert.match(source, /expectOperationStatus\(page, ['"]カフェラテ の1位に保存しました。['"]\)/, 'the flaky import-after-save regression spec should wait for the save success live-region before uploading import files')
-  assert.match(source, /registrationSaveButton\(page\)\.click\(\)[\s\S]*expectOperationStatus\(page, ['"]カフェラテ の1位に保存しました。['"]\)[\s\S]*uploadJsonImportFile\(page, ['"]valid\.json['"]/, 'save click, save completion assertion, and import upload should stay in that order')
+  assert.match(source, /saveRegistrationAndWaitForStatus\(page, ['"]カフェラテ の1位に保存しました。['"]\)/, 'the flaky import-after-save regression spec should wait for the save success live-region through the completion helper before uploading import files')
+  assert.match(source, /saveRegistrationAndWaitForStatus\(page, ['"]カフェラテ の1位に保存しました。['"]\)[\s\S]*uploadJsonImportFile\(page, ['"]valid\.json['"]/, 'save completion helper and import upload should stay in that order')
 })

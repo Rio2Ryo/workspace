@@ -8,10 +8,10 @@ import {
   rankedItemSummary,
   registrationLocationField,
   registrationNameField,
-  registrationSaveButton,
   registrationTagField,
   resetItemsByReplace,
   uploadJsonImportFile,
+  saveRegistrationAndWaitForStatus,
 } from './e2e-helpers'
 
 test.beforeEach(async ({ request }) => {
@@ -24,8 +24,7 @@ test('pending import preview blocks edit until user cancels the import context',
   await registrationTagField(page).fill('カフェラテ')
   await registrationLocationField(page).fill('柏の葉')
   await registrationNameField(page).fill('Edit Target')
-  await registrationSaveButton(page).click()
-  await expectOperationStatus(page, 'カフェラテ の1位に保存しました。')
+  await saveRegistrationAndWaitForStatus(page, 'カフェラテ の1位に保存しました。')
 
   const now = new Date().toISOString()
   const payload = [

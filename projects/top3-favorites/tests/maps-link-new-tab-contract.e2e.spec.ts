@@ -7,10 +7,10 @@ import {
   registrationMemoField,
   registrationNameField,
   registrationRankButton,
-  registrationSaveButton,
   registrationTagField,
   resetItemsByReplace,
   tagGroup,
+  saveRegistrationAndWaitForStatus,
 } from './e2e-helpers'
 
 test.beforeEach(async ({ request }) => {
@@ -25,9 +25,7 @@ test('maps link opens in a new tab with safe rel attributes', async ({ page }) =
   await registrationNameField(page).fill('Solito MAGO')
   await registrationMemoField(page).fill('maps attr contract')
   await registrationRankButton(page, 1).click()
-  await registrationSaveButton(page).click()
-
-  await expectOperationStatus(page, 'カフェラテ の1位に保存しました。')
+  await saveRegistrationAndWaitForStatus(page, 'カフェラテ の1位に保存しました。')
 
   const group = tagGroup(page, 'カフェラテ')
   await rankedItemSummary(group, 1, 'Solito MAGO').click()

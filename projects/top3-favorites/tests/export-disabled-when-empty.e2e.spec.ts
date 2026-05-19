@@ -5,9 +5,9 @@ import {
   registrationLocationField,
   registrationNameField,
   registrationRankButton,
-  registrationSaveButton,
   registrationTagField,
   resetItemsByReplace,
+  saveRegistrationAndWaitForStatus,
 } from './e2e-helpers'
 
 test.beforeEach(async ({ request }) => {
@@ -25,8 +25,6 @@ test('JSON export is disabled when there are no items, and enabled after adding 
   await registrationLocationField(page).fill('渋谷')
   await registrationNameField(page).fill('茶亭')
   await registrationRankButton(page, 1).click()
-  await registrationSaveButton(page).click()
-
-  await expectOperationStatus(page, 'カフェ の1位に保存しました。')
+  await saveRegistrationAndWaitForStatus(page, 'カフェ の1位に保存しました。')
   await expect(exportButton).toBeEnabled()
 })

@@ -8,13 +8,13 @@ import {
   rankedItemSummaryByName,
   registrationLocationField,
   registrationNameField,
-  registrationSaveButton,
   registrationTagField,
   resetItemsByReplace,
   searchClearButton,
   searchSection as searchSectionLocator,
   tagFilterButton,
   tagHeading,
+  saveRegistrationAndWaitForStatus,
 } from './e2e-helpers'
 
 test.beforeEach(async ({ request }) => {
@@ -28,14 +28,12 @@ test('editing last item tag clears stale selected filter so remaining data is vi
   await registrationTagField(page).fill('元タグ')
   await registrationLocationField(page).fill('柏')
   await registrationNameField(page).fill('Move Me')
-  await registrationSaveButton(page).click()
-  await expectOperationStatus(page, '元タグ の1位に保存しました。')
+  await saveRegistrationAndWaitForStatus(page, '元タグ の1位に保存しました。')
 
   await registrationTagField(page).fill('残るタグ')
   await registrationLocationField(page).fill('松戸')
   await registrationNameField(page).fill('Keep Me')
-  await registrationSaveButton(page).click()
-  await expectOperationStatus(page, '残るタグ の1位に保存しました。')
+  await saveRegistrationAndWaitForStatus(page, '残るタグ の1位に保存しました。')
 
   const searchSection = searchSectionLocator(page)
 

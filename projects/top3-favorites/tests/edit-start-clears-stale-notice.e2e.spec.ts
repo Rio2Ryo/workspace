@@ -6,9 +6,9 @@ import {
   rankedItemSummary,
   registrationLocationField,
   registrationNameField,
-  registrationSaveButton,
   registrationTagField,
   resetItemsByReplace,
+  saveRegistrationAndWaitForStatus,
 } from './e2e-helpers'
 
 test.beforeEach(async ({ request }) => {
@@ -21,8 +21,7 @@ test('starting edit clears stale success notice to match current context', async
   await registrationTagField(page).fill('カフェラテ')
   await registrationLocationField(page).fill('柏の葉')
   await registrationNameField(page).fill('Edit Start Notice')
-  await registrationSaveButton(page).click()
-  await expectOperationStatus(page, 'カフェラテ の1位に保存しました。')
+  await saveRegistrationAndWaitForStatus(page, 'カフェラテ の1位に保存しました。')
 
   await rankedItemSummary(page, 1, 'Edit Start Notice').click()
   await itemEditButton(page, 'Edit Start Notice').click()

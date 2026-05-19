@@ -6,13 +6,13 @@ import {
   registrationMemoField,
   registrationNameField,
   registrationRankButton,
-  registrationSaveButton,
   registrationTagField,
   resetItemsByReplace,
   saveSampleItems,
   searchInput,
   searchSection as searchSectionLocator,
   tagHeading,
+  saveRegistrationAndWaitForStatus,
 } from './e2e-helpers'
 
 test.beforeEach(async ({ request }) => {
@@ -53,9 +53,7 @@ test('adding a new first place rebalances the same tag to top 3', async ({ page 
   await registrationNameField(page).fill('New Coffee')
   await registrationMemoField(page).fill('検証用の新1位')
   await registrationRankButton(page, 1).click()
-  await registrationSaveButton(page).click()
-
-  await expectOperationStatus(page, 'カフェラテ の1位に保存しました。')
+  await saveRegistrationAndWaitForStatus(page, 'カフェラテ の1位に保存しました。')
   await searchInput(page).fill('')
 
   await expect(rankedItemSummaryByName(page, 'New Coffee')).toBeVisible()

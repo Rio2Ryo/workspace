@@ -7,11 +7,11 @@ import {
   registrationLocationField,
   registrationNameField,
   registrationRankButton,
-  registrationSaveButton,
   registrationTagField,
   reloadPageAndWaitForSearchReady,
   resetItemsByReplace,
   searchSection as searchSectionLocator,
+  saveRegistrationAndWaitForStatus,
 } from './e2e-helpers'
 
 test.beforeEach(async ({ request }) => {
@@ -35,8 +35,7 @@ test('adding new 1st place rebalances to Top3 and persists ranks after reload + 
   await registrationLocationField(page).fill('柏の葉')
   await registrationNameField(page).fill('New 1st')
   await registrationRankButton(page, 1).click()
-  await registrationSaveButton(page).click()
-  await expectOperationStatus(page, 'カフェラテ の1位に保存しました。')
+  await saveRegistrationAndWaitForStatus(page, 'カフェラテ の1位に保存しました。')
 
   const searchSection = searchSectionLocator(page)
 

@@ -12,11 +12,12 @@ import {
   registrationMemoField,
   registrationNameField,
   registrationRankButton,
-  registrationSaveButton,
   registrationTagField,
   resetItemsByReplace,
   sampleSaveButton,
   uploadJsonImportFile,
+  saveRegistrationAndWaitForStatus,
+  registrationSaveButton,
 } from '../../e2e-helpers'
 
 test.beforeEach(async ({ request }) => {
@@ -30,8 +31,7 @@ test('pending import preview enforces operation guards across registration/searc
   await registrationTagField(page).fill('カフェラテ')
   await registrationLocationField(page).fill('柏の葉')
   await registrationNameField(page).fill('Guard Seed')
-  await registrationSaveButton(page).click()
-  await expectOperationStatus(page, 'カフェラテ の1位に保存しました。')
+  await saveRegistrationAndWaitForStatus(page, 'カフェラテ の1位に保存しました。')
 
   const now = new Date().toISOString()
   const payload = [

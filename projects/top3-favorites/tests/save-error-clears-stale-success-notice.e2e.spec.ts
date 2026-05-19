@@ -8,6 +8,7 @@ import {
   registrationSaveButton,
   registrationTagField,
   resetItemsByReplace,
+  saveRegistrationAndWaitForStatus,
 } from './e2e-helpers'
 
 test.beforeEach(async ({ request }) => {
@@ -20,8 +21,7 @@ test('failed save clears stale success notice and keeps draft for retry', async 
   await registrationTagField(page).fill('カフェラテ')
   await registrationLocationField(page).fill('柏の葉')
   await registrationNameField(page).fill('First Save')
-  await registrationSaveButton(page).click()
-  await expectOperationStatus(page, 'カフェラテ の1位に保存しました。')
+  await saveRegistrationAndWaitForStatus(page, 'カフェラテ の1位に保存しました。')
 
   await page.route('**/api/items', async (route) => {
     if (route.request().method() === 'POST') {
