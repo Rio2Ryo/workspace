@@ -49,12 +49,12 @@
     a { color: inherit; }
     .post-row {
       display: grid;
-      grid-template-columns: minmax(128px, 168px) minmax(0, 1fr) auto auto;
+      grid-template-columns: minmax(128px, 168px) minmax(100px, 140px) minmax(0, 1fr) auto auto;
       gap: 10px;
       align-items: start;
       min-width: 0;
     }
-    .post-time { color: var(--muted); font-family: ui-monospace, SFMono-Regular, Menlo, monospace; white-space: nowrap; padding-top: 2px; }
+    .post-time, .post-handle { color: var(--muted); font-family: ui-monospace, SFMono-Regular, Menlo, monospace; white-space: nowrap; padding-top: 2px; }
     .post-text { min-width: 0; white-space: pre-wrap; overflow-wrap: anywhere; line-height: 1.55; }
     .post-link { white-space: nowrap; padding-top: 2px; }
     .show-shot {
@@ -83,7 +83,7 @@
     }
     @media (max-width: 640px) {
       .post-row { grid-template-columns: 1fr auto; }
-      .post-time, .post-text { grid-column: 1 / -1; }
+      .post-time, .post-handle, .post-text { grid-column: 1 / -1; }
       .post-link { display: none; }
     }
     .err { color: #c33; }
@@ -268,6 +268,11 @@
           time.className = 'post-time';
           time.textContent = fmtTime(post.posted_at || post.captured_at);
           row.appendChild(time);
+
+          const postHandle = document.createElement('span');
+          postHandle.className = 'post-handle';
+          postHandle.textContent = post.handle || '';
+          row.appendChild(postHandle);
 
           const text = document.createElement('span');
           text.className = 'post-text';

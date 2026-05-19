@@ -391,15 +391,15 @@
     }
   },
   "sync_state": {
-    "cursor": 45,
+    "cursor": 49,
     "db_max": 49,
-    "delta": 4,
+    "delta": 0,
     "cursor_file_exists": true
   },
   "dry_run_alert": {
-    "pending_ticks": 3,
+    "pending_ticks": 4,
     "since": "2026-05-18T23:46:27Z",
     "delta": 3
   },
-  "snapshot_generated_at": "2026-05-19T00:06:52Z"
+  "snapshot_generated_at": "2026-05-19T00:07:24Z"
 }

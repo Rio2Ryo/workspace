@@ -44,10 +44,11 @@ from watcher_pure import (
 PROJECT_ROOT = Path(__file__).resolve().parent
 SCREENSHOTS_DIR = PROJECT_ROOT / "screenshots"
 WEB_SNAPSHOT_FILE = PROJECT_ROOT / "threads-watcher-status" / "state.json"
-WEB_SNAPSHOT_HANDLE = "@hal.lifedesign"
+WEB_SNAPSHOT_HANDLES = ["@hal.lifedesign", "@bmw_intokyo"]
 DB_FILE = PROJECT_ROOT / "threads_watcher.db"
 
-DEFAULT_HANDLE = "@hal.lifedesign"
+DEFAULT_HANDLES = WEB_SNAPSHOT_HANDLES
+DEFAULT_HANDLE = ",".join(DEFAULT_HANDLES)
 DEFAULT_USER_AGENT = (
     "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) "
     "AppleWebKit/537.36 (KHTML, like Gecko) "
@@ -61,7 +62,32 @@ def _normalize_handle(handle: str) -> str:
     return handle if handle.startswith("@") else f"@{handle}"
 
 
-def _write_web_snapshot_from_db(conn: Any, handle: str) -> None:
+def _parse_handles(raw: str) -> list[str]:
+    handles = [_normalize_handle(h.strip()) for h in raw.split(",") if h.strip()]
+    return handles or list(DEFAULT_HANDLES)
+
+
+def _combined_snapshot(conn: Any, handles: list[str]) -> dict[str, Any]:
+    snapshots = [latest_snapshot(conn, h) for h in handles]
+    posts: list[dict[str, Any]] = []
+    for snap in snapshots:
+        posts.extend(snap.get("posts", []))
+    posts.sort(key=lambda p: str(p.get("captured_at") or p.get("first_seen_at") or ""), reverse=True)
+
+    last_checks = [s.get("last_check") for s in snapshots if s.get("last_check")]
+    last_checks.sort(key=lambda c: str(c.get("checked_at") or ""), reverse=True)
+    first = snapshots[0] if snapshots else latest_snapshot(conn, DEFAULT_HANDLES[0])
+    return {
+        **first,
+        "handle": ", ".join(handles),
+        "handles": handles,
+        "last_check": last_checks[0] if last_checks else None,
+        "saved_count": len(posts),
+        "posts": posts,
+    }
+
+
+def _write_web_snapshot_from_db(conn: Any, handle: str | None = None) -> None:
     """Write a sanitized status snapshot derived from the DB source of truth.
 
     The status file still excludes screenshot BLOBs and local host paths, but
@@ -70,10 +96,14 @@ def _write_web_snapshot_from_db(conn: Any, handle: str) -> None:
     saved screenshots alongside each post URL.
     """
     WEB_SNAPSHOT_FILE.parent.mkdir(parents=True, exist_ok=True)
-    snapshot = latest_snapshot(conn, handle)
-    screenshot_paths = export_status_screenshots(conn, handle, WEB_SNAPSHOT_FILE.parent)
+    handles = WEB_SNAPSHOT_HANDLES if handle is None or handle in WEB_SNAPSHOT_HANDLES else [handle]
+    snapshot = _combined_snapshot(conn, handles)
+    screenshot_paths: dict[str, str] = {}
+    for h in handles:
+        for pid, path in export_status_screenshots(conn, h, WEB_SNAPSHOT_FILE.parent).items():
+            screenshot_paths[f"{h}:{pid}"] = path
     for post in snapshot.get("posts", []):
-        post["screenshot_path"] = screenshot_paths.get(str(post.get("post_id")))
+        post["screenshot_path"] = screenshot_paths.get(f"{post.get('handle')}:{post.get('post_id')}")
 
     # Late import: sync.py imports sync_guards which imports json/sqlite —
     # all stdlib, no playwright dependency.
@@ -359,8 +389,8 @@ def run_once(handle: str, *, baseline_lookback_days: int | None = None) -> int:
             status=status,
             error=error,
         )
-        if handle == WEB_SNAPSHOT_HANDLE:
-            _write_web_snapshot_from_db(conn, handle)
+        if handle in WEB_SNAPSHOT_HANDLES:
+            _write_web_snapshot_from_db(conn)
         conn.close()
 
     print(f"[done] {handle} found={found_count} new_saved_to_db={new_count} at={checked_at}")
@@ -371,15 +401,17 @@ def run_watch(handle: str, interval_s: int, *, baseline_lookback_days: int | Non
     if interval_s < 60:
         print("[warn] interval below 60s is not allowed; clamping to 60s", file=sys.stderr)
         interval_s = 60
-    print(f"[watch] handle={handle} interval={interval_s}s lookback_days={baseline_lookback_days}")
+    handles = _parse_handles(handle)
+    print(f"[watch] handles={handles} interval={interval_s}s lookback_days={baseline_lookback_days}")
     while True:
-        try:
-            run_once(handle, baseline_lookback_days=baseline_lookback_days)
-        except KeyboardInterrupt:
-            print("[watch] interrupted")
-            return
-        except Exception as e:
-            print(f"[watch] iteration failed: {e}", file=sys.stderr)
+        for h in handles:
+            try:
+                run_once(h, baseline_lookback_days=baseline_lookback_days)
+            except KeyboardInterrupt:
+                print("[watch] interrupted")
+                return
+            except Exception as e:
+                print(f"[watch] iteration failed for {h}: {e}", file=sys.stderr)
         time.sleep(interval_s)
 
 
@@ -545,16 +577,19 @@ def main(argv: list[str] | None = None) -> int:
     )
     args = parser.parse_args(argv)
 
-    handle = _normalize_handle(args.handle)
+    handles = _parse_handles(args.handle)
+    handle = handles[0]
     if args.health_check:
         return run_health_check(handle, threshold=args.threshold)
     if args.recapture_existing:
-        recapture_existing(handle, limit=args.limit)
+        for h in handles:
+            recapture_existing(h, limit=args.limit)
         return 0
     if args.watch:
-        run_watch(handle, args.interval, baseline_lookback_days=args.baseline_lookback_days)
+        run_watch(args.handle, args.interval, baseline_lookback_days=args.baseline_lookback_days)
         return 0
-    run_once(handle, baseline_lookback_days=args.baseline_lookback_days)
+    for h in handles:
+        run_once(h, baseline_lookback_days=args.baseline_lookback_days)
     return 0
 
 

@@ -346,6 +346,7 @@ def build_web_snapshot_payload(
     """
     return {
         "handle": snapshot["handle"],
+        "handles": snapshot.get("handles"),
         "last_check": snapshot["last_check"],
         "saved_count": snapshot["saved_count"],
         "posts": snapshot["posts"],
