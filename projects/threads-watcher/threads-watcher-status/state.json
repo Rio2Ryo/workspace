@@ -5,14 +5,53 @@
     "@bmw_intokyo"
   ],
   "last_check": {
-    "checked_at": "2026-05-19T00:58:56Z",
+    "checked_at": "2026-05-19T14:59:39Z",
     "found_count": 15,
     "new_count": 0,
     "status": "ok",
     "error": null
   },
-  "saved_count": 37,
+  "saved_count": 40,
   "posts": [
+    {
+      "handle": "@bmw_intokyo",
+      "post_id": "DYgz_H2iTau",
+      "post_url": "https://www.threads.com/@bmw_intokyo/post/DYgz_H2iTau",
+      "first_seen_at": "2026-05-19T07:59:19Z",
+      "captured_at": "2026-05-19T07:59:23Z",
+      "screenshot_size_bytes": 177527,
+      "screenshot_width": 1280,
+      "screenshot_height": 1800,
+      "post_text": "謎風邪ひいて咳止まらないみたい ただでさえめんどい経営者にストレス抱えてんのに体調不良もあって大変やな そっちは適当にあしらってはやくこっちおいで",
+      "posted_at": "2026-05-19T07:58:07.000Z",
+      "screenshot_path": "screenshots/bmw_intokyo/DYgz_H2iTau__20260519T075923Z.png"
+    },
+    {
+      "handle": "@hal.lifedesign",
+      "post_id": "DYgrkTBkgrI",
+      "post_url": "https://www.threads.com/@hal.lifedesign/post/DYgrkTBkgrI",
+      "first_seen_at": "2026-05-19T06:45:17Z",
+      "captured_at": "2026-05-19T06:45:22Z",
+      "screenshot_size_bytes": 165354,
+      "screenshot_width": 1280,
+      "screenshot_height": 1800,
+      "post_text": "下手な考え休むに似たり。 ダラダラ考えてないで行動していこう。 行動によって得られる結果は何よりも考える材料になるから。",
+      "posted_at": "2026-05-19T06:44:33.000Z",
+      "screenshot_path": "screenshots/hal.lifedesign/DYgrkTBkgrI__20260519T064522Z.png"
+    },
+    {
+      "handle": "@bmw_intokyo",
+      "post_id": "DYgIaSECX5l",
+      "post_url": "https://www.threads.com/@bmw_intokyo/post/DYgIaSECX5l",
+      "first_seen_at": "2026-05-19T01:37:42Z",
+      "captured_at": "2026-05-19T01:37:51Z",
+      "screenshot_size_bytes": 180608,
+      "screenshot_width": 1280,
+      "screenshot_height": 1800,
+      "post_text": "人の心が離れていったこと理解できてる？ ということで退職できるようになりそう 失業保険を取ってもらって、その期間でおれがつくる会社に入るか、転職するかを決めてもらいます",
+      "posted_at": "2026-05-19T01:37:21.000Z",
+      "screenshot_path": "screenshots/bmw_intokyo/DYgIaSECX5l__20260519T013751Z.png"
+    },
     {
       "handle": "@hal.lifedesign",
       "post_id": "DYfpBYukpHp",
@@ -497,48 +536,48 @@
   ],
   "recent_stats": {
     "window_hours": 24,
-    "total": 767,
-    "ok": 714,
-    "partial_error": 53,
-    "error": 0,
+    "total": 625,
+    "ok": 225,
+    "partial_error": 399,
+    "error": 1,
     "other": 0,
-    "success_rate": 0.9308996088657105
+    "success_rate": 0.36
   },
   "recent_stats_by_window": {
     "1": {
       "window_hours": 1,
-      "total": 36,
-      "ok": 23,
-      "partial_error": 13,
+      "total": 42,
+      "ok": 14,
+      "partial_error": 28,
       "error": 0,
       "other": 0,
-      "success_rate": 0.6388888888888888
+      "success_rate": 0.3333333333333333
     },
     "24": {
       "window_hours": 24,
-      "total": 767,
-      "ok": 714,
-      "partial_error": 53,
-      "error": 0,
+      "total": 625,
+      "ok": 225,
+      "partial_error": 399,
+      "error": 1,
       "other": 0,
-      "success_rate": 0.9308996088657105
+      "success_rate": 0.36
     },
     "168": {
       "window_hours": 168,
-      "total": 1540,
-      "ok": 1487,
-      "partial_error": 53,
-      "error": 0,
+      "total": 2124,
+      "ok": 1685,
+      "partial_error": 438,
+      "error": 1,
       "other": 0,
-      "success_rate": 0.9655844155844155
+      "success_rate": 0.7933145009416196
     }
   },
   "sync_state": {
     "cursor": 60,
-    "db_max": 60,
-    "delta": 0,
+    "db_max": 63,
+    "delta": 3,
     "cursor_file_exists": true
   },
   "dry_run_alert": null,
-  "snapshot_generated_at": "2026-05-19T00:58:56Z"
+  "snapshot_generated_at": "2026-05-19T14:59:40Z"
 }
