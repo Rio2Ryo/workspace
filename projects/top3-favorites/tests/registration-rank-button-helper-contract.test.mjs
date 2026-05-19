@@ -25,8 +25,8 @@ function relativePath(fileUrl) {
   return path.relative(root.pathname, fileUrl.pathname)
 }
 
-const directRegistrationRankButtonPattern = /getByRole\(['"]button['"],\s*\{\s*name:\s*['"]登録 [123]位に入れる['"]\s*\}\)/
-const directEditRankButtonPattern = /getByRole\(['"]button['"],\s*\{\s*name:\s*['"]編集 [123]位に変更['"]\s*\}\)/
+const directRegistrationRankButtonPattern = /getBy(?:Role\(['"]button['"],\s*\{\s*name:\s*|Label\()(['"])登録 [123]位に入れる\1/
+const directEditRankButtonPattern = /getBy(?:Role\(['"]button['"],\s*\{\s*name:\s*|Label\()(['"])編集 [123]位に変更\1/
 
 function importsNamedHelper(source, helperName) {
   const importMatch = source.match(/import\s*\{([\s\S]*?)\}\s*from\s*['"][^'"]*e2e-helpers['"]/)
