@@ -11,6 +11,11 @@ export async function resetItemsByDelete(request: APIRequestContext) {
   await resetItemsByReplace(request)
 }
 
+export async function fetchItems<T = { items: unknown[] }>(request: APIRequestContext): Promise<T> {
+  const response = await request.get('/api/items')
+  expect(response.ok(), 'fetchItems should read the current /api/items state before assertions').toBe(true)
+  return (await response.json()) as T
+}
 
 export function sampleSaveButton(page: Page): Locator {
   return page.getByRole('button', { name: 'サンプルをDB保存' })

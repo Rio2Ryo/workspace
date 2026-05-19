@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test'
-import { uploadJsonImportFile, resetItemsByReplace, registrationSaveButton, expectOperationAlert, expectOperationStatus, registrationLocationField, registrationNameField, registrationTagField } from './e2e-helpers'
+import { uploadJsonImportFile, resetItemsByReplace, registrationSaveButton, expectOperationAlert, expectOperationStatus, registrationLocationField, registrationNameField, registrationTagField, fetchItems } from './e2e-helpers'
 
 test.beforeEach(async ({ request }) => {
   await resetItemsByReplace(request)
@@ -32,7 +32,7 @@ test('invalid JSON after a valid import preview clears pending preview and keeps
   await expect(page.getByLabel('インポート確認')).toHaveCount(0)
 
   // DB should remain unchanged (still seeded 1 item)
-  const apiData = (await request.get('/api/items').then((res) => res.json())) as { items: { name: string }[] }
+  const apiData = await fetchItems<{ items: { name: string }[] }>(request)
   expect(apiData.items).toHaveLength(1)
   expect(apiData.items[0]?.name).toBe('Base Item')
 })

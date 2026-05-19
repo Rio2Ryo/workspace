@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test'
-import { resetItemsByReplace, registrationSaveButton, expectOperationStatus, registrationRankButton, searchSection as searchSectionLocator, registrationLocationField, registrationNameField, registrationTagField, reloadPageAndWaitForSearchReady } from './e2e-helpers'
+import { resetItemsByReplace, registrationSaveButton, expectOperationStatus, registrationRankButton, searchSection as searchSectionLocator, registrationLocationField, registrationNameField, registrationTagField, reloadPageAndWaitForSearchReady, fetchItems } from './e2e-helpers'
 
 test.beforeEach(async ({ request }) => {
   await resetItemsByReplace(request)
@@ -42,9 +42,9 @@ test('adding new 1st place rebalances to Top3 and persists ranks after reload + 
   await expect(searchSection.getByText('C店')).toHaveCount(0)
 
   // API contract: only top3 of same tag with exact ranks
-  const apiData = (await request.get('/api/items').then((res) => res.json())) as {
+  const apiData = await fetchItems<{
     items: { tag: string; name: string; rank: number }[]
-  }
+  }>(request)
   const cafe = apiData.items
     .filter((item) => item.tag === 'カフェラテ')
     .sort((a, b) => a.rank - b.rank)

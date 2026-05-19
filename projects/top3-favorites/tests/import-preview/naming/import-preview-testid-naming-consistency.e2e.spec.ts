@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test'
-import { uploadJsonImportFile, resetItemsByDelete, saveSampleItems } from '../../e2e-helpers'
+import { uploadJsonImportFile, resetItemsByDelete, saveSampleItems, fetchItems } from '../../e2e-helpers'
 
 test.beforeEach(async ({ request }) => {
   await resetItemsByDelete(request)
@@ -9,7 +9,7 @@ test('import preview metrics/helpers use unified import-preview-* testid naming'
   await page.goto('/')
   await saveSampleItems(page)
 
-  const current = (await request.get('/api/items').then((res) => res.json())) as { items: unknown[] }
+  const current = await fetchItems<{ items: unknown[] }>(request)
   await uploadJsonImportFile(page, 'preview-testid-consistency.json', current.items)
 
   await expect(page.getByTestId('import-preview-direction-metrics')).toBeVisible()

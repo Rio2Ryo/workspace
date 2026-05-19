@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test'
-import { itemEditButton, editCancelButton, editSaveButton, resetItemsByReplace, saveSampleItems, expectOperationAlert, expectOperationStatus, operationAlert, editNameField, editTagField, editLocationField, editMemoField } from './e2e-helpers'
+import { itemEditButton, editCancelButton, editSaveButton, resetItemsByReplace, saveSampleItems, expectOperationAlert, expectOperationStatus, operationAlert, editNameField, editTagField, editLocationField, editMemoField, fetchItems } from './e2e-helpers'
 
 test.beforeEach(async ({ request }) => {
   await resetItemsByReplace(request)
@@ -24,7 +24,7 @@ test('edit form fields have accessible names and save edited Top3 data', async (
 
   await expect(page.getByText(/\d位: Solito MAGO Edited/)).toBeVisible()
 
-  const apiData = (await page.request.get('/api/items').then((res) => res.json())) as { items: Array<{ name: string }> }
+  const apiData = await fetchItems<{ items: Array<{ name: string }> }>(page.request)
   expect(apiData.items.some((item) => item.name === 'Solito MAGO Edited')).toBe(true)
 })
 

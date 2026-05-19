@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test'
-import { uploadJsonImportFile, resetItemsByReplace, saveSampleItems, importCancelButton, importConfirmButton, expectOperationStatus } from './e2e-helpers'
+import { uploadJsonImportFile, resetItemsByReplace, saveSampleItems, importCancelButton, importConfirmButton, expectOperationStatus, fetchItems } from './e2e-helpers'
 
 function item(id: string, tag: string, name: string, rank = 1) {
   const now = new Date().toISOString()
@@ -33,7 +33,7 @@ test('import shows a confirmation preview before replacing existing data', async
   await expect(page.getByText('現在3件 → インポート後1件')).toBeVisible()
   await expect(page.getByText('Preview Pudding')).not.toBeVisible()
 
-  const beforeConfirm = (await request.get('/api/items').then((res) => res.json())) as { items: { name: string }[] }
+  const beforeConfirm = await fetchItems<{ items: { name: string }[] }>(request)
   expect(beforeConfirm.items.map((saved) => saved.name).sort()).toEqual(['Solito MAGO', 'T-SITEのカフェ', 'とみ田'].sort())
 
   await importCancelButton(page).click()

@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test'
-import { resetItemsByReplace, saveSampleItems, searchSection as searchSectionLocator, reloadPageAndWaitForSearchReady } from './e2e-helpers'
+import { resetItemsByReplace, saveSampleItems, searchSection as searchSectionLocator, reloadPageAndWaitForSearchReady, fetchItems } from './e2e-helpers'
 
 test.beforeEach(async ({ request }) => {
   await resetItemsByReplace(request)
@@ -21,9 +21,9 @@ test('sample data seed remains after reload and is reflected in API data', async
   await expect(searchSection.getByText(/2位:\s*T-SITEのカフェ/)).toBeVisible()
   await expect(searchSection.getByText(/1位:\s*とみ田/)).toBeVisible()
 
-  const apiData = (await request.get('/api/items').then((res) => res.json())) as {
+  const apiData = await fetchItems<{
     items: { tag: string; location: string; name: string; rank: number; memo: string }[]
-  }
+  }>(request)
 
   expect(apiData.items).toHaveLength(3)
   expect(apiData.items.map(({ tag, location, name, rank, memo }) => ({ tag, location, name, rank, memo }))).toEqual(

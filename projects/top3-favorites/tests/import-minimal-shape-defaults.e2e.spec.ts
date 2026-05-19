@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test'
-import { uploadJsonImportFile, resetItemsByReplace, importConfirmButton, expectOperationStatus } from './e2e-helpers'
+import { uploadJsonImportFile, resetItemsByReplace, importConfirmButton, expectOperationStatus, fetchItems } from './e2e-helpers'
 
 test.beforeEach(async ({ request }) => {
   await resetItemsByReplace(request)
@@ -24,9 +24,9 @@ test('UI import accepts minimal valid items and fills generated fields before AP
   await importConfirmButton(page).click()
   await expectOperationStatus(page, 'インポート成功: 3件を反映しました。')
 
-  const data = (await request.get('/api/items').then((res) => res.json())) as {
+  const data = await fetchItems<{
     items: Array<{ id: string; createdAt: string; updatedAt: string; mapsUrl: string; placeId: string }>
-  }
+  }>(request)
   expect(data.items).toHaveLength(3)
   for (const item of data.items) {
     expect(item.createdAt).toMatch(/^\d{4}-\d{2}-\d{2}T/)

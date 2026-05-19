@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test'
-import { dismissNextDeleteDialog, acceptNextDeleteDialog, resetItemsByReplace, saveSampleItems, itemDeleteButton, expectOperationStatus } from './e2e-helpers'
+import { dismissNextDeleteDialog, acceptNextDeleteDialog, resetItemsByReplace, saveSampleItems, itemDeleteButton, expectOperationStatus, fetchItems } from './e2e-helpers'
 
 test.beforeEach(async ({ request }) => {
   await resetItemsByReplace(request)
@@ -32,6 +32,6 @@ test('delete confirmation accept removes the item', async ({ page }) => {
   await dialogPromise
   await expectOperationStatus(page, '削除しました。')
 
-  const apiData = (await page.request.get('/api/items').then((res) => res.json())) as { items: Array<{ name: string }> }
+  const apiData = await fetchItems<{ items: Array<{ name: string }> }>(page.request)
   expect(apiData.items.some((item) => item.name === 'Solito MAGO')).toBe(false)
 })

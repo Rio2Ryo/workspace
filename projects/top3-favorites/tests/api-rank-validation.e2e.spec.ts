@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test'
-import { resetItemsByReplace } from './e2e-helpers'
+import { resetItemsByReplace, fetchItems } from './e2e-helpers'
 
 test.beforeEach(async ({ request }) => {
   await resetItemsByReplace(request)
@@ -15,7 +15,7 @@ test('API create rejects invalid rank with a localized repair hint instead of si
     error: 'API create / フィールド: rank / 修正: 順位は1〜3で入力してください。',
   })
 
-  const apiData = (await request.get('/api/items').then((response) => response.json())) as { items: Array<{ name: string }> }
+  const apiData = await fetchItems<{ items: Array<{ name: string }> }>(request)
   expect(apiData.items.some((item) => item.name === 'Invalid Rank Create')).toBe(false)
 })
 
@@ -35,9 +35,9 @@ test('API edit rejects invalid rank with a localized repair hint and preserves t
     error: 'API edit / フィールド: rank / 修正: 順位は1〜3で入力してください。',
   })
 
-  const apiData = (await request.get('/api/items').then((response) => response.json())) as {
+  const apiData = await fetchItems<{
     items: Array<{ id: string; name: string; rank: number }>
-  }
+  }>(request)
   expect(apiData.items).toContainEqual(expect.objectContaining({ id: createdBody.item.id, name: 'Valid Rank Base', rank: 2 }))
   expect(apiData.items.some((item) => item.name === 'Invalid Rank Edit')).toBe(false)
 })
@@ -59,7 +59,7 @@ test('API create identifies the missing required field with a localized repair h
     error: 'API create / フィールド: name / 修正: 店舗名を入力してください。',
   })
 
-  const apiData = (await request.get('/api/items').then((response) => response.json())) as { items: Array<{ name: string }> }
+  const apiData = await fetchItems<{ items: Array<{ name: string }> }>(request)
   expect(apiData.items.some((item) => item.name === 'Missing Tag Create')).toBe(false)
 })
 
@@ -86,9 +86,9 @@ test('API edit identifies the missing required field with a localized repair hin
     error: 'API edit / フィールド: name / 修正: 店舗名を入力してください。',
   })
 
-  const apiData = (await request.get('/api/items').then((response) => response.json())) as {
+  const apiData = await fetchItems<{
     items: Array<{ id: string; name: string; tag: string }>
-  }
+  }>(request)
   expect(apiData.items).toContainEqual(expect.objectContaining({ id: createdBody.item.id, tag: '検証', name: 'Required Field Base' }))
   expect(apiData.items.some((item) => item.name === 'Invalid Missing Tag Edit')).toBe(false)
 })
@@ -109,9 +109,9 @@ test('API edit identifies a missing target item with a localized recovery hint a
     error: 'API edit / フィールド: id / 修正: 更新対象が見つかりません。最新データを再読み込みしてください。',
   })
 
-  const apiData = (await request.get('/api/items').then((response) => response.json())) as {
+  const apiData = await fetchItems<{
     items: Array<{ id: string; name: string }>
-  }
+  }>(request)
   expect(apiData.items).toContainEqual(expect.objectContaining({ id: createdBody.item.id, name: 'Existing Item Before Missing Target Edit' }))
   expect(apiData.items.some((item) => item.name === 'Should Not Be Inserted By Edit')).toBe(false)
 })

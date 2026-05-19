@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test'
-import { uploadJsonImportFile, resetItemsByReplace, importConfirmButton, registrationSaveButton, expectOperationStatus, expectOperationAlert, registrationLocationField, registrationNameField, registrationTagField } from './e2e-helpers'
+import { uploadJsonImportFile, resetItemsByReplace, importConfirmButton, registrationSaveButton, expectOperationStatus, expectOperationAlert, registrationLocationField, registrationNameField, registrationTagField, fetchItems } from './e2e-helpers'
 
 test.beforeEach(async ({ request }) => {
   await resetItemsByReplace(request)
@@ -49,7 +49,7 @@ test('import fail-closed matrix: all invalid inputs keep existing data and clear
     await expectOperationAlert(page, c.expected)
     await expect(page.getByLabel('インポート確認')).toHaveCount(0)
 
-    const apiData = (await request.get('/api/items').then((res) => res.json())) as { items: { name: string }[] }
+    const apiData = await fetchItems<{ items: { name: string }[] }>(request)
     expect(apiData.items).toHaveLength(1)
     expect(apiData.items[0]?.name).toBe('Baseline Keep')
   }
@@ -72,7 +72,7 @@ test('import fail-closed matrix: all invalid inputs keep existing data and clear
   await importConfirmButton(page).click()
   await expectOperationStatus(page, 'インポート成功: 2件を反映しました。')
 
-  const finalApiData = (await request.get('/api/items').then((res) => res.json())) as { items: { name: string }[] }
+  const finalApiData = await fetchItems<{ items: { name: string }[] }>(request)
   expect(finalApiData.items).toHaveLength(2)
   expect(finalApiData.items.map((v) => v.name).sort()).toEqual(['Valid A', 'Valid B'])
 })

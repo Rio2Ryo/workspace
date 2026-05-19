@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test'
-import { resetItemsByReplace, clickSampleSaveButton, expectOperationAlert } from './e2e-helpers'
+import { resetItemsByReplace, clickSampleSaveButton, expectOperationAlert, fetchItems } from './e2e-helpers'
 
 test.beforeEach(async ({ request }) => {
   await resetItemsByReplace(request)
@@ -28,6 +28,6 @@ test('failed sample save clears stale success notice and keeps existing data vis
   await expect(page.getByText('カフェラテ の1位に保存しました。')).toHaveCount(0)
   await expect(page.getByText('1位: Existing Keep')).toBeVisible()
 
-  const apiData = (await request.get('/api/items').then((res) => res.json())) as { items: { name: string }[] }
+  const apiData = await fetchItems<{ items: { name: string }[] }>(request)
   expect(apiData.items.map((item) => item.name)).toEqual(['Existing Keep'])
 })

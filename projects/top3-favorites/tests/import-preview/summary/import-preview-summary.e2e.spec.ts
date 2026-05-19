@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test'
-import { uploadJsonImportFile, resetItemsByReplace, saveSampleItems } from '../../e2e-helpers'
+import { uploadJsonImportFile, resetItemsByReplace, saveSampleItems, fetchItems } from '../../e2e-helpers'
 
 function item(id: string, tag: string, name: string, rank = 1) {
   const now = new Date().toISOString()
@@ -31,7 +31,7 @@ test('import confirmation summarizes added removed kept items and tag impact', a
   ]
 
   // Make one imported id match an existing saved id so the preview can distinguish kept vs added.
-  const current = await page.request.get('/api/items').then((res) => res.json()) as { items: { id: string }[] }
+  const current = await fetchItems<{ items: { id: string }[] }>(page.request)
   replacement[0].id = current.items[0].id
 
   await uploadJsonImportFile(page, 'impact-import.json', replacement)

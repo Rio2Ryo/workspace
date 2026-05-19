@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test'
-import { uploadJsonImportFile, resetItemsByReplace, saveSampleItems } from './e2e-helpers'
+import { uploadJsonImportFile, resetItemsByReplace, saveSampleItems, fetchItems } from './e2e-helpers'
 
 test.beforeEach(async ({ request }) => {
   await resetItemsByReplace(request)
@@ -9,7 +9,7 @@ test('import preview shows explicit no-change badge when payload matches current
   await page.goto('/')
   await saveSampleItems(page)
 
-  const current = (await request.get('/api/items').then((res) => res.json())) as { items: unknown[] }
+  const current = await fetchItems<{ items: unknown[] }>(request)
 
   await uploadJsonImportFile(page, 'same-data.json', current.items)
 

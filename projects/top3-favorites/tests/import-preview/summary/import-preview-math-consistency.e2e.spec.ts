@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test'
-import { uploadJsonImportFile, resetItemsByReplace, saveSampleItems, importConfirmButton, expectOperationStatus } from '../../e2e-helpers'
+import { uploadJsonImportFile, resetItemsByReplace, saveSampleItems, importConfirmButton, expectOperationStatus, fetchItems } from '../../e2e-helpers'
 
 test.beforeEach(async ({ request }) => {
   await resetItemsByReplace(request)
@@ -9,9 +9,9 @@ test('import confirmation math is consistent for added/kept/removed/excluded cou
   await page.goto('/')
   await saveSampleItems(page)
 
-  const current = (await request.get('/api/items').then((res) => res.json())) as {
+  const current = await fetchItems<{
     items: Array<{ id: string }>
-  }
+  }>(request)
   const keepId = current.items[0].id
 
   const now = new Date().toISOString()
