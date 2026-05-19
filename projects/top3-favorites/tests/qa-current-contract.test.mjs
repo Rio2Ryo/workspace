@@ -1397,6 +1397,31 @@ function manualChecklistItemBlock(markdown, itemText) {
   return nextItemIndex === -1 ? markdown.slice(itemIndex) : markdown.slice(itemIndex, nextItemIndex)
 }
 
+test('[Manual][automation-link] import preview direction child items have direct automated links', async () => {
+  const markdown = await readFile(new URL('docs/MANUAL_TEST_CHECKLIST.md', `${root}/`), 'utf8')
+  const childContracts = [
+    {
+      item: '`+追加 / ±保持 / -削除予定` の方向メトリクスが表示される',
+      specs: [
+        'tests/import-preview/direction/import-preview-direction-metrics.e2e.spec.ts',
+        'tests/import-preview/direction/import-preview-direction-a11y-labels.e2e.spec.ts',
+      ],
+    },
+    {
+      item: '値が `0` のメトリクスは弱調表示（通常項目より目立たない）になる',
+      specs: ['tests/import-preview/summary/import-preview-zero-metrics-muted.e2e.spec.ts'],
+    },
+  ]
+
+  for (const { item, specs } of childContracts) {
+    const block = manualChecklistItemBlock(markdown, item)
+    assert.match(block, /自動確認:/, contractMessage({ scope: 'Manual', rule: 'import preview direction child checklist item has direct automated link', expected: item, fix: 'add an indented 自動確認 line directly under this import preview direction manual checklist item' }))
+    for (const spec of specs) {
+      assert.ok(block.includes(`\`${spec}\``), contractMessage({ scope: 'Manual', rule: 'import preview direction child checklist item cites authoritative spec', expected: spec, fix: 'add the focused direction E2E path to the child item 自動確認 line' }))
+    }
+  }
+})
+
 test('[Manual][automation-link] import preview summary child items have direct automated links', async () => {
   const markdown = await readFile(new URL('docs/MANUAL_TEST_CHECKLIST.md', `${root}/`), 'utf8')
   const childContracts = [

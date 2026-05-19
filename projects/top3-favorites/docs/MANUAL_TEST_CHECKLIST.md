@@ -113,8 +113,9 @@
 
 #### 4.2.1 direction（追加/保持/削除予定）
 - [ ] `+追加 / ±保持 / -削除予定` の方向メトリクスが表示される
+  - 自動確認: `tests/import-preview/direction/import-preview-direction-metrics.e2e.spec.ts` と `tests/import-preview/direction/import-preview-direction-a11y-labels.e2e.spec.ts` が方向メトリクス表示・読み上げ名を検証する
 - [ ] 値が `0` のメトリクスは弱調表示（通常項目より目立たない）になる
-  - 自動確認: `tests/import-preview/direction/import-preview-direction-metrics.e2e.spec.ts`、`tests/import-preview/direction/import-preview-direction-a11y-labels.e2e.spec.ts`、`tests/import-preview/summary/import-preview-zero-metrics-muted.e2e.spec.ts` が方向メトリクス・読み上げ名・0件弱調を検証する
+  - 自動確認: `tests/import-preview/summary/import-preview-zero-metrics-muted.e2e.spec.ts` が0件メトリクスの弱調表示を検証する
 
 #### 4.2.2 live（読み上げ要約）
 - [ ] `aria-live="polite"` の更新領域で、差分要約が更新される

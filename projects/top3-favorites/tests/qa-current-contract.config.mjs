@@ -311,8 +311,8 @@ const rawManualAutomatedLinkContracts = {
       message: 'manual checklist should connect broken JSON import failure to automated parse-error specs',
     },
     {
-      pattern: /direction（追加\/保持\/削除予定）[\s\S]*`\+追加 \/ ±保持 \/ -削除予定` の方向メトリクスが表示される[\s\S]*値が `0` のメトリクスは弱調表示[\s\S]*自動確認: `tests\/import-preview\/direction\/import-preview-direction-metrics\.e2e\.spec\.ts`、`tests\/import-preview\/direction\/import-preview-direction-a11y-labels\.e2e\.spec\.ts`、`tests\/import-preview\/summary\/import-preview-zero-metrics-muted\.e2e\.spec\.ts`/,
-      message: 'manual checklist should connect import preview direction metrics and muted-zero behavior to automated specs',
+      pattern: /direction（追加\/保持\/削除予定）[\s\S]*`\+追加 \/ ±保持 \/ -削除予定` の方向メトリクスが表示される[\s\S]*自動確認: `tests\/import-preview\/direction\/import-preview-direction-metrics\.e2e\.spec\.ts` と `tests\/import-preview\/direction\/import-preview-direction-a11y-labels\.e2e\.spec\.ts`[\s\S]*値が `0` のメトリクスは弱調表示[\s\S]*自動確認: `tests\/import-preview\/summary\/import-preview-zero-metrics-muted\.e2e\.spec\.ts`/,
+      message: 'manual checklist should connect import preview direction metrics and muted-zero behavior to child-level automated specs',
     },
     {
       pattern: /live（読み上げ要約）[\s\S]*aria-live="polite"[\s\S]*差分なし時は `差分なし。インポート後N件。`[\s\S]*正規化除外がある時は `正規化除外N件（例: 店名）`[\s\S]*自動確認: `tests\/import-preview\/live\/import-preview-live-region-updates\.e2e\.spec\.ts`、`tests\/import-preview\/live\/import-preview-live-summary-concise\.e2e\.spec\.ts`、`tests\/import-preview\/live\/import-preview-live-summary-includes-excluded-name\.e2e\.spec\.ts`/,
