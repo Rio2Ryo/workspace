@@ -93,6 +93,17 @@ test('import validation field summary prioritizes repeated fields over first-see
 
 test('import validation field summary filters the repair list to the selected repeated field', async ({ page }) => {
   await page.goto('/')
+  await page.evaluate(() => {
+    Object.defineProperty(navigator, 'clipboard', {
+      configurable: true,
+      value: {
+        writeText: async (text: string) => {
+          window.localStorage.setItem('last-copied-import-validation-paths', text)
+          window.localStorage.setItem('last-copied-import-validation-repairs', text)
+        },
+      },
+    })
+  })
 
   const now = '2026-05-18T00:00:00.000Z'
   const invalidItems = [
@@ -115,6 +126,14 @@ test('import validation field summary filters the repair list to the selected re
     '2件目 / $.items[1].tag / tag / タグを入力してください。',
     '3件目 / $.items[2].tag / tag / タグを入力してください。',
   ])
+  await importValidationCopyJsonPaths(page).click()
+  await expectOperationStatus(page, 'JSONパス一覧をコピーしました。')
+  await expect.poll(() => page.evaluate(() => window.localStorage.getItem('last-copied-import-validation-paths'))).toBe('$.items[1].tag\n$.items[2].tag')
+  await importValidationCopyRepairList(page).click()
+  await expectOperationStatus(page, '修正対象一覧をコピーしました。')
+  await expect.poll(() => page.evaluate(() => window.localStorage.getItem('last-copied-import-validation-repairs'))).toBe(
+    '2件目 / $.items[1].tag / tag / タグを入力してください。\n3件目 / $.items[2].tag / tag / タグを入力してください。',
+  )
   await importValidationFieldFilter(page, 'name').click()
   await expect(details.getByText('表示中: name の修正対象1件')).toBeVisible()
   await expect(details.locator('.import-validation-error-list ol li')).toHaveText([

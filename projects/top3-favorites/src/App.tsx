@@ -601,30 +601,6 @@ export function App() {
     }
   }
 
-  const copyImportValidationPaths = async () => {
-    if (!importValidationIssue) return
-    const paths = importValidationIssue.relatedIssues.map((issue) => issue.path).join('\n')
-    try {
-      await navigator.clipboard.writeText(paths)
-      setNotice('JSONパス一覧をコピーしました。')
-    } catch {
-      setNotice('JSONパス一覧をコピーできませんでした。画面上のパスを手動でコピーしてください。')
-    }
-  }
-
-  const copyImportValidationRepairs = async () => {
-    if (!importValidationIssue) return
-    const repairs = importValidationIssue.relatedIssues
-      .map((issue) => `${issue.row} / ${issue.path} / ${issue.field} / ${issue.fix}`)
-      .join('\n')
-    try {
-      await navigator.clipboard.writeText(repairs)
-      setNotice('修正対象一覧をコピーしました。')
-    } catch {
-      setNotice('修正対象一覧をコピーできませんでした。画面上の修正対象を手動でコピーしてください。')
-    }
-  }
-
   const importValidationFieldCounts = importValidationIssue
     ? Array.from(
       importValidationIssue.relatedIssues.reduce<Map<string, number>>((counts, issue) => {
@@ -642,6 +618,30 @@ export function App() {
     : []
 
   const selectedImportValidationFieldCount = visibleImportValidationIssues.length
+
+  const copyImportValidationPaths = async () => {
+    if (!importValidationIssue) return
+    const paths = visibleImportValidationIssues.map((issue) => issue.path).join('\n')
+    try {
+      await navigator.clipboard.writeText(paths)
+      setNotice('JSONパス一覧をコピーしました。')
+    } catch {
+      setNotice('JSONパス一覧をコピーできませんでした。画面上のパスを手動でコピーしてください。')
+    }
+  }
+
+  const copyImportValidationRepairs = async () => {
+    if (!importValidationIssue) return
+    const repairs = visibleImportValidationIssues
+      .map((issue) => `${issue.row} / ${issue.path} / ${issue.field} / ${issue.fix}`)
+      .join('\n')
+    try {
+      await navigator.clipboard.writeText(repairs)
+      setNotice('修正対象一覧をコピーしました。')
+    } catch {
+      setNotice('修正対象一覧をコピーできませんでした。画面上の修正対象を手動でコピーしてください。')
+    }
+  }
 
   const copyImportExcludedNames = async () => {
     if (!pendingImport) return
