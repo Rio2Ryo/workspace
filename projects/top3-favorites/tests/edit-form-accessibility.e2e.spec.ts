@@ -1,19 +1,20 @@
 import { expect, test } from '@playwright/test'
 import {
-  itemEditButton,
   editCancelButton,
-  editSaveButton,
-  resetItemsByReplace,
-  saveSampleItems,
-  expectOperationAlert,
-  expectOperationStatus,
-  operationAlert,
-  editNameField,
-  editTagField,
   editLocationField,
   editMemoField,
+  editNameField,
+  editSaveButton,
+  editTagField,
+  expectOperationAlert,
+  expectOperationStatus,
   fetchItems,
+  itemEditButton,
+  operationAlert,
   rankedItemSummary,
+  rankedItemSummaryByName,
+  resetItemsByReplace,
+  saveSampleItems,
 } from './e2e-helpers'
 
 test.beforeEach(async ({ request }) => {
@@ -37,7 +38,7 @@ test('edit form fields have accessible names and save edited Top3 data', async (
   await editSaveButton(page).click()
   await expectOperationStatus(page, '編集を保存しました。')
 
-  await expect(page.getByText(/\d位: Solito MAGO Edited/)).toBeVisible()
+  await expect(rankedItemSummaryByName(page, 'Solito MAGO Edited')).toBeVisible()
 
   const apiData = await fetchItems<{ items: Array<{ name: string }> }>(page.request)
   expect(apiData.items.some((item) => item.name === 'Solito MAGO Edited')).toBe(true)
@@ -57,6 +58,6 @@ test('edit form validates required fields before saving', async ({ page }) => {
   await expect(editNameField(page)).toBeVisible()
 
   await editCancelButton(page).click()
-  await expect(page.getByText(/\d位: Solito MAGO/)).toBeVisible()
+  await expect(rankedItemSummaryByName(page, 'Solito MAGO')).toBeVisible()
   await expect(operationAlert(page)).not.toBeVisible()
 })

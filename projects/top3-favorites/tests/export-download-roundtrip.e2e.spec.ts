@@ -1,5 +1,16 @@
 import { expect, test } from '@playwright/test'
-import {uploadJsonImportFile, parseDownloadedJsonFile, resetItemsByReplace, downloadJsonExport, saveSampleItems, reloadPageAndWaitForSearchReady, fetchItems, confirmImportAndWaitForStatus, expectImportPreviewCounts} from './e2e-helpers'
+import {
+  confirmImportAndWaitForStatus,
+  downloadJsonExport,
+  expectImportPreviewCounts,
+  fetchItems,
+  parseDownloadedJsonFile,
+  rankedItemSummary,
+  reloadPageAndWaitForSearchReady,
+  resetItemsByReplace,
+  saveSampleItems,
+  uploadJsonImportFile,
+} from './e2e-helpers'
 
 const requiredStringFields = ['id', 'tag', 'location', 'name', 'memo', 'mapsUrl', 'placeId', 'createdAt', 'updatedAt'] as const
 
@@ -38,9 +49,9 @@ test('exported JSON file has valid item shape and can be imported back through t
 
   await expectImportPreviewCounts(page, 0, 3)
   await confirmImportAndWaitForStatus(page, 'インポート成功: 3件を反映しました。')
-  await expect(page.getByText('1位: Solito MAGO')).toBeVisible()
-  await expect(page.getByText('2位: T-SITEのカフェ')).toBeVisible()
-  await expect(page.getByText('1位: とみ田')).toBeVisible()
+  await expect(rankedItemSummary(page, 1, 'Solito MAGO')).toBeVisible()
+  await expect(rankedItemSummary(page, 2, 'T-SITEのカフェ')).toBeVisible()
+  await expect(rankedItemSummary(page, 1, 'とみ田')).toBeVisible()
 
   const afterImport = await fetchItems<{ items: ExportedItem[] }>(request)
   expect(afterImport.items.map((item) => item.name).sort()).toEqual(exportedItems.map((item) => item.name).sort())

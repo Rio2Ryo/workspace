@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test'
-import { tagFilterButton, resetItemsByReplace } from './e2e-helpers'
+import { rankedItemSummary, resetItemsByReplace, tagFilterButton } from './e2e-helpers'
 
 const item = (id: string, tag: string, rank: 1 | 2 | 3, name: string) => ({
   id,
@@ -37,7 +37,7 @@ test('tag chip regions have distinct accessible labels and show each tag once pe
   await expect(tagFilterButton(searchTags, '別タグ')).toHaveCount(1)
 
   await tagFilterButton(searchTags, '重複タグ').click()
-  await expect(page.getByText(/1位: 重複タグA/)).toBeVisible()
-  await expect(page.getByText(/2位: 重複タグB/)).toBeVisible()
-  await expect(page.getByText(/1位: 別タグA/)).not.toBeVisible()
+  await expect(rankedItemSummary(page, 1, '重複タグA')).toBeVisible()
+  await expect(rankedItemSummary(page, 2, '重複タグB')).toBeVisible()
+  await expect(rankedItemSummary(page, 1, '別タグA')).not.toBeVisible()
 })

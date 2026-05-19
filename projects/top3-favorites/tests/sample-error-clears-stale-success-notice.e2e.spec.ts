@@ -1,5 +1,13 @@
 import { expect, test } from '@playwright/test'
-import { resetItemsByReplace, clickSampleSaveButton, expectOperationAlert, fetchItems, postItem, operationStatus } from './e2e-helpers'
+import {
+  clickSampleSaveButton,
+  expectOperationAlert,
+  fetchItems,
+  operationStatus,
+  postItem,
+  rankedItemSummary,
+  resetItemsByReplace,
+} from './e2e-helpers'
 
 test.beforeEach(async ({ request }) => {
   await resetItemsByReplace(request)
@@ -8,7 +16,7 @@ test.beforeEach(async ({ request }) => {
 test('failed sample save clears stale success notice and keeps existing data visible', async ({ page, request }) => {
   await postItem(request, { tag: 'カフェラテ', location: '柏の葉', rank: 1, name: 'Existing Keep', memo: '' })
   await page.goto('/')
-  await expect(page.getByText('1位: Existing Keep')).toBeVisible()
+  await expect(rankedItemSummary(page, 1, 'Existing Keep')).toBeVisible()
 
   await page.route('**/api/items**', async (route) => {
     if (route.request().method() === 'POST') {
@@ -26,7 +34,7 @@ test('failed sample save clears stale success notice and keeps existing data vis
 
   await expectOperationAlert(page, 'サンプル保存APIが一時的に利用できません。')
   await expect(operationStatus(page)).toHaveCount(0)
-  await expect(page.getByText('1位: Existing Keep')).toBeVisible()
+  await expect(rankedItemSummary(page, 1, 'Existing Keep')).toBeVisible()
 
   const apiData = await fetchItems<{ items: { name: string }[] }>(request)
   expect(apiData.items.map((item) => item.name)).toEqual(['Existing Keep'])

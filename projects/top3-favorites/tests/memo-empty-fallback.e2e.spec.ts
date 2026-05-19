@@ -1,14 +1,15 @@
 import { expect, test } from '@playwright/test'
 import {
-  resetItemsByReplace,
-  registrationSaveButton,
-  registrationRankButton,
+  rankedItemSummary,
+  rankedItemSummaryByName,
   registrationLocationField,
   registrationMemoField,
   registrationNameField,
+  registrationRankButton,
+  registrationSaveButton,
   registrationTagField,
+  resetItemsByReplace,
   tagGroup,
-  rankedItemSummary,
 } from './e2e-helpers'
 
 test.beforeEach(async ({ request }) => {
@@ -26,7 +27,7 @@ test('item with empty memo shows fallback text （メモなし） in details', a
   await registrationSaveButton(page).click()
 
   const group = tagGroup(page, 'カフェ')
-  await expect(group.getByText(/\d位: 茶亭/)).toBeVisible()
+  await expect(rankedItemSummaryByName(group, '茶亭')).toBeVisible()
 
   await rankedItemSummary(group, 2, '茶亭').click()
   await expect(group.getByText('（メモなし）')).toBeVisible()

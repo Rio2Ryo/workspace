@@ -1,14 +1,15 @@
 import { expect, test } from '@playwright/test'
 import {
-  tagFilterButton,
-  searchClearButton,
   acceptNextDeleteDialog,
-  resetItemsByReplace,
-  itemDeleteButton,
   expectOperationStatus,
-  searchSection as searchSectionLocator,
+  itemDeleteButton,
   postItem,
   rankedItemSummary,
+  rankedItemSummaryByName,
+  resetItemsByReplace,
+  searchClearButton,
+  searchSection as searchSectionLocator,
+  tagFilterButton,
 } from './e2e-helpers'
 
 test.beforeEach(async ({ request }) => {
@@ -26,7 +27,7 @@ test('delete removes only the confirmed target item when multiple tags exist', a
   // Open target item and delete only that one
   const searchSection = searchSectionLocator(page)
   await tagFilterButton(searchSection as searchSectionLocator, 'カフェラテ').click()
-  await expect(searchSection.getByText(/\d位: 削除対象A/)).toBeVisible()
+  await expect(rankedItemSummaryByName(searchSection, '削除対象A')).toBeVisible()
   await rankedItemSummary(searchSection, 1, '削除対象A').click()
 
   const dialogPromise = acceptNextDeleteDialog(page, '削除対象A をTop3から削除しますか？')

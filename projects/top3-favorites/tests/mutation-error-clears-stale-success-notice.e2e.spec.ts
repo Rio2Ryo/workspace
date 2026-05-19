@@ -1,18 +1,18 @@
 import { expect, test } from '@playwright/test'
 import {
   acceptNextDeleteDialog,
-  itemEditButton,
   editSaveButton,
-  resetItemsByReplace,
-  itemDeleteButton,
-  registrationSaveButton,
-  expectOperationStatus,
   expectOperationAlert,
-  registrationLocationField,
-  registrationNameField,
-  registrationTagField,
+  expectOperationStatus,
+  itemDeleteButton,
+  itemEditButton,
   operationStatus,
   rankedItemSummary,
+  registrationLocationField,
+  registrationNameField,
+  registrationSaveButton,
+  registrationTagField,
+  resetItemsByReplace,
 } from './e2e-helpers'
 
 test.beforeEach(async ({ request }) => {

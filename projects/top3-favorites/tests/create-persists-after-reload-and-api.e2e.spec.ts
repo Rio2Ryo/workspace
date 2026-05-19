@@ -1,18 +1,18 @@
 import { expect, test } from '@playwright/test'
 import {
-  resetItemsByReplace,
-  registrationSaveButton,
   expectOperationStatus,
-  registrationRankButton,
-  searchSection as searchSectionLocator,
+  fetchItems,
+  rankedItemSummary,
   registrationLocationField,
   registrationMemoField,
   registrationNameField,
+  registrationRankButton,
+  registrationSaveButton,
   registrationTagField,
   reloadPageAndWaitForSearchReady,
-  fetchItems,
+  resetItemsByReplace,
+  searchSection as searchSectionLocator,
   tagHeading,
-  rankedItemSummary,
 } from './e2e-helpers'
 
 test.beforeEach(async ({ request }) => {
@@ -32,13 +32,13 @@ test('newly created item remains after reload and exists in API data', async ({ 
   await expectOperationStatus(page, '永続化タグ の2位に保存しました。')
 
   const searchSection = searchSectionLocator(page)
-  await expect(searchSection.getByText(/2位:\s*Persist New Item/)).toBeVisible()
+  await expect(rankedItemSummary(searchSection, 2, 'Persist New Item')).toBeVisible()
   await rankedItemSummary(searchSection, 2, 'Persist New Item').click()
   await expect(searchSection.getByText('reload persistence contract')).toBeVisible()
 
   await reloadPageAndWaitForSearchReady(page)
 
-  await expect(searchSection.getByText(/2位:\s*Persist New Item/)).toBeVisible()
+  await expect(rankedItemSummary(searchSection, 2, 'Persist New Item')).toBeVisible()
   await rankedItemSummary(searchSection, 2, 'Persist New Item').click()
   await expect(searchSection.getByText('reload persistence contract')).toBeVisible()
   await expect(tagHeading(searchSection, '永続化タグ')).toBeVisible()

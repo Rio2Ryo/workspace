@@ -1,20 +1,21 @@
 import { expect, test } from '@playwright/test'
 import {
-  sampleSaveButton,
-  jsonExportButton,
-  tagFilterButton,
-  searchClearButton,
-  uploadJsonImportFile,
-  parseDownloadedJsonFile,
-  resetItemsByReplace,
-  downloadJsonExport,
-  saveSampleItems,
-  jsonImportButton,
-  searchSection as searchSectionLocator,
-  reloadPageAndWaitForSearchReady,
   confirmImportAndWaitForStatus,
+  downloadJsonExport,
   expectImportPreviewCounts,
+  jsonExportButton,
+  jsonImportButton,
+  parseDownloadedJsonFile,
+  rankedItemSummary,
+  reloadPageAndWaitForSearchReady,
+  resetItemsByReplace,
+  sampleSaveButton,
+  saveSampleItems,
+  searchClearButton,
+  searchSection as searchSectionLocator,
+  tagFilterButton,
   tagHeading,
+  uploadJsonImportFile,
 } from './e2e-helpers'
 
 test.beforeEach(async ({ request }) => {
@@ -34,7 +35,7 @@ test('json import/export UI exists and invalid import keeps existing data', asyn
   await uploadJsonImportFile(page, 'invalid.json', '{"foo":1}')
 
   await expect(page.getByText(/インポート失敗/)).toBeVisible()
-  await expect(page.getByText('1位: Solito MAGO')).toBeVisible()
+  await expect(rankedItemSummary(page, 1, 'Solito MAGO')).toBeVisible()
 })
 
 test('exported JSON can be downloaded and imported back through the confirmation preview', async ({ page, request }) => {
@@ -56,7 +57,7 @@ test('exported JSON can be downloaded and imported back through the confirmation
 
   await expectImportPreviewCounts(page, 0, 3)
   await confirmImportAndWaitForStatus(page, 'インポート成功: 3件を反映しました。')
-  await expect(page.getByText('1位: Solito MAGO')).toBeVisible()
+  await expect(rankedItemSummary(page, 1, 'Solito MAGO')).toBeVisible()
 })
 
 test('valid import clears stale tag filters so imported data is immediately visible', async ({ page }) => {
@@ -65,7 +66,7 @@ test('valid import clears stale tag filters so imported data is immediately visi
 
   const searchSection = searchSectionLocator(page)
   await tagFilterButton(searchSection as searchSectionLocator, 'カフェラテ').click()
-  await expect(searchSection.getByText('1位: Solito MAGO')).toBeVisible()
+  await expect(rankedItemSummary(searchSection, 1, 'Solito MAGO')).toBeVisible()
 
   const importedItems = [
     {
@@ -87,6 +88,6 @@ test('valid import clears stale tag filters so imported data is immediately visi
   await expectImportPreviewCounts(page, 3, 1)
   await confirmImportAndWaitForStatus(page, 'インポート成功: 1件を反映しました。')
   await expect(tagHeading(searchSection, 'スイーツ')).toBeVisible()
-  await expect(searchSection.getByText('1位: Imported Pudding')).toBeVisible()
+  await expect(rankedItemSummary(searchSection, 1, 'Imported Pudding')).toBeVisible()
   await expect(searchClearButton(searchSection)).not.toBeVisible()
 })

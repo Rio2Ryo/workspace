@@ -1,5 +1,15 @@
 import { expect, test } from '@playwright/test'
-import {uploadJsonImportFile, resetItemsByReplace, saveSampleItems, importCancelButton, expectOperationStatus, fetchItems, confirmImportAndWaitForStatus, expectImportPreviewCounts} from './e2e-helpers'
+import {
+  confirmImportAndWaitForStatus,
+  expectImportPreviewCounts,
+  expectOperationStatus,
+  fetchItems,
+  importCancelButton,
+  rankedItemSummary,
+  resetItemsByReplace,
+  saveSampleItems,
+  uploadJsonImportFile,
+} from './e2e-helpers'
 
 function item(id: string, tag: string, name: string, rank = 1) {
   const now = new Date().toISOString()
@@ -24,7 +34,7 @@ test.beforeEach(async ({ request }) => {
 test('import shows a confirmation preview before replacing existing data', async ({ page, request }) => {
   await page.goto('/')
   await saveSampleItems(page)
-  await expect(page.getByText('1位: Solito MAGO')).toBeVisible()
+  await expect(rankedItemSummary(page, 1, 'Solito MAGO')).toBeVisible()
 
   const replacement = [item('preview-1', 'プリン', 'Preview Pudding')]
   await uploadJsonImportFile(page, 'preview-import.json', replacement)
@@ -38,10 +48,10 @@ test('import shows a confirmation preview before replacing existing data', async
 
   await importCancelButton(page).click()
   await expectOperationStatus(page, 'インポートをキャンセルしました。')
-  await expect(page.getByText('1位: Solito MAGO')).toBeVisible()
+  await expect(rankedItemSummary(page, 1, 'Solito MAGO')).toBeVisible()
 
   await uploadJsonImportFile(page, 'preview-import.json', replacement)
   await confirmImportAndWaitForStatus(page, 'インポート成功: 1件を反映しました。')
-  await expect(page.getByText('1位: Preview Pudding')).toBeVisible()
+  await expect(rankedItemSummary(page, 1, 'Preview Pudding')).toBeVisible()
   await expect(page.getByText('Solito MAGO')).not.toBeVisible()
 })

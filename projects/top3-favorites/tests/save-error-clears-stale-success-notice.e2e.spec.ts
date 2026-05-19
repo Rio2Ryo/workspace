@@ -1,5 +1,14 @@
 import { expect, test } from '@playwright/test'
-import { resetItemsByReplace, registrationSaveButton, expectOperationStatus, expectOperationAlert, registrationLocationField, registrationNameField, registrationTagField, operationStatus } from './e2e-helpers'
+import {
+  expectOperationAlert,
+  expectOperationStatus,
+  operationStatus,
+  registrationLocationField,
+  registrationNameField,
+  registrationSaveButton,
+  registrationTagField,
+  resetItemsByReplace,
+} from './e2e-helpers'
 
 test.beforeEach(async ({ request }) => {
   await resetItemsByReplace(request)

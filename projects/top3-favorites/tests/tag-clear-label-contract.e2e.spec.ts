@@ -1,5 +1,12 @@
 import { expect, test } from '@playwright/test'
-import { tagFilterButton, clearSearchTagFilter, resetItemsByReplace, saveSampleItems, searchSection as searchSectionLocator } from './e2e-helpers'
+import {
+  clearSearchTagFilter,
+  rankedItemSummary,
+  resetItemsByReplace,
+  saveSampleItems,
+  searchSection as searchSectionLocator,
+  tagFilterButton,
+} from './e2e-helpers'
 
 test.beforeEach(async ({ request }) => {
   await resetItemsByReplace(request)
@@ -15,6 +22,6 @@ test('tag filter clear action is exposed as クリア and resets list to all ite
 
   await clearSearchTagFilter(searchSection)
 
-  await expect(searchSection.getByText(/1位: Solito MAGO/)).toBeVisible()
-  await expect(searchSection.getByText(/1位: とみ田/)).toBeVisible()
+  await expect(rankedItemSummary(searchSection, 1, 'Solito MAGO')).toBeVisible()
+  await expect(rankedItemSummary(searchSection, 1, 'とみ田')).toBeVisible()
 })

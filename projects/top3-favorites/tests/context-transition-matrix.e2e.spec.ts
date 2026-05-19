@@ -1,20 +1,20 @@
 import { expect, test } from '@playwright/test'
 import {
-  tagFilterButton,
-  itemEditButton,
-  editSaveButton,
   clearSearchTagFilter,
-  uploadJsonImportFile,
-  resetItemsByReplace,
-  jsonImportButton,
-  registrationSaveButton,
+  editSaveButton,
   expectOperationStatus,
-  searchSection as searchSectionLocator,
+  importPreviewPanel,
+  itemEditButton,
+  jsonImportButton,
+  rankedItemSummary,
   registrationLocationField,
   registrationNameField,
+  registrationSaveButton,
   registrationTagField,
-  importPreviewPanel,
-  rankedItemSummary,
+  resetItemsByReplace,
+  searchSection as searchSectionLocator,
+  tagFilterButton,
+  uploadJsonImportFile,
 } from './e2e-helpers'
 
 test.beforeEach(async ({ request }) => {

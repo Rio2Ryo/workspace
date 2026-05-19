@@ -1,5 +1,11 @@
 import { expect, test } from '@playwright/test'
-import { uploadJsonImportFile, resetItemsByReplace, saveSampleItems, expectOperationAlert } from './e2e-helpers'
+import {
+  expectOperationAlert,
+  rankedItemSummary,
+  resetItemsByReplace,
+  saveSampleItems,
+  uploadJsonImportFile,
+} from './e2e-helpers'
 
 test.beforeEach(async ({ request }) => {
   await resetItemsByReplace(request)
@@ -8,7 +14,7 @@ test.beforeEach(async ({ request }) => {
 test('import rejects rank out of range and keeps existing data (fail-closed)', async ({ page }) => {
   await page.goto('/')
   await saveSampleItems(page)
-  await expect(page.getByText('1位: Solito MAGO')).toBeVisible()
+  await expect(rankedItemSummary(page, 1, 'Solito MAGO')).toBeVisible()
 
   const invalidItems = [
     {
@@ -27,14 +33,14 @@ test('import rejects rank out of range and keeps existing data (fail-closed)', a
   await uploadJsonImportFile(page, 'invalid-rank.json', invalidItems)
 
   await expect(page.getByText(/インポート失敗/)).toBeVisible()
-  await expect(page.getByText('1位: Solito MAGO')).toBeVisible()
+  await expect(rankedItemSummary(page, 1, 'Solito MAGO')).toBeVisible()
   await expect(page.getByText('Bad Rank Cafe')).not.toBeVisible()
 })
 
 test('import rejects duplicate ids with a clear message and keeps existing data', async ({ page }) => {
   await page.goto('/')
   await saveSampleItems(page)
-  await expect(page.getByText('1位: Solito MAGO')).toBeVisible()
+  await expect(rankedItemSummary(page, 1, 'Solito MAGO')).toBeVisible()
 
   const duplicateItems = [
     {
@@ -68,7 +74,7 @@ test('import rejects duplicate ids with a clear message and keeps existing data'
   await expectOperationAlert(page, 
     'インポート失敗: ファイル「duplicate-ids.json」のID「dup-ui-1」が1件目「Duplicate Pudding A」と2件目「Duplicate Pudding B」で重複しています。既存データは保持しました。',
   )
-  await expect(page.getByText('1位: Solito MAGO')).toBeVisible()
-  await expect(page.getByText(/1位: Duplicate Pudding A/)).not.toBeVisible()
-  await expect(page.getByText(/2位: Duplicate Pudding B/)).not.toBeVisible()
+  await expect(rankedItemSummary(page, 1, 'Solito MAGO')).toBeVisible()
+  await expect(rankedItemSummary(page, 1, 'Duplicate Pudding A')).not.toBeVisible()
+  await expect(rankedItemSummary(page, 2, 'Duplicate Pudding B')).not.toBeVisible()
 })

@@ -1,5 +1,12 @@
 import { expect, test } from '@playwright/test'
-import { resetItemsByReplace, saveSampleItems, searchSection as searchSectionLocator, reloadPageAndWaitForSearchReady, fetchItems } from './e2e-helpers'
+import {
+  fetchItems,
+  rankedItemSummary,
+  reloadPageAndWaitForSearchReady,
+  resetItemsByReplace,
+  saveSampleItems,
+  searchSection as searchSectionLocator,
+} from './e2e-helpers'
 
 test.beforeEach(async ({ request }) => {
   await resetItemsByReplace(request)
@@ -11,15 +18,15 @@ test('sample data seed remains after reload and is reflected in API data', async
   await saveSampleItems(page)
 
   const searchSection = searchSectionLocator(page)
-  await expect(searchSection.getByText(/1位:\s*Solito MAGO/)).toBeVisible()
-  await expect(searchSection.getByText(/2位:\s*T-SITEのカフェ/)).toBeVisible()
-  await expect(searchSection.getByText(/1位:\s*とみ田/)).toBeVisible()
+  await expect(rankedItemSummary(searchSection, 1, 'Solito MAGO')).toBeVisible()
+  await expect(rankedItemSummary(searchSection, 2, 'T-SITEのカフェ')).toBeVisible()
+  await expect(rankedItemSummary(searchSection, 1, 'とみ田')).toBeVisible()
 
   await reloadPageAndWaitForSearchReady(page)
 
-  await expect(searchSection.getByText(/1位:\s*Solito MAGO/)).toBeVisible()
-  await expect(searchSection.getByText(/2位:\s*T-SITEのカフェ/)).toBeVisible()
-  await expect(searchSection.getByText(/1位:\s*とみ田/)).toBeVisible()
+  await expect(rankedItemSummary(searchSection, 1, 'Solito MAGO')).toBeVisible()
+  await expect(rankedItemSummary(searchSection, 2, 'T-SITEのカフェ')).toBeVisible()
+  await expect(rankedItemSummary(searchSection, 1, 'とみ田')).toBeVisible()
 
   const apiData = await fetchItems<{
     items: { tag: string; location: string; name: string; rank: number; memo: string }[]

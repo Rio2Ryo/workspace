@@ -1,5 +1,18 @@
 import { expect, test } from '@playwright/test'
-import { resetItemsByReplace, registrationSaveButton, registrationRankButton, expectOperationStatus, clearSearchTagFilter, searchSection as searchSectionLocator, searchInput, registrationLocationField, registrationMemoField, registrationNameField, registrationTagField } from './e2e-helpers'
+import {
+  clearSearchTagFilter,
+  expectOperationStatus,
+  rankedItemSummary,
+  registrationLocationField,
+  registrationMemoField,
+  registrationNameField,
+  registrationRankButton,
+  registrationSaveButton,
+  registrationTagField,
+  resetItemsByReplace,
+  searchInput,
+  searchSection as searchSectionLocator,
+} from './e2e-helpers'
 
 test.beforeEach(async ({ request }) => {
   await resetItemsByReplace(request)
@@ -28,6 +41,6 @@ test('search query matches memo text (manual QA contract)', async ({ page }) => 
   await clearSearchTagFilter(searchSection)
   await searchInput(page).fill('深夜営業')
 
-  await expect(searchSection.getByText(/1位: 茶亭/)).toBeVisible()
-  await expect(searchSection.getByText(/1位: とみ田/)).not.toBeVisible()
+  await expect(rankedItemSummary(searchSection, 1, '茶亭')).toBeVisible()
+  await expect(rankedItemSummary(searchSection, 1, 'とみ田')).not.toBeVisible()
 })

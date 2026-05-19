@@ -1,5 +1,15 @@
 import { expect, test } from '@playwright/test'
-import { tagFilterButton, searchClearButton, resetItemsByReplace, registrationSaveButton, expectOperationStatus, searchSection as searchSectionLocator, registrationLocationField, registrationNameField, registrationTagField } from './e2e-helpers'
+import {
+  expectOperationStatus,
+  registrationLocationField,
+  registrationNameField,
+  registrationSaveButton,
+  registrationTagField,
+  resetItemsByReplace,
+  searchClearButton,
+  searchSection as searchSectionLocator,
+  tagFilterButton,
+} from './e2e-helpers'
 
 test.beforeEach(async ({ request }) => {
   await resetItemsByReplace(request)

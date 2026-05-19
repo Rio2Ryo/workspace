@@ -1,19 +1,20 @@
 import { expect, test } from '@playwright/test'
 import {
-  tagFilterButton,
-  searchClearButton,
-  itemEditButton,
   editSaveButton,
-  resetItemsByReplace,
-  registrationSaveButton,
-  expectOperationStatus,
-  searchSection as searchSectionLocator,
   editTagField,
+  expectOperationStatus,
+  itemEditButton,
+  rankedItemSummary,
+  rankedItemSummaryByName,
   registrationLocationField,
   registrationNameField,
+  registrationSaveButton,
   registrationTagField,
+  resetItemsByReplace,
+  searchClearButton,
+  searchSection as searchSectionLocator,
+  tagFilterButton,
   tagHeading,
-  rankedItemSummary,
 } from './e2e-helpers'
 
 test.beforeEach(async ({ request }) => {
@@ -40,7 +41,7 @@ test('editing last item tag clears stale selected filter so remaining data is vi
 
   // Filter by 元タグ and edit its only item to another tag
   await tagFilterButton(searchSection as searchSectionLocator, '元タグ').click()
-  await expect(searchSection.getByText(/\d位: Move Me/)).toBeVisible()
+  await expect(rankedItemSummaryByName(searchSection, 'Move Me')).toBeVisible()
   await rankedItemSummary(searchSection, 1, 'Move Me').click()
   await itemEditButton(searchSection as searchSectionLocator, 'Move Me').click()
 
@@ -51,7 +52,7 @@ test('editing last item tag clears stale selected filter so remaining data is vi
   // stale filter should be cleared because 元タグ no longer exists
   await expect(searchClearButton(searchSection)).not.toBeVisible()
   await expect(tagHeading(searchSection, '残るタグ')).toBeVisible()
-  await expect(searchSection.getByText(/\d位: Keep Me/)).toBeVisible()
+  await expect(rankedItemSummaryByName(searchSection, 'Keep Me')).toBeVisible()
   await expect(tagHeading(searchSection, '移動先タグ')).toBeVisible()
-  await expect(searchSection.getByText(/\d位: Move Me/)).toBeVisible()
+  await expect(rankedItemSummaryByName(searchSection, 'Move Me')).toBeVisible()
 })

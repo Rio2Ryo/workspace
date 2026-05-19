@@ -29,7 +29,7 @@ const directRegistrationRankButtonPattern = /getBy(?:Role\(['"]button['"],\s*\{\
 const directEditRankButtonPattern = /getBy(?:Role\(['"]button['"],\s*\{\s*name:\s*|Label\()(['"])編集 [123]位に変更\1/
 
 function importsNamedHelper(source, helperName) {
-  const importMatch = source.match(/import\s*\{([\s\S]*?)\}\s*from\s*['"][^'"]*e2e-helpers['"]/)
+  const importMatch = source.match(/^import\s*\{([^}]*)\}\s*from\s*['"][^'"]*e2e-helpers['"]/m)
   return Boolean(importMatch && importMatch[1].split(',').map((name) => name.trim()).includes(helperName))
 }
 

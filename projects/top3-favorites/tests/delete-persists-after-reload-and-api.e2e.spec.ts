@@ -1,15 +1,15 @@
 import { expect, test } from '@playwright/test'
 import {
-  tagFilterButton,
   acceptNextDeleteDialog,
-  resetItemsByReplace,
-  itemDeleteButton,
   expectOperationStatus,
-  searchSection as searchSectionLocator,
-  reloadPageAndWaitForSearchReady,
   fetchItems,
+  itemDeleteButton,
   postItem,
   rankedItemSummary,
+  reloadPageAndWaitForSearchReady,
+  resetItemsByReplace,
+  searchSection as searchSectionLocator,
+  tagFilterButton,
 } from './e2e-helpers'
 
 test.beforeEach(async ({ request }) => {
@@ -41,13 +41,13 @@ test('deleted item stays removed after reload and is absent from API data', asyn
   // UI state before reload
   await expect(searchSection.getByText('Delete Persist Target')).toHaveCount(0)
   await tagFilterButton(searchSection as searchSectionLocator, '残存タグ').click()
-  await expect(searchSection.getByText(/1位:\s*Persist Survivor/)).toBeVisible()
+  await expect(rankedItemSummary(searchSection, 1, 'Persist Survivor')).toBeVisible()
 
   await reloadPageAndWaitForSearchReady(page)
 
   // UI state after reload
   await expect(searchSection.getByText('Delete Persist Target')).toHaveCount(0)
-  await expect(searchSection.getByText(/1位:\s*Persist Survivor/)).toBeVisible()
+  await expect(rankedItemSummary(searchSection, 1, 'Persist Survivor')).toBeVisible()
 
   // API persistence contract
   const apiData = await fetchItems<{

@@ -1,5 +1,10 @@
 import { expect, test } from '@playwright/test'
-import { uploadJsonImportFile, resetItemsByReplace, saveSampleItems, fetchItems } from '../../e2e-helpers'
+import {
+  fetchItems,
+  resetItemsByReplace,
+  saveSampleItems,
+  uploadJsonImportFile,
+} from '../../e2e-helpers'
 
 function item(id: string, tag: string, name: string, rank = 1) {
   const now = new Date().toISOString()

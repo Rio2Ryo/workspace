@@ -1,19 +1,20 @@
 import { expect, test } from '@playwright/test'
 import {
-  tagFilterButton,
-  searchClearButton,
   acceptNextDeleteDialog,
-  resetItemsByReplace,
-  itemDeleteButton,
-  registrationSaveButton,
   expectOperationStatus,
-  searchSection as searchSectionLocator,
+  itemDeleteButton,
+  rankedItemSummary,
+  rankedItemSummaryByName,
   registrationLocationField,
   registrationNameField,
+  registrationSaveButton,
   registrationTagField,
   reloadPageAndWaitForSearchReady,
+  resetItemsByReplace,
+  searchClearButton,
+  searchSection as searchSectionLocator,
+  tagFilterButton,
   tagHeading,
-  rankedItemSummary,
 } from './e2e-helpers'
 
 test.beforeEach(async ({ request }) => {
@@ -40,7 +41,7 @@ test('deleting the last item in selected tag clears stale tag filter and keeps r
 
   // Select the tag we are about to empty
   await tagFilterButton(searchSection as searchSectionLocator, '削除対象タグ').click()
-  await expect(searchSection.getByText(/\d位: Delete Me/)).toBeVisible()
+  await expect(rankedItemSummaryByName(searchSection, 'Delete Me')).toBeVisible()
 
   // Delete the only item in that selected tag
   await rankedItemSummary(searchSection, 1, 'Delete Me').click()
@@ -53,10 +54,10 @@ test('deleting the last item in selected tag clears stale tag filter and keeps r
   // Stale selectedTag should be cleared so remaining data is visible
   await expect(searchClearButton(searchSection)).not.toBeVisible()
   await expect(tagHeading(searchSection, '残すタグ')).toBeVisible()
-  await expect(searchSection.getByText(/\d位: Keep Me/)).toBeVisible()
+  await expect(rankedItemSummaryByName(searchSection, 'Keep Me')).toBeVisible()
 
   await reloadPageAndWaitForSearchReady(page)
   await expect(tagHeading(searchSection, '残すタグ')).toBeVisible()
-  await expect(searchSection.getByText(/\d位: Keep Me/)).toBeVisible()
+  await expect(rankedItemSummaryByName(searchSection, 'Keep Me')).toBeVisible()
   await expect(searchSection.getByText('Delete Me')).not.toBeVisible()
 })

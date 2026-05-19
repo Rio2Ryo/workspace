@@ -1,16 +1,17 @@
 import { expect, test } from '@playwright/test'
 import {
-  resetItemsByReplace,
-  saveSampleItems,
-  registrationSaveButton,
   expectOperationStatus,
-  registrationRankButton,
-  searchSection as searchSectionLocator,
-  searchInput,
+  rankedItemSummaryByName,
   registrationLocationField,
   registrationMemoField,
   registrationNameField,
+  registrationRankButton,
+  registrationSaveButton,
   registrationTagField,
+  resetItemsByReplace,
+  saveSampleItems,
+  searchInput,
+  searchSection as searchSectionLocator,
   tagHeading,
 } from './e2e-helpers'
 
@@ -30,12 +31,12 @@ test('sample data can be saved, searched, and ranked through the real UI/API', a
 
   await saveSampleItems(page)
   await expect(tagHeading(page, 'カフェラテ')).toBeVisible()
-  await expect(page.getByText(/\d位: Solito MAGO/)).toBeVisible()
-  await expect(page.getByText(/\d位: T-SITEのカフェ/)).toBeVisible()
+  await expect(rankedItemSummaryByName(page, 'Solito MAGO')).toBeVisible()
+  await expect(rankedItemSummaryByName(page, 'T-SITEのカフェ')).toBeVisible()
 
   const searchSection = searchSectionLocator(page)
   await searchInput(page).fill('Solito')
-  await expect(searchSection.getByText(/\d位: Solito MAGO/)).toBeVisible()
+  await expect(rankedItemSummaryByName(searchSection, 'Solito MAGO')).toBeVisible()
   await expect(searchSection.getByText('T-SITEのカフェ')).not.toBeVisible()
 
   expect(errors).toEqual([])
@@ -44,8 +45,8 @@ test('sample data can be saved, searched, and ranked through the real UI/API', a
 test('adding a new first place rebalances the same tag to top 3', async ({ page }) => {
   await page.goto('/')
   await saveSampleItems(page)
-  await expect(page.getByText(/\d位: Solito MAGO/)).toBeVisible()
-  await expect(page.getByText(/\d位: T-SITEのカフェ/)).toBeVisible()
+  await expect(rankedItemSummaryByName(page, 'Solito MAGO')).toBeVisible()
+  await expect(rankedItemSummaryByName(page, 'T-SITEのカフェ')).toBeVisible()
 
   await registrationTagField(page).fill('カフェラテ')
   await registrationLocationField(page).fill('柏の葉')
@@ -57,7 +58,7 @@ test('adding a new first place rebalances the same tag to top 3', async ({ page 
   await expectOperationStatus(page, 'カフェラテ の1位に保存しました。')
   await searchInput(page).fill('')
 
-  await expect(page.getByText(/\d位: New Coffee/)).toBeVisible()
-  await expect(page.getByText(/\d位: Solito MAGO/)).toBeVisible()
-  await expect(page.getByText(/\d位: T-SITEのカフェ/)).toBeVisible()
+  await expect(rankedItemSummaryByName(page, 'New Coffee')).toBeVisible()
+  await expect(rankedItemSummaryByName(page, 'Solito MAGO')).toBeVisible()
+  await expect(rankedItemSummaryByName(page, 'T-SITEのカフェ')).toBeVisible()
 })

@@ -1,13 +1,13 @@
 import { expect, test } from '@playwright/test'
 import {
-  itemEditButton,
+  editRankButton,
   editSaveButton,
+  expectOperationStatus,
+  itemEditButton,
+  rankedItemSummary,
+  registrationRankButton,
   resetItemsByReplace,
   saveSampleItems,
-  expectOperationStatus,
-  registrationRankButton,
-  editRankButton,
-  rankedItemSummary,
 } from './e2e-helpers'
 
 test.beforeEach(async ({ request }) => {
@@ -30,5 +30,5 @@ test('new and edit rank pickers have context-specific accessible names', async (
   await editSaveButton(page).click()
 
   await expectOperationStatus(page, '編集を保存しました。')
-  await expect(page.getByText('3位: Solito MAGO')).toBeVisible()
+  await expect(rankedItemSummary(page, 3, 'Solito MAGO')).toBeVisible()
 })

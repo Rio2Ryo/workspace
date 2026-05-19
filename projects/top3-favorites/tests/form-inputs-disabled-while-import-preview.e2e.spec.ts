@@ -1,5 +1,14 @@
 import { expect, test } from '@playwright/test'
-import { uploadJsonImportFile, resetItemsByReplace, registrationLocationField, registrationMemoField, registrationNameField, registrationRankButton, registrationTagField , importPreviewPanel} from './e2e-helpers'
+import {
+  importPreviewPanel,
+  registrationLocationField,
+  registrationMemoField,
+  registrationNameField,
+  registrationRankButton,
+  registrationTagField,
+  resetItemsByReplace,
+  uploadJsonImportFile,
+} from './e2e-helpers'
 
 test.beforeEach(async ({ request }) => {
   await resetItemsByReplace(request)

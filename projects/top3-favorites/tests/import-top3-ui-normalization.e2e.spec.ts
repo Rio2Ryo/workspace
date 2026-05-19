@@ -1,11 +1,13 @@
 import { expect, test } from '@playwright/test'
 import {
-  uploadJsonImportFile,
-  resetItemsByReplace,
   confirmImportAndWaitForStatus,
   expectImportPreviewCounts,
   expectImportPreviewImpactMath,
+  rankedItemSummaries,
+  rankedItemSummaryByName,
+  resetItemsByReplace,
   tagGroup,
+  uploadJsonImportFile,
 } from './e2e-helpers'
 
 test.beforeEach(async ({ request }) => {
@@ -31,13 +33,13 @@ test('UI shows only Top3 after importing 4 items of same tag', async ({ page }) 
   await confirmImportAndWaitForStatus(page, 'インポート成功')
 
   const group = tagGroup(page, 'カフェラテ')
-  await expect(group.getByText(/位:/)).toHaveCount(3)
+  await expect(rankedItemSummaries(group)).toHaveCount(3)
 
   // UI list must be normalized to Top3 only
-  await expect(group.getByText(/位: A/)).toBeVisible()
-  await expect(group.getByText(/位: B/)).toBeVisible()
-  await expect(group.getByText(/位: C/)).toBeVisible()
-  await expect(group.getByText(/位: D/)).toHaveCount(0)
+  await expect(rankedItemSummaryByName(group, 'A')).toBeVisible()
+  await expect(rankedItemSummaryByName(group, 'B')).toBeVisible()
+  await expect(rankedItemSummaryByName(group, 'C')).toBeVisible()
+  await expect(rankedItemSummaryByName(group, 'D')).toHaveCount(0)
 
   const listText = await group.textContent()
   expect(listText ?? '').not.toContain('4位')

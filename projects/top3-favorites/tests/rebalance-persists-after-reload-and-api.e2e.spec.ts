@@ -1,5 +1,18 @@
 import { expect, test } from '@playwright/test'
-import { resetItemsByReplace, registrationSaveButton, expectOperationStatus, registrationRankButton, searchSection as searchSectionLocator, registrationLocationField, registrationNameField, registrationTagField, reloadPageAndWaitForSearchReady, fetchItems, postItem } from './e2e-helpers'
+import {
+  expectOperationStatus,
+  fetchItems,
+  postItem,
+  rankedItemSummary,
+  registrationLocationField,
+  registrationNameField,
+  registrationRankButton,
+  registrationSaveButton,
+  registrationTagField,
+  reloadPageAndWaitForSearchReady,
+  resetItemsByReplace,
+  searchSection as searchSectionLocator,
+} from './e2e-helpers'
 
 test.beforeEach(async ({ request }) => {
   await resetItemsByReplace(request)
@@ -28,17 +41,17 @@ test('adding new 1st place rebalances to Top3 and persists ranks after reload + 
   const searchSection = searchSectionLocator(page)
 
   // immediately after rebalance in UI
-  await expect(searchSection.getByText(/1位:\s*New 1st/)).toBeVisible()
-  await expect(searchSection.getByText(/2位:\s*A店/)).toBeVisible()
-  await expect(searchSection.getByText(/3位:\s*B店/)).toBeVisible()
+  await expect(rankedItemSummary(searchSection, 1, 'New 1st')).toBeVisible()
+  await expect(rankedItemSummary(searchSection, 2, 'A店')).toBeVisible()
+  await expect(rankedItemSummary(searchSection, 3, 'B店')).toBeVisible()
   await expect(searchSection.getByText('C店')).toHaveCount(0)
 
   await reloadPageAndWaitForSearchReady(page)
 
   // after reload, ranking must remain
-  await expect(searchSection.getByText(/1位:\s*New 1st/)).toBeVisible()
-  await expect(searchSection.getByText(/2位:\s*A店/)).toBeVisible()
-  await expect(searchSection.getByText(/3位:\s*B店/)).toBeVisible()
+  await expect(rankedItemSummary(searchSection, 1, 'New 1st')).toBeVisible()
+  await expect(rankedItemSummary(searchSection, 2, 'A店')).toBeVisible()
+  await expect(rankedItemSummary(searchSection, 3, 'B店')).toBeVisible()
   await expect(searchSection.getByText('C店')).toHaveCount(0)
 
   // API contract: only top3 of same tag with exact ranks

@@ -128,6 +128,15 @@ export function rankedItemSummary(scope: Page | Locator, rank: 1 | 2 | 3, itemNa
   return scope.locator('summary', { hasText: new RegExp(`${rank}位:\\s*${itemNamePattern}`) })
 }
 
+export function rankedItemSummaryByName(scope: Page | Locator, itemName: string | RegExp): Locator {
+  const itemNamePattern = typeof itemName === 'string' ? escapeRegExp(itemName) : itemName.source
+  return scope.locator('summary', { hasText: new RegExp(`\\d位:\\s*${itemNamePattern}`) })
+}
+
+export function rankedItemSummaries(scope: Page | Locator): Locator {
+  return scope.locator('summary', { hasText: /\d位:/ })
+}
+
 function escapeRegExp(value: string): string {
   return value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
 }

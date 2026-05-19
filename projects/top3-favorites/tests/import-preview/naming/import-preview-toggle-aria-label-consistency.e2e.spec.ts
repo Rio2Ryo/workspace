@@ -1,5 +1,12 @@
 import { expect, test } from '@playwright/test'
-import { uploadJsonImportFile, resetItemsByDelete , importPreviewToggleExcludedDetails, importPreviewToggleImpactTags, importPreviewToggleTermsHelper, importPreviewPanel} from '../../e2e-helpers'
+import {
+  importPreviewPanel,
+  importPreviewToggleExcludedDetails,
+  importPreviewToggleImpactTags,
+  importPreviewToggleTermsHelper,
+  resetItemsByDelete,
+  uploadJsonImportFile,
+} from '../../e2e-helpers'
 
 test.beforeEach(async ({ request }) => {
   await resetItemsByDelete(request)
