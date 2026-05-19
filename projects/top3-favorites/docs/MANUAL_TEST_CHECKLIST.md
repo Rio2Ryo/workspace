@@ -54,6 +54,8 @@
   - 自動確認: `tests/maps-link-new-tab-contract.e2e.spec.ts` と `tests/maps-link-query.e2e.spec.ts` が新規タブ属性と検索URL構成を検証する
 - [ ] URLクエリに `店名 + 場所 + タグ` が含まれる
   - 自動確認: `tests/maps-link-query.e2e.spec.ts` がGoogle Maps検索URLのqueryに店舗名・場所・タグが含まれることを検証する
+- [ ] インポートJSON内の `mapsUrl` は信用せず、現在の店舗情報からMaps検索URLを再生成する
+  - 自動確認: `tests/maps-link-import-safety.e2e.spec.ts` がインポート由来の外部URLを無視し、店舗名・場所・タグからGoogle Maps検索URLを作ることを検証する
 
 ---
 

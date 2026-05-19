@@ -279,6 +279,10 @@ const rawManualAutomatedLinkContracts = {
       message: 'manual checklist should connect Google Maps query contents to the automated maps query spec',
     },
     {
+      pattern: /インポートJSON内の `mapsUrl` は信用せず、現在の店舗情報からMaps検索URLを再生成する[\s\S]*自動確認: `tests\/maps-link-import-safety\.e2e\.spec\.ts`/,
+      message: 'manual checklist should connect imported mapsUrl safety to the automated maps import safety spec',
+    },
+    {
       pattern: /JSONエクスポート成功[\s\S]*自動確認: `tests\/import-export\.e2e\.spec\.ts` と `tests\/export-download-roundtrip\.e2e\.spec\.ts`/,
       message: 'manual checklist should connect JSON export success to both the automated import/export flow and the real download artifact roundtrip spec',
     },
