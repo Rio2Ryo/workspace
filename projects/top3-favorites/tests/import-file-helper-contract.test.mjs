@@ -159,7 +159,11 @@ test('[E2E-Helper][import-file] import validation errors expose structured repai
   assert.match(appSource, /data-testid="import-validation-error-details"/, 'App should render a dedicated validation repair details block')
   assert.match(appSource, /<dl[\s\S]*aria-label="インポートエラーの修正情報"/, 'App should expose import validation repair details as a labelled description list')
   assert.match(appSource, /<dt>ファイル<\/dt>[\s\S]*<dt>行<\/dt>[\s\S]*<dt>フィールド<\/dt>[\s\S]*<dt>修正<\/dt>/, 'App should keep file, row, field, and fix as separate term labels')
-  assert.match(validationSpec, /getByTestId\('import-validation-error-details'\)/, 'E2E should verify the structured import validation details block')
+  const helperSource = await readFile(helperPath, 'utf8')
+  assert.match(helperSource, /export function importValidationErrorDetails/, 'tests/e2e-helpers.ts should export importValidationErrorDetails(page)')
+  assert.match(helperSource, /getByTestId\('import-validation-error-details'\)/, 'importValidationErrorDetails helper should own the validation details test id')
+  assert.match(validationSpec, /importValidationErrorDetails\(page\)/, 'E2E should verify the structured import validation details block through the shared helper')
+  assert.doesNotMatch(validationSpec, /getByTestId\('import-validation-error-details'\)/, 'E2E specs should not duplicate the import validation details test id')
   assert.match(validationSpec, /locator\('dt'\)\)\.toHaveText\(\['ファイル', '行', 'フィールド', '修正'\]\)/, 'E2E should verify the term labels, not just the joined alert text')
 })
 

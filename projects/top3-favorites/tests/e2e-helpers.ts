@@ -301,6 +301,10 @@ export function importPreviewSummary(page: Page): Locator {
   return page.getByTestId('import-preview-summary')
 }
 
+export function importValidationErrorDetails(page: Page): Locator {
+  return page.getByTestId('import-validation-error-details')
+}
+
 export function importPreviewNormalization(page: Page): Locator {
   return page.getByTestId('import-preview-normalization')
 }
