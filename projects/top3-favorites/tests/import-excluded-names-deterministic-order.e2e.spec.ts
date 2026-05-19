@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test'
-import { uploadJsonImportFile, resetItemsByReplace , expectImportPreviewImpactMath, importPreviewExcludedNames} from './e2e-helpers'
+import { uploadJsonImportFile, resetItemsByReplace , expectImportPreviewImpactMath, importPreviewExcludedNames, importPreviewNormalization} from './e2e-helpers'
 
 test.beforeEach(async ({ request }) => {
   await resetItemsByReplace(request)
@@ -19,7 +19,7 @@ test('import preview shows excluded store names in deterministic sorted order', 
 
   await uploadJsonImportFile(page, 'excluded-order.json', payload)
 
-  const normalization = page.getByTestId('import-preview-normalization')
+  const normalization = importPreviewNormalization(page)
   await expect(normalization).toHaveAttribute('data-normalization-before-count', '5')
   await expect(normalization).toHaveAttribute('data-normalization-after-count', '3')
   await expectImportPreviewImpactMath(page, { added: 3, kept: 0, removed: 0, excluded: 2 })

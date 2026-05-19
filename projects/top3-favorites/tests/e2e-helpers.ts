@@ -227,6 +227,14 @@ export function importPreviewSummary(page: Page): Locator {
   return page.getByTestId('import-preview-summary')
 }
 
+export function importPreviewNormalization(page: Page): Locator {
+  return page.getByTestId('import-preview-normalization')
+}
+
+export function importPreviewReplaceHint(page: Page): Locator {
+  return page.getByTestId('import-preview-replace-hint')
+}
+
 export function importPreviewCounts(page: Page): Locator {
   return page.getByTestId('import-preview-counts')
 }
