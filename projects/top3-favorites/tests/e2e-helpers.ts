@@ -115,6 +115,10 @@ export function tagGroup(scope: Page | Locator, tag: string): Locator {
   return scope.locator('.group').filter({ has: scope.getByRole('heading', { name: tag }) })
 }
 
+export function tagHeading(scope: Page | Locator, tag: string): Locator {
+  return scope.getByRole('heading', { name: tag })
+}
+
 export function mapsLink(scope: Page | Locator): Locator {
   return scope.getByRole('link', { name: 'Mapsで開く' })
 }

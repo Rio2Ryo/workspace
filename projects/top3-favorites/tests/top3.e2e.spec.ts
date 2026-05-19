@@ -1,5 +1,18 @@
 import { expect, test } from '@playwright/test'
-import { resetItemsByReplace, saveSampleItems, registrationSaveButton, expectOperationStatus, registrationRankButton, searchSection as searchSectionLocator, searchInput, registrationLocationField, registrationMemoField, registrationNameField, registrationTagField } from './e2e-helpers'
+import {
+  resetItemsByReplace,
+  saveSampleItems,
+  registrationSaveButton,
+  expectOperationStatus,
+  registrationRankButton,
+  searchSection as searchSectionLocator,
+  searchInput,
+  registrationLocationField,
+  registrationMemoField,
+  registrationNameField,
+  registrationTagField,
+  tagHeading,
+} from './e2e-helpers'
 
 test.beforeEach(async ({ request }) => {
   await resetItemsByReplace(request)
@@ -16,7 +29,7 @@ test('sample data can be saved, searched, and ranked through the real UI/API', a
   await expect(page.locator('.status', { hasText: 'DB保存' })).toBeVisible()
 
   await saveSampleItems(page)
-  await expect(page.getByRole('heading', { name: 'カフェラテ' })).toBeVisible()
+  await expect(tagHeading(page, 'カフェラテ')).toBeVisible()
   await expect(page.getByText(/\d位: Solito MAGO/)).toBeVisible()
   await expect(page.getByText(/\d位: T-SITEのカフェ/)).toBeVisible()
 

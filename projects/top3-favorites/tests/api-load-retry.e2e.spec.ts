@@ -1,5 +1,11 @@
 import { expect, test } from '@playwright/test'
-import { expectOperationStatus, expectOperationAlert, operationAlert, reloadDataButton } from './e2e-helpers'
+import {
+  expectOperationStatus,
+  expectOperationAlert,
+  operationAlert,
+  reloadDataButton,
+  tagHeading,
+} from './e2e-helpers'
 
 test('initial API load failure shows a retry action and recovers without page reload', async ({ page }) => {
   let apiHits = 0
@@ -47,7 +53,7 @@ test('initial API load failure shows a retry action and recovers without page re
 
   await expect(operationAlert(page)).toHaveCount(0)
   await expectOperationStatus(page, 'データを再読み込みしました。')
-  await expect(page.getByRole('heading', { name: '復旧タグ' })).toBeVisible()
+  await expect(tagHeading(page, '復旧タグ')).toBeVisible()
   await expect(page.getByText('1位: 復旧した店')).toBeVisible()
   expect(apiHits).toBe(2)
 })
