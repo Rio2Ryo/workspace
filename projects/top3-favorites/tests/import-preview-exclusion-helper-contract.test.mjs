@@ -13,6 +13,13 @@ const helperNames = [
   'importPreviewExcludedNameVariants',
   'importPreviewToggleExcludedNames',
   'importPreviewToggleExcludedDetails',
+  'expectImportPreviewExcludedNamesContract',
+]
+
+const forbiddenExcludedNameAttributes = [
+  ['data-excluded-name-count', 'excluded name count attribute'],
+  ['data-excluded-name-labels', 'excluded name labels attribute'],
+  ['data-excluded-name-reason-labels', 'excluded name reason labels attribute'],
 ]
 
 const forbiddenTestIds = [
@@ -66,6 +73,16 @@ function directForbiddenButtonNames(source) {
   return offenders
 }
 
+function directForbiddenExcludedNameAttributes(source) {
+  const offenders = []
+  for (const [attributeName, label] of forbiddenExcludedNameAttributes) {
+    if (new RegExp(`toHaveAttribute\\(\\s*['\"]${attributeName}['\"]`).test(source)) {
+      offenders.push(label)
+    }
+  }
+  return offenders
+}
+
 test('[E2E-Helper][import-preview-exclusions] contract catches excluded-detail toggle copy', () => {
   assert.deepEqual(
     directForbiddenButtonNames("await page.getByRole('button', { name: '除外理由を全件表示' }).click()\nawait page.getByRole('button', { name: '除外理由を折りたたむ' }).click()"),
@@ -79,6 +96,15 @@ test('[E2E-Helper][import-preview-exclusions] contract catches excluded-name tog
     directForbiddenButtonNames("await page.getByRole('button', { name: '除外店舗名を全件表示' }).click()\nawait page.getByRole('button', { name: '除外店舗名を折りたたむ' }).click()"),
     ['excluded names show button', 'excluded names hide button'],
     'contract should catch direct excluded-name toggle accessible names',
+  )
+})
+
+test('[E2E-Helper][import-preview-exclusions] contract catches excluded-name data attribute copy', () => {
+  const source = "await expect(names).toHaveAttribute('data-excluded-name-reason-labels', 'A（カフェでTop3外: 4位相当）')"
+  assert.deepEqual(
+    directForbiddenExcludedNameAttributes(source),
+    ['excluded name reason labels attribute'],
+    'contract should catch direct excluded-name reason-label attribute assertions',
   )
 })
 
@@ -99,6 +125,10 @@ test('[E2E-Helper][import-preview-exclusions] E2E specs use shared excluded-name
     }
 
     for (const label of directForbiddenButtonNames(source)) {
+      offenders.push(`${relativePath(specUrl)}: direct import preview ${label}`)
+    }
+
+    for (const label of directForbiddenExcludedNameAttributes(source)) {
       offenders.push(`${relativePath(specUrl)}: direct import preview ${label}`)
     }
 
@@ -127,6 +157,11 @@ test('[E2E-Helper][import-preview-exclusions] helpers own excluded-name/detail t
   assert.match(source, /importPreviewToggleExcludedNames[\s\S]*getByTestId\(['"]import-preview-toggle-excluded-names['"]\)/, 'importPreviewToggleExcludedNames should own the excluded names toggle test id')
   assert.match(source, /export function importPreviewToggleExcludedDetails/, 'tests/e2e-helpers.ts should export importPreviewToggleExcludedDetails(page)')
   assert.match(source, /importPreviewToggleExcludedDetails[\s\S]*getByTestId\(['"]import-preview-toggle-excluded-details['"]\)/, 'importPreviewToggleExcludedDetails should own the excluded details toggle test id')
+  assert.match(source, /export async function expectImportPreviewExcludedNamesContract/, 'tests/e2e-helpers.ts should export expectImportPreviewExcludedNamesContract(page, contract)')
+  assert.match(source, /expectImportPreviewExcludedNamesContract[\s\S]*data-excluded-name-count/, 'expectImportPreviewExcludedNamesContract should own excluded name count attribute assertions')
+  assert.match(source, /expectImportPreviewExcludedNamesContract[\s\S]*data-excluded-name-labels/, 'expectImportPreviewExcludedNamesContract should own excluded name label attribute assertions')
+  assert.match(source, /expectImportPreviewExcludedNamesContract[\s\S]*data-excluded-name-reason-labels/, 'expectImportPreviewExcludedNamesContract should own excluded name reason-label attribute assertions')
+  assert.match(source, /expectImportPreviewExcludedNamesContract[\s\S]*parseImportPreviewSummary/, 'expectImportPreviewExcludedNamesContract should compare the visible DOM contract against summary JSON')
 })
 
 test('[App][config-quality] full verification runs import preview exclusion helper contract', async () => {

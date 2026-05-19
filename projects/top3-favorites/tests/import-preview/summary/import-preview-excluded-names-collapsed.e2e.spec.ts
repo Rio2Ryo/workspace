@@ -1,5 +1,6 @@
 import { expect, test } from '@playwright/test'
 import {
+  expectImportPreviewExcludedNamesContract,
   importPreviewExcludedNames,
   importPreviewToggleExcludedNames,
   resetItemsByReplace,
@@ -29,15 +30,20 @@ test('excluded store names preview collapses long lists and can be expanded', as
 
   const names = importPreviewExcludedNames(page)
   await expect(names).toHaveAttribute('aria-label', 'Top3外で正規化除外予定の店舗名プレビュー')
-  await expect(names).toHaveAttribute('data-excluded-name-count', '4')
-  await expect(names.getByText('正規化除外予定の店舗:')).toBeVisible()
-  await expect(importPreviewListItems(names)).toHaveText([
-    'B店（カフェラテでTop3外: 6位相当）',
-    'C店（カフェラテでTop3外: 7位相当）',
-    'F店（カフェラテでTop3外: 4位相当）',
-  ])
+  await expectImportPreviewExcludedNamesContract(page, {
+    reasonLabels: [
+      'B店（カフェラテでTop3外: 6位相当）',
+      'C店（カフェラテでTop3外: 7位相当）',
+      'F店（カフェラテでTop3外: 4位相当）',
+      'G店（カフェラテでTop3外: 5位相当）',
+    ],
+    visibleReasonLabels: [
+      'B店（カフェラテでTop3外: 6位相当）',
+      'C店（カフェラテでTop3外: 7位相当）',
+      'F店（カフェラテでTop3外: 4位相当）',
+    ],
+  })
   await expect(names.getByText('ほか1件')).toBeVisible()
-  await expect(names).toHaveAttribute('data-excluded-name-reason-labels', 'B店（カフェラテでTop3外: 6位相当）|C店（カフェラテでTop3外: 7位相当）|F店（カフェラテでTop3外: 4位相当）|G店（カフェラテでTop3外: 5位相当）')
   await expect(names).not.toContainText('G店')
 
   const toggle = importPreviewToggleExcludedNames(page)

@@ -2,6 +2,7 @@ import { expect, test } from '@playwright/test'
 import {
   confirmImportAndWaitForStatus,
   expectImportPreviewCounts,
+  expectImportPreviewExcludedNamesContract,
   fetchItems,
   importPreviewExcludedNames,
   importPreviewNormalization,
@@ -31,10 +32,9 @@ test('import normalizes visually equivalent tag spaces before Top3 truncation', 
 
   await expectImportPreviewCounts(page, 0, 3)
   await expect(importPreviewNormalization(page)).toHaveText('同一タグはTop3に正規化: 4件中3件を反映予定')
-  const excludedNames = importPreviewExcludedNames(page)
-  await expect(excludedNames.getByText('正規化除外予定の店舗:')).toBeVisible()
-  await expect(importPreviewListItems(excludedNames)).toHaveText('D（カフェ ラテでTop3外: 4位相当）')
-  await expect(excludedNames).toHaveAttribute('data-excluded-name-reason-labels', 'D（カフェ ラテでTop3外: 4位相当）')
+  await expectImportPreviewExcludedNamesContract(page, {
+    reasonLabels: ['D（カフェ ラテでTop3外: 4位相当）'],
+  })
 
   const summary = await parseImportPreviewSummary<{ tags: string[]; excludedNames: string[] }>(importPreviewSummary(page))
   expect(summary.tags).toEqual(['カフェ ラテ'])

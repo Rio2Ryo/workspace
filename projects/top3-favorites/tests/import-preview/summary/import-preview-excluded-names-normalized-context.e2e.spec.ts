@@ -1,5 +1,6 @@
 import { expect, test } from '@playwright/test'
 import {
+  expectImportPreviewExcludedNamesContract,
   importPreviewExcludedNameVariants,
   importPreviewExcludedNames,
   importPreviewSummary,
@@ -30,15 +31,13 @@ test('excluded store names add tag context for visually equivalent full-width an
 
   await uploadJsonImportFile(page, 'excluded-names-normalized-context.json', payload)
 
-  const names = importPreviewExcludedNames(page)
-  await expect(names).toHaveAttribute('data-excluded-name-count', '2')
-  await expect(names).toHaveAttribute('data-excluded-name-labels', 'カフェラテ: Cafe K|プリン: Ｃａｆｅ　Ｋ')
-  await expect(names).toHaveAttribute('data-excluded-name-reason-labels', 'カフェラテ: Cafe K（カフェラテでTop3外: 4位相当）|プリン: Ｃａｆｅ　Ｋ（プリンでTop3外: 4位相当）')
-  await expect(names.getByText('正規化除外予定の店舗:')).toBeVisible()
-  await expect(importPreviewListItems(names)).toHaveText([
-    'カフェラテ: Cafe K（カフェラテでTop3外: 4位相当）',
-    'プリン: Ｃａｆｅ　Ｋ（プリンでTop3外: 4位相当）',
-  ])
+  await expectImportPreviewExcludedNamesContract(page, {
+    labels: ['カフェラテ: Cafe K', 'プリン: Ｃａｆｅ　Ｋ'],
+    reasonLabels: [
+      'カフェラテ: Cafe K（カフェラテでTop3外: 4位相当）',
+      'プリン: Ｃａｆｅ　Ｋ（プリンでTop3外: 4位相当）',
+    ],
+  })
 
   const variants = importPreviewExcludedNameVariants(page)
   await expect(variants).toHaveText('表記ゆれ候補: カフェラテ: Cafe K / プリン: Ｃａｆｅ　Ｋ')

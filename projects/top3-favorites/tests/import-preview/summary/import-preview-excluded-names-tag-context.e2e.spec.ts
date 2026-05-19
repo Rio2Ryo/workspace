@@ -1,5 +1,6 @@
 import { expect, test } from '@playwright/test'
 import {
+  expectImportPreviewExcludedNamesContract,
   importPreviewExcludedDetails,
   importPreviewExcludedNames,
   importPreviewLive,
@@ -31,15 +32,13 @@ test('excluded store names preview includes tag context when multiple themes exc
 
   await uploadJsonImportFile(page, 'excluded-names-tag-context.json', payload)
 
-  const names = importPreviewExcludedNames(page)
-  await expect(names).toHaveAttribute('data-excluded-name-count', '2')
-  await expect(names).toHaveAttribute('data-excluded-name-labels', 'カフェラテ: 同名店|つけ麺: 同名店')
-  await expect(names).toHaveAttribute('data-excluded-name-reason-labels', 'カフェラテ: 同名店（カフェラテでTop3外: 4位相当）|つけ麺: 同名店（つけ麺でTop3外: 4位相当）')
-  await expect(names.getByText('正規化除外予定の店舗:')).toBeVisible()
-  await expect(importPreviewListItems(names)).toHaveText([
-    'カフェラテ: 同名店（カフェラテでTop3外: 4位相当）',
-    'つけ麺: 同名店（つけ麺でTop3外: 4位相当）',
-  ])
+  await expectImportPreviewExcludedNamesContract(page, {
+    labels: ['カフェラテ: 同名店', 'つけ麺: 同名店'],
+    reasonLabels: [
+      'カフェラテ: 同名店（カフェラテでTop3外: 4位相当）',
+      'つけ麺: 同名店（つけ麺でTop3外: 4位相当）',
+    ],
+  })
   await expect(importPreviewLive(page)).toContainText('正規化除外2件（例: カフェラテ: 同名店）')
   const details = importPreviewExcludedDetails(page)
   await expect(importPreviewListItems(details).nth(0)).toHaveText('カフェラテ: 同名店（カフェラテでTop3外: 4位相当）')

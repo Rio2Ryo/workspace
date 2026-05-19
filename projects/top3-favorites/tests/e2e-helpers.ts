@@ -317,8 +317,37 @@ export function importPreviewImpactMath(page: Page): Locator {
   return page.getByTestId('import-preview-impact-math')
 }
 
+type ImportPreviewExcludedNamesContract = {
+  labels?: string[]
+  reasonLabels: string[]
+  visibleReasonLabels?: string[]
+}
+
 export function importPreviewExcludedNames(page: Page): Locator {
   return page.getByTestId('import-preview-excluded-names')
+}
+
+export async function expectImportPreviewExcludedNamesContract(
+  page: Page,
+  { labels, reasonLabels, visibleReasonLabels = reasonLabels }: ImportPreviewExcludedNamesContract,
+): Promise<void> {
+  const names = importPreviewExcludedNames(page)
+  await expect(names.getByText('正規化除外予定の店舗:')).toBeVisible()
+  await expect(names).toHaveAttribute('data-excluded-name-count', String(reasonLabels.length))
+  if (labels) {
+    await expect(names).toHaveAttribute('data-excluded-name-labels', labels.join('|'))
+  }
+  await expect(names).toHaveAttribute('data-excluded-name-reason-labels', reasonLabels.join('|'))
+  await expect(importPreviewListItems(names)).toHaveText(visibleReasonLabels.length === 1 ? visibleReasonLabels[0] : visibleReasonLabels)
+
+  const summary = await parseImportPreviewSummary<{
+    excludedNameLabels: string[]
+    excludedNameReasonLabels: string[]
+  }>(importPreviewSummary(page))
+  if (labels) {
+    expect(summary.excludedNameLabels).toEqual(labels)
+  }
+  expect(summary.excludedNameReasonLabels).toEqual(reasonLabels)
 }
 
 export function importPreviewExcludedDetails(page: Page): Locator {
