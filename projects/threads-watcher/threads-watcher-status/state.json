@@ -497,12 +497,12 @@
   ],
   "recent_stats": {
     "window_hours": 24,
-    "total": 777,
-    "ok": 737,
+    "total": 776,
+    "ok": 736,
     "partial_error": 40,
     "error": 0,
     "other": 0,
-    "success_rate": 0.9485199485199485
+    "success_rate": 0.9484536082474226
   },
   "recent_stats_by_window": {
     "1": {
@@ -516,12 +516,12 @@
     },
     "24": {
       "window_hours": 24,
-      "total": 777,
-      "ok": 737,
+      "total": 776,
+      "ok": 736,
       "partial_error": 40,
       "error": 0,
       "other": 0,
-      "success_rate": 0.9485199485199485
+      "success_rate": 0.9484536082474226
     },
     "168": {
       "window_hours": 168,
@@ -534,11 +534,11 @@
     }
   },
   "sync_state": {
-    "cursor": 49,
+    "cursor": 60,
     "db_max": 60,
-    "delta": 11,
+    "delta": 0,
     "cursor_file_exists": true
   },
   "dry_run_alert": null,
-  "snapshot_generated_at": "2026-05-19T00:09:16Z"
+  "snapshot_generated_at": "2026-05-19T00:09:52Z"
 }
