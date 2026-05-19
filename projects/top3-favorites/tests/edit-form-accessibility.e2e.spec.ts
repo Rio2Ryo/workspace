@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test'
-import { itemEditButton, editCancelButton, editSaveButton, resetItemsByReplace, saveSampleItems, expectOperationAlert, operationAlert } from './e2e-helpers'
+import { itemEditButton, editCancelButton, editSaveButton, resetItemsByReplace, saveSampleItems, expectOperationAlert, expectOperationStatus, operationAlert } from './e2e-helpers'
 
 test.beforeEach(async ({ request }) => {
   await resetItemsByReplace(request)
@@ -20,6 +20,7 @@ test('edit form fields have accessible names and save edited Top3 data', async (
 
   await nameField.fill('Solito MAGO Edited')
   await editSaveButton(page).click()
+  await expectOperationStatus(page, '編集を保存しました。')
 
   await expect(page.getByText(/\d位: Solito MAGO Edited/)).toBeVisible()
 
