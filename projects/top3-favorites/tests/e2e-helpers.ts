@@ -219,6 +219,25 @@ export function importCancelButton(page: Page): Locator {
   return page.getByRole('button', { name: 'インポートをキャンセル' })
 }
 
+export function importPreviewCounts(page: Page): Locator {
+  return page.getByTestId('import-preview-counts')
+}
+
+export async function expectImportPreviewCounts(page: Page, beforeCount: number, afterCount: number): Promise<void> {
+  await expect(importPreviewCounts(page)).toHaveText(`現在${beforeCount}件 → インポート後${afterCount}件`)
+}
+
+export function importPreviewImpactMath(page: Page): Locator {
+  return page.getByTestId('import-preview-impact-math')
+}
+
+export async function expectImportPreviewImpactMath(
+  page: Page,
+  { added, kept, removed, excluded }: { added: number; kept: number; removed: number; excluded: number },
+): Promise<void> {
+  await expect(importPreviewImpactMath(page)).toHaveText(`追加${added}件 / 更新・保持${kept}件 / 削除予定${removed}件 / 正規化除外${excluded}件`)
+}
+
 export async function confirmImportAndWaitForStatus(page: Page, text: string | RegExp): Promise<void> {
   await importConfirmButton(page).click()
   await expectOperationStatus(page, text)

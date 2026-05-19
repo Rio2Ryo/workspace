@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test'
-import {uploadJsonImportFile, resetItemsByReplace, fetchItems, confirmImportAndWaitForStatus} from './e2e-helpers'
+import {uploadJsonImportFile, resetItemsByReplace, fetchItems, confirmImportAndWaitForStatus, importPreviewCounts} from './e2e-helpers'
 
 test.beforeEach(async ({ request }) => {
   await resetItemsByReplace(request)
@@ -17,7 +17,7 @@ test('UI import accepts minimal valid items and fills generated fields before AP
 
   await uploadJsonImportFile(page, 'minimal-shape.json', payload)
 
-  await expect(page.getByTestId('import-preview-counts')).toHaveAttribute('data-after-count', '3')
+  await expect(importPreviewCounts(page)).toHaveAttribute('data-after-count', '3')
   await expect(page.getByTestId('import-preview-normalization')).toHaveAttribute('data-normalization-before-count', '4')
   await expect(page.getByTestId('import-preview-normalization')).toHaveAttribute('data-normalization-after-count', '3')
 

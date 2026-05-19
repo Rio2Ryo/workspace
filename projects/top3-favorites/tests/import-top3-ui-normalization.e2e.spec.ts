@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test'
-import {uploadJsonImportFile, resetItemsByReplace, confirmImportAndWaitForStatus} from './e2e-helpers'
+import {uploadJsonImportFile, resetItemsByReplace, confirmImportAndWaitForStatus, expectImportPreviewCounts, expectImportPreviewImpactMath} from './e2e-helpers'
 
 test.beforeEach(async ({ request }) => {
   await resetItemsByReplace(request)
@@ -17,9 +17,9 @@ test('UI shows only Top3 after importing 4 items of same tag', async ({ page }) 
   ]
   await uploadJsonImportFile(page, 'same-tag-4items.json', items)
 
-  await expect(page.getByText('現在0件 → インポート後3件')).toBeVisible()
+  await expectImportPreviewCounts(page, 0, 3)
   await expect(page.getByText('同一タグはTop3に正規化: 4件中3件を反映予定')).toBeVisible()
-  await expect(page.getByText('追加3件 / 更新・保持0件 / 削除予定0件 / 正規化除外1件')).toBeVisible()
+  await expectImportPreviewImpactMath(page, { added: 3, kept: 0, removed: 0, excluded: 1 })
   await expect(page.getByText(/^正規化除外予定の店舗:/)).toBeVisible()
   await confirmImportAndWaitForStatus(page, 'インポート成功')
 

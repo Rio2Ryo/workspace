@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test'
-import {sampleSaveButton, jsonExportButton, tagFilterButton, searchClearButton, uploadJsonImportFile, parseDownloadedJsonFile, resetItemsByReplace, downloadJsonExport, saveSampleItems, jsonImportButton, searchSection as searchSectionLocator, reloadPageAndWaitForSearchReady, confirmImportAndWaitForStatus} from './e2e-helpers'
+import {sampleSaveButton, jsonExportButton, tagFilterButton, searchClearButton, uploadJsonImportFile, parseDownloadedJsonFile, resetItemsByReplace, downloadJsonExport, saveSampleItems, jsonImportButton, searchSection as searchSectionLocator, reloadPageAndWaitForSearchReady, confirmImportAndWaitForStatus, expectImportPreviewCounts} from './e2e-helpers'
 
 test.beforeEach(async ({ request }) => {
   await resetItemsByReplace(request)
@@ -38,7 +38,7 @@ test('exported JSON can be downloaded and imported back through the confirmation
 
   await uploadJsonImportFile(page, filename, exportedText)
 
-  await expect(page.getByText('現在0件 → インポート後3件')).toBeVisible()
+  await expectImportPreviewCounts(page, 0, 3)
   await confirmImportAndWaitForStatus(page, 'インポート成功: 3件を反映しました。')
   await expect(page.getByText('1位: Solito MAGO')).toBeVisible()
 })
@@ -68,7 +68,7 @@ test('valid import clears stale tag filters so imported data is immediately visi
 
   await uploadJsonImportFile(page, 'valid-import.json', importedItems)
 
-  await expect(page.getByText('現在3件 → インポート後1件')).toBeVisible()
+  await expectImportPreviewCounts(page, 3, 1)
   await confirmImportAndWaitForStatus(page, 'インポート成功: 1件を反映しました。')
   await expect(searchSection.getByRole('heading', { name: 'スイーツ' })).toBeVisible()
   await expect(searchSection.getByText('1位: Imported Pudding')).toBeVisible()

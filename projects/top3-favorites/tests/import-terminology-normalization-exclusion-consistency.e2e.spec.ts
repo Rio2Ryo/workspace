@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test'
-import { uploadJsonImportFile, resetItemsByDelete } from './e2e-helpers'
+import { uploadJsonImportFile, resetItemsByDelete , importPreviewImpactMath} from './e2e-helpers'
 
 test.beforeEach(async ({ request }) => {
   await resetItemsByDelete(request)
@@ -18,6 +18,6 @@ test('import preview uses consistent term "正規化除外" across live summary 
 
   await uploadJsonImportFile(page, 'normalization-term.json', payload)
 
-  await expect(page.getByTestId('import-preview-impact-math')).toContainText('正規化除外1件')
+  await expect(importPreviewImpactMath(page)).toContainText('正規化除外1件')
   await expect(page.getByTestId('import-preview-live')).toContainText('正規化除外1件')
 })

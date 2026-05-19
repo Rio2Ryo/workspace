@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test'
-import { uploadJsonImportFile, resetItemsByDelete } from '../../e2e-helpers'
+import { uploadJsonImportFile, resetItemsByDelete , expectImportPreviewCounts} from '../../e2e-helpers'
 
 test.beforeEach(async ({ request }) => {
   await resetItemsByDelete(request)
@@ -22,10 +22,10 @@ test('import preview exposes aria-live region and updates when file is replaced'
   await expect(live).toHaveAttribute('aria-live', 'polite')
   await expect(live).toHaveAttribute('aria-atomic', 'true')
   await expect(live).toHaveText('追加1件 / 削除予定0件 / インポート後1件。')
-  await expect(page.getByTestId('import-preview-counts')).toContainText('現在0件 → インポート後1件')
+  await expectImportPreviewCounts(page, 0, 1)
 
   await uploadJsonImportFile(page, 'live-b.json', payloadB)
 
   await expect(live).toHaveText('追加2件 / 削除予定0件 / インポート後2件。')
-  await expect(page.getByTestId('import-preview-counts')).toContainText('現在0件 → インポート後2件')
+  await expectImportPreviewCounts(page, 0, 2)
 })

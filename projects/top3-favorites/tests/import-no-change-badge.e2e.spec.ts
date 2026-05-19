@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test'
-import { uploadJsonImportFile, resetItemsByReplace, saveSampleItems, fetchItems } from './e2e-helpers'
+import { uploadJsonImportFile, resetItemsByReplace, saveSampleItems, fetchItems , importPreviewCounts} from './e2e-helpers'
 
 test.beforeEach(async ({ request }) => {
   await resetItemsByReplace(request)
@@ -13,7 +13,7 @@ test('import preview shows explicit no-change badge when payload matches current
 
   await uploadJsonImportFile(page, 'same-data.json', current.items)
 
-  await expect(page.getByTestId('import-preview-counts')).toHaveAttribute('data-before-count', '3')
-  await expect(page.getByTestId('import-preview-counts')).toHaveAttribute('data-after-count', '3')
+  await expect(importPreviewCounts(page)).toHaveAttribute('data-before-count', '3')
+  await expect(importPreviewCounts(page)).toHaveAttribute('data-after-count', '3')
   await expect(page.getByTestId('import-preview-no-change')).toHaveText('差分なし（このインポートでデータ変更はありません）')
 })

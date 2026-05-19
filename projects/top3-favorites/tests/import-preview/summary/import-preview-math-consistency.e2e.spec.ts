@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test'
-import {uploadJsonImportFile, resetItemsByReplace, saveSampleItems, fetchItems, confirmImportAndWaitForStatus} from '../../e2e-helpers'
+import {uploadJsonImportFile, resetItemsByReplace, saveSampleItems, fetchItems, confirmImportAndWaitForStatus, importPreviewCounts, importPreviewImpactMath} from '../../e2e-helpers'
 
 test.beforeEach(async ({ request }) => {
   await resetItemsByReplace(request)
@@ -27,13 +27,13 @@ test('import confirmation math is consistent for added/kept/removed/excluded cou
   await uploadJsonImportFile(page, 'impact-math.json', payload)
 
   // normalized result should be 4 items out of original 5 (one excluded by Top3 normalization)
-  const counts = page.getByTestId('import-preview-counts')
+  const counts = importPreviewCounts(page)
   await expect(counts).toHaveAttribute('data-before-count', '3')
   await expect(counts).toHaveAttribute('data-after-count', '4')
   await expect(page.getByTestId('import-preview-normalization')).toContainText('5件中4件')
 
   // Added + kept == after, and before - removed == kept
-  const math = page.getByTestId('import-preview-impact-math')
+  const math = importPreviewImpactMath(page)
   const [beforeCount, afterCount, addedCount, keptCount, removedCount, excludedCount] = await Promise.all([
     counts.getAttribute('data-before-count'),
     counts.getAttribute('data-after-count'),

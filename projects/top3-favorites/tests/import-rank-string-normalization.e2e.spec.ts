@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test'
-import {uploadJsonImportFile, resetItemsByReplace, confirmImportAndWaitForStatus} from './e2e-helpers'
+import {uploadJsonImportFile, resetItemsByReplace, confirmImportAndWaitForStatus, expectImportPreviewCounts, importPreviewImpactMath} from './e2e-helpers'
 
 test.beforeEach(async ({ request }) => {
   await resetItemsByReplace(request)
@@ -18,9 +18,9 @@ test('import preview handles string ranks and still normalizes same tag to Top3'
 
   await uploadJsonImportFile(page, 'rank-string.json', payload)
 
-  await expect(page.getByText('現在0件 → インポート後3件')).toBeVisible()
+  await expectImportPreviewCounts(page, 0, 3)
   await expect(page.getByText('同一タグはTop3に正規化: 4件中3件を反映予定')).toBeVisible()
-  await expect(page.getByTestId('import-preview-impact-math')).toContainText('正規化除外1件')
+  await expect(importPreviewImpactMath(page)).toContainText('正規化除外1件')
   await expect(page.getByText(/^正規化除外予定の店舗:/)).toBeVisible()
 
   await confirmImportAndWaitForStatus(page, 'インポート成功: 3件を反映しました。')
