@@ -888,18 +888,25 @@ export function App() {
                 )}
                 {pendingImport.excludedNames.length > 0 && (
                   <>
-                    <p
+                    <div
                       id="import-preview-excluded-names"
-                      className="hint compact"
+                      className="hint compact import-preview-detail-list"
                       data-testid="import-preview-excluded-names"
                       aria-label="Top3外で正規化除外予定の店舗名プレビュー"
                       data-excluded-name-count={pendingImport.excludedNames.length}
                       data-excluded-name-labels={pendingImport.excludedNameLabels.join('|')}
                       data-excluded-name-reason-labels={pendingImport.excludedNameReasonLabels.join('|')}
                     >
-                      正規化除外予定の店舗: {excludedNamesPreview.visible.join(', ')}
-                      {excludedNamesPreview.hiddenCount > 0 ? `（ほか${excludedNamesPreview.hiddenCount}件）` : ''}
-                    </p>
+                      <p className="import-preview-detail-heading">正規化除外予定の店舗:</p>
+                      <ul>
+                        {excludedNamesPreview.visible.map((name) => (
+                          <li key={name}>{name}</li>
+                        ))}
+                      </ul>
+                      {excludedNamesPreview.hiddenCount > 0 && (
+                        <p className="import-preview-detail-more">ほか{excludedNamesPreview.hiddenCount}件</p>
+                      )}
+                    </div>
                     {normalizedExcludedNameGroups.length > 0 && (
                       <p
                         className="hint compact"

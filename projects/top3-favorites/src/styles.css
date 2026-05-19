@@ -90,6 +90,10 @@ details[open] summary::after { content: '閉じる'; color: #6b7280; }
 
 .hint { color: #6b7280; font-size: 13px; font-weight: 400; margin: 6px 0 0; }
 .compact { margin-top: 2px; }
+.import-preview-detail-list { display: grid; gap: 3px; }
+.import-preview-detail-heading, .import-preview-detail-more { margin: 0; }
+.import-preview-detail-list ul { display: grid; gap: 2px; }
+.import-preview-detail-list li::before { content: '・'; }
 .import-preview-reason-list { display: grid; gap: 3px; }
 .import-preview-reason-heading, .import-preview-reason-more { margin: 0; }
 .import-preview-reason-list ul { display: grid; gap: 2px; }
