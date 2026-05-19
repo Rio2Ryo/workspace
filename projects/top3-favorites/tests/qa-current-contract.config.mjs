@@ -359,7 +359,7 @@ const rawManualAutomatedLinkContracts = {
       message: 'manual checklist should connect rank rebalance and reload persistence to the automated rebalance spec',
     },
     {
-      pattern: /同じタグを複数件登録してもタグチップが重複表示されない[\s\S]*タグチップ押下後に新規登録フォームのタグ欄が同期する[\s\S]*自動確認: `tests\/top3\.e2e\.spec\.ts` と `tests\/search-tag-select-syncs-registration-tag\.e2e\.spec\.ts`/,
+      pattern: /同じタグを複数件登録してもタグチップが重複表示されない[\s\S]*自動確認: `tests\/tag-chip-region-a11y-and-uniqueness\.e2e\.spec\.ts`[\s\S]*タグチップ押下後に新規登録フォームのタグ欄が同期する[\s\S]*自動確認: `tests\/search-tag-select-syncs-registration-tag\.e2e\.spec\.ts`/,
       message: 'manual checklist should connect tag chip dedupe and registration sync to automated tag specs',
     },
   ],

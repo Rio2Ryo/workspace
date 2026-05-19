@@ -1474,6 +1474,28 @@ test('[Manual][automation-link] edit/delete child items have direct automated li
   }
 })
 
+test('[Manual][automation-link] tag display child items have direct automated links', async () => {
+  const markdown = await readFile(new URL('docs/MANUAL_TEST_CHECKLIST.md', `${root}/`), 'utf8')
+  const childContracts = [
+    {
+      item: '同じタグを複数件登録してもタグチップが重複表示されない',
+      specs: ['tests/tag-chip-region-a11y-and-uniqueness.e2e.spec.ts'],
+    },
+    {
+      item: 'タグチップ押下後に新規登録フォームのタグ欄が同期する',
+      specs: ['tests/search-tag-select-syncs-registration-tag.e2e.spec.ts'],
+    },
+  ]
+
+  for (const { item, specs } of childContracts) {
+    const block = manualChecklistItemBlock(markdown, item)
+    assert.match(block, /自動確認:/, contractMessage({ scope: 'Manual', rule: 'tag display child checklist item has direct automated link', expected: item, fix: 'add an indented 自動確認 line directly under this tag display manual checklist item' }))
+    for (const spec of specs) {
+      assert.ok(block.includes(`\`${spec}\``), contractMessage({ scope: 'Manual', rule: 'tag display child checklist item cites authoritative spec', expected: spec, fix: 'add the focused E2E path to the child item 自動確認 line' }))
+    }
+  }
+})
+
 test('[Manual][automation-link] manual checklist marks browser-console, API-failure, and import/export checks as automated where possible', async () => {
   const markdown = await readFile(new URL('docs/MANUAL_TEST_CHECKLIST.md', `${root}/`), 'utf8')
   const coverageDoc = await readFile(new URL('docs/AUTOMATED_QA_COVERAGE.md', `${root}/`), 'utf8')

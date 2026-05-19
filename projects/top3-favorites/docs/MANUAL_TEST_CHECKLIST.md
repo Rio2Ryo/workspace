@@ -181,5 +181,6 @@
 ## 7. タグ重複・表示
 
 - [ ] 同じタグを複数件登録してもタグチップが重複表示されない
+  - 自動確認: `tests/tag-chip-region-a11y-and-uniqueness.e2e.spec.ts` が検索/登録タグ領域のタグチップ重複排除を検証する
 - [ ] タグチップ押下後に新規登録フォームのタグ欄が同期する
-  - 自動確認: `tests/top3.e2e.spec.ts` と `tests/search-tag-select-syncs-registration-tag.e2e.spec.ts` がタグチップ表示と選択タグの登録フォーム同期を検証する
+  - 自動確認: `tests/search-tag-select-syncs-registration-tag.e2e.spec.ts` がタグチップ選択後の登録フォームタグ同期を検証する
