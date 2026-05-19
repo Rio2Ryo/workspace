@@ -275,6 +275,10 @@ const rawManualAutomatedLinkContracts = {
       message: 'manual checklist should connect Google Maps tab/query behavior to automated maps specs',
     },
     {
+      pattern: /URLクエリに `店名 \+ 場所 \+ タグ` が含まれる[\s\S]*自動確認: `tests\/maps-link-query\.e2e\.spec\.ts`/,
+      message: 'manual checklist should connect Google Maps query contents to the automated maps query spec',
+    },
+    {
       pattern: /JSONエクスポート成功[\s\S]*自動確認: `tests\/import-export\.e2e\.spec\.ts` と `tests\/export-download-roundtrip\.e2e\.spec\.ts`/,
       message: 'manual checklist should connect JSON export success to both the automated import/export flow and the real download artifact roundtrip spec',
     },

@@ -53,6 +53,7 @@
 - [ ] 各アイテムの `Maps` を押すと新規タブでGoogle Maps検索が開く
   - 自動確認: `tests/maps-link-new-tab-contract.e2e.spec.ts` と `tests/maps-link-query.e2e.spec.ts` が新規タブ属性と検索URL構成を検証する
 - [ ] URLクエリに `店名 + 場所 + タグ` が含まれる
+  - 自動確認: `tests/maps-link-query.e2e.spec.ts` がGoogle Maps検索URLのqueryに店舗名・場所・タグが含まれることを検証する
 
 ---
 
