@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test'
-import { resetItemsByReplace, registrationSaveButton, expectOperationStatus, registrationRankButton, searchSection as searchSectionLocator, registrationLocationField, registrationNameField, registrationTagField } from './e2e-helpers'
+import { resetItemsByReplace, registrationSaveButton, expectOperationStatus, registrationRankButton, searchSection as searchSectionLocator, registrationLocationField, registrationNameField, registrationTagField, reloadPageAndWaitForSearchReady } from './e2e-helpers'
 
 test.beforeEach(async ({ request }) => {
   await resetItemsByReplace(request)
@@ -33,7 +33,7 @@ test('adding new 1st place rebalances to Top3 and persists ranks after reload + 
   await expect(searchSection.getByText(/3位:\s*B店/)).toBeVisible()
   await expect(searchSection.getByText('C店')).toHaveCount(0)
 
-  await page.reload()
+  await reloadPageAndWaitForSearchReady(page)
 
   // after reload, ranking must remain
   await expect(searchSection.getByText(/1位:\s*New 1st/)).toBeVisible()

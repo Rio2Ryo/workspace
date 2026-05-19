@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test'
-import { tagFilterButton, searchClearButton, acceptNextDeleteDialog, resetItemsByReplace, itemDeleteButton, registrationSaveButton, expectOperationStatus, searchSection as searchSectionLocator, registrationLocationField, registrationNameField, registrationTagField } from './e2e-helpers'
+import { tagFilterButton, searchClearButton, acceptNextDeleteDialog, resetItemsByReplace, itemDeleteButton, registrationSaveButton, expectOperationStatus, searchSection as searchSectionLocator, registrationLocationField, registrationNameField, registrationTagField, reloadPageAndWaitForSearchReady } from './e2e-helpers'
 
 test.beforeEach(async ({ request }) => {
   await resetItemsByReplace(request)
@@ -40,7 +40,7 @@ test('deleting the last item in selected tag clears stale tag filter and keeps r
   await expect(searchSection.getByRole('heading', { name: '残すタグ' })).toBeVisible()
   await expect(searchSection.getByText(/\d位: Keep Me/)).toBeVisible()
 
-  await page.reload()
+  await reloadPageAndWaitForSearchReady(page)
   await expect(searchSection.getByRole('heading', { name: '残すタグ' })).toBeVisible()
   await expect(searchSection.getByText(/\d位: Keep Me/)).toBeVisible()
   await expect(searchSection.getByText('Delete Me')).not.toBeVisible()

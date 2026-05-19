@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test'
-import { resetItemsByReplace, registrationSaveButton, expectOperationStatus, registrationRankButton, searchSection as searchSectionLocator, registrationLocationField, registrationMemoField, registrationNameField, registrationTagField } from './e2e-helpers'
+import { resetItemsByReplace, registrationSaveButton, expectOperationStatus, registrationRankButton, searchSection as searchSectionLocator, registrationLocationField, registrationMemoField, registrationNameField, registrationTagField, reloadPageAndWaitForSearchReady } from './e2e-helpers'
 
 test.beforeEach(async ({ request }) => {
   await resetItemsByReplace(request)
@@ -22,7 +22,7 @@ test('newly created item remains after reload and exists in API data', async ({ 
   await searchSection.getByText(/2位:\s*Persist New Item/).click()
   await expect(searchSection.getByText('reload persistence contract')).toBeVisible()
 
-  await page.reload()
+  await reloadPageAndWaitForSearchReady(page)
 
   await expect(searchSection.getByText(/2位:\s*Persist New Item/)).toBeVisible()
   await searchSection.getByText(/2位:\s*Persist New Item/).click()

@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test'
-import { uploadJsonImportFile, parseDownloadedJsonFile, resetItemsByReplace, downloadJsonExport, saveSampleItems, importConfirmButton, expectOperationStatus } from './e2e-helpers'
+import { uploadJsonImportFile, parseDownloadedJsonFile, resetItemsByReplace, downloadJsonExport, saveSampleItems, importConfirmButton, expectOperationStatus, reloadPageAndWaitForSearchReady } from './e2e-helpers'
 
 const requiredStringFields = ['id', 'tag', 'location', 'name', 'memo', 'mapsUrl', 'placeId', 'createdAt', 'updatedAt'] as const
 
@@ -31,7 +31,7 @@ test('exported JSON file has valid item shape and can be imported back through t
   }
 
   await resetItemsByReplace(request)
-  await page.reload()
+  await reloadPageAndWaitForSearchReady(page)
   await expect(page.getByText('該当するTop3がありません。')).toBeVisible()
 
   await uploadJsonImportFile(page, filename, raw)

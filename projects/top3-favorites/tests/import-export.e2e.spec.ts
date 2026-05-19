@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test'
-import { sampleSaveButton, jsonExportButton, tagFilterButton, searchClearButton, uploadJsonImportFile, parseDownloadedJsonFile, resetItemsByReplace, downloadJsonExport, saveSampleItems, jsonImportButton, importConfirmButton, expectOperationStatus, searchSection as searchSectionLocator } from './e2e-helpers'
+import { sampleSaveButton, jsonExportButton, tagFilterButton, searchClearButton, uploadJsonImportFile, parseDownloadedJsonFile, resetItemsByReplace, downloadJsonExport, saveSampleItems, jsonImportButton, importConfirmButton, expectOperationStatus, searchSection as searchSectionLocator, reloadPageAndWaitForSearchReady } from './e2e-helpers'
 
 test.beforeEach(async ({ request }) => {
   await resetItemsByReplace(request)
@@ -32,7 +32,7 @@ test('exported JSON can be downloaded and imported back through the confirmation
   expect(exportedItems.map((item) => item.name)).toContain('Solito MAGO')
 
   await resetItemsByReplace(request, [])
-  await page.reload()
+  await reloadPageAndWaitForSearchReady(page)
   await expect(jsonExportButton(page)).toBeDisabled()
   await expect(page.getByText('該当するTop3がありません。')).toBeVisible()
 
