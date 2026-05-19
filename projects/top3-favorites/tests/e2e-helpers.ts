@@ -111,6 +111,11 @@ export async function clearSearchTagFilter(searchSection: Locator): Promise<void
   await clearButton.click()
 }
 
+
+export function tagSyncStatus(page: Page): Locator {
+  return page.getByTestId('tag-sync-status')
+}
+
 export function tagFilterButton(scope: Page | Locator, tag: string): Locator {
   const name = `#${tag}`
   return scope.getByRole('button', { name })

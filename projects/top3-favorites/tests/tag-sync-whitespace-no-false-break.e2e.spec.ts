@@ -8,6 +8,7 @@ import {
   resetItemsByReplace,
   searchSection as searchSectionLocator,
   tagFilterButton,
+  tagSyncStatus,
   saveRegistrationAndWaitForStatus,
 } from './e2e-helpers'
 
@@ -25,11 +26,11 @@ test('typing same tag with trailing whitespace does not falsely break sync', asy
 
   const searchSection = searchSectionLocator(page)
   await tagFilterButton(searchSection as searchSectionLocator, 'カフェラテ').click()
-  await expect(page.getByTestId('tag-sync-status')).toHaveCount(1)
+  await expect(tagSyncStatus(page)).toHaveCount(1)
 
   await registrationTagField(page).fill('カフェラテ ')
 
   // still considered same tag context, so sync remains and no break notice
-  await expect(page.getByTestId('tag-sync-status')).toHaveCount(1)
+  await expect(tagSyncStatus(page)).toHaveCount(1)
   await expect(operationStatus(page)).not.toContainText('手入力によりタグ連動を解除しました。')
 })

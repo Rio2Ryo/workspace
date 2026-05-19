@@ -7,6 +7,7 @@ import {
   resetItemsByReplace,
   searchSection as searchSectionLocator,
   tagFilterButton,
+  tagSyncStatus,
   saveRegistrationAndWaitForStatus,
 } from './e2e-helpers'
 
@@ -29,5 +30,5 @@ test('sync-break notice auto-dismisses after short duration', async ({ page }) =
   await expectOperationStatus(page, '手入力によりタグ連動を解除しました。')
 
   await expect(page.getByText('手入力によりタグ連動を解除しました。')).toHaveCount(0, { timeout: 5000 })
-  await expect(page.getByTestId('tag-sync-status')).toHaveCount(0)
+  await expect(tagSyncStatus(page)).toHaveCount(0)
 })

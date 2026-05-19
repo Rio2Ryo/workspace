@@ -7,6 +7,7 @@ import {
   resetItemsByReplace,
   searchSection as searchSectionLocator,
   tagFilterButton,
+  tagSyncStatus,
   saveRegistrationAndWaitForStatus,
 } from './e2e-helpers'
 
@@ -32,5 +33,5 @@ test('sync-break notice is shown once and not repeatedly overwritten by further 
   // further typing should not spam/replace status with the same notice repeatedly
   await tagInput.fill('手入力タグ')
   await expectOperationStatus(page, '手入力によりタグ連動を解除しました。')
-  await expect(page.getByTestId('tag-sync-status')).toHaveCount(0)
+  await expect(tagSyncStatus(page)).toHaveCount(0)
 })

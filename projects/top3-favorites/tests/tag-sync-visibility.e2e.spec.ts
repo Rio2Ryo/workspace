@@ -8,6 +8,7 @@ import {
   resetItemsByReplace,
   searchSection as searchSectionLocator,
   tagFilterButton,
+  tagSyncStatus,
   saveRegistrationAndWaitForStatus,
 } from './e2e-helpers'
 
@@ -26,9 +27,9 @@ test('shows sync status when tag is selected and hides after clear', async ({ pa
   const searchSection = searchSectionLocator(page)
   await tagFilterButton(searchSection as searchSectionLocator, 'カフェラテ').click()
 
-  await expect(page.getByTestId('tag-sync-status')).toHaveText('検索タグ「カフェラテ」と登録タグを連動中')
+  await expect(tagSyncStatus(page)).toHaveText('検索タグ「カフェラテ」と登録タグを連動中')
 
   await clearSearchTagFilter(searchSection)
-  await expect(page.getByTestId('tag-sync-status')).toHaveCount(0)
+  await expect(tagSyncStatus(page)).toHaveCount(0)
   await expect(registrationTagField(page)).toHaveValue('')
 })

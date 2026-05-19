@@ -7,6 +7,7 @@ import {
   resetItemsByReplace,
   searchSection as searchSectionLocator,
   tagFilterButton,
+  tagSyncStatus,
   saveRegistrationAndWaitForStatus,
 } from './e2e-helpers'
 
@@ -30,6 +31,6 @@ test('sync-break notice clears when user reselects a tag and sync resumes', asyn
 
   await tagFilterButton(searchSection as searchSectionLocator, 'カフェラテ').click()
 
-  await expect(page.getByTestId('tag-sync-status')).toHaveText('検索タグ「カフェラテ」と登録タグを連動中')
+  await expect(tagSyncStatus(page)).toHaveText('検索タグ「カフェラテ」と登録タグを連動中')
   await expect(page.getByText('手入力によりタグ連動を解除しました。')).toHaveCount(0)
 })

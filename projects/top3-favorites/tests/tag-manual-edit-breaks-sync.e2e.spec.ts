@@ -8,6 +8,7 @@ import {
   searchClearButton,
   searchSection as searchSectionLocator,
   tagFilterButton,
+  tagSyncStatus,
   saveRegistrationAndWaitForStatus,
 } from './e2e-helpers'
 
@@ -25,12 +26,12 @@ test('manual tag edit breaks search-link sync and hides sync status', async ({ p
 
   const searchSection = searchSectionLocator(page)
   await tagFilterButton(searchSection as searchSectionLocator, 'カフェラテ').click()
-  await expect(page.getByTestId('tag-sync-status')).toHaveText('検索タグ「カフェラテ」と登録タグを連動中')
+  await expect(tagSyncStatus(page)).toHaveText('検索タグ「カフェラテ」と登録タグを連動中')
 
   // Manual tag typing should break sync state
   await registrationTagField(page).fill('手入力タグ')
 
-  await expect(page.getByTestId('tag-sync-status')).toHaveCount(0)
+  await expect(tagSyncStatus(page)).toHaveCount(0)
   await expect(searchClearButton(searchSection)).toHaveCount(0)
   await expect(registrationTagField(page)).toHaveValue('手入力タグ')
 })

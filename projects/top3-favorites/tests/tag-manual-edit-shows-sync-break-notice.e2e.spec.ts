@@ -7,6 +7,7 @@ import {
   resetItemsByReplace,
   searchSection as searchSectionLocator,
   tagFilterButton,
+  tagSyncStatus,
   saveRegistrationAndWaitForStatus,
 } from './e2e-helpers'
 
@@ -24,9 +25,9 @@ test('manual tag edit shows notice when search-tag sync is broken', async ({ pag
 
   const searchSection = searchSectionLocator(page)
   await tagFilterButton(searchSection as searchSectionLocator, 'カフェラテ').click()
-  await expect(page.getByTestId('tag-sync-status')).toHaveCount(1)
+  await expect(tagSyncStatus(page)).toHaveCount(1)
 
   await registrationTagField(page).fill('手入力タグ')
   await expectOperationStatus(page, '手入力によりタグ連動を解除しました。')
-  await expect(page.getByTestId('tag-sync-status')).toHaveCount(0)
+  await expect(tagSyncStatus(page)).toHaveCount(0)
 })

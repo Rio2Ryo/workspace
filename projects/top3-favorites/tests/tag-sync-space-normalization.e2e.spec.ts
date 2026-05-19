@@ -7,6 +7,7 @@ import {
   resetItemsByReplace,
   searchSection as searchSectionLocator,
   tagFilterButton,
+  tagSyncStatus,
   saveRegistrationAndWaitForStatus,
 } from './e2e-helpers'
 
@@ -24,9 +25,9 @@ test('tag sync should not break for semantically same tag with half/full width s
 
   const searchSection = searchSectionLocator(page)
   await tagFilterButton(searchSection as searchSectionLocator, 'カフェ ラテ').click()
-  await expect(page.getByTestId('tag-sync-status')).toHaveCount(1)
+  await expect(tagSyncStatus(page)).toHaveCount(1)
 
   // Same meaning with full-width space should keep sync
   await registrationTagField(page).fill('カフェ　ラテ')
-  await expect(page.getByTestId('tag-sync-status')).toHaveCount(1)
+  await expect(tagSyncStatus(page)).toHaveCount(1)
 })
