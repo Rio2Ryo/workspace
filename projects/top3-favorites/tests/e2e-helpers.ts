@@ -20,6 +20,23 @@ export async function fetchItems<T = { items: unknown[] }>(request: APIRequestCo
   return (await response.json()) as T
 }
 
+export async function installClipboardRecorder(page: Page, storageKey = 'last-copied-text'): Promise<void> {
+  await page.evaluate((storageKey) => {
+    Object.defineProperty(navigator, 'clipboard', {
+      configurable: true,
+      value: {
+        writeText: async (text: string) => {
+          window.localStorage.setItem(storageKey, text)
+        },
+      },
+    })
+  }, storageKey)
+}
+
+export async function readClipboardRecorder(page: Page, storageKey = 'last-copied-text'): Promise<string | null> {
+  return page.evaluate((storageKey) => window.localStorage.getItem(storageKey), storageKey)
+}
+
 export async function postItem(
   request: APIRequestContext,
   data: unknown,

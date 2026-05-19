@@ -2,6 +2,8 @@ import { expect, test } from '@playwright/test'
 import {
   expectOperationAlert,
   expectOperationStatus,
+  installClipboardRecorder,
+  readClipboardRecorder,
   importPreviewSummary,
   importValidationCopyJsonPaths,
   importValidationCopyRepairList,
@@ -30,17 +32,7 @@ test.beforeEach(async ({ request }) => {
 
 test('import validation error identifies the first invalid row and field for quick recovery', async ({ page }) => {
   await page.goto('/')
-  await page.evaluate(() => {
-    Object.defineProperty(navigator, 'clipboard', {
-      configurable: true,
-      value: {
-        writeText: async (text: string) => {
-          window.localStorage.setItem('last-copied-import-validation-paths', text)
-          window.localStorage.setItem('last-copied-import-validation-repairs', text)
-        },
-      },
-    })
-  })
+  await installClipboardRecorder(page, 'last-copied-import-validation')
 
   const now = '2026-05-18T00:00:00.000Z'
   const invalidItems = [
@@ -76,10 +68,10 @@ test('import validation error identifies the first invalid row and field for qui
   ])
   await importValidationCopyJsonPaths(page).click()
   await expectOperationStatus(page, 'JSONパス一覧をコピーしました。')
-  await expect.poll(() => page.evaluate(() => window.localStorage.getItem('last-copied-import-validation-paths'))).toBe('$.items[1].tag\n$.items[2].name')
+  await expect.poll(() => readClipboardRecorder(page, 'last-copied-import-validation')).toBe('$.items[1].tag\n$.items[2].name')
   await importValidationCopyRepairList(page).click()
   await expectOperationStatus(page, '修正対象一覧をコピーしました。')
-  await expect.poll(() => page.evaluate(() => window.localStorage.getItem('last-copied-import-validation-repairs'))).toBe(
+  await expect.poll(() => readClipboardRecorder(page, 'last-copied-import-validation')).toBe(
     '2件目 / $.items[1].tag / tag / タグを入力してください。\n3件目 / $.items[2].name / name / 店舗名を入力してください。',
   )
   await expect(importPreviewSummary(page)).toHaveCount(0)
@@ -87,6 +79,7 @@ test('import validation error identifies the first invalid row and field for qui
 
 test('import validation field summary prioritizes repeated fields over first-seen order', async ({ page }) => {
   await page.goto('/')
+  await installClipboardRecorder(page, 'last-copied-import-validation')
 
   const now = '2026-05-18T00:00:00.000Z'
   const invalidItems = [
@@ -140,17 +133,7 @@ test('import validation repair list collapses long all-issue lists and can expan
 
 test('import validation field summary filters the repair list to the selected repeated field', async ({ page }) => {
   await page.goto('/')
-  await page.evaluate(() => {
-    Object.defineProperty(navigator, 'clipboard', {
-      configurable: true,
-      value: {
-        writeText: async (text: string) => {
-          window.localStorage.setItem('last-copied-import-validation-paths', text)
-          window.localStorage.setItem('last-copied-import-validation-repairs', text)
-        },
-      },
-    })
-  })
+  await installClipboardRecorder(page, 'last-copied-import-validation')
 
   const now = '2026-05-18T00:00:00.000Z'
   const invalidItems = [
@@ -174,10 +157,10 @@ test('import validation field summary filters the repair list to the selected re
   ])
   await importValidationCopyJsonPaths(page).click()
   await expectOperationStatus(page, 'JSONパス一覧をコピーしました。')
-  await expect.poll(() => page.evaluate(() => window.localStorage.getItem('last-copied-import-validation-paths'))).toBe('$.items[1].tag\n$.items[2].tag')
+  await expect.poll(() => readClipboardRecorder(page, 'last-copied-import-validation')).toBe('$.items[1].tag\n$.items[2].tag')
   await importValidationCopyRepairList(page).click()
   await expectOperationStatus(page, '修正対象一覧をコピーしました。')
-  await expect.poll(() => page.evaluate(() => window.localStorage.getItem('last-copied-import-validation-repairs'))).toBe(
+  await expect.poll(() => readClipboardRecorder(page, 'last-copied-import-validation')).toBe(
     '2件目 / $.items[1].tag / tag / タグを入力してください。\n3件目 / $.items[2].tag / tag / タグを入力してください。',
   )
   await importValidationFieldFilter(page, 'name').click()
