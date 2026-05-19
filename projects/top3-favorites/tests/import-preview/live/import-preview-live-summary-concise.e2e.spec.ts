@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test'
-import { uploadJsonImportFile, resetItemsByDelete, saveSampleItems, fetchItems } from '../../e2e-helpers'
+import { uploadJsonImportFile, resetItemsByDelete, saveSampleItems, fetchItems, importPreviewLive } from '../../e2e-helpers'
 
 test.beforeEach(async ({ request }) => {
   await resetItemsByDelete(request)
@@ -8,7 +8,7 @@ test.beforeEach(async ({ request }) => {
 test('live summary is concise and mentions only changed elements', async ({ page, request }) => {
   await page.goto('/')
   await saveSampleItems(page)
-  const live = page.getByTestId('import-preview-live')
+  const live = importPreviewLive(page)
 
   // No-change case: same data re-import
   const current = await fetchItems<{ items: unknown[] }>(request)

@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test'
-import { uploadJsonImportFile, resetItemsByDelete , importPreviewExcludedDetails} from '../../e2e-helpers'
+import { uploadJsonImportFile, resetItemsByDelete, importPreviewExcludedDetails, importPreviewLive } from '../../e2e-helpers'
 
 test.beforeEach(async ({ request }) => {
   await resetItemsByDelete(request)
@@ -29,7 +29,7 @@ test('live summary representative excluded name is consistent with excluded-deta
   await expect(details).toContainText('・Z3店')
   await expect(details).toContainText('・A3店')
 
-  const live = page.getByTestId('import-preview-live')
+  const live = importPreviewLive(page)
   await expect(live).toContainText('正規化除外2件')
   await expect(live).toContainText('例: Z3店')
 })

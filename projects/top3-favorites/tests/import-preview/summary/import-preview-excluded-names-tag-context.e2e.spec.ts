@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test'
-import { uploadJsonImportFile, parseImportPreviewSummary, resetItemsByReplace , importPreviewExcludedNames, importPreviewExcludedDetails, importPreviewSummary} from '../../e2e-helpers'
+import { uploadJsonImportFile, parseImportPreviewSummary, resetItemsByReplace, importPreviewExcludedNames, importPreviewExcludedDetails, importPreviewSummary, importPreviewLive } from '../../e2e-helpers'
 
 test.beforeEach(async ({ request }) => {
   await resetItemsByReplace(request)
@@ -26,7 +26,7 @@ test('excluded store names preview includes tag context when multiple themes exc
   await expect(names).toHaveAttribute('data-excluded-name-count', '2')
   await expect(names).toHaveAttribute('data-excluded-name-labels', 'カフェラテ: 同名店|つけ麺: 同名店')
   await expect(names).toHaveText('正規化除外予定の店舗: カフェラテ: 同名店, つけ麺: 同名店')
-  await expect(page.getByTestId('import-preview-live')).toContainText('正規化除外2件（例: カフェラテ: 同名店）')
+  await expect(importPreviewLive(page)).toContainText('正規化除外2件（例: カフェラテ: 同名店）')
   await expect(importPreviewExcludedDetails(page)).toHaveText(
     '除外理由: ・カフェラテ: 同名店（カフェラテでTop3外: 4位相当） / ・つけ麺: 同名店（つけ麺でTop3外: 4位相当）',
   )

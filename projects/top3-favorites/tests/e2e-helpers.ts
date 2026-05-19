@@ -235,6 +235,14 @@ export function importPreviewReplaceHint(page: Page): Locator {
   return page.getByTestId('import-preview-replace-hint')
 }
 
+export function importPreviewLive(page: Page): Locator {
+  return page.getByTestId('import-preview-live')
+}
+
+export function importPreviewNoChange(page: Page): Locator {
+  return page.getByTestId('import-preview-no-change')
+}
+
 export function importPreviewCounts(page: Page): Locator {
   return page.getByTestId('import-preview-counts')
 }
