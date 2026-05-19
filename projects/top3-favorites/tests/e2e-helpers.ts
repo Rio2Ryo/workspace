@@ -333,6 +333,18 @@ export function importValidationCollapseRepairs(page: Page): Locator {
   return importValidationErrorDetails(page).getByRole('button', { name: '修正対象を折りたたむ' })
 }
 
+export function importValidationDetailTerms(page: Page): Locator {
+  return importValidationErrorDetails(page).locator('dt')
+}
+
+export function importValidationDetailValues(page: Page): Locator {
+  return importValidationErrorDetails(page).locator('dd')
+}
+
+export function importValidationRepairHeading(page: Page): Locator {
+  return importValidationErrorDetails(page).getByText('検出した修正対象')
+}
+
 export function importValidationRepairItems(page: Page): Locator {
   return importValidationErrorDetails(page).locator('.import-validation-error-list ol li')
 }

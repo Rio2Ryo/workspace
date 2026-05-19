@@ -10,6 +10,9 @@ import {
   importValidationFieldFilter,
   importValidationFieldSummary,
   importValidationFilteredRepairStatus,
+  importValidationDetailTerms,
+  importValidationDetailValues,
+  importValidationRepairHeading,
   importValidationRepairItems,
   importValidationShowAllRepairs,
   importValidationCollapseRepairs,
@@ -53,8 +56,8 @@ test('import validation error identifies the first invalid row and field for qui
   const details = importValidationErrorDetails(page)
   await expect(details).toBeVisible()
   await expect(details).toHaveAttribute('aria-label', 'インポートエラーの修正情報')
-  await expect(details.locator('dt')).toHaveText(['ファイル', '行', 'JSONパス', 'フィールド', '修正', '検出件数'])
-  await expect(details.locator('dd')).toHaveText([
+  await expect(importValidationDetailTerms(page)).toHaveText(['ファイル', '行', 'JSONパス', 'フィールド', '修正', '検出件数'])
+  await expect(importValidationDetailValues(page)).toHaveText([
     'invalid-import-field-details.json',
     '2件目',
     '$.items[1].tag',
@@ -62,7 +65,7 @@ test('import validation error identifies the first invalid row and field for qui
     'タグを入力してください。',
     '合計2件（ほか1件も修正してください）',
   ])
-  await expect(details.getByText('検出した修正対象')).toBeVisible()
+  await expect(importValidationRepairHeading(page)).toBeVisible()
   const fieldSummary = importValidationFieldSummary(page)
   await expect(fieldSummary).toBeVisible()
   await expect(fieldSummary.locator('li span')).toHaveText(['tag: 1件', 'name: 1件'])
