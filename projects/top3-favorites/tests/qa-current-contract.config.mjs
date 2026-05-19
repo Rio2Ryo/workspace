@@ -351,7 +351,7 @@ const rawManualAutomatedLinkContracts = {
       message: 'manual checklist should connect edit cancel behavior to automated edit cancel specs',
     },
     {
-      pattern: /削除で対象のみ消える[\s\S]*削除後に再読み込みしても削除結果が維持される[\s\S]*自動確認: `tests\/delete-confirmation\.e2e\.spec\.ts` と `tests\/delete-persists-after-reload-and-api\.e2e\.spec\.ts`/,
+      pattern: /削除で対象のみ消える[\s\S]*自動確認: `tests\/delete-confirmation\.e2e\.spec\.ts`[\s\S]*削除後に再読み込みしても削除結果が維持される[\s\S]*自動確認: `tests\/delete-persists-after-reload-and-api\.e2e\.spec\.ts`/,
       message: 'manual checklist should connect delete-only-target and reload persistence to automated delete specs',
     },
     {

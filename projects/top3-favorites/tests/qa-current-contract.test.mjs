@@ -1444,6 +1444,36 @@ test('[Manual][automation-link] import preview summary child items have direct a
   }
 })
 
+test('[Manual][automation-link] edit/delete child items have direct automated links', async () => {
+  const markdown = await readFile(new URL('docs/MANUAL_TEST_CHECKLIST.md', `${root}/`), 'utf8')
+  const childContracts = [
+    {
+      item: '編集ボタンで既存値が編集フォームに入る',
+      specs: ['tests/edit-form-accessibility.e2e.spec.ts'],
+    },
+    {
+      item: '編集保存で一覧表示が更新される',
+      specs: ['tests/edit-form-accessibility.e2e.spec.ts'],
+    },
+    {
+      item: '削除で対象のみ消える',
+      specs: ['tests/delete-confirmation.e2e.spec.ts'],
+    },
+    {
+      item: '削除後に再読み込みしても削除結果が維持される',
+      specs: ['tests/delete-persists-after-reload-and-api.e2e.spec.ts'],
+    },
+  ]
+
+  for (const { item, specs } of childContracts) {
+    const block = manualChecklistItemBlock(markdown, item)
+    assert.match(block, /自動確認:/, contractMessage({ scope: 'Manual', rule: 'edit/delete child checklist item has direct automated link', expected: item, fix: 'add an indented 自動確認 line directly under this edit/delete manual checklist item' }))
+    for (const spec of specs) {
+      assert.ok(block.includes(`\`${spec}\``), contractMessage({ scope: 'Manual', rule: 'edit/delete child checklist item cites authoritative spec', expected: spec, fix: 'add the focused E2E path to the child item 自動確認 line' }))
+    }
+  }
+})
+
 test('[Manual][automation-link] manual checklist marks browser-console, API-failure, and import/export checks as automated where possible', async () => {
   const markdown = await readFile(new URL('docs/MANUAL_TEST_CHECKLIST.md', `${root}/`), 'utf8')
   const coverageDoc = await readFile(new URL('docs/AUTOMATED_QA_COVERAGE.md', `${root}/`), 'utf8')

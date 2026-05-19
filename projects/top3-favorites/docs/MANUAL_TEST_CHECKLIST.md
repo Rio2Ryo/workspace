@@ -156,13 +156,15 @@
 ## 5. 編集/削除
 
 - [ ] 編集ボタンで既存値が編集フォームに入る
+  - 自動確認: `tests/edit-form-accessibility.e2e.spec.ts` が編集フォームの既存値表示・入力欄のa11y名を検証する
 - [ ] 編集保存で一覧表示が更新される
-  - 自動確認: `tests/edit-form-accessibility.e2e.spec.ts` が編集フォームの既存値表示・入力欄のa11y名・保存後の一覧/API反映を検証する
+  - 自動確認: `tests/edit-form-accessibility.e2e.spec.ts` が保存後の一覧/API反映を検証する
 - [ ] 編集キャンセルで編集モードを抜ける
   - 自動確認: `tests/edit-form-accessibility.e2e.spec.ts` と `tests/edit-cancel-clears-stale-notice.e2e.spec.ts` がキャンセル後の一覧復帰と古い成功通知のクリアを検証する
 - [ ] 削除で対象のみ消える
+  - 自動確認: `tests/delete-confirmation.e2e.spec.ts` が削除確認・対象削除を検証する
 - [ ] 削除後に再読み込みしても削除結果が維持される
-  - 自動確認: `tests/delete-confirmation.e2e.spec.ts` と `tests/delete-persists-after-reload-and-api.e2e.spec.ts` が削除確認・対象削除・reload/API永続化を検証する
+  - 自動確認: `tests/delete-persists-after-reload-and-api.e2e.spec.ts` が削除後のreload/API永続化を検証する
 
 ---
 
