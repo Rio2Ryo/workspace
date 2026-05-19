@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test'
-import { resetItemsByReplace, registrationSaveButton, expectOperationStatus } from './e2e-helpers'
+import { resetItemsByReplace, registrationSaveButton, expectOperationStatus, registrationRankButton } from './e2e-helpers'
 
 test.beforeEach(async ({ request }) => {
   await resetItemsByReplace(request)
@@ -12,7 +12,7 @@ test('newly created item remains after reload and exists in API data', async ({ 
   await page.getByLabel('場所', { exact: true }).fill('柏')
   await page.getByLabel('店舗名', { exact: true }).fill('Persist New Item')
   await page.getByLabel('メモ', { exact: true }).fill('reload persistence contract')
-  await page.getByRole('button', { name: '登録 2位に入れる' }).click()
+  await registrationRankButton(page, 2).click()
   await registrationSaveButton(page).click()
 
   await expectOperationStatus(page, '永続化タグ の2位に保存しました。')

@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test'
-import { sampleSaveButton, jsonExportButton, itemEditButton, uploadJsonImportFile, resetItemsByReplace, itemDeleteButton, importCancelButton, importConfirmButton, registrationSaveButton, expectOperationStatus } from '../../e2e-helpers'
+import { sampleSaveButton, jsonExportButton, itemEditButton, uploadJsonImportFile, resetItemsByReplace, itemDeleteButton, importCancelButton, importConfirmButton, registrationSaveButton, expectOperationStatus, registrationRankButton } from '../../e2e-helpers'
 
 test.beforeEach(async ({ request }) => {
   await resetItemsByReplace(request)
@@ -30,9 +30,9 @@ test('pending import preview enforces operation guards across registration/searc
   await expect(page.getByLabel('場所', { exact: true })).toBeDisabled()
   await expect(page.getByLabel('店舗名', { exact: true })).toBeDisabled()
   await expect(page.getByLabel('メモ', { exact: true })).toBeDisabled()
-  await expect(page.getByRole('button', { name: '登録 1位に入れる' })).toBeDisabled()
-  await expect(page.getByRole('button', { name: '登録 2位に入れる' })).toBeDisabled()
-  await expect(page.getByRole('button', { name: '登録 3位に入れる' })).toBeDisabled()
+  await expect(registrationRankButton(page, 1)).toBeDisabled()
+  await expect(registrationRankButton(page, 2)).toBeDisabled()
+  await expect(registrationRankButton(page, 3)).toBeDisabled()
 
   // save/sample/export locks
   await expect(registrationSaveButton(page)).toBeDisabled()

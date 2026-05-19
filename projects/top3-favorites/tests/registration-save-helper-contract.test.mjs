@@ -43,6 +43,7 @@ function collectSaveRaceOffenders(spec, source) {
     'page.reload(',
     'downloadJsonExport(',
     'page.waitForEvent(',
+    'tagFilterButton(',
   ]
   const offenders = []
   const saveClickPattern = /await\s+registrationSaveButton\(page\)\.click\(\)/g

@@ -12,6 +12,7 @@ test('sync-break notice clears when user reselects a tag and sync resumes', asyn
   await page.getByLabel('場所', { exact: true }).fill('柏の葉')
   await page.getByLabel('店舗名', { exact: true }).fill('Reselect Notice')
   await registrationSaveButton(page).click()
+  await expectOperationStatus(page, 'カフェラテ の1位に保存しました。')
 
   const searchSection = page.locator('section.card').filter({ has: page.getByRole('heading', { name: '探す' }) })
   await tagFilterButton(searchSection, 'カフェラテ').click()

@@ -56,6 +56,14 @@ export function registrationSaveButton(page: Page): Locator {
   return page.getByRole('button', { name: 'DBに保存' })
 }
 
+export function registrationRankButton(page: Page, rank: 1 | 2 | 3): Locator {
+  return page.getByRole('button', { name: `登録 ${rank}位に入れる` })
+}
+
+export function editRankButton(page: Page, rank: 1 | 2 | 3): Locator {
+  return page.getByRole('button', { name: `編集 ${rank}位に変更` })
+}
+
 export function editSaveButton(page: Page): Locator {
   return page.getByRole('button', { name: '編集を保存' })
 }

@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test'
-import { resetItemsByReplace, registrationSaveButton, expectOperationStatus } from './e2e-helpers'
+import { resetItemsByReplace, registrationSaveButton, expectOperationStatus, registrationRankButton } from './e2e-helpers'
 
 test.beforeEach(async ({ request }) => {
   await resetItemsByReplace(request)
@@ -12,7 +12,7 @@ test('maps link opens in a new tab with safe rel attributes', async ({ page }) =
   await page.getByLabel('場所', { exact: true }).fill('柏の葉')
   await page.getByLabel('店舗名', { exact: true }).fill('Solito MAGO')
   await page.getByLabel('メモ', { exact: true }).fill('maps attr contract')
-  await page.getByRole('button', { name: '登録 1位に入れる' }).click()
+  await registrationRankButton(page, 1).click()
   await registrationSaveButton(page).click()
 
   await expectOperationStatus(page, 'カフェラテ の1位に保存しました。')
