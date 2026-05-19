@@ -5,7 +5,7 @@
     "@bmw_intokyo"
   ],
   "last_check": {
-    "checked_at": "2026-05-19T00:57:28Z",
+    "checked_at": "2026-05-19T00:58:56Z",
     "found_count": 15,
     "new_count": 0,
     "status": "ok",
@@ -498,39 +498,39 @@
   "recent_stats": {
     "window_hours": 24,
     "total": 767,
-    "ok": 715,
-    "partial_error": 52,
+    "ok": 714,
+    "partial_error": 53,
     "error": 0,
     "other": 0,
-    "success_rate": 0.9322033898305084
+    "success_rate": 0.9308996088657105
   },
   "recent_stats_by_window": {
     "1": {
       "window_hours": 1,
-      "total": 35,
+      "total": 36,
       "ok": 23,
-      "partial_error": 12,
+      "partial_error": 13,
       "error": 0,
       "other": 0,
-      "success_rate": 0.6571428571428571
+      "success_rate": 0.6388888888888888
     },
     "24": {
       "window_hours": 24,
       "total": 767,
-      "ok": 715,
-      "partial_error": 52,
+      "ok": 714,
+      "partial_error": 53,
       "error": 0,
       "other": 0,
-      "success_rate": 0.9322033898305084
+      "success_rate": 0.9308996088657105
     },
     "168": {
       "window_hours": 168,
-      "total": 1539,
+      "total": 1540,
       "ok": 1487,
-      "partial_error": 52,
+      "partial_error": 53,
       "error": 0,
       "other": 0,
-      "success_rate": 0.9662118258609487
+      "success_rate": 0.9655844155844155
     }
   },
   "sync_state": {
@@ -540,5 +540,5 @@
     "cursor_file_exists": true
   },
   "dry_run_alert": null,
-  "snapshot_generated_at": "2026-05-19T00:57:28Z"
+  "snapshot_generated_at": "2026-05-19T00:58:56Z"
 }
