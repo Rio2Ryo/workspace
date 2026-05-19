@@ -320,6 +320,7 @@ export function App() {
   const [pendingImport, setPendingImport] = useState<PendingImport | null>(null)
   const [importValidationIssue, setImportValidationIssue] = useState<ImportValidationIssue | null>(null)
   const [selectedImportValidationField, setSelectedImportValidationField] = useState('')
+  const [isImportValidationRepairListExpanded, setIsImportValidationRepairListExpanded] = useState(false)
   const [isImpactTagsExpanded, setIsImpactTagsExpanded] = useState(false)
   const [isExcludedNamesExpanded, setIsExcludedNamesExpanded] = useState(false)
   const [isExcludedDetailsExpanded, setIsExcludedDetailsExpanded] = useState(false)
@@ -331,6 +332,7 @@ export function App() {
     setNotice('')
     setImportValidationIssue(null)
     setSelectedImportValidationField('')
+    setIsImportValidationRepairListExpanded(false)
     if (options?.pendingImport) {
       setPendingImport(null)
       setIsImpactTagsExpanded(false)
@@ -617,6 +619,14 @@ export function App() {
       : importValidationIssue.relatedIssues
     : []
 
+  const importValidationRepairListLimit = 5
+  const shouldCollapseImportValidationRepairList = !selectedImportValidationField && !isImportValidationRepairListExpanded
+  const displayedImportValidationIssues = shouldCollapseImportValidationRepairList
+    ? visibleImportValidationIssues.slice(0, importValidationRepairListLimit)
+    : visibleImportValidationIssues
+  const hiddenImportValidationIssueCount = Math.max(0, visibleImportValidationIssues.length - displayedImportValidationIssues.length)
+  const shouldToggleImportValidationRepairList = !selectedImportValidationField && visibleImportValidationIssues.length > importValidationRepairListLimit
+
   const selectedImportValidationFieldCount = visibleImportValidationIssues.length
 
   const copyImportValidationPaths = async () => {
@@ -726,6 +736,7 @@ export function App() {
         setError(`インポート失敗: ${issueWithCount.message}既存データは保持しました。`)
         setImportValidationIssue(issueWithCount)
         setSelectedImportValidationField('')
+        setIsImportValidationRepairListExpanded(false)
         setNotice('')
         setPendingImport(null)
         return
@@ -735,6 +746,7 @@ export function App() {
         setError(`インポート失敗: ${duplicateImportError}既存データは保持しました。`)
         setImportValidationIssue(null)
         setSelectedImportValidationField('')
+        setIsImportValidationRepairListExpanded(false)
         setNotice('')
         setPendingImport(null)
         return
@@ -1028,13 +1040,30 @@ export function App() {
                           <button className="ghost compact" type="button" onClick={() => setSelectedImportValidationField('')}>すべての修正対象を表示</button>
                         </div>
                       )}
+                      {!selectedImportValidationField && shouldToggleImportValidationRepairList && (
+                        <p className="hint compact">
+                          {isImportValidationRepairListExpanded
+                            ? `表示中: 全${visibleImportValidationIssues.length}件`
+                            : `表示中: 先頭${displayedImportValidationIssues.length}件（ほか${hiddenImportValidationIssueCount}件）`}
+                        </p>
+                      )}
                       <button className="ghost" type="button" onClick={copyImportValidationPaths}>JSONパス一覧をコピー</button>
                       <button className="ghost" type="button" onClick={copyImportValidationRepairs}>修正対象一覧をコピー</button>
                       <ol>
-                        {visibleImportValidationIssues.map((issue) => (
+                        {displayedImportValidationIssues.map((issue) => (
                           <li key={`${issue.row}-${issue.path}-${issue.field}`}>{issue.row} / {issue.path} / {issue.field} / {issue.fix}</li>
                         ))}
                       </ol>
+                      {!selectedImportValidationField && shouldToggleImportValidationRepairList && (
+                        <button
+                          className="ghost compact"
+                          type="button"
+                          aria-expanded={isImportValidationRepairListExpanded}
+                          onClick={() => setIsImportValidationRepairListExpanded((prev) => !prev)}
+                        >
+                          {isImportValidationRepairListExpanded ? '修正対象を折りたたむ' : '修正対象を全件表示'}
+                        </button>
+                      )}
                     </div>
                   )}
                 </div>

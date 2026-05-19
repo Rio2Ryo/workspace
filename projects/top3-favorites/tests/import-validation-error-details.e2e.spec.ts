@@ -9,6 +9,8 @@ import {
   importValidationFieldClear,
   importValidationFieldFilter,
   importValidationFieldSummary,
+  importValidationShowAllRepairs,
+  importValidationCollapseRepairs,
   resetItemsByReplace,
   uploadJsonImportFile,
 } from './e2e-helpers'
@@ -90,6 +92,42 @@ test('import validation field summary prioritizes repeated fields over first-see
     'インポート失敗: ファイル「invalid-import-field-priority.json」の1件目 / フィールド: name / 修正: 店舗名を入力してください。既存データは保持しました。',
   )
   await expect(importValidationFieldSummary(page).locator('li span')).toHaveText(['tag: 2件', 'name: 1件'])
+})
+
+test('import validation repair list collapses long all-issue lists and can expand back', async ({ page }) => {
+  await page.goto('/')
+
+  const now = '2026-05-18T00:00:00.000Z'
+  const invalidItems = Array.from({ length: 8 }, (_, index) => ({
+    id: `invalid-name-${index + 1}`,
+    tag: 'カフェラテ',
+    location: '柏の葉',
+    name: '',
+    rank: 1,
+    memo: '',
+    mapsUrl: '',
+    placeId: '',
+    createdAt: now,
+    updatedAt: now,
+  }))
+
+  await uploadJsonImportFile(page, 'invalid-import-long-repair-list.json', invalidItems)
+
+  const details = importValidationErrorDetails(page)
+  await expect(details.getByText('表示中: 先頭5件（ほか3件）')).toBeVisible()
+  await expect(details.locator('.import-validation-error-list ol li')).toHaveCount(5)
+  await expect(details.locator('.import-validation-error-list ol li').last()).toHaveText(
+    '5件目 / $.items[4].name / name / 店舗名を入力してください。',
+  )
+  await importValidationShowAllRepairs(page).click()
+  await expect(details.getByText('表示中: 全8件')).toBeVisible()
+  await expect(details.locator('.import-validation-error-list ol li')).toHaveCount(8)
+  await expect(details.locator('.import-validation-error-list ol li').last()).toHaveText(
+    '8件目 / $.items[7].name / name / 店舗名を入力してください。',
+  )
+  await importValidationCollapseRepairs(page).click()
+  await expect(details.getByText('表示中: 先頭5件（ほか3件）')).toBeVisible()
+  await expect(details.locator('.import-validation-error-list ol li')).toHaveCount(5)
 })
 
 test('import validation field summary filters the repair list to the selected repeated field', async ({ page }) => {

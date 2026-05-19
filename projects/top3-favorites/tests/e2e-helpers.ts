@@ -325,6 +325,14 @@ export function importValidationFieldClear(page: Page): Locator {
   return importValidationErrorDetails(page).getByRole('button', { name: 'すべての修正対象を表示' })
 }
 
+export function importValidationShowAllRepairs(page: Page): Locator {
+  return importValidationErrorDetails(page).getByRole('button', { name: '修正対象を全件表示' })
+}
+
+export function importValidationCollapseRepairs(page: Page): Locator {
+  return importValidationErrorDetails(page).getByRole('button', { name: '修正対象を折りたたむ' })
+}
+
 export function importPreviewNormalization(page: Page): Locator {
   return page.getByTestId('import-preview-normalization')
 }
