@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test'
-import { acceptNextDeleteDialog, itemEditButton, editSaveButton, resetItemsByReplace, itemDeleteButton, registrationSaveButton, expectOperationStatus, expectOperationAlert, registrationLocationField, registrationNameField, registrationTagField } from './e2e-helpers'
+import { acceptNextDeleteDialog, itemEditButton, editSaveButton, resetItemsByReplace, itemDeleteButton, registrationSaveButton, expectOperationStatus, expectOperationAlert, registrationLocationField, registrationNameField, registrationTagField, operationStatus } from './e2e-helpers'
 
 test.beforeEach(async ({ request }) => {
   await resetItemsByReplace(request)
@@ -36,7 +36,7 @@ test('failed edit clears stale success notice and keeps edit draft for retry', a
   await editSaveButton(page).click()
 
   await expectOperationAlert(page, '編集APIが一時的に利用できません。')
-  await expect(page.getByText('カフェラテ の1位に保存しました。')).toHaveCount(0)
+  await expect(operationStatus(page)).toHaveCount(0)
   await expect(page.getByLabel('編集 店舗名')).toHaveValue('Edit Retry Candidate')
 })
 
@@ -60,6 +60,6 @@ test('failed delete clears stale success notice and keeps item visible', async (
   await dialogPromise
 
   await expectOperationAlert(page, '削除APIが一時的に利用できません。')
-  await expect(page.getByText('カフェラテ の1位に保存しました。')).toHaveCount(0)
+  await expect(operationStatus(page)).toHaveCount(0)
   await expect(page.getByText('1位: Delete Base')).toBeVisible()
 })

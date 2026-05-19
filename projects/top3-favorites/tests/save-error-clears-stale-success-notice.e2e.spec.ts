@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test'
-import { resetItemsByReplace, registrationSaveButton, expectOperationStatus, expectOperationAlert, registrationLocationField, registrationNameField, registrationTagField } from './e2e-helpers'
+import { resetItemsByReplace, registrationSaveButton, expectOperationStatus, expectOperationAlert, registrationLocationField, registrationNameField, registrationTagField, operationStatus } from './e2e-helpers'
 
 test.beforeEach(async ({ request }) => {
   await resetItemsByReplace(request)
@@ -30,6 +30,6 @@ test('failed save clears stale success notice and keeps draft for retry', async 
   await registrationSaveButton(page).click()
 
   await expectOperationAlert(page, '保存APIが一時的に利用できません。')
-  await expect(page.getByText('カフェラテ の1位に保存しました。')).toHaveCount(0)
+  await expect(operationStatus(page)).toHaveCount(0)
   await expect(registrationNameField(page)).toHaveValue('Retry Candidate')
 })

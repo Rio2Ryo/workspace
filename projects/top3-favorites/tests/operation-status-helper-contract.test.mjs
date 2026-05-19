@@ -42,10 +42,14 @@ test('[E2E-Helper][operation-status] E2E specs use shared operation status helpe
     const specUrl = new URL(spec, `${root}/`)
     const source = await readFile(specUrl, 'utf8')
     const usesDirectStatusRole = /getByRole\(['"]status['"]\)/.test(source)
+    const usesDirectStatusText = /getByText\(['"][^'"]*(?:保存しました。|削除しました。|インポートしました。)['"]\)/.test(source)
     const usesHelper = /(?:operationStatus|expectOperationStatus)\(/.test(source)
 
     if (usesDirectStatusRole) {
       offenders.push(`${relativePath(specUrl)}: direct operation status role locator`)
+    }
+    if (usesDirectStatusText) {
+      offenders.push(`${relativePath(specUrl)}: direct operation status text locator`)
     }
     if (usesHelper && !importsOperationStatusHelper(source)) {
       offenders.push(`${relativePath(specUrl)}: operation status helper call without named import`)
