@@ -315,8 +315,8 @@ const rawManualAutomatedLinkContracts = {
       message: 'manual checklist should connect import preview direction metrics and muted-zero behavior to child-level automated specs',
     },
     {
-      pattern: /live（読み上げ要約）[\s\S]*aria-live="polite"[\s\S]*差分なし時は `差分なし。インポート後N件。`[\s\S]*正規化除外がある時は `正規化除外N件（例: 店名）`[\s\S]*自動確認: `tests\/import-preview\/live\/import-preview-live-region-updates\.e2e\.spec\.ts`、`tests\/import-preview\/live\/import-preview-live-summary-concise\.e2e\.spec\.ts`、`tests\/import-preview\/live\/import-preview-live-summary-includes-excluded-name\.e2e\.spec\.ts`/,
-      message: 'manual checklist should connect import preview live summary behavior to automated specs',
+      pattern: /live（読み上げ要約）[\s\S]*aria-live="polite"[\s\S]*自動確認: `tests\/import-preview\/live\/import-preview-live-region-updates\.e2e\.spec\.ts`[\s\S]*差分なし時は `差分なし。インポート後N件。`[\s\S]*自動確認: `tests\/import-preview\/live\/import-preview-live-summary-concise\.e2e\.spec\.ts`[\s\S]*正規化除外がある時は `正規化除外N件（例: 店名）`[\s\S]*自動確認: `tests\/import-preview\/live\/import-preview-live-summary-includes-excluded-name\.e2e\.spec\.ts`/,
+      message: 'manual checklist should connect import preview live summary behavior to child-level automated specs',
     },
     {
       pattern: /tags（影響タグ）[\s\S]*影響タグが多い場合、先頭表示 \+ `ほかN件`[\s\S]*`影響タグを全件表示` \/ `影響タグを折りたたむ`[\s\S]*自動確認: `tests\/import-preview\/tags\/import-preview-tags-collapsed\.e2e\.spec\.ts`、`tests\/import-preview\/tags\/import-preview-tags-expand-toggle\.e2e\.spec\.ts`、`tests\/import-preview\/tags\/import-preview-tags-deterministic-order\.e2e\.spec\.ts`/,

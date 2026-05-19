@@ -119,9 +119,11 @@
 
 #### 4.2.2 live（読み上げ要約）
 - [ ] `aria-live="polite"` の更新領域で、差分要約が更新される
+  - 自動確認: `tests/import-preview/live/import-preview-live-region-updates.e2e.spec.ts` がlive region更新を検証する
 - [ ] 差分なし時は `差分なし。インポート後N件。` が読める
+  - 自動確認: `tests/import-preview/live/import-preview-live-summary-concise.e2e.spec.ts` が差分なし時の読み上げ要約を検証する
 - [ ] 正規化除外がある時は `正規化除外N件（例: 店名）` を含む
-  - 自動確認: `tests/import-preview/live/import-preview-live-region-updates.e2e.spec.ts`、`tests/import-preview/live/import-preview-live-summary-concise.e2e.spec.ts`、`tests/import-preview/live/import-preview-live-summary-includes-excluded-name.e2e.spec.ts` がlive region更新・差分なし要約・除外名入り要約を検証する
+  - 自動確認: `tests/import-preview/live/import-preview-live-summary-includes-excluded-name.e2e.spec.ts` が正規化除外名入り要約を検証する
 
 #### 4.2.3 tags（影響タグ）
 - [ ] 影響タグが多い場合、先頭表示 + `ほかN件` で折りたたまれる

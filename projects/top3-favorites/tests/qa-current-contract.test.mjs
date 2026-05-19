@@ -1422,6 +1422,32 @@ test('[Manual][automation-link] import preview direction child items have direct
   }
 })
 
+test('[Manual][automation-link] import preview live child items have direct automated links', async () => {
+  const markdown = await readFile(new URL('docs/MANUAL_TEST_CHECKLIST.md', `${root}/`), 'utf8')
+  const childContracts = [
+    {
+      item: '`aria-live="polite"` の更新領域で、差分要約が更新される',
+      specs: ['tests/import-preview/live/import-preview-live-region-updates.e2e.spec.ts'],
+    },
+    {
+      item: '差分なし時は `差分なし。インポート後N件。` が読める',
+      specs: ['tests/import-preview/live/import-preview-live-summary-concise.e2e.spec.ts'],
+    },
+    {
+      item: '正規化除外がある時は `正規化除外N件（例: 店名）` を含む',
+      specs: ['tests/import-preview/live/import-preview-live-summary-includes-excluded-name.e2e.spec.ts'],
+    },
+  ]
+
+  for (const { item, specs } of childContracts) {
+    const block = manualChecklistItemBlock(markdown, item)
+    assert.match(block, /自動確認:/, contractMessage({ scope: 'Manual', rule: 'import preview live child checklist item has direct automated link', expected: item, fix: 'add an indented 自動確認 line directly under this import preview live manual checklist item' }))
+    for (const spec of specs) {
+      assert.ok(block.includes(`\`${spec}\``), contractMessage({ scope: 'Manual', rule: 'import preview live child checklist item cites authoritative spec', expected: spec, fix: 'add the focused live E2E path to the child item 自動確認 line' }))
+    }
+  }
+})
+
 test('[Manual][automation-link] import preview summary child items have direct automated links', async () => {
   const markdown = await readFile(new URL('docs/MANUAL_TEST_CHECKLIST.md', `${root}/`), 'utf8')
   const childContracts = [
