@@ -1,6 +1,7 @@
 import { expect, test } from '@playwright/test'
 import {
   expectOperationAlert,
+  expectOperationStatus,
   importPreviewSummary,
   importValidationErrorDetails,
   resetItemsByReplace,
@@ -13,6 +14,16 @@ test.beforeEach(async ({ request }) => {
 
 test('import validation error identifies the first invalid row and field for quick recovery', async ({ page }) => {
   await page.goto('/')
+  await page.evaluate(() => {
+    Object.defineProperty(navigator, 'clipboard', {
+      configurable: true,
+      value: {
+        writeText: async (text: string) => {
+          window.localStorage.setItem('last-copied-import-validation-paths', text)
+        },
+      },
+    })
+  })
 
   const now = '2026-05-18T00:00:00.000Z'
   const invalidItems = [
@@ -43,5 +54,8 @@ test('import validation error identifies the first invalid row and field for qui
     '2件目 / $.items[1].tag / tag / タグを入力してください。',
     '3件目 / $.items[2].name / name / 店舗名を入力してください。',
   ])
+  await details.getByRole('button', { name: 'JSONパス一覧をコピー' }).click()
+  await expectOperationStatus(page, 'JSONパス一覧をコピーしました。')
+  await expect.poll(() => page.evaluate(() => window.localStorage.getItem('last-copied-import-validation-paths'))).toBe('$.items[1].tag\n$.items[2].name')
   await expect(importPreviewSummary(page)).toHaveCount(0)
 })

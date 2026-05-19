@@ -160,6 +160,7 @@ test('[E2E-Helper][import-file] import validation errors expose structured repai
   assert.match(appSource, /<dl>[\s\S]*<dt>ファイル<\/dt>[\s\S]*<dt>行<\/dt>[\s\S]*<dt>JSONパス<\/dt>[\s\S]*<dt>フィールド<\/dt>[\s\S]*<dt>修正<\/dt>[\s\S]*<dt>検出件数<\/dt>/, 'App should keep file, row, JSON path, field, fix, and total issue count as separate term labels')
   assert.match(appSource, /\$\.items\[\$\{index\}\]\.\$\{field\}/, 'App should expose JSON paths for field-level import validation issues')
   assert.match(appSource, /検出した修正対象[\s\S]*relatedIssues\.map/, 'App should show the full list of detected validation issues for multi-error recovery')
+  assert.match(appSource, /copyImportValidationPaths[\s\S]*navigator\.clipboard\.writeText\(paths\)[\s\S]*JSONパス一覧をコピーしました。/, 'App should let users copy all detected JSON paths for faster multi-error repair')
   const helperSource = await readFile(helperPath, 'utf8')
   assert.match(helperSource, /export function importValidationErrorDetails/, 'tests/e2e-helpers.ts should export importValidationErrorDetails(page)')
   assert.match(helperSource, /getByTestId\('import-validation-error-details'\)/, 'importValidationErrorDetails helper should own the validation details test id')

@@ -599,6 +599,17 @@ export function App() {
     }
   }
 
+  const copyImportValidationPaths = async () => {
+    if (!importValidationIssue) return
+    const paths = importValidationIssue.relatedIssues.map((issue) => issue.path).join('\n')
+    try {
+      await navigator.clipboard.writeText(paths)
+      setNotice('JSONパス一覧をコピーしました。')
+    } catch {
+      setNotice('JSONパス一覧をコピーできませんでした。画面上のパスを手動でコピーしてください。')
+    }
+  }
+
   const exportJson = () => {
     const blob = new Blob([JSON.stringify(items, null, 2)], { type: 'application/json' })
     const url = URL.createObjectURL(blob)
@@ -919,6 +930,7 @@ export function App() {
                   {importValidationIssue.relatedIssues.length > 1 && (
                     <div className="import-validation-error-list">
                       <p className="hint compact">検出した修正対象</p>
+                      <button className="ghost" type="button" onClick={copyImportValidationPaths}>JSONパス一覧をコピー</button>
                       <ol>
                         {importValidationIssue.relatedIssues.map((issue) => (
                           <li key={`${issue.row}-${issue.path}-${issue.field}`}>{issue.row} / {issue.path} / {issue.field} / {issue.fix}</li>
