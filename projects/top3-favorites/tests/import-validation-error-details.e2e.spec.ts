@@ -6,6 +6,7 @@ import {
   importValidationCopyJsonPaths,
   importValidationCopyRepairList,
   importValidationErrorDetails,
+  importValidationFieldClear,
   importValidationFieldFilter,
   importValidationFieldSummary,
   resetItemsByReplace,
@@ -138,5 +139,12 @@ test('import validation field summary filters the repair list to the selected re
   await expect(details.getByText('表示中: name の修正対象1件')).toBeVisible()
   await expect(details.locator('.import-validation-error-list ol li')).toHaveText([
     '1件目 / $.items[0].name / name / 店舗名を入力してください。',
+  ])
+  await importValidationFieldClear(page).click()
+  await expect(details.getByText(/^表示中:/)).toHaveCount(0)
+  await expect(details.locator('.import-validation-error-list ol li')).toHaveText([
+    '1件目 / $.items[0].name / name / 店舗名を入力してください。',
+    '2件目 / $.items[1].tag / tag / タグを入力してください。',
+    '3件目 / $.items[2].tag / tag / タグを入力してください。',
   ])
 })

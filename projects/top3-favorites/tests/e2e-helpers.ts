@@ -321,6 +321,10 @@ export function importValidationFieldFilter(page: Page, field: string): Locator 
   return importValidationFieldSummary(page).getByRole('button', { name: `${field}の修正対象だけ表示` })
 }
 
+export function importValidationFieldClear(page: Page): Locator {
+  return importValidationErrorDetails(page).getByRole('button', { name: 'すべての修正対象を表示' })
+}
+
 export function importPreviewNormalization(page: Page): Locator {
   return page.getByTestId('import-preview-normalization')
 }

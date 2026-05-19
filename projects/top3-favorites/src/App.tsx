@@ -1023,7 +1023,10 @@ export function App() {
                     <div className="import-validation-error-list">
                       <p className="hint compact">検出した修正対象</p>
                       {selectedImportValidationField && (
-                        <p className="hint compact">表示中: {selectedImportValidationField} の修正対象{selectedImportValidationFieldCount}件</p>
+                        <div className="row no-margin">
+                          <p className="hint compact">表示中: {selectedImportValidationField} の修正対象{selectedImportValidationFieldCount}件</p>
+                          <button className="ghost compact" type="button" onClick={() => setSelectedImportValidationField('')}>すべての修正対象を表示</button>
+                        </div>
                       )}
                       <button className="ghost" type="button" onClick={copyImportValidationPaths}>JSONパス一覧をコピー</button>
                       <button className="ghost" type="button" onClick={copyImportValidationRepairs}>修正対象一覧をコピー</button>
