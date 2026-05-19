@@ -750,6 +750,7 @@ export function App() {
     }
   }
 
+  const importLockDescriptionId = pendingImport ? 'import-lock-hint' : undefined
   const exportButtonDescriptionIds = [
     pendingImport ? 'import-export-lock-hint' : '',
     items.length === 0 ? 'export-empty-hint' : '',
@@ -773,7 +774,7 @@ export function App() {
         </div>
 
         <TagPicker label="登録タグ選択" tags={tags} activeTag={draft.tag} selectedTag={selectedTag} onSelect={selectTag} onClear={clearSelectedTag} />
-        {isImportPreviewActive && <p className="hint compact" data-testid="import-lock-hint">インポート確認中のため登録フォームは一時ロック中です。</p>}
+        {isImportPreviewActive && <p id="import-lock-hint" className="hint compact" data-testid="import-lock-hint">インポート確認中のため登録フォームは一時ロック中です。</p>}
         {selectedTag && (
           <p className="hint compact" data-testid="tag-sync-status">
             検索タグ「{selectedTag}」と登録タグを連動中
@@ -783,16 +784,16 @@ export function App() {
         <div className="form-grid">
           <label>
             <span>タグ</span>
-            <input value={draft.tag} onChange={(e) => updateDraftTag(e.target.value)} placeholder="例: カフェラテ" list="tag-options" disabled={isImportPreviewActive} />
+            <input value={draft.tag} onChange={(e) => updateDraftTag(e.target.value)} placeholder="例: カフェラテ" list="tag-options" disabled={isImportPreviewActive} aria-describedby={importLockDescriptionId} />
             <datalist id="tag-options">{tags.map((tag) => <option key={tag} value={tag} />)}</datalist>
           </label>
           <label>
             <span>場所</span>
-            <input value={draft.location} onChange={(e) => updateDraft({ location: e.target.value })} placeholder="例: 松戸 / 柏の葉" disabled={isImportPreviewActive} />
+            <input value={draft.location} onChange={(e) => updateDraft({ location: e.target.value })} placeholder="例: 松戸 / 柏の葉" disabled={isImportPreviewActive} aria-describedby={importLockDescriptionId} />
           </label>
           <label className="wide">
             <span>店舗名</span>
-            <input value={draft.name} onChange={(e) => updateDraft({ name: e.target.value })} placeholder="例: Solito MAGO" disabled={isImportPreviewActive} />
+            <input value={draft.name} onChange={(e) => updateDraft({ name: e.target.value })} placeholder="例: Solito MAGO" disabled={isImportPreviewActive} aria-describedby={importLockDescriptionId} />
           </label>
         </div>
 
@@ -804,6 +805,7 @@ export function App() {
               onClick={() => updateDraft({ rank: rank as Rank })}
               aria-label={`登録 ${rank}位に入れる`}
               disabled={isImportPreviewActive}
+              aria-describedby={importLockDescriptionId}
             >
               {rank}位に入れる
             </button>
@@ -812,7 +814,7 @@ export function App() {
 
         <label>
           <span>メモ</span>
-          <textarea value={draft.memo} onChange={(e) => updateDraft({ memo: e.target.value })} placeholder="例: ミルク感が強くて、今日飲んだ中で一番うまい" rows={2} disabled={isImportPreviewActive} />
+          <textarea value={draft.memo} onChange={(e) => updateDraft({ memo: e.target.value })} placeholder="例: ミルク感が強くて、今日飲んだ中で一番うまい" rows={2} disabled={isImportPreviewActive} aria-describedby={importLockDescriptionId} />
         </label>
 
         <div className="preview-panel">
@@ -821,13 +823,13 @@ export function App() {
               <strong>{currentTag || 'タグ未入力'} のTop3プレビュー</strong>
               <p className="hint compact">店舗名を入れると、保存後の順位が見えます。</p>
             </div>
-            <button onClick={saveNew} disabled={isSaving || !!pendingImport}>{isSaving ? '保存中…' : 'DBに保存'}</button>
+            <button onClick={saveNew} disabled={isSaving || !!pendingImport} aria-describedby={importLockDescriptionId}>{isSaving ? '保存中…' : 'DBに保存'}</button>
           </div>
           <CompactTop3 items={previewTop3} previewName={draft.name} empty="まだ登録なし。ここが1位候補です。" />
         </div>
 
         <div className="row feedback">
-          <button className="ghost" onClick={addSamples} disabled={isSaving || !!pendingImport}>サンプルをDB保存</button>
+          <button className="ghost" onClick={addSamples} disabled={isSaving || !!pendingImport} aria-describedby={importLockDescriptionId}>サンプルをDB保存</button>
           {loadError && <button className="ghost" onClick={retryLoadItems} disabled={isLoading}>データを再読み込み</button>}
           {error && <p className="error" role="alert">{error}</p>}
           {notice && <p className="notice" role="status" aria-live="polite">{notice}</p>}

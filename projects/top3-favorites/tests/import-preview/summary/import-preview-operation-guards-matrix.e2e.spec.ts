@@ -35,8 +35,11 @@ test('pending import preview enforces operation guards across registration/searc
 
   // save/sample/export locks
   await expect(registrationSaveButton(page)).toBeDisabled()
+  await expect(registrationSaveButton(page)).toHaveAccessibleDescription('インポート確認中のため登録フォームは一時ロック中です。')
   await expect(sampleSaveButton(page)).toBeDisabled()
+  await expect(sampleSaveButton(page)).toHaveAccessibleDescription('インポート確認中のため登録フォームは一時ロック中です。')
   await expect(jsonExportButton(page)).toBeDisabled()
+  await expect(jsonExportButton(page)).toHaveAccessibleDescription('インポート確認中のため、現在DBのJSONエクスポートは一時停止中です。')
   await expect(page.getByTestId('import-export-lock-hint')).toHaveText('インポート確認中のため、現在DBのJSONエクスポートは一時停止中です。')
 
   // list actions lock
