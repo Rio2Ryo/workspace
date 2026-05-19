@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test'
-import { importPreviewExcludedDetails, resetItemsByReplace, uploadJsonImportFile } from './e2e-helpers'
+import { importPreviewExcludedDetails, importPreviewToggleExcludedDetails, resetItemsByReplace, uploadJsonImportFile } from './e2e-helpers'
 
 test.beforeEach(async ({ request }) => {
   await resetItemsByReplace(request)
@@ -31,12 +31,12 @@ test('excluded details can be expanded to show all reasons and collapsed back', 
   await expect(details).toContainText('6位相当')
   await expect(details).toContainText('ほか1件')
 
-  await page.getByRole('button', { name: '除外理由を全件表示' }).click()
+  await importPreviewToggleExcludedDetails(page).click()
   await expect(details).toContainText('C店')
   await expect(details).not.toContainText('ほか1件')
-  await expect(page.getByRole('button', { name: '除外理由を折りたたむ' })).toBeVisible()
+  await expect(importPreviewToggleExcludedDetails(page)).toBeVisible()
 
-  await page.getByRole('button', { name: '除外理由を折りたたむ' }).click()
+  await importPreviewToggleExcludedDetails(page).click()
   await expect(details).not.toContainText('C店')
   await expect(details).toContainText('ほか1件')
 })

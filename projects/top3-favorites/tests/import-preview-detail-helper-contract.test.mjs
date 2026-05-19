@@ -34,6 +34,7 @@ const forbiddenButtonNames = [
   ['差分用語の詳細説明を表示', 'terms helper show button'],
   ['差分用語の詳細説明を隠す', 'terms helper hide button'],
   ['影響タグをすべて表示', 'impact tags show button'],
+  ['影響タグを全件表示', 'impact tags show button'],
   ['影響タグを折りたたむ', 'impact tags hide button'],
 ]
 
@@ -61,6 +62,24 @@ function importsDetailHelpers(source) {
   return new RegExp(`import \\{[^}]*(?:${helperNames.join('|')})[^}]*\\} from '(?:\\.\\/|\\.\\.\\/)*e2e-helpers'`).test(source)
 }
 
+function directForbiddenButtonNames(source) {
+  const offenders = []
+  for (const [buttonName, label] of forbiddenButtonNames) {
+    if (source.includes(`getByRole('button', { name: '${buttonName}' })`) || source.includes(`getByRole("button", { name: "${buttonName}" })`)) {
+      offenders.push(label)
+    }
+  }
+  return offenders
+}
+
+test('[E2E-Helper][import-preview-details] contract catches current impact-tag toggle copy', () => {
+  assert.deepEqual(
+    directForbiddenButtonNames("await page.getByRole('button', { name: '影響タグを全件表示' }).click()"),
+    ['impact tags show button'],
+    'contract should catch the current impact-tag expand button copy, not only older wording',
+  )
+})
+
 test('[E2E-Helper][import-preview-details] E2E specs use shared direction/tag/terms helpers', async () => {
   const offenders = []
   const specs = await listE2eSpecs(testsRoot)
@@ -77,10 +96,8 @@ test('[E2E-Helper][import-preview-details] E2E specs use shared direction/tag/te
       }
     }
 
-    for (const [buttonName, label] of forbiddenButtonNames) {
-      if (source.includes(`getByRole('button', { name: '${buttonName}' })`) || source.includes(`getByRole("button", { name: "${buttonName}" })`)) {
-        offenders.push(`${relativePath(specUrl)}: direct import preview ${label}`)
-      }
+    for (const label of directForbiddenButtonNames(source)) {
+      offenders.push(`${relativePath(specUrl)}: direct import preview ${label}`)
     }
 
     if (usedHelpers.length > 0 && !importsDetailHelpers(source)) {

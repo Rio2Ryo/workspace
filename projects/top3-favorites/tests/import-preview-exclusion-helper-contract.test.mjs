@@ -23,6 +23,11 @@ const forbiddenTestIds = [
   ['import-preview-toggle-excluded-details', 'excluded details toggle locator'],
 ]
 
+const forbiddenButtonNames = [
+  ['除外理由を全件表示', 'excluded details show button'],
+  ['除外理由を折りたたむ', 'excluded details hide button'],
+]
+
 async function listE2eSpecs(dirUrl) {
   const entries = await readdir(dirUrl, { withFileTypes: true })
   const specs = []
@@ -49,6 +54,24 @@ function importsExclusionHelpers(source) {
   return new RegExp(`import \\{[^}]*(?:${helperNames.join('|')})[^}]*\\} from '(?:\\.\\/|\\.\\.\\/)*e2e-helpers'`).test(source)
 }
 
+function directForbiddenButtonNames(source) {
+  const offenders = []
+  for (const [buttonName, label] of forbiddenButtonNames) {
+    if (source.includes(`getByRole('button', { name: '${buttonName}' })`) || source.includes(`getByRole("button", { name: "${buttonName}" })`)) {
+      offenders.push(label)
+    }
+  }
+  return offenders
+}
+
+test('[E2E-Helper][import-preview-exclusions] contract catches excluded-detail toggle copy', () => {
+  assert.deepEqual(
+    directForbiddenButtonNames("await page.getByRole('button', { name: '除外理由を全件表示' }).click()\nawait page.getByRole('button', { name: '除外理由を折りたたむ' }).click()"),
+    ['excluded details show button', 'excluded details hide button'],
+    'contract should catch direct excluded-detail toggle accessible names',
+  )
+})
+
 test('[E2E-Helper][import-preview-exclusions] E2E specs use shared excluded-name/detail helpers', async () => {
   const offenders = []
   const specs = await listE2eSpecs(testsRoot)
@@ -63,6 +86,10 @@ test('[E2E-Helper][import-preview-exclusions] E2E specs use shared excluded-name
       if (new RegExp(`getByTestId\\(['\"]${testId}['\"]\\)`).test(source)) {
         offenders.push(`${relativePath(specUrl)}: direct import preview ${label}`)
       }
+    }
+
+    for (const label of directForbiddenButtonNames(source)) {
+      offenders.push(`${relativePath(specUrl)}: direct import preview ${label}`)
     }
 
     if (usedHelpers.length > 0 && !importsExclusionHelpers(source)) {
