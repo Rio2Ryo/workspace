@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test'
-import { uploadJsonImportFile, parseImportPreviewSummary, resetItemsByReplace } from '../../e2e-helpers'
+import { uploadJsonImportFile, parseImportPreviewSummary, resetItemsByReplace , importPreviewExcludedNames, importPreviewExcludedNameVariants} from '../../e2e-helpers'
 
 test.beforeEach(async ({ request }) => {
   await resetItemsByReplace(request)
@@ -22,12 +22,12 @@ test('excluded store names add tag context for visually equivalent full-width an
 
   await uploadJsonImportFile(page, 'excluded-names-normalized-context.json', payload)
 
-  const names = page.getByTestId('import-preview-excluded-names')
+  const names = importPreviewExcludedNames(page)
   await expect(names).toHaveAttribute('data-excluded-name-count', '2')
   await expect(names).toHaveAttribute('data-excluded-name-labels', 'カフェラテ: Cafe K|プリン: Ｃａｆｅ　Ｋ')
   await expect(names).toHaveText('正規化除外予定の店舗: カフェラテ: Cafe K, プリン: Ｃａｆｅ　Ｋ')
 
-  const variants = page.getByTestId('import-preview-excluded-name-variants')
+  const variants = importPreviewExcludedNameVariants(page)
   await expect(variants).toHaveText('表記ゆれ候補: カフェラテ: Cafe K / プリン: Ｃａｆｅ　Ｋ')
   await expect(variants).toHaveAttribute('data-normalized-excluded-name-groups', 'cafe k=カフェラテ: Cafe K/プリン: Ｃａｆｅ　Ｋ')
 

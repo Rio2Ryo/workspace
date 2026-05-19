@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test'
-import { uploadJsonImportFile, resetItemsByReplace } from './e2e-helpers'
+import { uploadJsonImportFile, resetItemsByReplace , importPreviewExcludedDetails} from './e2e-helpers'
 
 test.beforeEach(async ({ request }) => {
   await resetItemsByReplace(request)
@@ -19,7 +19,7 @@ test('excluded details are rendered in a readable bullet-like format', async ({ 
 
   await uploadJsonImportFile(page, 'excluded-format.json', payload)
 
-  const details = page.getByTestId('import-preview-excluded-details')
+  const details = importPreviewExcludedDetails(page)
   await expect(details).toContainText('除外理由:')
   await expect(details).toContainText('・')
   await expect(details).toContainText('D店')

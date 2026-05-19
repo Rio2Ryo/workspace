@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test'
-import { uploadJsonImportFile, resetItemsByReplace } from '../../e2e-helpers'
+import { uploadJsonImportFile, resetItemsByReplace , importPreviewExcludedNames, importPreviewToggleExcludedNames} from '../../e2e-helpers'
 
 test.beforeEach(async ({ request }) => {
   await resetItemsByReplace(request)
@@ -21,13 +21,13 @@ test('excluded store names preview collapses long lists and can be expanded', as
 
   await uploadJsonImportFile(page, 'excluded-names-collapsed.json', payload)
 
-  const names = page.getByTestId('import-preview-excluded-names')
+  const names = importPreviewExcludedNames(page)
   await expect(names).toHaveAttribute('aria-label', 'Top3外で正規化除外予定の店舗名プレビュー')
   await expect(names).toHaveAttribute('data-excluded-name-count', '4')
   await expect(names).toContainText('正規化除外予定の店舗: B店, C店, F店（ほか1件）')
   await expect(names).not.toContainText('G店')
 
-  const toggle = page.getByTestId('import-preview-toggle-excluded-names')
+  const toggle = importPreviewToggleExcludedNames(page)
   await expect(toggle).toHaveAttribute('aria-controls', 'import-preview-excluded-names')
   await expect(toggle).toHaveAttribute('aria-expanded', 'false')
   await expect(toggle).toHaveAccessibleName('インポート詳細: 除外店舗名を全件表示')

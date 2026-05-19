@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test'
-import { uploadJsonImportFile, resetItemsByDelete } from '../../e2e-helpers'
+import { uploadJsonImportFile, resetItemsByDelete , importPreviewToggleExcludedDetails} from '../../e2e-helpers'
 
 test.beforeEach(async ({ request }) => {
   await resetItemsByDelete(request)
@@ -39,7 +39,7 @@ test('all import preview toggles use consistent aria-label prefix without collid
   await uploadJsonImportFile(page, 'toggle-aria-label-consistency.json', payload)
 
   const tagsToggle = page.getByTestId('import-preview-toggle-impact-tags')
-  const excludedToggle = page.getByTestId('import-preview-toggle-excluded-details')
+  const excludedToggle = importPreviewToggleExcludedDetails(page)
   const termsToggle = page.getByTestId('import-preview-toggle-terms-helper')
 
   await expect(page.getByLabel('インポート確認')).toHaveCount(1)

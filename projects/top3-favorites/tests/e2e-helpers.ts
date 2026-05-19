@@ -231,6 +231,26 @@ export function importPreviewImpactMath(page: Page): Locator {
   return page.getByTestId('import-preview-impact-math')
 }
 
+export function importPreviewExcludedNames(page: Page): Locator {
+  return page.getByTestId('import-preview-excluded-names')
+}
+
+export function importPreviewExcludedDetails(page: Page): Locator {
+  return page.getByTestId('import-preview-excluded-details')
+}
+
+export function importPreviewExcludedNameVariants(page: Page): Locator {
+  return page.getByTestId('import-preview-excluded-name-variants')
+}
+
+export function importPreviewToggleExcludedNames(page: Page): Locator {
+  return page.getByTestId('import-preview-toggle-excluded-names')
+}
+
+export function importPreviewToggleExcludedDetails(page: Page): Locator {
+  return page.getByTestId('import-preview-toggle-excluded-details')
+}
+
 export async function expectImportPreviewImpactMath(
   page: Page,
   { added, kept, removed, excluded }: { added: number; kept: number; removed: number; excluded: number },

@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test'
-import { uploadJsonImportFile, parseImportPreviewSummary, resetItemsByReplace, saveSampleItems, fetchItems } from './e2e-helpers'
+import { uploadJsonImportFile, parseImportPreviewSummary, resetItemsByReplace, saveSampleItems, fetchItems , importPreviewExcludedNames} from './e2e-helpers'
 
 test.beforeEach(async ({ request }) => {
   await resetItemsByReplace(request)
@@ -48,5 +48,5 @@ test('import preview exposes a consistent summary JSON for QA assertions', async
   expect(summary.excludedNameLabels).toEqual(['New 3'])
   expect(summary.tags).toEqual(['カフェラテ', 'つけ麺', 'プリン'].sort((a, b) => a.localeCompare(b, 'ja')))
 
-  await expect(page.getByTestId('import-preview-excluded-names')).toContainText('正規化除外予定の店舗: New 3')
+  await expect(importPreviewExcludedNames(page)).toContainText('正規化除外予定の店舗: New 3')
 })

@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test'
-import { uploadJsonImportFile, parseImportPreviewSummary, resetItemsByReplace } from './e2e-helpers'
+import { uploadJsonImportFile, parseImportPreviewSummary, resetItemsByReplace , importPreviewExcludedDetails} from './e2e-helpers'
 
 test.beforeEach(async ({ request }) => {
   await resetItemsByReplace(request)
@@ -18,7 +18,7 @@ test('import preview explains why each excluded store will not be imported', asy
 
   await uploadJsonImportFile(page, 'excluded-reasons.json', payload)
 
-  const details = page.getByTestId('import-preview-excluded-details')
+  const details = importPreviewExcludedDetails(page)
   await expect(details).toBeVisible()
   await expect(details).toHaveText('除外理由: ・D店（カフェラテでTop3外: 4位相当）')
 

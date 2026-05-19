@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test'
-import { uploadJsonImportFile, resetItemsByReplace , expectImportPreviewImpactMath} from './e2e-helpers'
+import { uploadJsonImportFile, resetItemsByReplace , expectImportPreviewImpactMath, importPreviewExcludedNames} from './e2e-helpers'
 
 test.beforeEach(async ({ request }) => {
   await resetItemsByReplace(request)
@@ -25,5 +25,5 @@ test('import preview shows excluded store names in deterministic sorted order', 
   await expectImportPreviewImpactMath(page, { added: 3, kept: 0, removed: 0, excluded: 2 })
 
   // Excluded names should be deterministic (ja locale sort), not input-order dependent
-  await expect(page.getByTestId('import-preview-excluded-names')).toHaveText('正規化除外予定の店舗: Y店, Z店')
+  await expect(importPreviewExcludedNames(page)).toHaveText('正規化除外予定の店舗: Y店, Z店')
 })
