@@ -24,6 +24,7 @@
     "test:sample-data-helper-contract": "node --test tests/sample-data-helper-contract.test.mjs",
     "test:search-clear-helper-contract": "node --test tests/search-clear-helper-contract.test.mjs",
     "test:search-section-helper-contract": "node --test tests/search-section-helper-contract.test.mjs",
+    "test:search-input-helper-contract": "node --test tests/search-input-helper-contract.test.mjs",
     "test:tag-filter-button-helper-contract": "node --test tests/tag-filter-button-helper-contract.test.mjs",
     "test:edit-save-helper-contract": "node --test tests/edit-save-helper-contract.test.mjs",
     "test:edit-cancel-helper-contract": "node --test tests/edit-cancel-helper-contract.test.mjs",
@@ -45,7 +46,7 @@
     "test:import-preview-terms": "playwright test tests/import-preview/terms",
     "test:import-preview-naming": "playwright test tests/import-preview/naming",
     "test:import-preview-summary": "playwright test tests/import-preview/summary",
-    "test:full": "pnpm test:docs-only && pnpm test:legacy-zero-run-script && pnpm test:legacy-zero-run-env-script && pnpm test:qa-failure-summary-script && pnpm test:tag-normalization-contract && pnpm test:import-preview-summary-contract && pnpm test:export-download-helper-contract && pnpm test:import-file-helper-contract && pnpm test:sample-data-helper-contract && pnpm test:search-clear-helper-contract && pnpm test:search-section-helper-contract && pnpm test:tag-filter-button-helper-contract && pnpm test:edit-save-helper-contract && pnpm test:edit-cancel-helper-contract && pnpm test:item-edit-action-helper-contract && pnpm test:item-delete-action-helper-contract && pnpm test:delete-dialog-helper-contract && pnpm test:json-import-trigger-helper-contract && pnpm test:import-preview-action-helper-contract && pnpm test:registration-save-helper-contract && pnpm test:registration-rank-button-helper-contract && pnpm test:operation-status-helper-contract && pnpm test:operation-alert-helper-contract && pnpm test:e2e-clean-script && pnpm test:e2e:clean && pnpm build"
+    "test:full": "pnpm test:docs-only && pnpm test:legacy-zero-run-script && pnpm test:legacy-zero-run-env-script && pnpm test:qa-failure-summary-script && pnpm test:tag-normalization-contract && pnpm test:import-preview-summary-contract && pnpm test:export-download-helper-contract && pnpm test:import-file-helper-contract && pnpm test:sample-data-helper-contract && pnpm test:search-clear-helper-contract && pnpm test:search-section-helper-contract && pnpm test:search-input-helper-contract && pnpm test:tag-filter-button-helper-contract && pnpm test:edit-save-helper-contract && pnpm test:edit-cancel-helper-contract && pnpm test:item-edit-action-helper-contract && pnpm test:item-delete-action-helper-contract && pnpm test:delete-dialog-helper-contract && pnpm test:json-import-trigger-helper-contract && pnpm test:import-preview-action-helper-contract && pnpm test:registration-save-helper-contract && pnpm test:registration-rank-button-helper-contract && pnpm test:operation-status-helper-contract && pnpm test:operation-alert-helper-contract && pnpm test:e2e-clean-script && pnpm test:e2e:clean && pnpm build"
   },
   "dependencies": {
     "@vercel/blob": "^2.3.3",

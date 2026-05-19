@@ -45,6 +45,10 @@ export function searchSection(page: Page): Locator {
   return page.locator('section.card').filter({ has: page.getByRole('heading', { name: '探す' }) })
 }
 
+export function searchInput(page: Page): Locator {
+  return page.getByRole('textbox', { name: 'Top3検索' })
+}
+
 export function searchClearButton(searchSection: Locator): Locator {
   return searchSection.getByRole('button', { name: 'クリア' })
 }

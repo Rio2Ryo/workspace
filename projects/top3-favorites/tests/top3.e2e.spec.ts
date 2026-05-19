@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test'
-import { resetItemsByReplace, saveSampleItems, registrationSaveButton, expectOperationStatus, registrationRankButton, searchSection as searchSectionLocator } from './e2e-helpers'
+import { resetItemsByReplace, saveSampleItems, registrationSaveButton, expectOperationStatus, registrationRankButton, searchSection as searchSectionLocator, searchInput } from './e2e-helpers'
 
 test.beforeEach(async ({ request }) => {
   await resetItemsByReplace(request)
@@ -21,7 +21,7 @@ test('sample data can be saved, searched, and ranked through the real UI/API', a
   await expect(page.getByText(/\d位: T-SITEのカフェ/)).toBeVisible()
 
   const searchSection = searchSectionLocator(page)
-  await page.getByPlaceholder('例: カフェラテ / 柏の葉 / Solito').fill('Solito')
+  await searchInput(page).fill('Solito')
   await expect(searchSection.getByText(/\d位: Solito MAGO/)).toBeVisible()
   await expect(searchSection.getByText('T-SITEのカフェ')).not.toBeVisible()
 
@@ -42,7 +42,7 @@ test('adding a new first place rebalances the same tag to top 3', async ({ page 
   await registrationSaveButton(page).click()
 
   await expectOperationStatus(page, 'カフェラテ の1位に保存しました。')
-  await page.getByPlaceholder('例: カフェラテ / 柏の葉 / Solito').fill('')
+  await searchInput(page).fill('')
 
   await expect(page.getByText(/\d位: New Coffee/)).toBeVisible()
   await expect(page.getByText(/\d位: Solito MAGO/)).toBeVisible()

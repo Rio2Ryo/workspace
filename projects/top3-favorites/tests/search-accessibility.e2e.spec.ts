@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test'
-import { resetItemsByReplace, saveSampleItems } from './e2e-helpers'
+import { resetItemsByReplace, saveSampleItems, searchInput } from './e2e-helpers'
 
 test.beforeEach(async ({ request }) => {
   await resetItemsByReplace(request)
@@ -9,7 +9,7 @@ test('search field has an accessible name and filters saved Top3 items', async (
   await page.goto('/')
   await saveSampleItems(page)
 
-  const search = page.getByRole('textbox', { name: 'Top3検索' })
+  const search = searchInput(page)
   await expect(search).toBeVisible()
   await search.fill('松戸')
 
