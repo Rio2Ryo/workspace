@@ -27,17 +27,17 @@ test('impact tags can be expanded to show all tags and collapsed back', async ({
 
   const tags = importPreviewImpactTags(page)
   await expect(tags).toContainText('ほか1件')
-  await expect(tags).not.toContainText('Fタグ')
+  await expect(tags.getByRole('listitem')).toHaveText(['Aタグ', 'Bタグ', 'Cタグ', 'Dタグ', 'Eタグ'])
 
   const toggle = page.getByRole('button', { name: '影響タグを全件表示' })
   await expect(toggle).toBeVisible()
   await toggle.click()
 
-  await expect(tags).toContainText('Fタグ')
+  await expect(tags.getByRole('listitem')).toHaveText(['Aタグ', 'Bタグ', 'Cタグ', 'Dタグ', 'Eタグ', 'Fタグ'])
   await expect(tags).not.toContainText('ほか1件')
   await expect(importPreviewToggleImpactTags(page)).toBeVisible()
 
   await importPreviewToggleImpactTags(page).click()
   await expect(tags).toContainText('ほか1件')
-  await expect(tags).not.toContainText('Fタグ')
+  await expect(tags.getByRole('listitem')).toHaveText(['Aタグ', 'Bタグ', 'Cタグ', 'Dタグ', 'Eタグ'])
 })

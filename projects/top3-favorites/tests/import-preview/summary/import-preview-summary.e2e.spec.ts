@@ -1,6 +1,7 @@
 import { expect, test } from '@playwright/test'
 import {
   fetchItems,
+  importPreviewImpactTags,
   resetItemsByReplace,
   saveSampleItems,
   uploadJsonImportFile,
@@ -44,5 +45,7 @@ test('import confirmation summarizes added removed kept items and tag impact', a
   const preview = page.locator('[aria-label="インポート確認"]')
   await expect(preview).toContainText('現在3件 → インポート後2件')
   await expect(preview).toContainText('追加1件 / 更新・保持1件 / 削除予定2件')
-  await expect(preview).toContainText('影響タグ: カフェラテ, つけ麺, プリン')
+  const tags = importPreviewImpactTags(page)
+  await expect(tags).toContainText('影響タグ: 3件')
+  await expect(tags.getByRole('listitem')).toHaveText(['カフェラテ', 'つけ麺', 'プリン'])
 })

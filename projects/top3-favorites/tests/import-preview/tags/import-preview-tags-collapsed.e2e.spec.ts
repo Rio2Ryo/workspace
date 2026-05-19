@@ -21,6 +21,7 @@ test('impact tags are collapsed when many tags are affected', async ({ page }) =
   await uploadJsonImportFile(page, 'impact-many-tags.json', payload)
 
   const tags = importPreviewImpactTags(page)
-  await expect(tags).toContainText('影響タグ: Aタグ, Bタグ, Cタグ, Dタグ, Eタグ')
+  await expect(tags).toContainText('影響タグ: 5件')
+  await expect(tags.getByRole('listitem')).toHaveText(['Aタグ', 'Bタグ', 'Cタグ', 'Dタグ', 'Eタグ'])
   await expect(tags).toContainText('ほか1件')
 })

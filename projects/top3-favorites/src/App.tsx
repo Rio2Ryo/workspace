@@ -1002,16 +1002,28 @@ export function App() {
                     {pendingImportImpact.added === 0 && pendingImportImpact.removed === 0 && pendingImportImpact.excluded === 0 && (
                       <p className="hint compact" data-testid="import-preview-no-change">差分なし（このインポートでデータ変更はありません）</p>
                     )}
-                    <p
+                    <div
                       id="import-preview-impact-tags"
-                      className="hint compact"
+                      className="hint compact import-preview-detail-list"
                       data-testid="import-preview-impact-tags"
                       data-impact-tag-count={pendingImportImpact.tags.length}
                       data-impact-tags={pendingImportImpact.tags.join('|')}
+                      aria-label="インポート影響タグプレビュー"
                     >
-                      影響タグ: {pendingImportImpactTagPreview.visible.length ? pendingImportImpactTagPreview.visible.join(', ') : 'なし'}
-                      {pendingImportImpactTagPreview.hiddenCount > 0 ? `（ほか${pendingImportImpactTagPreview.hiddenCount}件）` : ''}
-                    </p>
+                      <p className="import-preview-detail-heading">
+                        影響タグ: {pendingImportImpactTagPreview.visible.length ? `${pendingImportImpactTagPreview.visible.length}件` : 'なし'}
+                      </p>
+                      {pendingImportImpactTagPreview.visible.length > 0 && (
+                        <ul aria-label="インポートで影響を受けるタグ">
+                          {pendingImportImpactTagPreview.visible.map((tag) => (
+                            <li key={tag}>{tag}</li>
+                          ))}
+                        </ul>
+                      )}
+                      {pendingImportImpactTagPreview.hiddenCount > 0 && (
+                        <p className="import-preview-detail-more">ほか{pendingImportImpactTagPreview.hiddenCount}件</p>
+                      )}
+                    </div>
                     {pendingImportImpact.tags.length > 5 && (
                       <button
                         className="ghost small"
