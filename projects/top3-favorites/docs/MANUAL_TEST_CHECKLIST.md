@@ -167,6 +167,10 @@
   - 自動確認: `tests/edit-form-accessibility.e2e.spec.ts` が編集フォームの既存値表示・入力欄のa11y名を検証する
 - [ ] 編集保存で一覧表示が更新される
   - 自動確認: `tests/edit-form-accessibility.e2e.spec.ts` が保存後の一覧/API反映を検証する
+- [ ] 編集必須入力不足
+  - 手順: 編集フォームでタグまたは店舗名を空にして保存する
+  - 期待: 編集モードを維持し、`タグと店舗名は必須です。` が表示され、既存データは維持される
+  - 自動確認: `tests/edit-form-accessibility.e2e.spec.ts` が編集必須入力不足時のエラー表示・編集フォーム維持・既存データ保持を検証する
 - [ ] 編集キャンセルで編集モードを抜ける
   - 自動確認: `tests/edit-form-accessibility.e2e.spec.ts` と `tests/edit-cancel-clears-stale-notice.e2e.spec.ts` がキャンセル後の一覧復帰と古い成功通知のクリアを検証する
 - [ ] 削除で対象のみ消える

@@ -347,6 +347,10 @@ const rawManualAutomatedLinkContracts = {
       message: 'manual checklist should connect edit form prefill/save behavior to the automated edit form spec',
     },
     {
+      pattern: /編集必須入力不足[\s\S]*期待: 編集モードを維持し、`タグと店舗名は必須です。` が表示され、既存データは維持される[\s\S]*自動確認: `tests\/edit-form-accessibility\.e2e\.spec\.ts`/,
+      message: 'manual checklist should connect edit required-field validation and data preservation to the automated edit form spec',
+    },
+    {
       pattern: /編集キャンセルで編集モードを抜ける[\s\S]*自動確認: `tests\/edit-form-accessibility\.e2e\.spec\.ts` と `tests\/edit-cancel-clears-stale-notice\.e2e\.spec\.ts`/,
       message: 'manual checklist should connect edit cancel behavior to automated edit cancel specs',
     },
