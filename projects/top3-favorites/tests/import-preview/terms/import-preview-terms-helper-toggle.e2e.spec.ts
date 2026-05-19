@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test'
-import { uploadJsonImportFile, resetItemsByDelete, saveSampleItems } from '../../e2e-helpers'
+import { uploadJsonImportFile, resetItemsByDelete, saveSampleItems , importPreviewTermsHelper, importPreviewToggleTermsHelper} from '../../e2e-helpers'
 
 test.beforeEach(async ({ request }) => {
   await resetItemsByDelete(request)
@@ -19,14 +19,14 @@ test('impact terms helper is collapsed by default and can be expanded/collapsed'
 
   await uploadJsonImportFile(page, 'terms-toggle.json', payload)
 
-  await expect(page.getByRole('button', { name: '差分用語の詳細説明を表示' })).toBeVisible()
-  await expect(page.getByTestId('import-preview-terms-helper')).toHaveCount(0)
+  await expect(importPreviewToggleTermsHelper(page)).toBeVisible()
+  await expect(importPreviewTermsHelper(page)).toHaveCount(0)
 
-  await page.getByRole('button', { name: '差分用語の詳細説明を表示' }).click()
-  const helper = page.getByTestId('import-preview-terms-helper')
+  await importPreviewToggleTermsHelper(page).click()
+  const helper = importPreviewTermsHelper(page)
   await expect(helper).toContainText('削除予定: 現在DBにあるが、インポート後データに含まれない項目')
   await expect(helper).toContainText('正規化除外: インポートJSON内で同一タグTop3に収まらず取り込まれない項目')
 
-  await page.getByRole('button', { name: '差分用語の詳細説明を隠す' }).click()
-  await expect(page.getByTestId('import-preview-terms-helper')).toHaveCount(0)
+  await importPreviewToggleTermsHelper(page).click()
+  await expect(importPreviewTermsHelper(page)).toHaveCount(0)
 })

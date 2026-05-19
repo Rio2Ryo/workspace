@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test'
-import { uploadJsonImportFile, resetItemsByDelete, saveSampleItems } from '../../e2e-helpers'
+import { uploadJsonImportFile, resetItemsByDelete, saveSampleItems , importPreviewToggleTermsHelper} from '../../e2e-helpers'
 
 test.beforeEach(async ({ request }) => {
   await resetItemsByDelete(request)
@@ -19,7 +19,7 @@ test('terms helper toggle exposes aria-expanded and aria-controls correctly', as
 
   await uploadJsonImportFile(page, 'terms-toggle-a11y.json', payload)
 
-  const toggle = page.getByTestId('import-preview-toggle-terms-helper')
+  const toggle = importPreviewToggleTermsHelper(page)
   await expect(toggle).toHaveAttribute('aria-controls', 'import-preview-terms-helper')
   await expect(toggle).toHaveAttribute('aria-expanded', 'false')
 

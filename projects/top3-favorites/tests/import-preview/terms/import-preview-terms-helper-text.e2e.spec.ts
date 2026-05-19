@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test'
-import { uploadJsonImportFile, resetItemsByDelete, saveSampleItems } from '../../e2e-helpers'
+import { uploadJsonImportFile, resetItemsByDelete, saveSampleItems , importPreviewTermsHelper, importPreviewToggleTermsHelper} from '../../e2e-helpers'
 
 test.beforeEach(async ({ request }) => {
   await resetItemsByDelete(request)
@@ -21,8 +21,8 @@ test('import preview explains difference between 削除予定 and 正規化除�
 
   await uploadJsonImportFile(page, 'terms-helper.json', payload)
 
-  await page.getByRole('button', { name: '差分用語の詳細説明を表示' }).click()
-  const helper = page.getByTestId('import-preview-terms-helper')
+  await importPreviewToggleTermsHelper(page).click()
+  const helper = importPreviewTermsHelper(page)
   await expect(helper).toContainText('削除予定: 現在DBにあるが、インポート後データに含まれない項目')
   await expect(helper).toContainText('正規化除外: インポートJSON内で同一タグTop3に収まらず取り込まれない項目')
 })

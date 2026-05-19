@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test'
-import { uploadJsonImportFile, resetItemsByDelete, saveSampleItems, fetchItems } from '../../e2e-helpers'
+import { uploadJsonImportFile, resetItemsByDelete, saveSampleItems, fetchItems , importPreviewDirectionMetrics, importPreviewMetricAdded, importPreviewMetricKept, importPreviewMetricRemoved, importPreviewTermsHelper, importPreviewToggleTermsHelper} from '../../e2e-helpers'
 
 test.beforeEach(async ({ request }) => {
   await resetItemsByDelete(request)
@@ -12,11 +12,11 @@ test('import preview metrics/helpers use unified import-preview-* testid naming'
   const current = await fetchItems<{ items: unknown[] }>(request)
   await uploadJsonImportFile(page, 'preview-testid-consistency.json', current.items)
 
-  await expect(page.getByTestId('import-preview-direction-metrics')).toBeVisible()
-  await expect(page.getByTestId('import-preview-metric-added')).toBeVisible()
-  await expect(page.getByTestId('import-preview-metric-kept')).toBeVisible()
-  await expect(page.getByTestId('import-preview-metric-removed')).toBeVisible()
+  await expect(importPreviewDirectionMetrics(page)).toBeVisible()
+  await expect(importPreviewMetricAdded(page)).toBeVisible()
+  await expect(importPreviewMetricKept(page)).toBeVisible()
+  await expect(importPreviewMetricRemoved(page)).toBeVisible()
 
-  await page.getByTestId('import-preview-toggle-terms-helper').click()
-  await expect(page.getByTestId('import-preview-terms-helper')).toBeVisible()
+  await importPreviewToggleTermsHelper(page).click()
+  await expect(importPreviewTermsHelper(page)).toBeVisible()
 })

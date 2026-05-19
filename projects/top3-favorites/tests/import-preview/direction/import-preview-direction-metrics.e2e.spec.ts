@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test'
-import { uploadJsonImportFile, resetItemsByReplace, saveSampleItems, fetchItems } from '../../e2e-helpers'
+import { uploadJsonImportFile, resetItemsByReplace, saveSampleItems, fetchItems , importPreviewMetricAdded, importPreviewMetricKept, importPreviewMetricRemoved} from '../../e2e-helpers'
 
 test.beforeEach(async ({ request }) => {
   await resetItemsByReplace(request)
@@ -19,7 +19,7 @@ test('import impact metrics show directional signs (+ / ± / -)', async ({ page,
 
   await uploadJsonImportFile(page, 'impact-direction.json', payload)
 
-  await expect(page.getByTestId('import-preview-metric-added')).toHaveText(/\+1\s*追加/)
-  await expect(page.getByTestId('import-preview-metric-kept')).toHaveText(/±1\s*保持/)
-  await expect(page.getByTestId('import-preview-metric-removed')).toHaveText(/-2\s*削除予定/)
+  await expect(importPreviewMetricAdded(page)).toHaveText(/\+1\s*追加/)
+  await expect(importPreviewMetricKept(page)).toHaveText(/±1\s*保持/)
+  await expect(importPreviewMetricRemoved(page)).toHaveText(/-2\s*削除予定/)
 })

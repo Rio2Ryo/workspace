@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test'
-import { uploadJsonImportFile, resetItemsByDelete , importPreviewToggleExcludedDetails} from '../../e2e-helpers'
+import { uploadJsonImportFile, resetItemsByDelete , importPreviewToggleExcludedDetails, importPreviewToggleImpactTags} from '../../e2e-helpers'
 
 test.beforeEach(async ({ request }) => {
   await resetItemsByDelete(request)
@@ -38,7 +38,7 @@ test('impact-tags and excluded-details toggles expose aria-expanded/aria-control
 
   await uploadJsonImportFile(page, 'expand-a11y.json', payload)
 
-  const tagsToggle = page.getByTestId('import-preview-toggle-impact-tags')
+  const tagsToggle = importPreviewToggleImpactTags(page)
   await expect(tagsToggle).toHaveAttribute('aria-controls', 'import-preview-impact-tags')
   await expect(tagsToggle).toHaveAttribute('aria-expanded', 'false')
   await tagsToggle.click()

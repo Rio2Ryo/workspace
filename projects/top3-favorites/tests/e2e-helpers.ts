@@ -251,6 +251,38 @@ export function importPreviewToggleExcludedDetails(page: Page): Locator {
   return page.getByTestId('import-preview-toggle-excluded-details')
 }
 
+export function importPreviewDirectionMetrics(page: Page): Locator {
+  return page.getByTestId('import-preview-direction-metrics')
+}
+
+export function importPreviewMetricAdded(page: Page): Locator {
+  return page.getByTestId('import-preview-metric-added')
+}
+
+export function importPreviewMetricKept(page: Page): Locator {
+  return page.getByTestId('import-preview-metric-kept')
+}
+
+export function importPreviewMetricRemoved(page: Page): Locator {
+  return page.getByTestId('import-preview-metric-removed')
+}
+
+export function importPreviewImpactTags(page: Page): Locator {
+  return page.getByTestId('import-preview-impact-tags')
+}
+
+export function importPreviewToggleImpactTags(page: Page): Locator {
+  return page.getByTestId('import-preview-toggle-impact-tags')
+}
+
+export function importPreviewTermsHelper(page: Page): Locator {
+  return page.getByTestId('import-preview-terms-helper')
+}
+
+export function importPreviewToggleTermsHelper(page: Page): Locator {
+  return page.getByTestId('import-preview-toggle-terms-helper')
+}
+
 export async function expectImportPreviewImpactMath(
   page: Page,
   { added, kept, removed, excluded }: { added: number; kept: number; removed: number; excluded: number },

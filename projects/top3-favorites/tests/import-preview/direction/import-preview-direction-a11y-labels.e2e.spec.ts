@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test'
-import { uploadJsonImportFile, resetItemsByReplace, saveSampleItems, fetchItems } from '../../e2e-helpers'
+import { uploadJsonImportFile, resetItemsByReplace, saveSampleItems, fetchItems , importPreviewMetricAdded, importPreviewMetricKept, importPreviewMetricRemoved} from '../../e2e-helpers'
 
 test.beforeEach(async ({ request }) => {
   await resetItemsByReplace(request)
@@ -19,7 +19,7 @@ test('impact direction metrics expose explicit aria-labels for screen readers', 
 
   await uploadJsonImportFile(page, 'impact-a11y.json', payload)
 
-  await expect(page.getByTestId('import-preview-metric-added')).toHaveAttribute('aria-label', '追加 1件')
-  await expect(page.getByTestId('import-preview-metric-kept')).toHaveAttribute('aria-label', '保持 1件')
-  await expect(page.getByTestId('import-preview-metric-removed')).toHaveAttribute('aria-label', '削除予定 2件')
+  await expect(importPreviewMetricAdded(page)).toHaveAttribute('aria-label', '追加 1件')
+  await expect(importPreviewMetricKept(page)).toHaveAttribute('aria-label', '保持 1件')
+  await expect(importPreviewMetricRemoved(page)).toHaveAttribute('aria-label', '削除予定 2件')
 })

@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test'
-import { uploadJsonImportFile, resetItemsByReplace } from '../../e2e-helpers'
+import { uploadJsonImportFile, resetItemsByReplace , importPreviewImpactTags, importPreviewToggleImpactTags} from '../../e2e-helpers'
 
 test.beforeEach(async ({ request }) => {
   await resetItemsByReplace(request)
@@ -20,7 +20,7 @@ test('impact tags can be expanded to show all tags and collapsed back', async ({
 
   await uploadJsonImportFile(page, 'impact-expand-tags.json', payload)
 
-  const tags = page.getByTestId('import-preview-impact-tags')
+  const tags = importPreviewImpactTags(page)
   await expect(tags).toContainText('ほか1件')
   await expect(tags).not.toContainText('Fタグ')
 
@@ -30,9 +30,9 @@ test('impact tags can be expanded to show all tags and collapsed back', async ({
 
   await expect(tags).toContainText('Fタグ')
   await expect(tags).not.toContainText('ほか1件')
-  await expect(page.getByRole('button', { name: '影響タグを折りたたむ' })).toBeVisible()
+  await expect(importPreviewToggleImpactTags(page)).toBeVisible()
 
-  await page.getByRole('button', { name: '影響タグを折りたたむ' }).click()
+  await importPreviewToggleImpactTags(page).click()
   await expect(tags).toContainText('ほか1件')
   await expect(tags).not.toContainText('Fタグ')
 })
