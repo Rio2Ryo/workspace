@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test'
-import { tagFilterButton, uploadJsonImportFile, parseDownloadedJsonFile, resetItemsByReplace, downloadJsonExport, saveSampleItems, jsonImportButton, importConfirmButton } from './e2e-helpers'
+import { jsonExportButton, tagFilterButton, uploadJsonImportFile, parseDownloadedJsonFile, resetItemsByReplace, downloadJsonExport, saveSampleItems, jsonImportButton, importConfirmButton } from './e2e-helpers'
 
 test.beforeEach(async ({ request }) => {
   await resetItemsByReplace(request)
@@ -12,7 +12,7 @@ test('json import/export UI exists and invalid import keeps existing data', asyn
   await expect(page.getByText('サンプルをDBに保存しました。')).toBeVisible()
 
   // Export / Import buttons should exist
-  await expect(page.getByRole('button', { name: 'JSONエクスポート' })).toBeVisible()
+  await expect(jsonExportButton(page)).toBeVisible()
   await expect(jsonImportButton(page)).toBeVisible()
 
   // Invalid import must not destroy existing data (fail-closed)
@@ -35,7 +35,7 @@ test('exported JSON can be downloaded and imported back through the confirmation
 
   await resetItemsByReplace(request, [])
   await page.reload()
-  await expect(page.getByRole('button', { name: 'JSONエクスポート' })).toBeDisabled()
+  await expect(jsonExportButton(page)).toBeDisabled()
   await expect(page.getByText('該当するTop3がありません。')).toBeVisible()
 
   await uploadJsonImportFile(page, filename, exportedText)

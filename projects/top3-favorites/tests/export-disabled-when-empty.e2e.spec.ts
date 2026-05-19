@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test'
-import { resetItemsByReplace, registrationSaveButton } from './e2e-helpers'
+import { jsonExportButton, resetItemsByReplace, registrationSaveButton } from './e2e-helpers'
 
 test.beforeEach(async ({ request }) => {
   await resetItemsByReplace(request)
@@ -8,7 +8,7 @@ test.beforeEach(async ({ request }) => {
 test('JSON export is disabled when there are no items, and enabled after adding one', async ({ page }) => {
   await page.goto('/')
 
-  const exportButton = page.getByRole('button', { name: 'JSONエクスポート' })
+  const exportButton = jsonExportButton(page)
   await expect(exportButton).toBeDisabled()
 
   await page.getByLabel('タグ', { exact: true }).fill('カフェ')

@@ -87,6 +87,10 @@ export function jsonImportButton(page: Page): Locator {
   return page.getByRole('button', { name: 'JSONインポート' })
 }
 
+export function jsonExportButton(page: Page): Locator {
+  return page.getByRole('button', { name: 'JSONエクスポート' })
+}
+
 export function importConfirmButton(page: Page): Locator {
   return page.getByRole('button', { name: 'この内容でインポート' })
 }
@@ -114,7 +118,7 @@ export async function parseImportPreviewSummary<T = Record<string, unknown>>(sum
 
 export async function downloadJsonExport(page: Page): Promise<Download> {
   const downloadPromise = page.waitForEvent('download')
-  await page.getByRole('button', { name: 'JSONエクスポート' }).click()
+  await jsonExportButton(page).click()
   return downloadPromise
 }
 
