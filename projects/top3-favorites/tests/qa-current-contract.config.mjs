@@ -263,6 +263,10 @@ const rawManualAutomatedLinkContracts = {
       message: 'manual checklist should connect multi-field partial search to automated search specs',
     },
     {
+      pattern: /タグチップ押下で該当データのみ表示される[\s\S]*自動確認: `tests\/tag-chip-region-a11y-and-uniqueness\.e2e\.spec\.ts`/,
+      message: 'manual checklist should connect tag-chip filtering to the automated tag chip region spec',
+    },
+    {
       pattern: /`クリア` で全件表示に戻る[\s\S]*自動確認: `tests\/tag-clear-label-contract\.e2e\.spec\.ts` と `tests\/clear-tag-filter-syncs-registration-tag\.e2e\.spec\.ts`/,
       message: 'manual checklist should connect clear-filter behavior to automated clear/reset specs',
     },
