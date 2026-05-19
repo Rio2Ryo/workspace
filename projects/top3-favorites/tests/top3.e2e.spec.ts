@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test'
-import { resetItemsByReplace, saveSampleItems, registrationSaveButton, expectOperationStatus, registrationRankButton } from './e2e-helpers'
+import { resetItemsByReplace, saveSampleItems, registrationSaveButton, expectOperationStatus, registrationRankButton, searchSection as searchSectionLocator } from './e2e-helpers'
 
 test.beforeEach(async ({ request }) => {
   await resetItemsByReplace(request)
@@ -20,7 +20,7 @@ test('sample data can be saved, searched, and ranked through the real UI/API', a
   await expect(page.getByText(/\d位: Solito MAGO/)).toBeVisible()
   await expect(page.getByText(/\d位: T-SITEのカフェ/)).toBeVisible()
 
-  const searchSection = page.locator('section.card').filter({ has: page.getByRole('heading', { name: '探す' }) })
+  const searchSection = searchSectionLocator(page)
   await page.getByPlaceholder('例: カフェラテ / 柏の葉 / Solito').fill('Solito')
   await expect(searchSection.getByText(/\d位: Solito MAGO/)).toBeVisible()
   await expect(searchSection.getByText('T-SITEのカフェ')).not.toBeVisible()

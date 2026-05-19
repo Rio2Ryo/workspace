@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test'
-import { tagFilterButton, acceptNextDeleteDialog, resetItemsByReplace, itemDeleteButton, expectOperationStatus } from './e2e-helpers'
+import { tagFilterButton, acceptNextDeleteDialog, resetItemsByReplace, itemDeleteButton, expectOperationStatus, searchSection as searchSectionLocator } from './e2e-helpers'
 
 test.beforeEach(async ({ request }) => {
   await resetItemsByReplace(request)
@@ -18,18 +18,18 @@ test('deleted item stays removed after reload and is absent from API data', asyn
 
   await page.goto('/')
 
-  const searchSection = page.locator('section.card').filter({ has: page.getByRole('heading', { name: '探す' }) })
-  await tagFilterButton(searchSection, '削除タグ').click()
+  const searchSection = searchSectionLocator(page)
+  await tagFilterButton(searchSection as searchSectionLocator, '削除タグ').click()
   await searchSection.locator('summary', { hasText: /1位:\s*Delete Persist Target/ }).click()
 
   const dialogPromise = acceptNextDeleteDialog(page, 'Delete Persist Target')
-  await itemDeleteButton(searchSection, 'Delete Persist Target').click()
+  await itemDeleteButton(searchSection as searchSectionLocator, 'Delete Persist Target').click()
   await dialogPromise
   await expectOperationStatus(page, '削除しました。')
 
   // UI state before reload
   await expect(searchSection.getByText('Delete Persist Target')).toHaveCount(0)
-  await tagFilterButton(searchSection, '残存タグ').click()
+  await tagFilterButton(searchSection as searchSectionLocator, '残存タグ').click()
   await expect(searchSection.getByText(/1位:\s*Persist Survivor/)).toBeVisible()
 
   await page.reload()

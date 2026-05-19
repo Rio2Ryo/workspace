@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test'
-import { resetItemsByReplace, registrationSaveButton, expectOperationStatus, registrationRankButton } from './e2e-helpers'
+import { resetItemsByReplace, registrationSaveButton, expectOperationStatus, registrationRankButton, searchSection as searchSectionLocator } from './e2e-helpers'
 
 test.beforeEach(async ({ request }) => {
   await resetItemsByReplace(request)
@@ -17,7 +17,7 @@ test('newly created item remains after reload and exists in API data', async ({ 
 
   await expectOperationStatus(page, '永続化タグ の2位に保存しました。')
 
-  const searchSection = page.locator('section.card').filter({ has: page.getByRole('heading', { name: '探す' }) })
+  const searchSection = searchSectionLocator(page)
   await expect(searchSection.getByText(/2位:\s*Persist New Item/)).toBeVisible()
   await searchSection.getByText(/2位:\s*Persist New Item/).click()
   await expect(searchSection.getByText('reload persistence contract')).toBeVisible()

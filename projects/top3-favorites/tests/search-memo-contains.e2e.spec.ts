@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test'
-import { resetItemsByReplace, registrationSaveButton, registrationRankButton, expectOperationStatus, clearSearchTagFilter } from './e2e-helpers'
+import { resetItemsByReplace, registrationSaveButton, registrationRankButton, expectOperationStatus, clearSearchTagFilter, searchSection as searchSectionLocator } from './e2e-helpers'
 
 test.beforeEach(async ({ request }) => {
   await resetItemsByReplace(request)
@@ -24,7 +24,7 @@ test('search query matches memo text (manual QA contract)', async ({ page }) => 
   await registrationSaveButton(page).click()
   await expectOperationStatus(page, 'ラーメン の1位に保存しました。')
 
-  const searchSection = page.locator('section.card').filter({ has: page.getByRole('heading', { name: '探す' }) })
+  const searchSection = searchSectionLocator(page)
   await clearSearchTagFilter(searchSection)
   await page.getByPlaceholder('例: カフェラテ / 柏の葉 / Solito').fill('深夜営業')
 

@@ -41,6 +41,10 @@ export async function saveSampleItems(page: Page): Promise<void> {
   await expectOperationStatus(page, 'サンプルをDBに保存しました。')
 }
 
+export function searchSection(page: Page): Locator {
+  return page.locator('section.card').filter({ has: page.getByRole('heading', { name: '探す' }) })
+}
+
 export function searchClearButton(searchSection: Locator): Locator {
   return searchSection.getByRole('button', { name: 'クリア' })
 }

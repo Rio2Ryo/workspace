@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test'
-import { tagFilterButton, resetItemsByReplace, registrationSaveButton, expectOperationStatus } from './e2e-helpers'
+import { tagFilterButton, resetItemsByReplace, registrationSaveButton, expectOperationStatus, searchSection as searchSectionLocator } from './e2e-helpers'
 
 test.beforeEach(async ({ request }) => {
   await resetItemsByReplace(request)
@@ -21,8 +21,8 @@ test('selecting a tag in search also syncs registration tag input', async ({ pag
   await registrationSaveButton(page).click()
   await expectOperationStatus(page, 'つけ麺 の1位に保存しました。')
 
-  const searchSection = page.locator('section.card').filter({ has: page.getByRole('heading', { name: '探す' }) })
-  await tagFilterButton(searchSection, 'つけ麺').click()
+  const searchSection = searchSectionLocator(page)
+  await tagFilterButton(searchSection as searchSectionLocator, 'つけ麺').click()
 
   await expect(page.getByLabel('タグ', { exact: true })).toHaveValue('つけ麺')
 })

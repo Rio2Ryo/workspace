@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test'
-import { tagFilterButton, searchClearButton, acceptNextDeleteDialog, resetItemsByReplace, itemDeleteButton, registrationSaveButton, expectOperationStatus } from './e2e-helpers'
+import { tagFilterButton, searchClearButton, acceptNextDeleteDialog, resetItemsByReplace, itemDeleteButton, registrationSaveButton, expectOperationStatus, searchSection as searchSectionLocator } from './e2e-helpers'
 
 test.beforeEach(async ({ request }) => {
   await resetItemsByReplace(request)
@@ -21,16 +21,16 @@ test('deleting the last item in selected tag clears stale tag filter and keeps r
   await registrationSaveButton(page).click()
   await expectOperationStatus(page, '残すタグ の1位に保存しました。')
 
-  const searchSection = page.locator('section.card').filter({ has: page.getByRole('heading', { name: '探す' }) })
+  const searchSection = searchSectionLocator(page)
 
   // Select the tag we are about to empty
-  await tagFilterButton(searchSection, '削除対象タグ').click()
+  await tagFilterButton(searchSection as searchSectionLocator, '削除対象タグ').click()
   await expect(searchSection.getByText(/\d位: Delete Me/)).toBeVisible()
 
   // Delete the only item in that selected tag
   await searchSection.getByText(/\d位: Delete Me/).click()
   const dialogPromise = acceptNextDeleteDialog(page, 'Delete Me')
-  await itemDeleteButton(searchSection, 'Delete Me').click()
+  await itemDeleteButton(searchSection as searchSectionLocator, 'Delete Me').click()
   await dialogPromise
 
   await expectOperationStatus(page, '削除しました。')

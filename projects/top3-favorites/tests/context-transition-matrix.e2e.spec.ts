@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test'
-import { tagFilterButton, itemEditButton, editSaveButton, clearSearchTagFilter, uploadJsonImportFile, resetItemsByReplace, jsonImportButton, registrationSaveButton, expectOperationStatus } from './e2e-helpers'
+import { tagFilterButton, itemEditButton, editSaveButton, clearSearchTagFilter, uploadJsonImportFile, resetItemsByReplace, jsonImportButton, registrationSaveButton, expectOperationStatus, searchSection as searchSectionLocator } from './e2e-helpers'
 
 test.beforeEach(async ({ request }) => {
   await resetItemsByReplace(request)
@@ -19,14 +19,14 @@ test('context transition matrix keeps only one active workflow context', async (
   const payload = [
     { id: 'imp-1', tag: 'プリン', location: '浅草', name: 'Pending A', rank: 1, memo: '', mapsUrl: '', placeId: '', createdAt: now, updatedAt: now },
   ]
-  const searchSection = page.locator('section.card').filter({ has: page.getByRole('heading', { name: '探す' }) })
+  const searchSection = searchSectionLocator(page)
 
   // baseline: import preview visible
   await uploadJsonImportFile(page, 'pending.json', payload)
   await expect(page.getByLabel('インポート確認')).toBeVisible()
 
   // search select should close import preview
-  await tagFilterButton(searchSection, 'カフェラテ').click()
+  await tagFilterButton(searchSection as searchSectionLocator, 'カフェラテ').click()
   await expect(page.getByLabel('インポート確認')).toHaveCount(0)
 
   // make import preview visible again

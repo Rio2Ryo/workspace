@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test'
-import { tagFilterButton, clearSearchTagFilter, uploadJsonImportFile, resetItemsByReplace, registrationSaveButton, expectOperationStatus } from './e2e-helpers'
+import { tagFilterButton, clearSearchTagFilter, uploadJsonImportFile, resetItemsByReplace, registrationSaveButton, expectOperationStatus, searchSection as searchSectionLocator } from './e2e-helpers'
 
 test.beforeEach(async ({ request }) => {
   await resetItemsByReplace(request)
@@ -21,8 +21,8 @@ test('clearing search tag closes pending import preview to keep search context c
   await uploadJsonImportFile(page, 'pending.json', payload)
   await expect(page.getByLabel('インポート確認')).toBeVisible()
 
-  const searchSection = page.locator('section.card').filter({ has: page.getByRole('heading', { name: '探す' }) })
-  await tagFilterButton(searchSection, 'カフェラテ').click()
+  const searchSection = searchSectionLocator(page)
+  await tagFilterButton(searchSection as searchSectionLocator, 'カフェラテ').click()
   await clearSearchTagFilter(searchSection)
 
   await expect(page.getByLabel('インポート確認')).toHaveCount(0)

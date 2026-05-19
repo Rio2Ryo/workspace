@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test'
-import { tagFilterButton, searchClearButton, resetItemsByReplace, registrationSaveButton, expectOperationStatus } from './e2e-helpers'
+import { tagFilterButton, searchClearButton, resetItemsByReplace, registrationSaveButton, expectOperationStatus, searchSection as searchSectionLocator } from './e2e-helpers'
 
 test.beforeEach(async ({ request }) => {
   await resetItemsByReplace(request)
@@ -14,8 +14,8 @@ test('manual tag edit breaks search-link sync and hides sync status', async ({ p
   await registrationSaveButton(page).click()
   await expectOperationStatus(page, 'カフェラテ の1位に保存しました。')
 
-  const searchSection = page.locator('section.card').filter({ has: page.getByRole('heading', { name: '探す' }) })
-  await tagFilterButton(searchSection, 'カフェラテ').click()
+  const searchSection = searchSectionLocator(page)
+  await tagFilterButton(searchSection as searchSectionLocator, 'カフェラテ').click()
   await expect(page.getByTestId('tag-sync-status')).toHaveText('検索タグ「カフェラテ」と登録タグを連動中')
 
   // Manual tag typing should break sync state

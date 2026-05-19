@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test'
-import { tagFilterButton, resetItemsByReplace, registrationSaveButton, expectOperationStatus } from './e2e-helpers'
+import { tagFilterButton, resetItemsByReplace, registrationSaveButton, expectOperationStatus, searchSection as searchSectionLocator } from './e2e-helpers'
 
 test.beforeEach(async ({ request }) => {
   await resetItemsByReplace(request)
@@ -14,8 +14,8 @@ test('sync-break notice auto-dismisses after short duration', async ({ page }) =
   await registrationSaveButton(page).click()
   await expectOperationStatus(page, 'カフェラテ の1位に保存しました。')
 
-  const searchSection = page.locator('section.card').filter({ has: page.getByRole('heading', { name: '探す' }) })
-  await tagFilterButton(searchSection, 'カフェラテ').click()
+  const searchSection = searchSectionLocator(page)
+  await tagFilterButton(searchSection as searchSectionLocator, 'カフェラテ').click()
 
   await page.getByLabel('タグ', { exact: true }).fill('手入力タグ')
   await expectOperationStatus(page, '手入力によりタグ連動を解除しました。')

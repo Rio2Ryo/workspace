@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test'
-import { sampleSaveButton, jsonExportButton, tagFilterButton, searchClearButton, uploadJsonImportFile, parseDownloadedJsonFile, resetItemsByReplace, downloadJsonExport, saveSampleItems, jsonImportButton, importConfirmButton, expectOperationStatus } from './e2e-helpers'
+import { sampleSaveButton, jsonExportButton, tagFilterButton, searchClearButton, uploadJsonImportFile, parseDownloadedJsonFile, resetItemsByReplace, downloadJsonExport, saveSampleItems, jsonImportButton, importConfirmButton, expectOperationStatus, searchSection as searchSectionLocator } from './e2e-helpers'
 
 test.beforeEach(async ({ request }) => {
   await resetItemsByReplace(request)
@@ -48,8 +48,8 @@ test('valid import clears stale tag filters so imported data is immediately visi
   await page.goto('/')
   await saveSampleItems(page)
 
-  const searchSection = page.locator('section.card').filter({ has: page.getByRole('heading', { name: '探す' }) })
-  await tagFilterButton(searchSection, 'カフェラテ').click()
+  const searchSection = searchSectionLocator(page)
+  await tagFilterButton(searchSection as searchSectionLocator, 'カフェラテ').click()
   await expect(searchSection.getByText('1位: Solito MAGO')).toBeVisible()
 
   const importedItems = [

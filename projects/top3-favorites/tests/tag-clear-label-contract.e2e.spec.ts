@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test'
-import { tagFilterButton, clearSearchTagFilter, resetItemsByReplace, saveSampleItems } from './e2e-helpers'
+import { tagFilterButton, clearSearchTagFilter, resetItemsByReplace, saveSampleItems, searchSection as searchSectionLocator } from './e2e-helpers'
 
 test.beforeEach(async ({ request }) => {
   await resetItemsByReplace(request)
@@ -10,8 +10,8 @@ test('tag filter clear action is exposed as クリア and resets list to all ite
 
   await saveSampleItems(page)
 
-  const searchSection = page.locator('section.card').filter({ has: page.getByRole('heading', { name: '探す' }) })
-  await tagFilterButton(searchSection, 'カフェラテ').first().click()
+  const searchSection = searchSectionLocator(page)
+  await tagFilterButton(searchSection as searchSectionLocator, 'カフェラテ').first().click()
 
   await clearSearchTagFilter(searchSection)
 

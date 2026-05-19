@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test'
-import { resetItemsByReplace, saveSampleItems } from './e2e-helpers'
+import { resetItemsByReplace, saveSampleItems, searchSection as searchSectionLocator } from './e2e-helpers'
 
 test.beforeEach(async ({ request }) => {
   await resetItemsByReplace(request)
@@ -10,7 +10,7 @@ test('sample data seed remains after reload and is reflected in API data', async
 
   await saveSampleItems(page)
 
-  const searchSection = page.locator('section.card').filter({ has: page.getByRole('heading', { name: '探す' }) })
+  const searchSection = searchSectionLocator(page)
   await expect(searchSection.getByText(/1位:\s*Solito MAGO/)).toBeVisible()
   await expect(searchSection.getByText(/2位:\s*T-SITEのカフェ/)).toBeVisible()
   await expect(searchSection.getByText(/1位:\s*とみ田/)).toBeVisible()
