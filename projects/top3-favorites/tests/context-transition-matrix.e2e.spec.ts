@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test'
-import { tagFilterButton, itemEditButton, editSaveButton, clearSearchTagFilter, uploadJsonImportFile, resetItemsByReplace, jsonImportButton, registrationSaveButton } from './e2e-helpers'
+import { tagFilterButton, itemEditButton, editSaveButton, clearSearchTagFilter, uploadJsonImportFile, resetItemsByReplace, jsonImportButton, registrationSaveButton, expectOperationStatus } from './e2e-helpers'
 
 test.beforeEach(async ({ request }) => {
   await resetItemsByReplace(request)
@@ -13,6 +13,7 @@ test('context transition matrix keeps only one active workflow context', async (
   await page.getByLabel('場所', { exact: true }).fill('柏の葉')
   await page.getByLabel('店舗名', { exact: true }).fill('Context Base')
   await registrationSaveButton(page).click()
+  await expectOperationStatus(page, 'カフェラテ の1位に保存しました。')
 
   const now = new Date().toISOString()
   const payload = [

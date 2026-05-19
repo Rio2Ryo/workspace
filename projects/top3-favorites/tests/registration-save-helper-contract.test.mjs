@@ -35,6 +35,40 @@ function sourceUsesDirectRegistrationSaveButton(source) {
   return /getByRole\(['"]button['"],\s*\{\s*name:\s*['"]DBに保存['"]\s*\}\)/.test(source)
 }
 
+function collectSaveRaceOffenders(spec, source) {
+  const riskyNextActions = [
+    'uploadJsonImportFile(',
+    "request.get('/api/items'",
+    'request.get("/api/items"',
+    'page.reload(',
+    'downloadJsonExport(',
+    'page.waitForEvent(',
+  ]
+  const offenders = []
+  const saveClickPattern = /await\s+registrationSaveButton\(page\)\.click\(\)/g
+  const matches = [...source.matchAll(saveClickPattern)]
+
+  for (const match of matches) {
+    const start = match.index + match[0].length
+    const nextSaveIndex = source.indexOf('registrationSaveButton(page).click()', start)
+    const block = source.slice(start, nextSaveIndex === -1 ? undefined : nextSaveIndex)
+    const statusIndex = block.indexOf('expectOperationStatus(page,')
+    const riskyAction = riskyNextActions.find((token) => block.includes(token))
+
+    if (!riskyAction) {
+      continue
+    }
+    if (statusIndex !== -1 && statusIndex < block.indexOf(riskyAction)) {
+      continue
+    }
+
+    const line = source.slice(0, match.index).split('\n').length
+    offenders.push(`${spec}:${line}: wait for expectOperationStatus(page, ...) before ${riskyAction}`)
+  }
+
+  return offenders
+}
+
 test('[E2E-Helper][registration-save] E2E specs use shared registration save button locator', async () => {
   const offenders = []
   const specs = await listE2eSpecs(testsRoot)
@@ -67,6 +101,22 @@ test('[E2E-Helper][registration-save] helper owns registration save accessible-n
   assert.match(source, /export function registrationSaveButton/, 'tests/e2e-helpers.ts should export registrationSaveButton')
   assert.match(source, /name:\s*['"]DBに保存['"]/, 'registrationSaveButton should own the DB save accessible name')
   assert.match(source, /getByRole\(['"]button['"],\s*\{\s*name:\s*['"]DBに保存['"]\s*\}\)/, 'registrationSaveButton should return the shared button locator')
+})
+
+test('[E2E-Helper][registration-save] risky post-save workflows wait for save completion', async () => {
+  const offenders = []
+  const specs = await listE2eSpecs(testsRoot)
+
+  for (const spec of specs) {
+    const source = await readFile(new URL(spec, `${root}/`), 'utf8')
+    offenders.push(...collectSaveRaceOffenders(spec, source))
+  }
+
+  assert.deepEqual(
+    offenders.sort(),
+    [],
+    `E2E specs that save and then start another workflow should wait for the save success live-region first: ${offenders.join(', ')}`,
+  )
 })
 
 test('[E2E-Helper][registration-save] import-invalid-after-valid waits for save completion before import upload', async () => {
