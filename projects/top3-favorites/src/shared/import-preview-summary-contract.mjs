@@ -16,6 +16,7 @@ const STRING_ARRAY_FIELDS = [
   'tags',
   'excludedNames',
   'excludedNameLabels',
+  'excludedNameReasonLabels',
   'excludedDetailLabels',
 ]
 
@@ -85,6 +86,9 @@ export function validateImportPreviewSummary(summary) {
   }
   if (summary.excludedNames.length !== summary.excludedNameLabels.length) {
     return 'excludedNames and excludedNameLabels must have the same length'
+  }
+  if (summary.excludedNames.length !== summary.excludedNameReasonLabels.length) {
+    return 'excludedNames and excludedNameReasonLabels must have the same length'
   }
   return null
 }

@@ -23,6 +23,7 @@ test('[App][import-preview-summary] shared contract accepts the current versione
     tags: ['カフェラテ', 'プリン'],
     excludedNames: ['New 3'],
     excludedNameLabels: ['カフェラテ: New 3'],
+    excludedNameReasonLabels: ['カフェラテ: New 3（カフェラテでTop3外: 4位相当）'],
     excludedDetailLabels: ['カフェラテ: New 3'],
     normalizedExcludedNameGroups: [
       {
@@ -47,8 +48,43 @@ test('[App][import-preview-summary] shared contract reports actionable schema an
     /schema must be top3-import-preview-summary/,
   )
   assert.match(
-    validateImportPreviewSummary({ schema: 'top3-import-preview-summary', version: 1, before: 3, after: 3, added: 1, kept: 1, removed: 2, excluded: 0, normalizationBefore: 2, normalizationAfter: 2, tags: [], excludedNames: [], excludedNameLabels: [], excludedDetailLabels: [], normalizedExcludedNameGroups: [], excludedDetails: [] }),
+    validateImportPreviewSummary({ schema: 'top3-import-preview-summary', version: 1, before: 3, after: 3, added: 1, kept: 1, removed: 2, excluded: 0, normalizationBefore: 2, normalizationAfter: 2, tags: [], excludedNames: [], excludedNameLabels: [], excludedNameReasonLabels: [], excludedDetailLabels: [], normalizedExcludedNameGroups: [], excludedDetails: [] }),
     /added \+ kept must equal after/,
+  )
+})
+
+test('[App][import-preview-summary] shared contract requires excluded-name reason labels', () => {
+  const summary = {
+    schema: 'top3-import-preview-summary',
+    version: 1,
+    before: 0,
+    after: 3,
+    normalizationBefore: 4,
+    normalizationAfter: 3,
+    added: 3,
+    kept: 0,
+    removed: 0,
+    excluded: 1,
+    tags: ['カフェラテ'],
+    excludedNames: ['New 4'],
+    excludedNameLabels: ['カフェラテ: New 4'],
+    excludedDetailLabels: ['カフェラテ: New 4'],
+    normalizedExcludedNameGroups: [],
+    excludedDetails: [
+      { tag: 'カフェラテ', name: 'New 4', reason: 'カフェラテでTop3外: 4位相当' },
+    ],
+  }
+
+  assert.match(
+    validateImportPreviewSummary(summary),
+    /excludedNameReasonLabels must be a string array/,
+    'summary JSON should fail if the user-readable excluded-store reason labels disappear from the shared contract',
+  )
+
+  assert.match(
+    validateImportPreviewSummary({ ...summary, excludedNameReasonLabels: [] }),
+    /excludedNames and excludedNameReasonLabels must have the same length/,
+    'reason labels should stay one-to-one with excluded store names so preview consumers can explain each exclusion',
   )
 })
 
