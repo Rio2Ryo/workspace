@@ -6,6 +6,7 @@ import {
   importValidationCopyJsonPaths,
   importValidationCopyRepairList,
   importValidationErrorDetails,
+  importValidationFieldSummary,
   resetItemsByReplace,
   uploadJsonImportFile,
 } from './e2e-helpers'
@@ -53,7 +54,10 @@ test('import validation error identifies the first invalid row and field for qui
     '合計2件（ほか1件も修正してください）',
   ])
   await expect(details.getByText('検出した修正対象')).toBeVisible()
-  await expect(details.locator('li')).toHaveText([
+  const fieldSummary = importValidationFieldSummary(page)
+  await expect(fieldSummary).toBeVisible()
+  await expect(fieldSummary.locator('li')).toHaveText(['tag: 1件', 'name: 1件'])
+  await expect(details.locator('.import-validation-error-list ol li')).toHaveText([
     '2件目 / $.items[1].tag / tag / タグを入力してください。',
     '3件目 / $.items[2].name / name / 店舗名を入力してください。',
   ])

@@ -623,6 +623,16 @@ export function App() {
     }
   }
 
+  const importValidationFieldCounts = importValidationIssue
+    ? Array.from(
+      importValidationIssue.relatedIssues.reduce<Map<string, number>>((counts, issue) => {
+        counts.set(issue.field, (counts.get(issue.field) ?? 0) + 1)
+        return counts
+      }, new Map()),
+      ([field, count]) => ({ field, count }),
+    )
+    : []
+
   const copyImportExcludedNames = async () => {
     if (!pendingImport) return
     const labels = pendingImport.excludedNameReasonLabels.join('\n')
@@ -975,6 +985,16 @@ export function App() {
                       </dd>
                     </div>
                   </dl>
+                  {importValidationFieldCounts.length > 1 && (
+                    <div className="import-validation-field-summary" data-testid="import-validation-field-summary">
+                      <p className="hint compact">フィールド別内訳</p>
+                      <ul>
+                        {importValidationFieldCounts.map(({ field, count }) => (
+                          <li key={field}>{field}: {count}件</li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
                   {importValidationIssue.relatedIssues.length > 1 && (
                     <div className="import-validation-error-list">
                       <p className="hint compact">検出した修正対象</p>
