@@ -20,9 +20,17 @@ export async function clickSampleSaveButton(page: Page): Promise<void> {
   await sampleSaveButton(page).click()
 }
 
+export function operationStatus(page: Page): Locator {
+  return page.getByRole('status')
+}
+
+export async function expectOperationStatus(page: Page, text: string | RegExp): Promise<void> {
+  await expect(operationStatus(page)).toContainText(text)
+}
+
 export async function saveSampleItems(page: Page): Promise<void> {
   await clickSampleSaveButton(page)
-  await expect(page.getByRole('status')).toContainText('サンプルをDBに保存しました。')
+  await expectOperationStatus(page, 'サンプルをDBに保存しました。')
 }
 
 export async function clearSearchTagFilter(searchSection: Locator): Promise<void> {

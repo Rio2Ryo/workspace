@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test'
-import { tagFilterButton, resetItemsByReplace, registrationSaveButton } from './e2e-helpers'
+import { tagFilterButton, resetItemsByReplace, registrationSaveButton, expectOperationStatus } from './e2e-helpers'
 
 test.beforeEach(async ({ request }) => {
   await resetItemsByReplace(request)
@@ -17,7 +17,7 @@ test('sync-break notice clears when user reselects a tag and sync resumes', asyn
   await tagFilterButton(searchSection, 'カフェラテ').click()
 
   await page.getByLabel('タグ', { exact: true }).fill('手入力タグ')
-  await expect(page.getByRole('status')).toContainText('手入力によりタグ連動を解除しました。')
+  await expectOperationStatus(page, '手入力によりタグ連動を解除しました。')
 
   await tagFilterButton(searchSection, 'カフェラテ').click()
 

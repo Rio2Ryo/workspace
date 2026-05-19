@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test'
-import { tagFilterButton, resetItemsByReplace, registrationSaveButton } from './e2e-helpers'
+import { tagFilterButton, resetItemsByReplace, registrationSaveButton, expectOperationStatus } from './e2e-helpers'
 
 test.beforeEach(async ({ request }) => {
   await resetItemsByReplace(request)
@@ -18,10 +18,10 @@ test('sync-break notice is shown once and not repeatedly overwritten by further 
 
   const tagInput = page.getByLabel('タグ', { exact: true })
   await tagInput.fill('手')
-  await expect(page.getByRole('status')).toContainText('手入力によりタグ連動を解除しました。')
+  await expectOperationStatus(page, '手入力によりタグ連動を解除しました。')
 
   // further typing should not spam/replace status with the same notice repeatedly
   await tagInput.fill('手入力タグ')
-  await expect(page.getByRole('status')).toContainText('手入力によりタグ連動を解除しました。')
+  await expectOperationStatus(page, '手入力によりタグ連動を解除しました。')
   await expect(page.getByTestId('tag-sync-status')).toHaveCount(0)
 })

@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test'
-import { uploadJsonImportFile, parseImportPreviewSummary, resetItemsByReplace , importConfirmButton} from './e2e-helpers'
+import { uploadJsonImportFile, parseImportPreviewSummary, resetItemsByReplace, importConfirmButton, expectOperationStatus } from './e2e-helpers'
 
 test.beforeEach(async ({ request }) => {
   await resetItemsByReplace(request)
@@ -27,7 +27,7 @@ test('import normalizes visually equivalent tag spaces before Top3 truncation', 
   expect(summary.excludedNames).toEqual(['D'])
 
   await importConfirmButton(page).click()
-  await expect(page.getByRole('status')).toContainText('インポート成功')
+  await expectOperationStatus(page, 'インポート成功')
 
   const data = (await request.get('/api/items').then((res) => res.json())) as { items: Array<{ tag: string; name: string; rank: number }> }
   expect(data.items.map((item) => item.name).sort()).toEqual(['A', 'B', 'C'])

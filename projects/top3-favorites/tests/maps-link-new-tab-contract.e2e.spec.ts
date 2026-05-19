@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test'
-import { resetItemsByReplace, registrationSaveButton } from './e2e-helpers'
+import { resetItemsByReplace, registrationSaveButton, expectOperationStatus } from './e2e-helpers'
 
 test.beforeEach(async ({ request }) => {
   await resetItemsByReplace(request)
@@ -15,7 +15,7 @@ test('maps link opens in a new tab with safe rel attributes', async ({ page }) =
   await page.getByRole('button', { name: '登録 1位に入れる' }).click()
   await registrationSaveButton(page).click()
 
-  await expect(page.getByRole('status')).toContainText('カフェラテ の1位に保存しました。')
+  await expectOperationStatus(page, 'カフェラテ の1位に保存しました。')
 
   const group = page.locator('.group').filter({ has: page.getByRole('heading', { name: 'カフェラテ' }) })
   await group.locator('summary', { hasText: /1位:\s*Solito MAGO/ }).click()

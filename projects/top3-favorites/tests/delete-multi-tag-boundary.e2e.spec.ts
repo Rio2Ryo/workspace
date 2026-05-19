@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test'
-import { tagFilterButton, acceptNextDeleteDialog, resetItemsByReplace, itemDeleteButton } from './e2e-helpers'
+import { tagFilterButton, acceptNextDeleteDialog, resetItemsByReplace, itemDeleteButton, expectOperationStatus } from './e2e-helpers'
 
 test.beforeEach(async ({ request }) => {
   await resetItemsByReplace(request)
@@ -22,7 +22,7 @@ test('delete removes only the confirmed target item when multiple tags exist', a
   const dialogPromise = acceptNextDeleteDialog(page, '削除対象A をTop3から削除しますか？')
   await itemDeleteButton(page, '削除対象A').click()
   await dialogPromise
-  await expect(page.getByRole('status')).toContainText('削除しました。')
+  await expectOperationStatus(page, '削除しました。')
 
   // Target should be deleted
   await expect(page.getByText('削除対象A')).not.toBeVisible()

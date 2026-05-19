@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test'
-import { resetItemsByReplace, registrationSaveButton } from './e2e-helpers'
+import { resetItemsByReplace, registrationSaveButton, expectOperationStatus } from './e2e-helpers'
 
 test.beforeEach(async ({ request }) => {
   await resetItemsByReplace(request)
@@ -12,7 +12,7 @@ test('validation error clears stale success notice to avoid mixed feedback', asy
   await page.getByLabel('場所', { exact: true }).fill('柏の葉')
   await page.getByLabel('店舗名', { exact: true }).fill('Notice Mix')
   await registrationSaveButton(page).click()
-  await expect(page.getByRole('status')).toContainText('カフェラテ の1位に保存しました。')
+  await expectOperationStatus(page, 'カフェラテ の1位に保存しました。')
 
   // trigger validation error on next save attempt
   await page.getByLabel('店舗名', { exact: true }).fill('')

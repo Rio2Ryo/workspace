@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test'
-import { jsonExportButton, resetItemsByReplace, registrationSaveButton } from './e2e-helpers'
+import { jsonExportButton, resetItemsByReplace, registrationSaveButton, expectOperationStatus } from './e2e-helpers'
 
 test.beforeEach(async ({ request }) => {
   await resetItemsByReplace(request)
@@ -17,6 +17,6 @@ test('JSON export is disabled when there are no items, and enabled after adding 
   await page.getByRole('button', { name: '登録 1位に入れる' }).click()
   await registrationSaveButton(page).click()
 
-  await expect(page.getByRole('status')).toContainText('カフェ の1位に保存しました。')
+  await expectOperationStatus(page, 'カフェ の1位に保存しました。')
   await expect(exportButton).toBeEnabled()
 })

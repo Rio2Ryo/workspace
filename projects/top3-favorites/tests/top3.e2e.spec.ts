@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test'
-import { resetItemsByReplace, saveSampleItems, registrationSaveButton } from './e2e-helpers'
+import { resetItemsByReplace, saveSampleItems, registrationSaveButton, expectOperationStatus } from './e2e-helpers'
 
 test.beforeEach(async ({ request }) => {
   await resetItemsByReplace(request)
@@ -41,7 +41,7 @@ test('adding a new first place rebalances the same tag to top 3', async ({ page 
   await page.getByRole('button', { name: '登録 1位に入れる' }).click()
   await registrationSaveButton(page).click()
 
-  await expect(page.getByRole('status')).toContainText('カフェラテ の1位に保存しました。')
+  await expectOperationStatus(page, 'カフェラテ の1位に保存しました。')
   await page.getByPlaceholder('例: カフェラテ / 柏の葉 / Solito').fill('')
 
   await expect(page.getByText(/\d位: New Coffee/)).toBeVisible()

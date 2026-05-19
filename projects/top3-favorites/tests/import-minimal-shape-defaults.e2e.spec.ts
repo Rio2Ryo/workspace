@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test'
-import { uploadJsonImportFile, resetItemsByReplace , importConfirmButton} from './e2e-helpers'
+import { uploadJsonImportFile, resetItemsByReplace, importConfirmButton, expectOperationStatus } from './e2e-helpers'
 
 test.beforeEach(async ({ request }) => {
   await resetItemsByReplace(request)
@@ -22,7 +22,7 @@ test('UI import accepts minimal valid items and fills generated fields before AP
   await expect(page.getByTestId('import-preview-normalization')).toHaveAttribute('data-normalization-after-count', '3')
 
   await importConfirmButton(page).click()
-  await expect(page.getByRole('status')).toContainText('インポート成功: 3件を反映しました。')
+  await expectOperationStatus(page, 'インポート成功: 3件を反映しました。')
 
   const data = (await request.get('/api/items').then((res) => res.json())) as {
     items: Array<{ id: string; createdAt: string; updatedAt: string; mapsUrl: string; placeId: string }>

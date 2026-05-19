@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test'
-import { resetItemsByReplace, registrationSaveButton } from './e2e-helpers'
+import { resetItemsByReplace, registrationSaveButton, expectOperationStatus } from './e2e-helpers'
 
 test.beforeEach(async ({ request }) => {
   await resetItemsByReplace(request)
@@ -15,7 +15,7 @@ test('saving with rank 3 keeps the selected rank in API and list output', async 
   await rank3Button.click()
   await expect(rank3Button).toHaveClass(/active/)
   await registrationSaveButton(page).click()
-  await expect(page.getByRole('status')).toContainText('3位に保存しました。')
+  await expectOperationStatus(page, '3位に保存しました。')
 
   const data = (await request.get('/api/items').then((res) => res.json())) as {
     items: { tag: string; name: string; rank: number }[]

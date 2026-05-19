@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test'
-import { tagFilterButton, acceptNextDeleteDialog, resetItemsByReplace, itemDeleteButton } from './e2e-helpers'
+import { tagFilterButton, acceptNextDeleteDialog, resetItemsByReplace, itemDeleteButton, expectOperationStatus } from './e2e-helpers'
 
 test.beforeEach(async ({ request }) => {
   await resetItemsByReplace(request)
@@ -25,7 +25,7 @@ test('deleted item stays removed after reload and is absent from API data', asyn
   const dialogPromise = acceptNextDeleteDialog(page, 'Delete Persist Target')
   await itemDeleteButton(searchSection, 'Delete Persist Target').click()
   await dialogPromise
-  await expect(page.getByRole('status')).toContainText('削除しました。')
+  await expectOperationStatus(page, '削除しました。')
 
   // UI state before reload
   await expect(searchSection.getByText('Delete Persist Target')).toHaveCount(0)

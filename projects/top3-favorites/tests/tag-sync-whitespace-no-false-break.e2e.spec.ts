@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test'
-import { tagFilterButton, resetItemsByReplace, registrationSaveButton } from './e2e-helpers'
+import { tagFilterButton, resetItemsByReplace, registrationSaveButton, operationStatus } from './e2e-helpers'
 
 test.beforeEach(async ({ request }) => {
   await resetItemsByReplace(request)
@@ -21,5 +21,5 @@ test('typing same tag with trailing whitespace does not falsely break sync', asy
 
   // still considered same tag context, so sync remains and no break notice
   await expect(page.getByTestId('tag-sync-status')).toHaveCount(1)
-  await expect(page.getByRole('status')).not.toContainText('手入力によりタグ連動を解除しました。')
+  await expect(operationStatus(page)).not.toContainText('手入力によりタグ連動を解除しました。')
 })

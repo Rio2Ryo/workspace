@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test'
-import { uploadJsonImportFile, resetItemsByReplace, importConfirmButton, registrationSaveButton } from './e2e-helpers'
+import { uploadJsonImportFile, resetItemsByReplace, importConfirmButton, registrationSaveButton, expectOperationStatus } from './e2e-helpers'
 
 test.beforeEach(async ({ request }) => {
   await resetItemsByReplace(request)
@@ -13,7 +13,7 @@ test('import fail-closed matrix: all invalid inputs keep existing data and clear
   await page.getByLabel('場所', { exact: true }).fill('柏の葉')
   await page.getByLabel('店舗名', { exact: true }).fill('Baseline Keep')
   await registrationSaveButton(page).click()
-  await expect(page.getByRole('status')).toContainText('カフェラテ の1位に保存しました。')
+  await expectOperationStatus(page, 'カフェラテ の1位に保存しました。')
 
   const now = new Date().toISOString()
 
@@ -70,7 +70,7 @@ test('import fail-closed matrix: all invalid inputs keep existing data and clear
   await uploadJsonImportFile(page, 'valid-last.json', validItems)
   await expect(page.getByLabel('インポート確認')).toBeVisible()
   await importConfirmButton(page).click()
-  await expect(page.getByRole('status')).toContainText('インポート成功: 2件を反映しました。')
+  await expectOperationStatus(page, 'インポート成功: 2件を反映しました。')
 
   const finalApiData = (await request.get('/api/items').then((res) => res.json())) as { items: { name: string }[] }
   expect(finalApiData.items).toHaveLength(2)
