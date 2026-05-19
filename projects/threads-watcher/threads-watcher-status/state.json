@@ -5,14 +5,27 @@
     "@bmw_intokyo"
   ],
   "last_check": {
-    "checked_at": "2026-05-19T15:02:20Z",
-    "found_count": 15,
+    "checked_at": "2026-05-19T21:57:13Z",
+    "found_count": 4,
     "new_count": 0,
-    "status": "ok",
-    "error": null
+    "status": "partial_error",
+    "error": "profile extraction returned partial result: found=4 previous_max=15"
   },
-  "saved_count": 40,
+  "saved_count": 41,
   "posts": [
+    {
+      "handle": "@hal.lifedesign",
+      "post_id": "DYiTsepEhxe",
+      "post_url": "https://www.threads.com/@hal.lifedesign/post/DYiTsepEhxe",
+      "first_seen_at": "2026-05-19T21:55:31Z",
+      "captured_at": "2026-05-19T21:55:37Z",
+      "screenshot_size_bytes": 623155,
+      "screenshot_width": 1280,
+      "screenshot_height": 1800,
+      "post_text": "珍しく朝から海をみに。",
+      "posted_at": "2026-05-19T21:54:26.000Z",
+      "screenshot_path": "screenshots/hal.lifedesign/DYiTsepEhxe__20260519T215536Z.png"
+    },
     {
       "handle": "@bmw_intokyo",
       "post_id": "DYgz_H2iTau",
@@ -536,48 +549,48 @@
   ],
   "recent_stats": {
     "window_hours": 24,
-    "total": 625,
-    "ok": 225,
-    "partial_error": 399,
+    "total": 914,
+    "ok": 300,
+    "partial_error": 613,
     "error": 1,
     "other": 0,
-    "success_rate": 0.36
+    "success_rate": 0.3282275711159737
   },
   "recent_stats_by_window": {
     "1": {
       "window_hours": 1,
       "total": 43,
-      "ok": 14,
-      "partial_error": 29,
+      "ok": 8,
+      "partial_error": 35,
       "error": 0,
       "other": 0,
-      "success_rate": 0.32558139534883723
+      "success_rate": 0.18604651162790697
     },
     "24": {
       "window_hours": 24,
-      "total": 625,
-      "ok": 225,
-      "partial_error": 399,
+      "total": 914,
+      "ok": 300,
+      "partial_error": 613,
       "error": 1,
       "other": 0,
-      "success_rate": 0.36
+      "success_rate": 0.3282275711159737
     },
     "168": {
       "window_hours": 168,
-      "total": 2126,
-      "ok": 1686,
-      "partial_error": 439,
+      "total": 2415,
+      "ok": 1761,
+      "partial_error": 653,
       "error": 1,
       "other": 0,
-      "success_rate": 0.793038570084666
+      "success_rate": 0.7291925465838509
     }
   },
   "sync_state": {
     "cursor": 63,
-    "db_max": 63,
-    "delta": 0,
+    "db_max": 64,
+    "delta": 1,
     "cursor_file_exists": true
   },
   "dry_run_alert": null,
-  "snapshot_generated_at": "2026-05-19T15:02:20Z"
+  "snapshot_generated_at": "2026-05-19T21:57:13Z"
 }
