@@ -1,6 +1,8 @@
 import { expect, test } from '@playwright/test'
 import {
   expectImportPreviewExcludedNamesContract,
+  expectOperationStatus,
+  importPreviewCopyExcludedNameVariants,
   importPreviewExcludedNameVariants,
   importPreviewExcludedNames,
   importPreviewSummary,
@@ -16,6 +18,16 @@ test.beforeEach(async ({ request }) => {
 
 test('excluded store names add tag context for visually equivalent full-width and spaced names', async ({ page }) => {
   await page.goto('/')
+  await page.evaluate(() => {
+    Object.defineProperty(navigator, 'clipboard', {
+      configurable: true,
+      value: {
+        writeText: async (text: string) => {
+          window.localStorage.setItem('last-copied-import-excluded-name-variants', text)
+        },
+      },
+    })
+  })
 
   const now = '2026-05-18T00:00:00.000Z'
   const payload = [
@@ -42,6 +54,12 @@ test('excluded store names add tag context for visually equivalent full-width an
   const variants = importPreviewExcludedNameVariants(page)
   await expect(variants).toHaveText('表記ゆれ候補: カフェラテ: Cafe K / プリン: Ｃａｆｅ　Ｋ')
   await expect(variants).toHaveAttribute('data-normalized-excluded-name-groups', 'cafe k=カフェラテ: Cafe K/プリン: Ｃａｆｅ　Ｋ')
+
+  await importPreviewCopyExcludedNameVariants(page).click()
+  await expectOperationStatus(page, '表記ゆれ候補をコピーしました。')
+  await expect.poll(() => page.evaluate(() => window.localStorage.getItem('last-copied-import-excluded-name-variants'))).toBe(
+    'cafe k: カフェラテ: Cafe K / プリン: Ｃａｆｅ　Ｋ',
+  )
 
   const summary = await parseImportPreviewSummary<{
     excludedDetailLabels: string[]

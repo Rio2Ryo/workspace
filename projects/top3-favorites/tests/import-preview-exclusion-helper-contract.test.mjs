@@ -13,6 +13,7 @@ const helperNames = [
   'importPreviewExcludedNameVariants',
   'importPreviewCopyExcludedNames',
   'importPreviewCopyExcludedNameLabels',
+  'importPreviewCopyExcludedNameVariants',
   'importPreviewToggleExcludedNames',
   'importPreviewToggleExcludedDetails',
   'expectImportPreviewExcludedNamesContract',
@@ -37,6 +38,7 @@ const forbiddenButtonNames = [
   ['除外店舗名を折りたたむ', 'excluded names hide button'],
   ['正規化除外店舗一覧をコピー', 'excluded names copy button'],
   ['店舗名だけコピー', 'excluded name-labels copy button'],
+  ['表記ゆれ候補をコピー', 'excluded name variants copy button'],
   ['除外理由を全件表示', 'excluded details show button'],
   ['除外理由を折りたたむ', 'excluded details hide button'],
 ]
@@ -119,6 +121,14 @@ test('[E2E-Helper][import-preview-exclusions] contract catches excluded-name-lab
   )
 })
 
+test('[E2E-Helper][import-preview-exclusions] contract catches excluded-name variants copy button', () => {
+  assert.deepEqual(
+    directForbiddenButtonNames("await page.getByRole('button', { name: '表記ゆれ候補をコピー' }).click()"),
+    ['excluded name variants copy button'],
+    'contract should catch direct excluded-name variants copy button accessible name',
+  )
+})
+
 test('[E2E-Helper][import-preview-exclusions] contract catches excluded-name data attribute copy', () => {
   const source = "await expect(names).toHaveAttribute('data-excluded-name-reason-labels', 'A（カフェでTop3外: 4位相当）')"
   assert.deepEqual(
@@ -177,6 +187,8 @@ test('[E2E-Helper][import-preview-exclusions] helpers own excluded-name/detail t
   assert.match(source, /importPreviewCopyExcludedNames[\s\S]*getByRole\(['"]button['"], \{ name: ['"]正規化除外店舗一覧をコピー['"] \}\)/, 'importPreviewCopyExcludedNames should own the excluded-name copy accessible name')
   assert.match(source, /export function importPreviewCopyExcludedNameLabels/, 'tests/e2e-helpers.ts should export importPreviewCopyExcludedNameLabels(page)')
   assert.match(source, /importPreviewCopyExcludedNameLabels[\s\S]*getByRole\(['"]button['"], \{ name: ['"]店舗名だけコピー['"] \}\)/, 'importPreviewCopyExcludedNameLabels should own the raw excluded-name copy accessible name')
+  assert.match(source, /export function importPreviewCopyExcludedNameVariants/, 'tests/e2e-helpers.ts should export importPreviewCopyExcludedNameVariants(page)')
+  assert.match(source, /importPreviewCopyExcludedNameVariants[\s\S]*getByRole\(['"]button['"], \{ name: ['"]表記ゆれ候補をコピー['"] \}\)/, 'importPreviewCopyExcludedNameVariants should own the excluded-name variants copy accessible name')
   assert.match(source, /export function importPreviewToggleExcludedNames/, 'tests/e2e-helpers.ts should export importPreviewToggleExcludedNames(page)')
   assert.match(source, /importPreviewToggleExcludedNames[\s\S]*getByTestId\(['"]import-preview-toggle-excluded-names['"]\)/, 'importPreviewToggleExcludedNames should own the excluded names toggle test id')
   assert.match(source, /export function importPreviewToggleExcludedDetails/, 'tests/e2e-helpers.ts should export importPreviewToggleExcludedDetails(page)')

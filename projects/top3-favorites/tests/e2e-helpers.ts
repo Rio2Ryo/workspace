@@ -382,6 +382,10 @@ export function importPreviewCopyExcludedNameLabels(page: Page): Locator {
   return page.getByRole('button', { name: '店舗名だけコピー' })
 }
 
+export function importPreviewCopyExcludedNameVariants(page: Page): Locator {
+  return page.getByRole('button', { name: '表記ゆれ候補をコピー' })
+}
+
 export function importPreviewListItems(section: Locator): Locator {
   return section.getByRole('listitem')
 }

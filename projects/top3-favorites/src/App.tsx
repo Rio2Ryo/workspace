@@ -632,6 +632,19 @@ export function App() {
     }
   }
 
+  const copyImportExcludedNameVariants = async () => {
+    if (normalizedExcludedNameGroups.length === 0) return
+    const labels = normalizedExcludedNameGroups
+      .map((group) => `${group.key}: ${group.labels.join(' / ')}`)
+      .join('\n')
+    try {
+      await navigator.clipboard.writeText(labels)
+      setNotice('表記ゆれ候補をコピーしました。')
+    } catch {
+      setNotice('表記ゆれ候補をコピーできませんでした。画面上の候補を手動でコピーしてください。')
+    }
+  }
+
   const exportJson = () => {
     const blob = new Blob([JSON.stringify(items, null, 2)], { type: 'application/json' })
     const url = URL.createObjectURL(blob)
@@ -1030,13 +1043,16 @@ export function App() {
                       <button className="ghost small" type="button" onClick={copyImportExcludedNameLabels}>店舗名だけコピー</button>
                     </div>
                     {normalizedExcludedNameGroups.length > 0 && (
-                      <p
-                        className="hint compact"
-                        data-testid="import-preview-excluded-name-variants"
-                        data-normalized-excluded-name-groups={normalizedExcludedNameGroupData}
-                      >
-                        表記ゆれ候補: {normalizedExcludedNameGroupLabel}
-                      </p>
+                      <>
+                        <p
+                          className="hint compact"
+                          data-testid="import-preview-excluded-name-variants"
+                          data-normalized-excluded-name-groups={normalizedExcludedNameGroupData}
+                        >
+                          表記ゆれ候補: {normalizedExcludedNameGroupLabel}
+                        </p>
+                        <button className="ghost small" type="button" onClick={copyImportExcludedNameVariants}>表記ゆれ候補をコピー</button>
+                      </>
                     )}
                     {pendingImport.excludedNames.length > 3 && (
                       <button
