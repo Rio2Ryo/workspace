@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test'
-import { tagFilterButton, acceptNextDeleteDialog, resetItemsByReplace, itemDeleteButton, expectOperationStatus } from './e2e-helpers'
+import { tagFilterButton, searchClearButton, acceptNextDeleteDialog, resetItemsByReplace, itemDeleteButton, expectOperationStatus } from './e2e-helpers'
 
 test.beforeEach(async ({ request }) => {
   await resetItemsByReplace(request)
@@ -28,7 +28,7 @@ test('delete removes only the confirmed target item when multiple tags exist', a
   await expect(page.getByText('削除対象A')).not.toBeVisible()
 
   // Filter should auto-clear when the selected tag disappears
-  await expect(searchSection.getByRole('button', { name: 'クリア' })).not.toBeVisible()
+  await expect(searchClearButton(searchSection)).not.toBeVisible()
 
   // Other-tag items must remain
   await expect(searchSection.getByText('残すB')).toBeVisible()

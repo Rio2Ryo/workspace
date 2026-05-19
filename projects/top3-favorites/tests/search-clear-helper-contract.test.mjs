@@ -28,11 +28,11 @@ function relativePath(url) {
 }
 
 function sourceImportsSearchClearHelper(source) {
-  return /import \{[^}]*clearSearchTagFilter[^}]*\} from '(?:\.\/|\.\.\/)*e2e-helpers'/.test(source)
+  return /import \{[^}]*(?:clearSearchTagFilter|searchClearButton)[^}]*\} from '(?:\.\/|\.\.\/)*e2e-helpers'/.test(source)
 }
 
 function sourceUsesDirectSearchClear(source) {
-  return /getByRole\(['"]button['"],\s*\{\s*name:\s*['"]クリア['"]\s*\}\)\.(?:click|toBeVisible|toHaveCount|toBeDisabled|not\.toBeVisible)\(/.test(source)
+  return /getByRole\(['"]button['"],\s*\{\s*name:\s*['"]クリア['"]\s*\}\)/.test(source)
 }
 
 test('[E2E-Helper][search-clear] E2E specs clear search tags through shared helper', async () => {
@@ -65,7 +65,8 @@ test('[E2E-Helper][search-clear] E2E specs clear search tags through shared help
 test('[E2E-Helper][search-clear] helper owns search clear button mechanics', async () => {
   const source = await readFile(helperPath, 'utf8')
 
-  assert.match(source, /export async function clearSearchTagFilter/, 'tests/e2e-helpers.ts should export clearSearchTagFilter')
-  assert.match(source, /const clearButton = searchSection\.getByRole\(['"]button['"],\s*\{\s*name:\s*['"]クリア['"]\s*\}\)/, 'clearSearchTagFilter should own the clear button accessible name')
+  assert.match(source, /export function searchClearButton\(searchSection: Locator\): Locator/, 'tests/e2e-helpers.ts should export searchClearButton for visibility/count assertions')
+  assert.match(source, /return searchSection\.getByRole\(['"]button['"],\s*\{\s*name:\s*['"]クリア['"]\s*\}\)/, 'searchClearButton should own the clear button accessible name')
+  assert.match(source, /const clearButton = searchClearButton\(searchSection\)/, 'clearSearchTagFilter should use the shared searchClearButton locator')
   assert.match(source, /clearButton\.click\(\)/, 'clearSearchTagFilter should own the clear button click')
 })

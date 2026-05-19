@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test'
-import { sampleSaveButton, jsonExportButton, tagFilterButton, uploadJsonImportFile, parseDownloadedJsonFile, resetItemsByReplace, downloadJsonExport, saveSampleItems, jsonImportButton, importConfirmButton, expectOperationStatus } from './e2e-helpers'
+import { sampleSaveButton, jsonExportButton, tagFilterButton, searchClearButton, uploadJsonImportFile, parseDownloadedJsonFile, resetItemsByReplace, downloadJsonExport, saveSampleItems, jsonImportButton, importConfirmButton, expectOperationStatus } from './e2e-helpers'
 
 test.beforeEach(async ({ request }) => {
   await resetItemsByReplace(request)
@@ -74,5 +74,5 @@ test('valid import clears stale tag filters so imported data is immediately visi
   await expectOperationStatus(page, 'インポート成功: 1件を反映しました。')
   await expect(searchSection.getByRole('heading', { name: 'スイーツ' })).toBeVisible()
   await expect(searchSection.getByText('1位: Imported Pudding')).toBeVisible()
-  await expect(searchSection.getByRole('button', { name: 'クリア' })).not.toBeVisible()
+  await expect(searchClearButton(searchSection)).not.toBeVisible()
 })

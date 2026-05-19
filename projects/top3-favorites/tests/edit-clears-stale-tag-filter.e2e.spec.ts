@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test'
-import { tagFilterButton, itemEditButton, editSaveButton, resetItemsByReplace, registrationSaveButton, expectOperationStatus } from './e2e-helpers'
+import { tagFilterButton, searchClearButton, itemEditButton, editSaveButton, resetItemsByReplace, registrationSaveButton, expectOperationStatus } from './e2e-helpers'
 
 test.beforeEach(async ({ request }) => {
   await resetItemsByReplace(request)
@@ -34,7 +34,7 @@ test('editing last item tag clears stale selected filter so remaining data is vi
   await expectOperationStatus(page, '編集を保存しました。')
 
   // stale filter should be cleared because 元タグ no longer exists
-  await expect(searchSection.getByRole('button', { name: 'クリア' })).not.toBeVisible()
+  await expect(searchClearButton(searchSection)).not.toBeVisible()
   await expect(searchSection.getByRole('heading', { name: '残るタグ' })).toBeVisible()
   await expect(searchSection.getByText(/\d位: Keep Me/)).toBeVisible()
   await expect(searchSection.getByRole('heading', { name: '移動先タグ' })).toBeVisible()

@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test'
-import { tagFilterButton, resetItemsByReplace, registrationSaveButton, expectOperationStatus } from './e2e-helpers'
+import { tagFilterButton, searchClearButton, resetItemsByReplace, registrationSaveButton, expectOperationStatus } from './e2e-helpers'
 
 test.beforeEach(async ({ request }) => {
   await resetItemsByReplace(request)
@@ -22,6 +22,6 @@ test('manual tag edit breaks search-link sync and hides sync status', async ({ p
   await page.getByLabel('タグ', { exact: true }).fill('手入力タグ')
 
   await expect(page.getByTestId('tag-sync-status')).toHaveCount(0)
-  await expect(searchSection.getByRole('button', { name: 'クリア' })).toHaveCount(0)
+  await expect(searchClearButton(searchSection)).toHaveCount(0)
   await expect(page.getByLabel('タグ', { exact: true })).toHaveValue('手入力タグ')
 })

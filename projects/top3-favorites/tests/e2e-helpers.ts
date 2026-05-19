@@ -41,8 +41,12 @@ export async function saveSampleItems(page: Page): Promise<void> {
   await expectOperationStatus(page, 'サンプルをDBに保存しました。')
 }
 
+export function searchClearButton(searchSection: Locator): Locator {
+  return searchSection.getByRole('button', { name: 'クリア' })
+}
+
 export async function clearSearchTagFilter(searchSection: Locator): Promise<void> {
-  const clearButton = searchSection.getByRole('button', { name: 'クリア' })
+  const clearButton = searchClearButton(searchSection)
   await expect(clearButton).toBeVisible()
   await clearButton.click()
 }
