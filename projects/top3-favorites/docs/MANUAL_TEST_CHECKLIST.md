@@ -171,10 +171,13 @@
 ## 6. 順位繰り下げ（重要）
 
 - [ ] 同一タグで `1位/2位/3位` が存在する状態を作る
+  - 自動確認: `tests/rebalance-persists-after-reload-and-api.e2e.spec.ts` が同一タグの1位/2位/3位 seed 状態を検証する
 - [ ] 既存 `1位` に新しい `1位` 相当データを追加（または編集）
+  - 自動確認: `tests/rebalance-persists-after-reload-and-api.e2e.spec.ts` が新しい1位保存後の繰り下げ起点を検証する
 - [ ] 期待: 既存1位→2位、既存2位→3位、既存3位はTop3外になる
+  - 自動確認: `tests/rebalance-persists-after-reload-and-api.e2e.spec.ts` がTop3繰り下げと4件目除外を検証する
 - [ ] 再読み込み後も順位が維持される
-  - 自動確認: `tests/rebalance-persists-after-reload-and-api.e2e.spec.ts` がTop3繰り下げ・4件目除外・reload/API永続化を検証する
+  - 自動確認: `tests/rebalance-persists-after-reload-and-api.e2e.spec.ts` がreload後の順位維持とAPI永続化を検証する
 
 ---
 

@@ -1474,6 +1474,22 @@ test('[Manual][automation-link] edit/delete child items have direct automated li
   }
 })
 
+test('[Manual][automation-link] rank rebalance child items have direct automated links', async () => {
+  const markdown = await readFile(new URL('docs/MANUAL_TEST_CHECKLIST.md', `${root}/`), 'utf8')
+  const childContracts = [
+    '同一タグで `1位/2位/3位` が存在する状態を作る',
+    '既存 `1位` に新しい `1位` 相当データを追加（または編集）',
+    '期待: 既存1位→2位、既存2位→3位、既存3位はTop3外になる',
+    '再読み込み後も順位が維持される',
+  ]
+
+  for (const item of childContracts) {
+    const block = manualChecklistItemBlock(markdown, item)
+    assert.match(block, /自動確認:/, contractMessage({ scope: 'Manual', rule: 'rank rebalance child checklist item has direct automated link', expected: item, fix: 'add an indented 自動確認 line directly under this rank rebalance manual checklist item' }))
+    assert.ok(block.includes('`tests/rebalance-persists-after-reload-and-api.e2e.spec.ts`'), contractMessage({ scope: 'Manual', rule: 'rank rebalance child checklist item cites authoritative spec', expected: 'tests/rebalance-persists-after-reload-and-api.e2e.spec.ts', fix: 'add the focused rebalance E2E path to the child item 自動確認 line' }))
+  }
+})
+
 test('[Manual][automation-link] tag display child items have direct automated links', async () => {
   const markdown = await readFile(new URL('docs/MANUAL_TEST_CHECKLIST.md', `${root}/`), 'utf8')
   const childContracts = [
