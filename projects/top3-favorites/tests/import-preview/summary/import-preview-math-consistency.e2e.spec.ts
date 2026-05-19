@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test'
-import { uploadJsonImportFile, resetItemsByReplace, saveSampleItems, importConfirmButton, expectOperationStatus, fetchItems } from '../../e2e-helpers'
+import {uploadJsonImportFile, resetItemsByReplace, saveSampleItems, fetchItems, confirmImportAndWaitForStatus} from '../../e2e-helpers'
 
 test.beforeEach(async ({ request }) => {
   await resetItemsByReplace(request)
@@ -54,6 +54,5 @@ test('import confirmation math is consistent for added/kept/removed/excluded cou
   expect(before - removed).toBe(kept)
   expect(excluded).toBe(1)
 
-  await importConfirmButton(page).click()
-  await expectOperationStatus(page, 'インポート成功: 4件を反映しました。')
+  await confirmImportAndWaitForStatus(page, 'インポート成功: 4件を反映しました。')
 })

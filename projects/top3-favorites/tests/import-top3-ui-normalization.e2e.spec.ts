@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test'
-import { uploadJsonImportFile, resetItemsByReplace, importConfirmButton, expectOperationStatus } from './e2e-helpers'
+import {uploadJsonImportFile, resetItemsByReplace, confirmImportAndWaitForStatus} from './e2e-helpers'
 
 test.beforeEach(async ({ request }) => {
   await resetItemsByReplace(request)
@@ -21,8 +21,7 @@ test('UI shows only Top3 after importing 4 items of same tag', async ({ page }) 
   await expect(page.getByText('同一タグはTop3に正規化: 4件中3件を反映予定')).toBeVisible()
   await expect(page.getByText('追加3件 / 更新・保持0件 / 削除予定0件 / 正規化除外1件')).toBeVisible()
   await expect(page.getByText(/^正規化除外予定の店舗:/)).toBeVisible()
-  await importConfirmButton(page).click()
-  await expectOperationStatus(page, 'インポート成功')
+  await confirmImportAndWaitForStatus(page, 'インポート成功')
 
   const group = page.locator('.group').filter({ has: page.getByRole('heading', { name: 'カフェラテ' }) })
   await expect(group.getByText(/位:/)).toHaveCount(3)

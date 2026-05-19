@@ -219,6 +219,11 @@ export function importCancelButton(page: Page): Locator {
   return page.getByRole('button', { name: 'インポートをキャンセル' })
 }
 
+export async function confirmImportAndWaitForStatus(page: Page, text: string | RegExp): Promise<void> {
+  await importConfirmButton(page).click()
+  await expectOperationStatus(page, text)
+}
+
 export async function uploadJsonImportFile(page: Page, name: string, body: string | unknown): Promise<void> {
   const buffer = Buffer.from(typeof body === 'string' ? body : JSON.stringify(body), 'utf-8')
   await page.locator('input[type="file"][accept*="json"]').setInputFiles({
