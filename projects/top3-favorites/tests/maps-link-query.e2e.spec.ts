@@ -2,6 +2,7 @@ import { expect, test } from '@playwright/test'
 import {
   expectOperationStatus,
   mapsLink,
+  rankedItemSummary,
   registrationLocationField,
   registrationMemoField,
   registrationNameField,
@@ -27,7 +28,7 @@ test('maps link includes name location and tag in Google Maps search query', asy
 
   await expectOperationStatus(page, '検証タグ の1位に保存しました。')
 
-  await page.getByText('1位: 検証店').click()
+  await rankedItemSummary(page, 1, '検証店').click()
 
   const mapsAnchor = mapsLink(page).first()
   await expect(mapsAnchor).toBeVisible()

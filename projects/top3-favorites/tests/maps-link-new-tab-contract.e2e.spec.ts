@@ -2,6 +2,7 @@ import { expect, test } from '@playwright/test'
 import {
   expectOperationStatus,
   mapsLink,
+  rankedItemSummary,
   registrationLocationField,
   registrationMemoField,
   registrationNameField,
@@ -28,7 +29,7 @@ test('maps link opens in a new tab with safe rel attributes', async ({ page }) =
   await expectOperationStatus(page, 'カフェラテ の1位に保存しました。')
 
   const group = page.locator('.group').filter({ has: page.getByRole('heading', { name: 'カフェラテ' }) })
-  await group.locator('summary', { hasText: /1位:\s*Solito MAGO/ }).click()
+  await rankedItemSummary(group, 1, 'Solito MAGO').click()
 
   const mapsAnchor = mapsLink(group).first()
   await expect(mapsAnchor).toBeVisible()

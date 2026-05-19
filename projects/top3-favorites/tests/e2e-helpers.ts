@@ -115,6 +115,15 @@ export function mapsLink(scope: Page | Locator): Locator {
   return scope.getByRole('link', { name: 'Mapsで開く' })
 }
 
+export function rankedItemSummary(scope: Page | Locator, rank: 1 | 2 | 3, itemName: string | RegExp): Locator {
+  const itemNamePattern = typeof itemName === 'string' ? escapeRegExp(itemName) : itemName.source
+  return scope.locator('summary', { hasText: new RegExp(`${rank}位:\\s*${itemNamePattern}`) })
+}
+
+function escapeRegExp(value: string): string {
+  return value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+}
+
 export function registrationTagField(page: Page): Locator {
   return page.getByRole('combobox', { name: 'タグ' })
 }
