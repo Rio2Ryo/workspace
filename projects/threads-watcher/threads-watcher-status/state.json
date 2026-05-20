@@ -5,14 +5,27 @@
     "@bmw_intokyo"
   ],
   "last_check": {
-    "checked_at": "2026-05-20T00:04:00Z",
+    "checked_at": "2026-05-20T10:28:58Z",
     "found_count": 4,
-    "new_count": 1,
+    "new_count": 0,
     "status": "partial_error",
     "error": "profile extraction returned partial result: found=4 previous_max=15"
   },
-  "saved_count": 44,
+  "saved_count": 45,
   "posts": [
+    {
+      "handle": "@hal.lifedesign",
+      "post_id": "DYi3G8Gkpg_",
+      "post_url": "https://www.threads.com/@hal.lifedesign/post/DYi3G8Gkpg_",
+      "first_seen_at": "2026-05-20T10:27:14Z",
+      "captured_at": "2026-05-20T10:27:19Z",
+      "screenshot_size_bytes": 224188,
+      "screenshot_width": 1280,
+      "screenshot_height": 1800,
+      "post_text": "なんか東京で生きてきたから地震が当たり前過ぎて、ちょっとやそっとじゃ気にならなくなってしまってるんだよね。 何事も慣れってこわいね。",
+      "posted_at": "2026-05-20T03:03:53.000Z",
+      "screenshot_path": "screenshots/hal.lifedesign/DYi3G8Gkpg___20260520T102719Z.png"
+    },
     {
       "handle": "@hal.lifedesign",
       "post_id": "DYiidtKEjHp",
@@ -588,48 +601,48 @@
   ],
   "recent_stats": {
     "window_hours": 24,
-    "total": 1000,
-    "ok": 310,
-    "partial_error": 689,
-    "error": 1,
+    "total": 657,
+    "ok": 159,
+    "partial_error": 498,
+    "error": 0,
     "other": 0,
-    "success_rate": 0.31
+    "success_rate": 0.2420091324200913
   },
   "recent_stats_by_window": {
     "1": {
       "window_hours": 1,
-      "total": 42,
-      "ok": 0,
-      "partial_error": 42,
+      "total": 2,
+      "ok": 1,
+      "partial_error": 1,
       "error": 0,
       "other": 0,
-      "success_rate": 0.0
+      "success_rate": 0.5
     },
     "24": {
       "window_hours": 24,
-      "total": 1000,
-      "ok": 310,
-      "partial_error": 689,
-      "error": 1,
+      "total": 657,
+      "ok": 159,
+      "partial_error": 498,
+      "error": 0,
       "other": 0,
-      "success_rate": 0.31
+      "success_rate": 0.2420091324200913
     },
     "168": {
       "window_hours": 168,
-      "total": 2504,
-      "ok": 1774,
-      "partial_error": 729,
+      "total": 2591,
+      "ok": 1777,
+      "partial_error": 813,
       "error": 1,
       "other": 0,
-      "success_rate": 0.7084664536741214
+      "success_rate": 0.6858355847163258
     }
   },
   "sync_state": {
-    "cursor": 65,
-    "db_max": 67,
-    "delta": 2,
+    "cursor": 67,
+    "db_max": 68,
+    "delta": 1,
     "cursor_file_exists": true
   },
   "dry_run_alert": null,
-  "snapshot_generated_at": "2026-05-20T00:04:00Z"
+  "snapshot_generated_at": "2026-05-20T10:28:58Z"
 }
