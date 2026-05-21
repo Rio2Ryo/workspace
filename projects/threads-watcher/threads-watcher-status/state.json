@@ -5,14 +5,27 @@
     "@bmw_intokyo"
   ],
   "last_check": {
-    "checked_at": "2026-05-20T22:09:30Z",
-    "found_count": 15,
+    "checked_at": "2026-05-21T08:34:44Z",
+    "found_count": 4,
     "new_count": 0,
-    "status": "ok",
-    "error": null
+    "status": "partial_error",
+    "error": "profile extraction returned partial result: found=4 previous_max=15"
   },
-  "saved_count": 46,
+  "saved_count": 47,
   "posts": [
+    {
+      "handle": "@hal.lifedesign",
+      "post_id": "DYmBOvpkmj2",
+      "post_url": "https://www.threads.com/@hal.lifedesign/post/DYmBOvpkmj2",
+      "first_seen_at": "2026-05-21T08:31:30Z",
+      "captured_at": "2026-05-21T08:31:34Z",
+      "screenshot_size_bytes": 178590,
+      "screenshot_width": 1280,
+      "screenshot_height": 1800,
+      "post_text": "最近不意にhideの曲聴いてるんだけどさ、時々とんでもなくパワーのある言葉が飛び込んでくるよね。 \"何にもないって事 そりゃあなんでもアリって事 君の行きたい場所へ何処でも行ける\" 自分には何もないななんて思うこともあるけどさ、\"何でもありってこと\"って言われたらさ、もう笑っちゃうよね、「確かにw」ってさ。 行きたい場所に何処でも行ける。 行きたい場所に行こう。",
+      "posted_at": "2026-05-21T08:30:03.000Z",
+      "screenshot_path": "screenshots/hal.lifedesign/DYmBOvpkmj2__20260521T083134Z.png"
+    },
     {
       "handle": "@hal.lifedesign",
       "post_id": "DYk5qD0EgQ2",
@@ -614,48 +627,52 @@
   ],
   "recent_stats": {
     "window_hours": 24,
-    "total": 653,
+    "total": 922,
     "ok": 135,
-    "partial_error": 518,
+    "partial_error": 787,
     "error": 0,
     "other": 0,
-    "success_rate": 0.20673813169984687
+    "success_rate": 0.14642082429501085
   },
   "recent_stats_by_window": {
     "1": {
       "window_hours": 1,
       "total": 42,
-      "ok": 14,
-      "partial_error": 28,
+      "ok": 0,
+      "partial_error": 42,
       "error": 0,
       "other": 0,
-      "success_rate": 0.3333333333333333
+      "success_rate": 0.0
     },
     "24": {
       "window_hours": 24,
-      "total": 653,
+      "total": 922,
       "ok": 135,
-      "partial_error": 518,
+      "partial_error": 787,
       "error": 0,
       "other": 0,
-      "success_rate": 0.20673813169984687
+      "success_rate": 0.14642082429501085
     },
     "168": {
       "window_hours": 168,
-      "total": 3076,
-      "ok": 1899,
-      "partial_error": 1176,
+      "total": 3511,
+      "ok": 1911,
+      "partial_error": 1599,
       "error": 1,
       "other": 0,
-      "success_rate": 0.6173602080624188
+      "success_rate": 0.5442893762460838
     }
   },
   "sync_state": {
-    "cursor": 68,
-    "db_max": 69,
+    "cursor": 69,
+    "db_max": 70,
     "delta": 1,
     "cursor_file_exists": true
   },
-  "dry_run_alert": null,
-  "snapshot_generated_at": "2026-05-20T22:09:30Z"
+  "dry_run_alert": {
+    "pending_ticks": 3,
+    "since": "2026-05-19T15:01:42Z",
+    "delta": 3
+  },
+  "snapshot_generated_at": "2026-05-21T08:34:44Z"
 }
