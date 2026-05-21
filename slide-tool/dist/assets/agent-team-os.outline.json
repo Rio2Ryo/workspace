@@ -1,0 +1,280 @@
+{
+  "title": "24時間AIエージェントチーム運用OS",
+  "subtitle": "AIエージェントを単発ツールではなく、役割・監視・品質ゲートを持つ常時稼働チームとして導入する。",
+  "audience": "生成AIを業務導入したい経営者・事業責任者",
+  "tone": "具体的、導入判断しやすい、現場運用に強い",
+  "thesis": "AIエージェントを単発ツールではなく、役割・監視・品質ゲートを持つ常時稼働チームとして導入する。",
+  "artifactFirst": true,
+  "clientFacing": false,
+  "hideStudioBadge": false,
+  "generatedBy": "Shiro Slide Studio",
+  "theme": {
+    "mode": "artifact-first",
+    "background": "F6F3EE",
+    "paper": "FFFDF8",
+    "ink": "172033",
+    "muted": "667085",
+    "accent": "2563EB",
+    "accent2": "0F766E",
+    "warm": "C2410C",
+    "line": "D8DEE8"
+  },
+  "slides": [
+    {
+      "type": "cover",
+      "title": "24時間AIエージェントチーム運用OS",
+      "subtitle": "AIエージェントを単発ツールではなく、役割・監視・品質ゲートを持つ常時稼働チームとして導入する。",
+      "claim": "Artifact/HTML first, editable PPTX final.",
+      "bullets": [
+        "自然会話から開始",
+        "HTMLで速く確認",
+        "本文はPowerPointで編集可能"
+      ],
+      "columns": [
+        {
+          "title": "Point 1",
+          "body": "自然会話から開始"
+        },
+        {
+          "title": "Point 2",
+          "body": "HTMLで速く確認"
+        },
+        {
+          "title": "Point 3",
+          "body": "本文はPowerPointで編集可能"
+        }
+      ],
+      "imagePrompt": "Premium editorial cover for a presentation titled \"24時間AIエージェントチーム運用OS\". Abstract workflow from chat bubbles to HTML canvas to editable PowerPoint slides. Clean Japanese business design, warm neutral paper, precise blue-green accents, no readable tiny text.",
+      "speakerNotes": "表紙では、いきなりPPTXではなく会話からプレビューを経て納品する思想を示す。"
+    },
+    {
+      "type": "section",
+      "title": "なぜ今、AIエージェントチームが必要か",
+      "subtitle": "",
+      "claim": "人手不足と意思決定速度の差が、事業成長のボトルネックになっている",
+      "bullets": [
+        "人手不足と意思決定速度の差が、事業成長のボトルネックになっている",
+        "ChatGPT単体利用では、作業の継続・検証・引き継ぎが属人化する",
+        "24時間動くAIチームなら、調査・実装・QA・報告を止めずに回せる",
+        "重要なのはAIの賢さだけでなく、運用ルールと成果物の品質管理である"
+      ],
+      "columns": [
+        {
+          "title": "Point 1",
+          "body": "人手不足と意思決定速度の差が、事業成長のボトルネックになっている"
+        },
+        {
+          "title": "Point 2",
+          "body": "ChatGPT単体利用では、作業の継続・検証・引き継ぎが属人化する"
+        },
+        {
+          "title": "Point 3",
+          "body": "24時間動くAIチームなら、調査・実装・QA・報告を止めずに回せる"
+        },
+        {
+          "title": "Point 4",
+          "body": "重要なのはAIの賢さだけでなく、運用ルールと成果物の品質管理である"
+        }
+      ],
+      "imagePrompt": "Create a 16:9 presentation visual for \"24時間AIエージェントチーム運用OS / なぜ今、AIエージェントチームが必要か\". Use a premium Japanese business editorial style, artifact/HTML canvas motif, subtle warm paper background, blue and teal accents, crisp diagram-like composition. Leave safe empty space for editable slide text. Avoid logos, fake UI screenshots, dense text, and decorative clutter.",
+      "speakerNotes": "なぜ今、AIエージェントチームが必要かについて、要点を短く説明する。"
+    },
+    {
+      "type": "visual",
+      "title": "導入コンセプト",
+      "subtitle": "",
+      "claim": "人間: 方針、優先順位、承認、最終判断に集中する",
+      "bullets": [
+        "人間: 方針、優先順位、承認、最終判断に集中する",
+        "AI司令塔: 目的分解、担当割り当て、進捗判断、ブロッカー解消を担う",
+        "実行AI: 調査、実装、資料化、QA、監視などの専門タスクを並列処理する",
+        "監査ログ: 何をしたか、なぜ止まったか、何が検証済みかを残す"
+      ],
+      "columns": [
+        {
+          "title": "人間",
+          "body": "方針、優先順位、承認、最終判断に集中する"
+        },
+        {
+          "title": "AI司令塔",
+          "body": "目的分解、担当割り当て、進捗判断、ブロッカー解消を担う"
+        },
+        {
+          "title": "実行AI",
+          "body": "調査、実装、資料化、QA、監視などの専門タスクを並列処理する"
+        },
+        {
+          "title": "監査ログ",
+          "body": "何をしたか、なぜ止まったか、何が検証済みかを残す"
+        }
+      ],
+      "imagePrompt": "Create a 16:9 presentation visual for \"24時間AIエージェントチーム運用OS / 導入コンセプト\". Use a premium Japanese business editorial style, artifact/HTML canvas motif, subtle warm paper background, blue and teal accents, crisp diagram-like composition. Leave safe empty space for editable slide text. Avoid logos, fake UI screenshots, dense text, and decorative clutter.",
+      "speakerNotes": "導入コンセプトについて、要点を短く説明する。"
+    },
+    {
+      "type": "visual",
+      "title": "まず作るべき最小構成",
+      "subtitle": "",
+      "claim": "Intake: Discord/Telegram/フォームから依頼を受ける",
+      "bullets": [
+        "Intake: Discord/Telegram/フォームから依頼を受ける",
+        "Task DB: 依頼・担当・状態・成果物URL・検証結果を一元管理する",
+        "Agent Sessions: Claude/Codex/Gemini等を用途別に常駐させる",
+        "Keeper: IDLE、承認待ち、失敗、完了報告漏れを検知して再投入する",
+        "Delivery Portal: 成果物・検証ログ・ダウンロードを1URLで確認できるようにする"
+      ],
+      "columns": [
+        {
+          "title": "Intake",
+          "body": "Discord/Telegram/フォームから依頼を受ける"
+        },
+        {
+          "title": "Task DB",
+          "body": "依頼・担当・状態・成果物URL・検証結果を一元管理する"
+        },
+        {
+          "title": "Agent Sessions",
+          "body": "Claude/Codex/Gemini等を用途別に常駐させる"
+        },
+        {
+          "title": "Keeper",
+          "body": "IDLE、承認待ち、失敗、完了報告漏れを検知して再投入する"
+        },
+        {
+          "title": "Delivery Portal",
+          "body": "成果物・検証ログ・ダウンロードを1URLで確認できるようにする"
+        }
+      ],
+      "imagePrompt": "Create a 16:9 presentation visual for \"24時間AIエージェントチーム運用OS / まず作るべき最小構成\". Use a premium Japanese business editorial style, artifact/HTML canvas motif, subtle warm paper background, blue and teal accents, crisp diagram-like composition. Leave safe empty space for editable slide text. Avoid logos, fake UI screenshots, dense text, and decorative clutter.",
+      "speakerNotes": "まず作るべき最小構成について、要点を短く説明する。"
+    },
+    {
+      "type": "matrix",
+      "title": "成果物の品質ゲート",
+      "subtitle": "",
+      "claim": "Definition of Done: 目的達成、検証、公開URL、残ブロッカーを必須にする",
+      "bullets": [
+        "Definition of Done: 目的達成、検証、公開URL、残ブロッカーを必須にする",
+        "Non-final Rule: ローカル作業だけで終わらせず、公開・共有・確認まで進める",
+        "Verification: テスト、ブラウザ確認、API疎通、スクリーンショットを証拠化する",
+        "Safety: 本番変更・削除・課金増・機密投入だけ人間承認に戻す"
+      ],
+      "columns": [
+        {
+          "title": "Definition of Done",
+          "body": "目的達成、検証、公開URL、残ブロッカーを必須にする"
+        },
+        {
+          "title": "Non-final Rule",
+          "body": "ローカル作業だけで終わらせず、公開・共有・確認まで進める"
+        },
+        {
+          "title": "Verification",
+          "body": "テスト、ブラウザ確認、API疎通、スクリーンショットを証拠化する"
+        },
+        {
+          "title": "Safety",
+          "body": "本番変更・削除・課金増・機密投入だけ人間承認に戻す"
+        }
+      ],
+      "imagePrompt": "Create a 16:9 presentation visual for \"24時間AIエージェントチーム運用OS / 成果物の品質ゲート\". Use a premium Japanese business editorial style, artifact/HTML canvas motif, subtle warm paper background, blue and teal accents, crisp diagram-like composition. Leave safe empty space for editable slide text. Avoid logos, fake UI screenshots, dense text, and decorative clutter.",
+      "speakerNotes": "成果物の品質ゲートについて、要点を短く説明する。"
+    },
+    {
+      "type": "visual",
+      "title": "30日導入ロードマップ",
+      "subtitle": "",
+      "claim": "Week 1: 依頼受付、タスクDB、基本エージェント、報告テンプレを整備する",
+      "bullets": [
+        "Week 1: 依頼受付、タスクDB、基本エージェント、報告テンプレを整備する",
+        "Week 2: 主要業務1つを選び、調査→実装→QA→公開まで自動化する",
+        "Week 3: 監視・再投入・失敗時レポートを追加し、止まらない運用にする",
+        "Week 4: KPI、コスト、成果物品質を振り返り、本番業務へ拡張する"
+      ],
+      "columns": [
+        {
+          "title": "Week 1",
+          "body": "依頼受付、タスクDB、基本エージェント、報告テンプレを整備する"
+        },
+        {
+          "title": "Week 2",
+          "body": "主要業務1つを選び、調査→実装→QA→公開まで自動化する"
+        },
+        {
+          "title": "Week 3",
+          "body": "監視・再投入・失敗時レポートを追加し、止まらない運用にする"
+        },
+        {
+          "title": "Week 4",
+          "body": "KPI、コスト、成果物品質を振り返り、本番業務へ拡張する"
+        }
+      ],
+      "imagePrompt": "Create a 16:9 presentation visual for \"24時間AIエージェントチーム運用OS / 30日導入ロードマップ\". Use a premium Japanese business editorial style, artifact/HTML canvas motif, subtle warm paper background, blue and teal accents, crisp diagram-like composition. Leave safe empty space for editable slide text. Avoid logos, fake UI screenshots, dense text, and decorative clutter.",
+      "speakerNotes": "30日導入ロードマップについて、要点を短く説明する。"
+    },
+    {
+      "type": "visual",
+      "title": "期待できる効果",
+      "subtitle": "",
+      "claim": "調査から初期成果物までのリードタイムを短縮する",
+      "bullets": [
+        "調査から初期成果物までのリードタイムを短縮する",
+        "進捗不明、担当不明、完了報告漏れを減らす",
+        "小さな改善を24時間積み上げ、事業の試行回数を増やす",
+        "人間は判断と創造に寄せ、AIは継続作業と検証を担う"
+      ],
+      "columns": [
+        {
+          "title": "Point 1",
+          "body": "調査から初期成果物までのリードタイムを短縮する"
+        },
+        {
+          "title": "Point 2",
+          "body": "進捗不明、担当不明、完了報告漏れを減らす"
+        },
+        {
+          "title": "Point 3",
+          "body": "小さな改善を24時間積み上げ、事業の試行回数を増やす"
+        },
+        {
+          "title": "Point 4",
+          "body": "人間は判断と創造に寄せ、AIは継続作業と検証を担う"
+        }
+      ],
+      "imagePrompt": "Create a 16:9 presentation visual for \"24時間AIエージェントチーム運用OS / 期待できる効果\". Use a premium Japanese business editorial style, artifact/HTML canvas motif, subtle warm paper background, blue and teal accents, crisp diagram-like composition. Leave safe empty space for editable slide text. Avoid logos, fake UI screenshots, dense text, and decorative clutter.",
+      "speakerNotes": "期待できる効果について、要点を短く説明する。"
+    },
+    {
+      "type": "process",
+      "title": "次のアクション",
+      "subtitle": "",
+      "claim": "まず1業務を選ぶ: 資料作成、営業リサーチ、QA、監視のどれか",
+      "bullets": [
+        "まず1業務を選ぶ: 資料作成、営業リサーチ、QA、監視のどれか",
+        "成果物の公開URLと検証項目を先に決める",
+        "2週間でPoCを作り、作業時間・品質・報告負荷を測定する",
+        "効果が出た領域から、担当AIと自動化範囲を増やす"
+      ],
+      "columns": [
+        {
+          "title": "まず1業務を選ぶ",
+          "body": "資料作成、営業リサーチ、QA、監視のどれか"
+        },
+        {
+          "title": "Point 2",
+          "body": "成果物の公開URLと検証項目を先に決める"
+        },
+        {
+          "title": "Point 3",
+          "body": "2週間でPoCを作り、作業時間・品質・報告負荷を測定する"
+        },
+        {
+          "title": "Point 4",
+          "body": "効果が出た領域から、担当AIと自動化範囲を増やす"
+        }
+      ],
+      "imagePrompt": "Create a 16:9 presentation visual for \"24時間AIエージェントチーム運用OS / 次のアクション\". Use a premium Japanese business editorial style, artifact/HTML canvas motif, subtle warm paper background, blue and teal accents, crisp diagram-like composition. Leave safe empty space for editable slide text. Avoid logos, fake UI screenshots, dense text, and decorative clutter.",
+      "speakerNotes": "次のアクションについて、要点を短く説明する。"
+    }
+  ]
+}

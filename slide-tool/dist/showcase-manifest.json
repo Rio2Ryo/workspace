@@ -1,12 +1,12 @@
 {
   "schemaVersion": 1,
-  "title": "AIでスライドを作る最新ワークフロー",
-  "readyHeader": "納品準備OK: AIでスライドを作る最新ワークフロー",
-  "verificationHeader": "検証: 投稿OK: AIでスライドを作る最新ワークフロー / slides 7 / acceptance ready",
+  "title": "24時間AIエージェントチーム運用OS",
+  "readyHeader": "納品準備OK: 24時間AIエージェントチーム運用OS",
+  "verificationHeader": "検証: 投稿OK: 24時間AIエージェントチーム運用OS / slides 8 / acceptance ready",
   "qaLines": [
     "delivery readiness: ready",
     "reasons: none",
-    "manifest: ai-slide-workflow.acceptance.manifest.json",
+    "manifest: agent-team-os.acceptance.manifest.json",
     "manifest verification scope: manifest-only",
     "checked artifacts: 1",
     "checked artifact types: deck",
@@ -17,38 +17,38 @@
     "PPTX hidden text: 0"
   ],
   "warnings": [],
-  "slideCount": 7,
+  "slideCount": 8,
   "assets": {
     "previewHtml": {
       "label": "HTML Preview",
-      "href": "assets/ai-slide-workflow.preview.html",
-      "bytes": 8745,
-      "size": "8.5 KB"
+      "href": "assets/agent-team-os.preview.html",
+      "bytes": 10154,
+      "size": "9.9 KB"
     },
     "previewPng": {
       "label": "Preview PNG",
-      "href": "assets/ai-slide-workflow.preview.png",
-      "bytes": 423399,
-      "size": "413.5 KB"
+      "href": "assets/agent-team-os.preview.png",
+      "bytes": 405003,
+      "size": "395.5 KB"
     },
     "pptx": {
       "label": "Editable PPTX",
-      "href": "assets/ai-slide-workflow.editable.pptx",
-      "bytes": 161921,
-      "size": "158.1 KB"
+      "href": "assets/agent-team-os.editable.pptx",
+      "bytes": 174829,
+      "size": "170.7 KB"
     },
     "outline": {
       "label": "Outline JSON",
-      "href": "assets/ai-slide-workflow.outline.json",
-      "bytes": 12609,
-      "size": "12.3 KB"
+      "href": "assets/agent-team-os.outline.json",
+      "bytes": 14705,
+      "size": "14.4 KB"
     },
     "promptsMd": {
       "label": "Image Prompts",
-      "href": "assets/ai-slide-workflow.image-prompts.md",
-      "bytes": 3190,
-      "size": "3.1 KB"
+      "href": "assets/agent-team-os.image-prompts.md",
+      "bytes": 3734,
+      "size": "3.6 KB"
     }
   },
-  "builtAt": "2026-05-21T03:48:53.679Z"
+  "builtAt": "2026-05-21T08:52:04.217Z"
 }

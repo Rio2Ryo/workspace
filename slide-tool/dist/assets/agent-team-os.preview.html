@@ -1,0 +1,91 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>24時間AIエージェントチーム運用OS</title>
+  <style>
+    :root {
+      --bg: #F6F3EE;
+      --paper: #FFFDF8;
+      --ink: #172033;
+      --muted: #667085;
+      --accent: #2563EB;
+      --accent2: #0F766E;
+      --warm: #C2410C;
+      --line: #D8DEE8;
+    }
+    * { box-sizing: border-box; }
+    body { margin: 0; background: #211f1b; color: var(--ink); font-family: "Hiragino Sans", "Yu Gothic", system-ui, sans-serif; }
+    main { display: grid; gap: 28px; padding: 28px; }
+    .slide { position: relative; width: min(1280px, calc(100vw - 56px)); aspect-ratio: 16 / 9; margin: 0 auto; overflow: hidden; background: var(--bg); padding: 64px 76px; box-shadow: 0 18px 50px rgba(0,0,0,.28); }
+    .slide::before { content: ""; position: absolute; inset: 0; background: linear-gradient(135deg, rgba(255,255,255,.72), rgba(255,255,255,0) 46%), radial-gradient(circle at 90% 12%, rgba(37,99,235,.18), transparent 28%), radial-gradient(circle at 15% 92%, rgba(194,65,12,.13), transparent 34%); pointer-events: none; }
+    .slide > * { position: relative; z-index: 1; }
+    .kicker { font-size: 14px; color: var(--muted); letter-spacing: .06em; text-transform: uppercase; margin-bottom: 42px; }
+    h1 { font-size: 78px; line-height: .96; letter-spacing: 0; width: 72%; margin: 0 0 26px; }
+    h2 { font-size: 52px; line-height: 1.02; letter-spacing: 0; width: 78%; margin: 0 0 18px; }
+    h3 { font-size: 20px; margin: 0 0 8px; color: var(--accent); }
+    p, li { font-size: 23px; line-height: 1.38; }
+    .subtitle { width: 74%; color: var(--muted); font-size: 26px; }
+    .claim { width: 70%; font-size: 28px; line-height: 1.25; color: var(--accent2); font-weight: 700; }
+    ul, ol { width: 62%; padding-left: 1.2em; margin-top: 30px; }
+    .grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 22px; margin-top: 40px; }
+    article { min-height: 132px; border-top: 3px solid var(--accent); padding-top: 16px; }
+    article p { font-size: 18px; color: var(--ink); margin: 0; }
+    .process ol { counter-reset: step; display: grid; grid-template-columns: repeat(2, minmax(0,1fr)); gap: 22px 44px; width: 84%; padding: 0; list-style: none; }
+    .process ol li { position: relative; padding-left: 54px; min-height: 54px; }
+    .process ol li::before { counter-increment: step; content: counter(step); position: absolute; left: 0; top: 0; width: 36px; height: 36px; border-radius: 50%; background: var(--ink); color: white; display: grid; place-items: center; font-size: 16px; font-weight: 800; }
+    aside { position: absolute; right: 76px; bottom: 44px; width: 34%; font-size: 15px; line-height: 1.45; color: var(--muted); border-top: 1px solid var(--line); padding-top: 14px; }
+    .cover aside { display: none; }
+    .cover:not(.no-badge)::after { content: "HTML first → editable PPTX"; position: absolute; right: 72px; bottom: 64px; font-weight: 800; color: var(--warm); font-size: 28px; z-index: 1; }
+    @media print { body { background: white; } main { padding: 0; gap: 0; } .slide { width: 100vw; box-shadow: none; page-break-after: always; } }
+  </style>
+</head>
+<body><main>
+      <section class="slide cover ">
+        <div class="kicker">01 / 24時間AIエージェントチーム運用OS</div>
+        <h1>24時間AIエージェントチーム運用OS</h1><p class="subtitle">AIエージェントを単発ツールではなく、役割・監視・品質ゲートを持つ常時稼働チームとして導入する。</p><p class="claim">Artifact/HTML first, editable PPTX final.</p><ul><li>自然会話から開始</li><li>HTMLで速く確認</li><li>本文はPowerPointで編集可能</li></ul>
+        <aside>表紙では、いきなりPPTXではなく会話からプレビューを経て納品する思想を示す。</aside>
+      </section>
+
+      <section class="slide section ">
+        <div class="kicker">02 / 24時間AIエージェントチーム運用OS</div>
+        <h2>なぜ今、AIエージェントチームが必要か</h2><p class="claim">人手不足と意思決定速度の差が、事業成長のボトルネックになっている</p><div class="grid"><article><h3>Point 1</h3><p>人手不足と意思決定速度の差が、事業成長のボトルネックになっている</p></article><article><h3>Point 2</h3><p>ChatGPT単体利用では、作業の継続・検証・引き継ぎが属人化する</p></article><article><h3>Point 3</h3><p>24時間動くAIチームなら、調査・実装・QA・報告を止めずに回せる</p></article><article><h3>Point 4</h3><p>重要なのはAIの賢さだけでなく、運用ルールと成果物の品質管理である</p></article></div>
+        <aside>なぜ今、AIエージェントチームが必要かについて、要点を短く説明する。</aside>
+      </section>
+
+      <section class="slide visual ">
+        <div class="kicker">03 / 24時間AIエージェントチーム運用OS</div>
+        <h2>導入コンセプト</h2><p class="claim">人間: 方針、優先順位、承認、最終判断に集中する</p><div class="grid"><article><h3>人間</h3><p>方針、優先順位、承認、最終判断に集中する</p></article><article><h3>AI司令塔</h3><p>目的分解、担当割り当て、進捗判断、ブロッカー解消を担う</p></article><article><h3>実行AI</h3><p>調査、実装、資料化、QA、監視などの専門タスクを並列処理する</p></article><article><h3>監査ログ</h3><p>何をしたか、なぜ止まったか、何が検証済みかを残す</p></article></div>
+        <aside>導入コンセプトについて、要点を短く説明する。</aside>
+      </section>
+
+      <section class="slide visual ">
+        <div class="kicker">04 / 24時間AIエージェントチーム運用OS</div>
+        <h2>まず作るべき最小構成</h2><p class="claim">Intake: Discord/Telegram/フォームから依頼を受ける</p><div class="grid"><article><h3>Intake</h3><p>Discord/Telegram/フォームから依頼を受ける</p></article><article><h3>Task DB</h3><p>依頼・担当・状態・成果物URL・検証結果を一元管理する</p></article><article><h3>Agent Sessions</h3><p>Claude/Codex/Gemini等を用途別に常駐させる</p></article><article><h3>Keeper</h3><p>IDLE、承認待ち、失敗、完了報告漏れを検知して再投入する</p></article><article><h3>Delivery Portal</h3><p>成果物・検証ログ・ダウンロードを1URLで確認できるようにする</p></article></div>
+        <aside>まず作るべき最小構成について、要点を短く説明する。</aside>
+      </section>
+
+      <section class="slide matrix ">
+        <div class="kicker">05 / 24時間AIエージェントチーム運用OS</div>
+        <h2>成果物の品質ゲート</h2><p class="claim">Definition of Done: 目的達成、検証、公開URL、残ブロッカーを必須にする</p><div class="grid"><article><h3>Definition of Done</h3><p>目的達成、検証、公開URL、残ブロッカーを必須にする</p></article><article><h3>Non-final Rule</h3><p>ローカル作業だけで終わらせず、公開・共有・確認まで進める</p></article><article><h3>Verification</h3><p>テスト、ブラウザ確認、API疎通、スクリーンショットを証拠化する</p></article><article><h3>Safety</h3><p>本番変更・削除・課金増・機密投入だけ人間承認に戻す</p></article></div>
+        <aside>成果物の品質ゲートについて、要点を短く説明する。</aside>
+      </section>
+
+      <section class="slide visual ">
+        <div class="kicker">06 / 24時間AIエージェントチーム運用OS</div>
+        <h2>30日導入ロードマップ</h2><p class="claim">Week 1: 依頼受付、タスクDB、基本エージェント、報告テンプレを整備する</p><div class="grid"><article><h3>Week 1</h3><p>依頼受付、タスクDB、基本エージェント、報告テンプレを整備する</p></article><article><h3>Week 2</h3><p>主要業務1つを選び、調査→実装→QA→公開まで自動化する</p></article><article><h3>Week 3</h3><p>監視・再投入・失敗時レポートを追加し、止まらない運用にする</p></article><article><h3>Week 4</h3><p>KPI、コスト、成果物品質を振り返り、本番業務へ拡張する</p></article></div>
+        <aside>30日導入ロードマップについて、要点を短く説明する。</aside>
+      </section>
+
+      <section class="slide visual ">
+        <div class="kicker">07 / 24時間AIエージェントチーム運用OS</div>
+        <h2>期待できる効果</h2><p class="claim">調査から初期成果物までのリードタイムを短縮する</p><div class="grid"><article><h3>Point 1</h3><p>調査から初期成果物までのリードタイムを短縮する</p></article><article><h3>Point 2</h3><p>進捗不明、担当不明、完了報告漏れを減らす</p></article><article><h3>Point 3</h3><p>小さな改善を24時間積み上げ、事業の試行回数を増やす</p></article><article><h3>Point 4</h3><p>人間は判断と創造に寄せ、AIは継続作業と検証を担う</p></article></div>
+        <aside>期待できる効果について、要点を短く説明する。</aside>
+      </section>
+
+      <section class="slide process ">
+        <div class="kicker">08 / 24時間AIエージェントチーム運用OS</div>
+        <h2>次のアクション</h2><p class="claim">まず1業務を選ぶ: 資料作成、営業リサーチ、QA、監視のどれか</p><ol><li>まず1業務を選ぶ: 資料作成、営業リサーチ、QA、監視のどれか</li><li>成果物の公開URLと検証項目を先に決める</li><li>2週間でPoCを作り、作業時間・品質・報告負荷を測定する</li><li>効果が出た領域から、担当AIと自動化範囲を増やす</li></ol>
+        <aside>次のアクションについて、要点を短く説明する。</aside>
+      </section></main></body></html>
