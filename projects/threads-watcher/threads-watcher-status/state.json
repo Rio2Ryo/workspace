@@ -5,14 +5,27 @@
     "@bmw_intokyo"
   ],
   "last_check": {
-    "checked_at": "2026-05-21T08:34:44Z",
+    "checked_at": "2026-05-21T22:45:44Z",
     "found_count": 4,
     "new_count": 0,
     "status": "partial_error",
     "error": "profile extraction returned partial result: found=4 previous_max=15"
   },
-  "saved_count": 47,
+  "saved_count": 48,
   "posts": [
+    {
+      "handle": "@hal.lifedesign",
+      "post_id": "DYnjDzQks3Z",
+      "post_url": "https://www.threads.com/@hal.lifedesign/post/DYnjDzQks3Z",
+      "first_seen_at": "2026-05-21T22:45:22Z",
+      "captured_at": "2026-05-21T22:45:27Z",
+      "screenshot_size_bytes": 745938,
+      "screenshot_width": 1280,
+      "screenshot_height": 1800,
+      "post_text": "今日は胸トレ。 最近なんかトレーニングが惰性感出てきてるな…モチベーションに頼らない習慣であって、ライフスタイルの一部ではあるけれど、惰性で行うのは違うんだよな。 そろそろほんとトレーナーさん必要だ。。。",
+      "posted_at": "2026-05-21T22:44:53.000Z",
+      "screenshot_path": "screenshots/hal.lifedesign/DYnjDzQks3Z__20260521T224526Z.png"
+    },
     {
       "handle": "@hal.lifedesign",
       "post_id": "DYmBOvpkmj2",
@@ -627,45 +640,45 @@
   ],
   "recent_stats": {
     "window_hours": 24,
-    "total": 922,
-    "ok": 135,
-    "partial_error": 787,
+    "total": 1004,
+    "ok": 170,
+    "partial_error": 834,
     "error": 0,
     "other": 0,
-    "success_rate": 0.14642082429501085
+    "success_rate": 0.1693227091633466
   },
   "recent_stats_by_window": {
     "1": {
       "window_hours": 1,
       "total": 42,
-      "ok": 0,
-      "partial_error": 42,
+      "ok": 11,
+      "partial_error": 31,
       "error": 0,
       "other": 0,
-      "success_rate": 0.0
+      "success_rate": 0.2619047619047619
     },
     "24": {
       "window_hours": 24,
-      "total": 922,
-      "ok": 135,
-      "partial_error": 787,
+      "total": 1004,
+      "ok": 170,
+      "partial_error": 834,
       "error": 0,
       "other": 0,
-      "success_rate": 0.14642082429501085
+      "success_rate": 0.1693227091633466
     },
     "168": {
       "window_hours": 168,
-      "total": 3511,
-      "ok": 1911,
-      "partial_error": 1599,
+      "total": 4105,
+      "ok": 2074,
+      "partial_error": 2030,
       "error": 1,
       "other": 0,
-      "success_rate": 0.5442893762460838
+      "success_rate": 0.505237515225335
     }
   },
   "sync_state": {
-    "cursor": 69,
-    "db_max": 70,
+    "cursor": 70,
+    "db_max": 71,
     "delta": 1,
     "cursor_file_exists": true
   },
@@ -674,5 +687,5 @@
     "since": "2026-05-19T15:01:42Z",
     "delta": 3
   },
-  "snapshot_generated_at": "2026-05-21T08:34:44Z"
+  "snapshot_generated_at": "2026-05-21T22:45:44Z"
 }
