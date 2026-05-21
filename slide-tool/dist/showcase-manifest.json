@@ -1,0 +1,54 @@
+{
+  "schemaVersion": 1,
+  "title": "AIでスライドを作る最新ワークフロー",
+  "readyHeader": "納品準備OK: AIでスライドを作る最新ワークフロー",
+  "verificationHeader": "検証: 投稿OK: AIでスライドを作る最新ワークフロー / slides 7 / acceptance ready",
+  "qaLines": [
+    "delivery readiness: ready",
+    "reasons: none",
+    "manifest: ai-slide-workflow.acceptance.manifest.json",
+    "manifest verification scope: manifest-only",
+    "checked artifacts: 1",
+    "checked artifact types: deck",
+    "identity checks: report ready / deliveryMessage ready / deliveryManifest ready",
+    "visual QA: ready / source: chrome / 1280x900 / uniqueSampledColors: 4",
+    "PPTX images: 0 (none)",
+    "PPTX special elements: 0 (none)",
+    "PPTX hidden text: 0"
+  ],
+  "warnings": [],
+  "slideCount": 7,
+  "assets": {
+    "previewHtml": {
+      "label": "HTML Preview",
+      "href": "assets/ai-slide-workflow.preview.html",
+      "bytes": 8745,
+      "size": "8.5 KB"
+    },
+    "previewPng": {
+      "label": "Preview PNG",
+      "href": "assets/ai-slide-workflow.preview.png",
+      "bytes": 423399,
+      "size": "413.5 KB"
+    },
+    "pptx": {
+      "label": "Editable PPTX",
+      "href": "assets/ai-slide-workflow.editable.pptx",
+      "bytes": 161921,
+      "size": "158.1 KB"
+    },
+    "outline": {
+      "label": "Outline JSON",
+      "href": "assets/ai-slide-workflow.outline.json",
+      "bytes": 12609,
+      "size": "12.3 KB"
+    },
+    "promptsMd": {
+      "label": "Image Prompts",
+      "href": "assets/ai-slide-workflow.image-prompts.md",
+      "bytes": 3190,
+      "size": "3.1 KB"
+    }
+  },
+  "builtAt": "2026-05-21T03:48:53.679Z"
+}

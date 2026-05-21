@@ -1,0 +1,32 @@
+[
+  {
+    "file": "ai-slide-workflow.md",
+    "name": "ai-slide-workflow",
+    "status": "verified",
+    "expectedSlides": 7
+  },
+  {
+    "file": "kataomoi-org-showcase.json",
+    "name": "kataomoi-org-showcase",
+    "status": "verified",
+    "expectedSlides": 10
+  },
+  {
+    "file": "discord-report-flat-api.md",
+    "name": "discord-report-flat-api",
+    "status": "verified",
+    "expectedSlides": 6
+  },
+  {
+    "file": "sample-input.md",
+    "name": "sample-input",
+    "status": "verified",
+    "expectedSlides": 6
+  },
+  {
+    "file": "top3-favorites-app-mvp.json",
+    "name": "top3-favorites-app-mvp",
+    "status": "verified",
+    "expectedSlides": 5
+  }
+]

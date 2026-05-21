@@ -1,0 +1,14 @@
+{
+  "private": true,
+  "scripts": {
+    "test:slides": "node --import ./tests/tempdir-cleanup.mjs --test tests/*.test.mjs",
+    "build:showcase": "node scripts/build-showcase.mjs",
+    "clean:slide-out": "node scripts/clean-generated-out.mjs",
+    "verify:slides": "node scripts/verify-artifacts.mjs",
+    "verify:examples": "node scripts/verify-example-catalog.mjs",
+    "verify:flat-report-summary": "node scripts/verify-flat-report-summary.mjs",
+    "verify:shipping-docs": "node scripts/verify-shipping-docs.mjs",
+    "verify:slide-report": "node scripts/verify-discord-report.mjs",
+    "suggest:slide-policy": "node scripts/suggest-manifest-policy.mjs"
+  }
+}

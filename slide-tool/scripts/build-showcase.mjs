@@ -1,0 +1,260 @@
+import fs from 'node:fs';
+import path from 'node:path';
+import { fileURLToPath } from 'node:url';
+import { spawnSync } from 'node:child_process';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+const rootDir = path.resolve(__dirname, '..');
+
+function parseArgs(argv) {
+  const args = {
+    input: path.join(rootDir, 'examples', 'ai-slide-workflow.md'),
+    workOut: path.join(rootDir, 'out', 'showcase-ai-slide-workflow'),
+    dist: path.join(rootDir, 'dist'),
+    name: 'ai-slide-workflow',
+    skipStudio: false,
+  };
+  for (let i = 0; i < argv.length; i += 1) {
+    const arg = argv[i];
+    if (arg === '--input') args.input = readOptionValue(argv, i++, arg);
+    else if (arg === '--work-out') args.workOut = readOptionValue(argv, i++, arg);
+    else if (arg === '--dist') args.dist = readOptionValue(argv, i++, arg);
+    else if (arg === '--name') args.name = readOptionValue(argv, i++, arg);
+    else if (arg === '--skip-studio') args.skipStudio = true;
+    else throw new Error(`Unknown option: ${arg}`);
+  }
+  return args;
+}
+
+function readOptionValue(argv, index, option) {
+  const value = argv[index + 1];
+  if (!value || value.startsWith('--')) throw new Error(`${option} requires a value`);
+  return value;
+}
+
+function run(command, args, options = {}) {
+  const result = spawnSync(command, args, {
+    cwd: options.cwd || rootDir,
+    encoding: 'utf8',
+    stdio: options.stdio || 'pipe',
+  });
+  if (result.status !== 0) {
+    throw new Error([
+      `Command failed: ${command} ${args.join(' ')}`,
+      result.stdout?.trim(),
+      result.stderr?.trim(),
+    ].filter(Boolean).join('\n'));
+  }
+  return result;
+}
+
+function ensureCleanDir(dir) {
+  fs.rmSync(dir, { recursive: true, force: true });
+  fs.mkdirSync(dir, { recursive: true });
+}
+
+function readJson(filePath) {
+  return JSON.parse(fs.readFileSync(filePath, 'utf8'));
+}
+
+function copyFile(src, dest) {
+  fs.mkdirSync(path.dirname(dest), { recursive: true });
+  fs.copyFileSync(src, dest);
+}
+
+function fileSize(filePath) {
+  return fs.statSync(filePath).size;
+}
+
+function esc(value) {
+  return String(value ?? '').replace(/[&<>"']/g, (ch) => ({
+    '&': '&amp;',
+    '<': '&lt;',
+    '>': '&gt;',
+    '"': '&quot;',
+    "'": '&#39;',
+  }[ch]));
+}
+
+function formatBytes(bytes) {
+  if (bytes < 1024) return `${bytes} B`;
+  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
+  return `${(bytes / 1024 / 1024).toFixed(1)} MB`;
+}
+
+function safeRelativeAssets({ workOut, dist, name }) {
+  const assetDir = path.join(dist, 'assets');
+  fs.mkdirSync(assetDir, { recursive: true });
+  const files = [
+    { key: 'previewHtml', label: 'HTML Preview', source: `${name}.preview.html`, target: `${name}.preview.html` },
+    { key: 'previewPng', label: 'Preview PNG', source: `${name}.preview.png`, target: `${name}.preview.png` },
+    { key: 'pptx', label: 'Editable PPTX', source: `${name}.editable.pptx`, target: `${name}.editable.pptx` },
+    { key: 'outline', label: 'Outline JSON', source: `${name}.outline.json`, target: `${name}.outline.json` },
+    { key: 'promptsMd', label: 'Image Prompts', source: `${name}.image-prompts.md`, target: `${name}.image-prompts.md` },
+  ];
+  const assets = {};
+  for (const file of files) {
+    const src = path.join(workOut, file.source);
+    if (!fs.existsSync(src)) throw new Error(`Missing generated artifact: ${src}`);
+    const dest = path.join(assetDir, file.target);
+    copyFile(src, dest);
+    assets[file.key] = {
+      label: file.label,
+      href: `assets/${file.target}`,
+      bytes: fileSize(dest),
+      size: formatBytes(fileSize(dest)),
+    };
+  }
+  return assets;
+}
+
+function sanitizePublicLine(line) {
+  return String(line ?? '').replace(/\/[^\s`]*\/([^/\s`]+(?:\.(?:json|md|html|pptx|png)))/g, '$1');
+}
+
+function buildHtml({ manifest, outline, assets, builtAt }) {
+  const qaLines = (manifest.qaLines || []).map(sanitizePublicLine);
+  const slideCount = outline.slides?.length || 0;
+  const downloadCards = [assets.pptx, assets.previewHtml, assets.outline, assets.promptsMd]
+    .map((asset) => `
+      <a class="download" href="${esc(asset.href)}" download>
+        <span>${esc(asset.label)}</span>
+        <strong>${esc(asset.size)}</strong>
+      </a>`).join('');
+  const qaItems = qaLines.map((line) => `<li>${esc(line)}</li>`).join('');
+  const slides = (outline.slides || []).map((slide, index) => `
+    <article class="slide-card">
+      <span>${String(index + 1).padStart(2, '0')}</span>
+      <h3>${esc(slide.title)}</h3>
+      <p>${esc(slide.claim || slide.subtitle || 'Editable slide')}</p>
+    </article>`).join('');
+
+  return `<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Slide Tool Showcase — ${esc(manifest.title)}</title>
+  <meta name="description" content="A public delivery portal generated by Shiro Slide Studio: preview, editable PPTX, outline, prompts, and verification status." />
+  <style>
+    :root { color-scheme: light; --bg:#0f172a; --paper:#fffaf0; --ink:#172033; --muted:#667085; --accent:#2563eb; --teal:#0f766e; --line:#d8dee8; }
+    * { box-sizing: border-box; }
+    body { margin: 0; font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; background: radial-gradient(circle at top left, #334155 0, #0f172a 42%, #08111f 100%); color: white; }
+    a { color: inherit; }
+    .wrap { width: min(1160px, calc(100% - 32px)); margin: 0 auto; }
+    header { padding: 56px 0 30px; }
+    .badge { display:inline-flex; gap:8px; align-items:center; padding:8px 12px; border:1px solid rgba(255,255,255,.2); border-radius:999px; color:#c7d2fe; background:rgba(255,255,255,.06); font-size:13px; }
+    h1 { margin: 20px 0 12px; font-size: clamp(36px, 7vw, 76px); letter-spacing: -.06em; line-height: .96; }
+    .lead { margin: 0; max-width: 760px; color: #cbd5e1; font-size: clamp(17px, 2vw, 22px); line-height: 1.6; }
+    .hero-grid { display:grid; grid-template-columns: 1.1fr .9fr; gap:24px; align-items: stretch; padding-bottom: 38px; }
+    .panel { border:1px solid rgba(255,255,255,.14); border-radius:28px; background:rgba(255,255,255,.08); box-shadow: 0 24px 80px rgba(0,0,0,.32); backdrop-filter: blur(18px); overflow:hidden; }
+    .preview { background:#f8fafc; padding:14px; }
+    .preview img { display:block; width:100%; border-radius:18px; box-shadow:0 16px 34px rgba(15,23,42,.24); }
+    .status { padding: 24px; }
+    .status h2, .section h2 { margin:0 0 12px; font-size:24px; letter-spacing:-.03em; }
+    .metrics { display:grid; grid-template-columns:repeat(3,1fr); gap:12px; margin:22px 0; }
+    .metric { padding:16px; border-radius:18px; background:rgba(255,255,255,.09); border:1px solid rgba(255,255,255,.1); }
+    .metric b { display:block; font-size:28px; }
+    .metric span { color:#cbd5e1; font-size:12px; }
+    .downloads { display:grid; gap:10px; }
+    .download { text-decoration:none; display:flex; justify-content:space-between; gap:16px; padding:14px 16px; border-radius:16px; background:#fffaf0; color:var(--ink); transition: transform .16s ease, box-shadow .16s ease; }
+    .download:hover { transform: translateY(-2px); box-shadow:0 12px 30px rgba(0,0,0,.22); }
+    .download strong { color:var(--teal); white-space:nowrap; }
+    main { background:#f6f3ee; color:var(--ink); border-radius: 36px 36px 0 0; padding: 42px 0 70px; }
+    .sections { display:grid; grid-template-columns: .9fr 1.1fr; gap:24px; }
+    .section { background:#fffdf8; border:1px solid var(--line); border-radius:28px; padding:24px; box-shadow:0 10px 28px rgba(23,32,51,.08); }
+    .qa { margin:0; padding-left: 20px; color:var(--muted); line-height:1.75; }
+    .slide-list { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:12px; }
+    .slide-card { border:1px solid var(--line); border-radius:18px; padding:16px; background:linear-gradient(135deg,#fff 0,#f8fafc 100%); }
+    .slide-card span { color:var(--accent); font-weight:800; font-size:12px; }
+    .slide-card h3 { margin:8px 0; font-size:17px; letter-spacing:-.02em; }
+    .slide-card p { margin:0; color:var(--muted); line-height:1.5; }
+    footer { padding: 28px 0 40px; color:#64748b; font-size:13px; }
+    @media (max-width: 880px) { .hero-grid, .sections { grid-template-columns:1fr; } .slide-list { grid-template-columns:1fr; } .metrics { grid-template-columns:1fr 1fr; } }
+  </style>
+</head>
+<body>
+  <header class="wrap">
+    <span class="badge">✓ Production showcase / verified delivery bundle</span>
+    <h1>Slide Tool<br />Delivery Portal</h1>
+    <p class="lead">自然文から、HTML preview・編集可能PPTX・画像プロンプト・検証ログまで一気通貫で生成する Slide Studio の公開デモです。</p>
+  </header>
+  <section class="wrap hero-grid">
+    <div class="panel preview"><img src="${esc(assets.previewPng.href)}" alt="Generated slide deck preview" /></div>
+    <aside class="panel status">
+      <h2>${esc(manifest.readyHeader || manifest.title)}</h2>
+      <p class="lead" style="font-size:15px">${esc(manifest.verificationHeader || 'Verified')}</p>
+      <div class="metrics">
+        <div class="metric"><b>${slideCount}</b><span>slides</span></div>
+        <div class="metric"><b>${esc(manifest.warnings?.length || 0)}</b><span>warnings</span></div>
+        <div class="metric"><b>OK</b><span>readiness</span></div>
+      </div>
+      <div class="downloads">${downloadCards}</div>
+    </aside>
+  </section>
+  <main>
+    <div class="wrap sections">
+      <section class="section">
+        <h2>Verification</h2>
+        <ul class="qa">${qaItems}</ul>
+      </section>
+      <section class="section">
+        <h2>Deck outline</h2>
+        <div class="slide-list">${slides}</div>
+      </section>
+    </div>
+    <footer class="wrap">Built at ${esc(builtAt)} by slide-tool/scripts/build-showcase.mjs. Published assets use relative paths only; local machine paths are stripped from the public bundle.</footer>
+  </main>
+</body>
+</html>`;
+}
+
+export function buildShowcase(options = {}) {
+  const args = { ...parseArgs([]), ...options };
+  if (!args.skipStudio) {
+    run(process.execPath, [path.join('scripts', 'studio.mjs'), args.input, '--out', args.workOut, '--name', args.name, '--verify'], { cwd: rootDir });
+  }
+  ensureCleanDir(args.dist);
+  const assets = safeRelativeAssets(args);
+  const manifest = readJson(path.join(args.workOut, 'delivery-manifest.json'));
+  const outline = readJson(path.join(args.workOut, `${args.name}.outline.json`));
+  const builtAt = new Date().toISOString();
+  const publicManifest = {
+    schemaVersion: 1,
+    title: manifest.title,
+    readyHeader: manifest.readyHeader,
+    verificationHeader: manifest.verificationHeader,
+    qaLines: (manifest.qaLines || []).map(sanitizePublicLine),
+    warnings: (manifest.warnings || []).map(sanitizePublicLine),
+    slideCount: outline.slides?.length || 0,
+    assets,
+    builtAt,
+  };
+  fs.writeFileSync(path.join(args.dist, 'index.html'), buildHtml({ manifest, outline, assets, builtAt }));
+  fs.writeFileSync(path.join(args.dist, 'showcase-manifest.json'), `${JSON.stringify(publicManifest, null, 2)}\n`);
+  assertPublicBundle(args.dist);
+  return publicManifest;
+}
+
+export function assertPublicBundle(dist) {
+  const offenders = [];
+  const stack = [dist];
+  while (stack.length) {
+    const current = stack.pop();
+    for (const entry of fs.readdirSync(current, { withFileTypes: true })) {
+      const fullPath = path.join(current, entry.name);
+      if (entry.isDirectory()) stack.push(fullPath);
+      else if (/\.(html|json|md|txt|css|js)$/i.test(entry.name)) {
+        const text = fs.readFileSync(fullPath, 'utf8');
+        if (/\/Users\/|\.openclaw|workspace\/slide-tool\/out/.test(text)) offenders.push(path.relative(dist, fullPath));
+      }
+    }
+  }
+  if (offenders.length) throw new Error(`Public bundle leaks local paths: ${offenders.join(', ')}`);
+}
+
+if (import.meta.url === `file://${process.argv[1]}`) {
+  const manifest = buildShowcase(parseArgs(process.argv.slice(2)));
+  console.log(JSON.stringify({ ok: true, dist: path.relative(rootDir, parseArgs(process.argv.slice(2)).dist), title: manifest.title, slideCount: manifest.slideCount }, null, 2));
+}

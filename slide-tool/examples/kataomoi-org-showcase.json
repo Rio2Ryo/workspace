@@ -1,0 +1,261 @@
+{
+  "title": "KATAOMOI.org 提案資料",
+  "subtitle": "第一印象をハックする。紙の名刺から、AIが動く営業体験へ。",
+  "audience": "経営者・営業責任者・イベント主催者・AIアプリ開発を検討する企業",
+  "tone": "プレミアム、余白が大きい、温かい紙質感、黒金の高級感、未来感、商談向け",
+  "thesis": "KATAOMOIは、NFCスマート名刺を入口に、出会いをデータ化し、AIが24時間関係を育てる“次世代営業OS”である。",
+  "artifactFirst": true,
+  "theme": {
+    "mode": "premium-dark-paper",
+    "background": "07080C",
+    "paper": "FFF8EA",
+    "ink": "FFF8EA",
+    "muted": "D0C2A6",
+    "accent": "D8B15F",
+    "accent2": "FFF1C7",
+    "warm": "B8894A",
+    "line": "3C3324"
+  },
+  "slides": [
+    {
+      "type": "cover",
+      "title": "出会いを、\n営業資産へ。",
+      "subtitle": "KATAOMOI.org｜NFCスマート名刺 × AI駆動アプリ開発",
+      "claim": "第一印象から、継続する関係へ。",
+      "bullets": [],
+      "imagePrompt": "Create a premium 16:9 cover visual for KATAOMOI.org. A warm textured Japanese paper business card floats over a deep black background, a subtle NFC glow arcs into a smartphone, gold and coral accents, luxury startup pitch deck style, lots of negative space for editable Japanese text, no logos, no fake small text.",
+      "speakerNotes": "KATAOMOIの核は、名刺という古い儀式を、デジタルとAIで営業体験に変えることです。"
+    },
+    {
+      "type": "section",
+      "title": "名刺交換は、まだ“もったいない”",
+      "claim": "多くの出会いは、交換した瞬間がピークで、その後の関係育成につながっていない。",
+      "bullets": [
+        "QRコードは便利だが、体験としては記憶に残りにくい",
+        "プラ・メタルカードは“渡す”儀式を壊しやすい",
+        "相手に合わせた情報提供が、その場でできない",
+        "展示会・交流会の大量接点が、後日フォローで埋もれる"
+      ],
+      "columns": [
+        {
+          "title": "記憶に残らない",
+          "body": "交換後に名刺入れへ入り、会話の熱量が冷めていく。"
+        },
+        {
+          "title": "フォローが遅い",
+          "body": "相手別の資料送付やSNS接続が後回しになる。"
+        },
+        {
+          "title": "接点が見えない",
+          "body": "誰とどれくらい近い関係か、営業資産として可視化されない。"
+        }
+      ],
+      "imagePrompt": "A refined business slide illustration: scattered traditional business cards fading into darkness, one card emitting a small NFC light. Minimal, elegant, Japanese premium design, black background, gold linework, no readable text.",
+      "speakerNotes": "課題は名刺そのものではなく、交換後の関係性が活用されないことです。"
+    },
+    {
+      "type": "visual",
+      "title": "KATAOMOI名刺：紙の温もり × デジタルの即時性",
+      "claim": "“普通の紙名刺に見えるのに、タッチしたら反応する”——その驚きが会話を作る。",
+      "bullets": [
+        "NFC内蔵でスマホをかざすだけ",
+        "QR不要でスムーズに情報共有",
+        "ブランドに合わせたオリジナルデザイン",
+        "SNS・予約・EC・資料・採用ページへ連携"
+      ],
+      "columns": [
+        {
+          "title": "触れる",
+          "body": "紙の質感と“渡す”礼儀を残す。"
+        },
+        {
+          "title": "驚く",
+          "body": "タッチで反応し、自然に会話が生まれる。"
+        },
+        {
+          "title": "つながる",
+          "body": "相手に最適なURLへ誘導し、次の行動へ進める。"
+        }
+      ],
+      "imagePrompt": "Close-up hero visual of a premium paper NFC business card being tapped by a smartphone, warm paper texture, black and gold luxury palette, subtle glow, high-end Japanese business branding, blank safe area for editable text.",
+      "speakerNotes": "紙の名刺の礼儀を捨てずに、デジタルの即時性を重ねる点が魅力です。"
+    },
+    {
+      "type": "process",
+      "title": "交換の瞬間から、相手別の営業が始まる",
+      "claim": "名刺は“連絡先”ではなく、その場で出し分けできるパーソナルLPになる。",
+      "bullets": [
+        "相手に合わせてタッチ先URLを変更",
+        "営業資料・HP・アプリ・採用ページへ誘導",
+        "初対面でも最適なファーストタッチを提供",
+        "展示会ではイベントカードとして体験を記録",
+        "カード購入者はアプリの優先アクセス権を取得",
+        "片思いの営業を、両思いの関係へ転換"
+      ],
+      "imagePrompt": "A clean process diagram visual: business card touch branches into personalized destinations: sales deck, website, recruiting, reservation, ecommerce. Premium black background, gold and teal nodes, no tiny text, modern investor deck style.",
+      "speakerNotes": "URLの出し分けにより、1枚の名刺が相手別の営業導線になります。"
+    },
+    {
+      "type": "matrix",
+      "title": "特許技術：人脈を“感覚”から“資産”へ",
+      "claim": "接触回数・分身AI会話量・対面時間などを統合し、親密度を可視化する。",
+      "bullets": [
+        "距離が近いほど親密度が高い人脈マップ",
+        "接触回数・会話量・対面時間を総合分析",
+        "紹介者としての信頼度をブロックチェーンで証明",
+        "属人的なつながりを、営業・採用・紹介の資産に変える"
+      ],
+      "columns": [
+        {
+          "title": "見える",
+          "body": "人脈の距離と濃度をマップ化。"
+        },
+        {
+          "title": "測れる",
+          "body": "複数パラメータで親密度を自動算出。"
+        },
+        {
+          "title": "証明できる",
+          "body": "紹介者の信頼をブロックチェーンで担保。"
+        },
+        {
+          "title": "動かせる",
+          "body": "AIが次のアプローチを支援。"
+        }
+      ],
+      "imagePrompt": "Elegant network map visual: golden nodes connected by thin lines over black paper texture, varying distance indicates relationship closeness, subtle blockchain motif, premium Japanese startup style, no text.",
+      "speakerNotes": "名刺を入口に、人脈そのものを定量化・可視化する世界観を示します。"
+    },
+    {
+      "type": "comparison",
+      "title": "SNSの次へ：網ではなく、銛を増やす",
+      "claim": "不特定多数への拡散ではなく、特定の相手に刺さる接点を増やす営業へ。",
+      "bullets": [
+        "SNS疲れを避け、つながりベースで関係を育てる",
+        "分身AIが24時間、質の高い接点を維持",
+        "“誰に何を届けるか”を名刺交換の瞬間から設計",
+        "営業・採用・PR・紹介をひとつの接点OSに統合"
+      ],
+      "columns": [
+        {
+          "title": "従来SNS",
+          "body": "広く投稿し、偶然届くのを待つ。"
+        },
+        {
+          "title": "KATAOMOI",
+          "body": "出会った相手に、最適な導線を即時に届ける。"
+        },
+        {
+          "title": "分身AI",
+          "body": "寝ている間も関係性を育て、次の接点を作る。"
+        }
+      ],
+      "imagePrompt": "A minimalist comparison visual: wide net fading on one side, precise golden harpoon/beam connecting to one target node on the other side. Premium black-gold presentation style, abstract not violent, no text.",
+      "speakerNotes": "“網ではなく銛”という表現を、営業精度の高さとして視覚化します。"
+    },
+    {
+      "type": "section",
+      "title": "AI駆動アプリ開発：ビジネスを自動で動かす",
+      "claim": "AIが使うことを前提に設計されたアプリを、短期間・低コスト・高品質で構築する。",
+      "bullets": [
+        "AIエージェントが並列開発し、通常の1/3の工期を目指す",
+        "スモールスタートから拡張しやすい",
+        "人間エンジニアが設計・レビューで品質を担保",
+        "アプリ同士が連動し、自動化エコシステムを作る"
+      ],
+      "columns": [
+        {
+          "title": "早い",
+          "body": "MVPから本格アプリまで爆速で納品。"
+        },
+        {
+          "title": "安い",
+          "body": "AI効率化で開発コストを抑える。"
+        },
+        {
+          "title": "高品質",
+          "body": "人間がAIをディレクションし、設計とレビューを担保。"
+        }
+      ],
+      "imagePrompt": "Premium business app ecosystem visual: multiple app cards connected by AI agent lines, black background, gold and coral highlights, clean dashboard-like geometry, no fake UI text.",
+      "speakerNotes": "KATAOMOIは名刺事業だけでなく、AIが動かすアプリ開発も提供します。"
+    },
+    {
+      "type": "matrix",
+      "title": "実績が示す、AI実装力",
+      "claim": "業務削減、収益化、エンゲージメント向上など、成果に直結するアプリを開発。",
+      "bullets": [
+        "写真DLスポンサーアプリ：DL数3倍・新収益源",
+        "カーボンクレジット算出：工数90%削減",
+        "食品輸入管理：ミス80%削減",
+        "メールクライアント：処理時間70%短縮",
+        "AIセカンドブレイン：ナレッジ活用率3倍",
+        "分身AI：投稿頻度5倍"
+      ],
+      "columns": [
+        {
+          "title": "売上化",
+          "body": "スポンサー連動DLで新収益源を構築。"
+        },
+        {
+          "title": "効率化",
+          "body": "CO2算出・メール処理・在庫管理を自動化。"
+        },
+        {
+          "title": "知識活用",
+          "body": "Second Brainで情報検索と整理を強化。"
+        },
+        {
+          "title": "AI代行",
+          "body": "分身AIが運用リソース不足を補う。"
+        }
+      ],
+      "imagePrompt": "A high-end results dashboard visual with large abstract metrics 3x, 90%, 80%, 70% represented as bars and rings, no readable small labels, black and warm gold palette, polished consulting deck style.",
+      "speakerNotes": "公開サイトの実績数値を、信頼につながる証拠として整理します。"
+    },
+    {
+      "type": "process",
+      "title": "導入はシンプル：伝える → 出来上がる → 改善する",
+      "claim": "技術の話から始めない。やりたいことを話すだけで、数日〜数週間でプロトタイプへ。",
+      "bullets": [
+        "STEP 01：やりたいことをそのまま伝える",
+        "STEP 02：AIエージェントが開発し、途中経過も共有",
+        "STEP 03：使いながら改善し、成長するアプリへ",
+        "名刺購入者はKATAOMOIアプリに優先アクセス",
+        "営業・採用・イベント・PRの接点を統合",
+        "まずはベータ版予約・相談へ"
+      ],
+      "imagePrompt": "A simple three-step premium process visual: Speak, Build, Improve. Abstract Japanese business design, warm paper cards on black, gold step numbers, subtle AI circuit lines, no readable text.",
+      "speakerNotes": "導入ハードルが低いことを伝え、相談への心理的障壁を下げます。"
+    },
+    {
+      "type": "summary",
+      "title": "KATAOMOIは、出会いを成果に変える接点OS",
+      "claim": "名刺・人脈・AIアプリをつなぎ、“第一印象”から“継続関係”まで設計する。",
+      "bullets": [
+        "第一印象：紙×NFCで驚きと会話を生む",
+        "営業導線：相手別URLで初回接点を最適化",
+        "関係資産：親密度を可視化し、紹介の信頼を証明",
+        "自動化：分身AIとアプリ開発で24時間動くビジネスへ"
+      ],
+      "columns": [
+        {
+          "title": "買う理由",
+          "body": "印象に残る名刺と、すぐ使える営業導線。"
+        },
+        {
+          "title": "相談する理由",
+          "body": "AIアプリ開発で、業務と接点を自動化。"
+        },
+        {
+          "title": "期待する未来",
+          "body": "片思いの営業を、両思いのビジネスへ。"
+        }
+      ],
+      "imagePrompt": "Final closing visual for KATAOMOI: a glowing paper NFC business card becomes a relationship graph and AI app ecosystem, premium black-gold-coral palette, elegant Japanese pitch deck, strong emotional finish, no small text.",
+      "speakerNotes": "最後はKATAOMOIを単なる名刺ではなく、接点OSとして位置づけて締めます。"
+    }
+  ],
+  "clientFacing": true,
+  "hideStudioBadge": true
+}

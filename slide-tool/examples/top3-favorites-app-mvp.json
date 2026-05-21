@@ -1,0 +1,87 @@
+{
+  "title": "Top3 Favorites App MVP提案",
+  "subtitle": "好きなものを3つだけ選ぶ、軽い自己理解と会話のきっかけアプリ",
+  "audience": "MVP検討メンバー / 初期プロダクト判断者",
+  "tone": "シンプル、親しみやすい、実装判断に使える",
+  "thesis": "Top3という制限で入力負荷を下げ、プロフィール・会話・比較を自然に生むMVPから始める。",
+  "artifactFirst": true,
+  "clientFacing": true,
+  "theme": {
+    "mode": "product-mvp",
+    "background": "F7F3EA",
+    "paper": "FFFDF8",
+    "ink": "1B2430",
+    "muted": "657085",
+    "accent": "E85D75",
+    "accent2": "2F9C95",
+    "warm": "F2A541",
+    "line": "DED7CC"
+  },
+  "slides": [
+    {
+      "type": "cover",
+      "title": "Top3 Favorites App MVP提案",
+      "subtitle": "好きなものを3つだけ選ぶ、軽い自己理解と会話のきっかけアプリ",
+      "claim": "選択肢を絞るほど、入力は軽く、共有は濃くなる。",
+      "bullets": ["3つだけ選ぶ", "プロフィール化", "会話の入口にする"],
+      "imagePrompt": "Create a warm premium product proposal cover for a mobile app called Top3 Favorites. Show abstract ranked favorite cards, three highlighted choices, soft cream background, coral and teal accents, friendly but polished MVP pitch style. Leave large empty area for editable Japanese title text. No readable UI text, no logos.",
+      "speakerNotes": "Top3制限によって、入力負荷を下げながら人柄が伝わるプロダクトとして提案する。"
+    },
+    {
+      "type": "section",
+      "title": "課題",
+      "claim": "好きなものを聞く体験は多いが、入力が重いか、会話につながりにくい。",
+      "columns": [
+        { "title": "自由入力は重い", "body": "何を書けばいいか迷い、初回入力で離脱しやすい。" },
+        { "title": "羅列は印象に残らない", "body": "好きなものが多すぎると、その人らしさが薄まる。" },
+        { "title": "共有後の会話が弱い", "body": "プロフィール情報が、質問や比較のきっかけになりにくい。" }
+      ],
+      "bullets": ["自由入力は重い", "羅列は印象に残らない", "共有後の会話が弱い"],
+      "imagePrompt": "Create a clean product strategy diagram showing the problem: too many choices, blank input anxiety, weak social conversation. Use three simple abstract panels, warm cream background, coral warning accent, teal resolution hint. No readable text.",
+      "speakerNotes": "課題は入力負荷、個性の薄まり、共有後の会話不足の3点に絞る。"
+    },
+    {
+      "type": "process",
+      "title": "入力体験",
+      "claim": "ユーザーはカテゴリを選び、候補から3つだけ選び、短い理由を足す。",
+      "bullets": [
+        "カテゴリを選ぶ：映画、音楽、食べ物、場所、人、アプリなど",
+        "候補を探す：検索、最近選ばれた候補、手入力から選択",
+        "Top3を決める：順位入れ替えはドラッグで完結",
+        "一言理由を書く：任意入力で会話の種だけ残す",
+        "カード化する：共有しやすいプロフィールとして保存"
+      ],
+      "imagePrompt": "Create a 16:9 visual of a mobile onboarding flow for choosing top 3 favorites. Abstract phone screens, category chips, three ranked cards, drag reorder gesture, note field. Friendly coral, teal, warm yellow accents. Leave safe space for editable text, no readable UI labels.",
+      "speakerNotes": "入力は5ステップ以内。自由入力より選択式を中心にし、理由入力は任意にする。"
+    },
+    {
+      "type": "matrix",
+      "title": "MVP機能",
+      "claim": "最初は「作る・見る・共有する」に集中し、SNS化や推薦は後回しにする。",
+      "columns": [
+        { "title": "Top3作成", "body": "カテゴリ別に3件を選び、順位と一言理由を保存する。" },
+        { "title": "プロフィール表示", "body": "ユーザーのTop3一覧をカードとして閲覧できる。" },
+        { "title": "共有カード", "body": "1カテゴリのTop3を画像またはリンクで共有する。" },
+        { "title": "比較ビュー", "body": "友人との共通項と違いを軽く見せる。" },
+        { "title": "編集履歴", "body": "過去のTop3を残し、好みの変化を見られる。" },
+        { "title": "運用管理", "body": "カテゴリ、候補、通報対象を最低限管理する。" }
+      ],
+      "bullets": ["Top3作成", "プロフィール表示", "共有カード", "比較ビュー", "編集履歴", "運用管理"],
+      "imagePrompt": "Create a product MVP feature map for a Top3 Favorites app. Show six simple feature modules around a central top-three card motif. Warm minimal product design, cream background, coral and teal accents, no readable text.",
+      "speakerNotes": "MVPでは投稿タイムラインや高度な推薦を持たず、プロフィールと共有の価値検証を優先する。"
+    },
+    {
+      "type": "process",
+      "title": "次フェーズ",
+      "claim": "MVPで入力完了率と共有率を見て、会話・推薦・コミュニティへ拡張する。",
+      "bullets": [
+        "Phase 1：カテゴリと共有カードで入力完了率を検証",
+        "Phase 2：友人比較、質問生成、コメントで会話を増やす",
+        "Phase 3：趣味の近い人、店舗、コンテンツ推薦へ広げる",
+        "判断指標：作成完了率、共有率、再編集率、比較閲覧率"
+      ],
+      "imagePrompt": "Create a clean roadmap visual for a Top3 Favorites app MVP. Three phases moving from creation to conversation to recommendation, using abstract app cards and arrows. Soft cream background, coral, teal, and warm yellow accents. No readable text.",
+      "speakerNotes": "次フェーズはMVPの行動指標を見て判断し、会話機能と推薦機能を段階的に足す。"
+    }
+  ]
+}

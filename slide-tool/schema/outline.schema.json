@@ -1,0 +1,65 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://openclaw.local/slide-tool/outline.schema.json",
+  "title": "Shiro Slide Studio Outline",
+  "type": "object",
+  "required": ["title", "slides"],
+  "additionalProperties": true,
+  "properties": {
+    "title": { "type": "string", "minLength": 1 },
+    "subtitle": { "type": "string" },
+    "audience": { "type": "string" },
+    "tone": { "type": "string" },
+    "thesis": { "type": "string" },
+    "artifactFirst": { "type": "boolean" },
+    "theme": {
+      "type": "object",
+      "additionalProperties": true,
+      "properties": {
+        "mode": { "type": "string" },
+        "accent": { "type": "string" },
+        "background": { "type": "string" },
+        "text": { "type": "string" }
+      }
+    },
+    "slides": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": ["title"],
+        "additionalProperties": true,
+        "properties": {
+          "type": {
+            "type": "string",
+            "enum": ["cover", "section", "process", "comparison", "matrix", "visual", "summary", "appendix"]
+          },
+          "title": { "type": "string", "minLength": 1 },
+          "subtitle": { "type": "string" },
+          "claim": { "type": "string" },
+          "bullets": {
+            "type": "array",
+            "items": { "type": "string" }
+          },
+          "columns": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "required": ["title"],
+              "properties": {
+                "title": { "type": "string" },
+                "body": { "type": "string" },
+                "bullets": {
+                  "type": "array",
+                  "items": { "type": "string" }
+                }
+              }
+            }
+          },
+          "imagePrompt": { "type": "string" },
+          "speakerNotes": { "type": "string" }
+        }
+      }
+    }
+  }
+}

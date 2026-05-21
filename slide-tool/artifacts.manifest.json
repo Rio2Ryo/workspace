@@ -1,0 +1,45 @@
+{
+  "artifacts": [
+    {
+      "name": "ai-slide-workflow deck",
+      "type": "deck",
+      "dir": "slide-tool/out/ai-slide-workflow",
+      "basename": "ai-slide-workflow",
+      "maxPptxImages": 0,
+      "minSlides": 7,
+      "maxSlides": 7,
+      "requiredSlideTitles": ["AIでスライドを作る最新ワークフロー", "なぜ今変えるか", "標準フロー", "ツールの使い分け", "内製フローの役割分担", "品質基準", "次に試す依頼"]
+    },
+    {
+      "name": "top3-favorites-app-mvp deck",
+      "type": "deck",
+      "dir": "slide-tool/out/top3-favorites-app-mvp",
+      "basename": "top3-favorites-app-mvp",
+      "maxPptxImages": 0,
+      "minSlides": 5,
+      "maxSlides": 5,
+      "requiredSlideTitles": ["Top3 Favorites App MVP提案", "課題", "入力体験", "MVP機能", "次フェーズ"]
+    },
+    {
+      "name": "kataomoi-org-showcase deck",
+      "type": "deck",
+      "dir": "slide-tool/out/kataomoi-org-showcase",
+      "basename": "kataomoi-org-showcase",
+      "maxPptxImages": 0,
+      "minSlides": 10,
+      "maxSlides": 10,
+      "requiredSlideTitles": ["出会いを、\n営業資産へ。", "名刺交換は、まだ“もったいない”", "KATAOMOI名刺：紙の温もり × デジタルの即時性"]
+    },
+    {
+      "name": "top3-favorites-app-lp-onepager",
+      "type": "onepager",
+      "dir": "slide-tool/out/top3-favorites-app-lp-onepager",
+      "basename": "top3-favorites-app-lp-onepager",
+      "requiredTerms": ["課題", "解決", "入力例", "主要機能", "次アクション"]
+    }
+  ],
+  "ignoreDirs": [
+    "slide-tool/out/json-input-test",
+    "slide-tool/out/skill-wrapper-test"
+  ]
+}
