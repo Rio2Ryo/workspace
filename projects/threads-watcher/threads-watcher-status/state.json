@@ -5,14 +5,27 @@
     "@bmw_intokyo"
   ],
   "last_check": {
-    "checked_at": "2026-05-21T22:45:44Z",
-    "found_count": 4,
+    "checked_at": "2026-05-21T23:11:22Z",
+    "found_count": 6,
     "new_count": 0,
     "status": "partial_error",
-    "error": "profile extraction returned partial result: found=4 previous_max=15"
+    "error": "profile extraction returned partial result: found=6 previous_max=15"
   },
-  "saved_count": 48,
+  "saved_count": 49,
   "posts": [
+    {
+      "handle": "@hal.lifedesign",
+      "post_id": "DYnlrzIktpI",
+      "post_url": "https://www.threads.com/@hal.lifedesign/post/DYnlrzIktpI",
+      "first_seen_at": "2026-05-21T23:08:20Z",
+      "captured_at": "2026-05-21T23:08:25Z",
+      "screenshot_size_bytes": 620423,
+      "screenshot_width": 1280,
+      "screenshot_height": 1800,
+      "post_text": "HALOのAUTHENTICITYスコアがいい感じになってきた。 確かに昨日は精神面に余裕なかったな。。 ありたい自分であるためには、自分自身を常にチューニングしないとね。",
+      "posted_at": "2026-05-21T23:07:50.000Z",
+      "screenshot_path": "screenshots/hal.lifedesign/DYnlrzIktpI__20260521T230825Z.png"
+    },
     {
       "handle": "@hal.lifedesign",
       "post_id": "DYnjDzQks3Z",
@@ -641,44 +654,44 @@
   "recent_stats": {
     "window_hours": 24,
     "total": 1004,
-    "ok": 170,
-    "partial_error": 834,
+    "ok": 177,
+    "partial_error": 827,
     "error": 0,
     "other": 0,
-    "success_rate": 0.1693227091633466
+    "success_rate": 0.17629482071713148
   },
   "recent_stats_by_window": {
     "1": {
       "window_hours": 1,
       "total": 42,
-      "ok": 11,
-      "partial_error": 31,
+      "ok": 15,
+      "partial_error": 27,
       "error": 0,
       "other": 0,
-      "success_rate": 0.2619047619047619
+      "success_rate": 0.35714285714285715
     },
     "24": {
       "window_hours": 24,
       "total": 1004,
-      "ok": 170,
-      "partial_error": 834,
+      "ok": 177,
+      "partial_error": 827,
       "error": 0,
       "other": 0,
-      "success_rate": 0.1693227091633466
+      "success_rate": 0.17629482071713148
     },
     "168": {
       "window_hours": 168,
-      "total": 4105,
-      "ok": 2074,
-      "partial_error": 2030,
+      "total": 4123,
+      "ok": 2081,
+      "partial_error": 2041,
       "error": 1,
       "other": 0,
-      "success_rate": 0.505237515225335
+      "success_rate": 0.5047295658501092
     }
   },
   "sync_state": {
-    "cursor": 70,
-    "db_max": 71,
+    "cursor": 71,
+    "db_max": 72,
     "delta": 1,
     "cursor_file_exists": true
   },
@@ -687,5 +700,5 @@
     "since": "2026-05-19T15:01:42Z",
     "delta": 3
   },
-  "snapshot_generated_at": "2026-05-21T22:45:44Z"
+  "snapshot_generated_at": "2026-05-21T23:11:22Z"
 }
