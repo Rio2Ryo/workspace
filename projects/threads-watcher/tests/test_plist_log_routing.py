@@ -173,6 +173,20 @@ def test_sync_plist_program_arguments_invoke_publish_if_delta():
     )
 
 
+def test_sync_plist_target_exists_and_is_executable():
+    # Same guard as the auto-restart plist: launchd execs the script by
+    # absolute path, so a rename / move / lost exec bit makes every
+    # tick fail silently. Pin existence, the exec bit, and that the
+    # path matches the script's real repo location.
+    plist = _load(SYNC_PLIST)
+    target = Path(plist["ProgramArguments"][0])
+    assert target == PROJECT_ROOT / "publish-if-delta.sh", (
+        f"plist path {target} does not match the script's repo location"
+    )
+    assert target.is_file(), f"{target} does not exist"
+    assert os.access(target, os.X_OK), f"{target} is not executable (launchd cannot run it)"
+
+
 def test_sync_plist_runs_live_publish_wrapper_only():
     # The wrapper is the safety boundary: it checks DB delta first, then
     # runs sync.py --confirm --enable-push and deploy.sh only when needed.
