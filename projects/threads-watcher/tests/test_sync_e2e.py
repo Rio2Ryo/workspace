@@ -438,3 +438,75 @@ def test_commit_happens_before_push_attempt(tmp_path):
     assert committed_idx >= 0, f"no committed line in log: {log_lines}"
     assert pushed_idx >= 0, f"no pushed line in log: {log_lines}"
     assert committed_idx < pushed_idx, "commit must be logged before push"
+
+
+# ── dry-run accumulator: stale-state clearing ───────────────────────────
+#
+# The dry-run accumulator (logs/dry-run-state.json) is written only on the
+# dry-run-AND-proceed path. It was never cleared when the streak resolves:
+#   - a real commit lands (--confirm), or
+#   - the delta drops to 0 (nothing pending).
+# So once a streak built up and the operator promoted sync to --confirm,
+# the stale file lingered and get_active_dry_run_alert() kept emitting a
+# false "dry-run stuck" banner on the status page. Observed live:
+# logs/dry-run-state.json said {delta:3,count:18,since:2026-05-19} while
+# logs/sync.log showed real commits on 2026-05-21/22.
+
+
+def test_confirm_commit_clears_stale_dry_run_state(tmp_path):
+    paths = _seed_repo(tmp_path)
+    _mutate_snapshot(paths["snapshot"], n=2)
+    dry_state = tmp_path / "dry-run-state.json"
+    # Stale streak left over from before --confirm was enabled.
+    dry_state.write_text(
+        json.dumps({"delta": 3, "count": 18, "since": "2026-05-19T15:01:42Z"}),
+        encoding="utf-8",
+    )
+
+    rc = sync_mod.main(_argv(paths, "--confirm", "--dry-state", str(dry_state)))
+
+    assert rc == 0
+    # The commit resolved the pending work — the stale streak file must be
+    # gone so get_active_dry_run_alert() stops firing a false alert.
+    assert not dry_state.exists()
+
+
+def test_zero_delta_clears_stale_dry_run_state(tmp_path):
+    paths = _seed_repo(tmp_path)
+    _mutate_snapshot(paths["snapshot"])
+    # First confirm sync advances the cursor to the DB max.
+    assert sync_mod.main(_argv(paths, "--confirm")) == 0
+
+    dry_state = tmp_path / "dry-run-state.json"
+    dry_state.write_text(
+        json.dumps({"delta": 2, "count": 9, "since": "2026-05-19T10:00:00Z"}),
+        encoding="utf-8",
+    )
+
+    # Second run: cursor == DB max → delta 0 → guard skip. Nothing is
+    # pending, so the stale streak must be cleared.
+    rc = sync_mod.main(_argv(paths, "--confirm", "--dry-state", str(dry_state)))
+
+    assert rc == 0
+    assert not dry_state.exists()
+
+
+def test_gap_skip_with_pending_delta_keeps_dry_run_state(tmp_path):
+    """Precision guard: a guard skip while delta is still > 0 (work is
+    genuinely pending) must NOT clear the streak — only a real commit or
+    a zero delta resolves it."""
+    paths = _seed_repo(tmp_path)
+    _mutate_snapshot(paths["snapshot"], n=2)
+    dry_state = tmp_path / "dry-run-state.json"
+    original = json.dumps({"delta": 3, "count": 4, "since": "2026-05-22T10:00:00Z"})
+    dry_state.write_text(original, encoding="utf-8")
+
+    # Huge min-gap → the just-created initial commit blocks this tick.
+    # delta stays > 0 (pending), so the streak file must survive intact.
+    rc = sync_mod.main(
+        _argv(paths, "--confirm", "--min-gap-sec", "999999", "--dry-state", str(dry_state))
+    )
+
+    assert rc == 0
+    assert dry_state.exists()
+    assert json.loads(dry_state.read_text(encoding="utf-8")) == json.loads(original)

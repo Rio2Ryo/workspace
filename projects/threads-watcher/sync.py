@@ -175,6 +175,19 @@ def save_dry_run_state(path: Path, state: DryRunState) -> None:
         sys.stderr.write(f"WARN: failed to save dry-run state to {path}\n")
 
 
+def clear_dry_run_state(path: Path) -> None:
+    """Remove the dry-run accumulator file — called when the streak is
+    resolved: a real commit landed (--confirm), or the delta dropped to
+    0 (nothing pending). Without this the stale file would keep
+    get_active_dry_run_alert() emitting a 'dry-run stuck' ALERT long
+    after syncs resumed. Best-effort: a missing file is the desired end
+    state anyway, so unlink failure only warns."""
+    try:
+        path.unlink(missing_ok=True)
+    except OSError as e:
+        sys.stderr.write(f"WARN: failed to clear dry-run state {path}: {e}\n")
+
+
 def read_cursor(path: Path) -> int:
     """Return last-synced max(posts.id). Missing/corrupt file → 0.
 
@@ -534,6 +547,12 @@ def main(argv: list[str] | None = None) -> int:
         _log_decision(log, decision, current_max, last_cursor)
 
         if not decision.proceed:
+            # A zero delta means nothing is pending — resolve any
+            # dry-run streak so the status page stops showing a stale
+            # "dry-run stuck" alert. A guard skip with delta > 0 leaves
+            # the streak intact: the work is still genuinely pending.
+            if decision.delta == 0:
+                clear_dry_run_state(args.dry_state)
             return 0  # guard skip is healthy behavior, not a failure
 
         if not args.confirm:
@@ -619,6 +638,7 @@ def _do_commit_and_maybe_push(
     if diff_check.returncode == 0:
         log.log("snapshot and screenshot assets already match git index; no commit needed")
         write_cursor(args.cursor, current_max)
+        clear_dry_run_state(args.dry_state)
         return 0
 
     message = build_commit_message(now_iso(), decision.delta)
@@ -628,6 +648,9 @@ def _do_commit_and_maybe_push(
         return 1
     log.log(f"committed: {message}")
     write_cursor(args.cursor, current_max)
+    # The pending delta is now in git — resolve any dry-run streak so a
+    # stale "dry-run stuck" alert can't outlive the work it tracked.
+    clear_dry_run_state(args.dry_state)
 
     if not args.enable_push:
         log.log("ENABLE_PUSH not set, skipping push (commit local only)")
