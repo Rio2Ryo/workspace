@@ -238,6 +238,37 @@ def test_sanity_check_passes_when_posts_key_missing(tmp_path):
     assert d.proceed
 
 
+# Valid JSON whose top level is NOT an object. snapshot_sanity_check
+# handled FileNotFoundError + JSONDecodeError but then called
+# data.get("posts") — which raises AttributeError on a list / str /
+# None / number top level. A defensive guard must return a clean
+# GuardDecision(False, ...), not crash evaluate_all with a traceback.
+
+
+def test_sanity_check_blocks_top_level_array(tmp_path):
+    snapshot = tmp_path / "state.json"
+    snapshot.write_text(json.dumps([]), encoding="utf-8")
+    d = snapshot_sanity_check(snapshot)
+    assert not d.proceed
+    assert "object" in d.reason.lower()
+
+
+def test_sanity_check_blocks_top_level_null(tmp_path):
+    snapshot = tmp_path / "state.json"
+    snapshot.write_text(json.dumps(None), encoding="utf-8")
+    d = snapshot_sanity_check(snapshot)
+    assert not d.proceed
+    assert "object" in d.reason.lower()
+
+
+def test_sanity_check_blocks_top_level_string(tmp_path):
+    snapshot = tmp_path / "state.json"
+    snapshot.write_text(json.dumps("corrupt"), encoding="utf-8")
+    d = snapshot_sanity_check(snapshot)
+    assert not d.proceed
+    assert "object" in d.reason.lower()
+
+
 # Deep recursion — defense in depth for forbidden keys in non-`posts`
 # regions of the snapshot. Today's payload is built from explicit DB
 # columns so the leak surface is small, but the guard's job is to stop

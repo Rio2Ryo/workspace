@@ -158,6 +158,14 @@ def snapshot_sanity_check(snapshot_path: Path) -> GuardDecision:
     except json.JSONDecodeError as exc:
         return GuardDecision(False, f"snapshot is not valid JSON: {exc}")
 
+    # Valid JSON whose top level is not an object (a list / string /
+    # number / null) — `.get` below would raise AttributeError. A guard
+    # must reject it cleanly, not crash evaluate_all with a traceback.
+    if not isinstance(data, dict):
+        return GuardDecision(
+            False, f"snapshot is not a JSON object (got {type(data).__name__})"
+        )
+
     # Posts list must contain dicts only (per-element type pin).
     posts = data.get("posts") or []
     for idx, post in enumerate(posts):
