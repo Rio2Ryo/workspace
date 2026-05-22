@@ -347,6 +347,28 @@ def combine_error_messages(base: str | None, capture_errors: list[str]) -> str |
     return failure_summary
 
 
+# Private post fields that must NEVER reach the public state.json:
+# raw screenshot bytes (privacy + payload size) and local filesystem
+# paths (info disclosure). Mirrors sync_guards.FORBIDDEN_POST_KEYS and
+# deploy.sh's FORBIDDEN_KEYS_CSV — the same set, enforced at three
+# layers: this generator chokepoint, sync.py's snapshot_sanity_check,
+# and deploy.sh's pre-flight / post-deploy verify.
+FORBIDDEN_POST_KEYS = frozenset({"screenshot_png", "local_path"})
+
+
+def _sanitize_post(post: Any) -> Any:
+    """Return a copy of `post` with forbidden private keys removed.
+
+    The browser-safe `screenshot_path` (a relative URL added by
+    watcher._write_web_snapshot_from_db) is intentionally kept — only
+    the raw bytes / host path are stripped. Non-dict entries pass
+    through untouched so a malformed posts list can't crash the build.
+    """
+    if not isinstance(post, dict):
+        return post
+    return {k: v for k, v in post.items() if k not in FORBIDDEN_POST_KEYS}
+
+
 def build_web_snapshot_payload(
     snapshot: dict[str, Any],
     dry_run_alert: dict | None,
@@ -360,6 +382,13 @@ def build_web_snapshot_payload(
     just calls this + writes; all field-presence / sanitisation logic
     is here.
 
+    Sanitisation: each post is passed through `_sanitize_post`, which
+    drops FORBIDDEN_POST_KEYS. The DB projection (db.latest_snapshot)
+    already selects only safe columns, so this is defence-in-depth —
+    a future `SELECT *` regression, or a caller that hand-builds a
+    snapshot, still cannot leak screenshot bytes / host paths to the
+    public page through this chokepoint.
+
     `dry_run_alert` is either None (no active streak — UI hides the
     banner) or {pending_ticks, since, delta}. Surfaces sync.py's
     "promote to --confirm" signal, previously only visible via
@@ -370,7 +399,7 @@ def build_web_snapshot_payload(
         "handles": snapshot.get("handles"),
         "last_check": snapshot["last_check"],
         "saved_count": snapshot["saved_count"],
-        "posts": snapshot["posts"],
+        "posts": [_sanitize_post(p) for p in snapshot["posts"]],
         "recent_stats": snapshot.get("recent_stats"),
         "recent_stats_by_window": snapshot.get("recent_stats_by_window"),
         "sync_state": snapshot.get("sync_state"),

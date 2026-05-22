@@ -192,6 +192,80 @@ def test_builder_full_payload_is_json_serializable():
     assert parsed["sync_state"]["delta"] == 1
 
 
+# ── build_web_snapshot_payload — private-field sanitisation ─────────────
+#
+# screenshot_png (raw image bytes) and local_path (host filesystem
+# path) are posts-table columns that must NEVER reach the public
+# state.json. db.latest_snapshot selects only safe columns today, but
+# the builder is the documented sanitisation chokepoint — pin that it
+# strips these keys regardless of what upstream hands it, so a future
+# `SELECT *` regression or a hand-built snapshot can't leak them.
+
+LEAKY_SNAPSHOT = {
+    "handle": "@example",
+    "last_check": {"status": "ok", "checked_at": "2026-05-18T12:00:00Z"},
+    "saved_count": 1,
+    "posts": [{
+        "post_id": "p1",
+        "post_url": "https://www.threads.net/@example/post/p1",
+        "screenshot_path": "screenshots/p1.png",
+        "screenshot_png": "iVBORw0KGgoAAAANSUhEUg==",          # forbidden: raw bytes
+        "local_path": "/Users/umi/.openclaw/workspace/x/p1.png",  # forbidden: host path
+    }],
+    "recent_stats": {"window_hours": 24, "total": 1},
+    "recent_stats_by_window": {"24": {"total": 1}},
+    "sync_state": {"db_max": 1, "cursor": 0, "delta": 1},
+}
+
+
+def test_builder_strips_screenshot_png_and_local_path_from_posts():
+    out = build_web_snapshot_payload(LEAKY_SNAPSHOT, dry_run_alert=None, generated_at="now")
+    assert len(out["posts"]) == 1
+    post = out["posts"][0]
+    assert "screenshot_png" not in post
+    assert "local_path" not in post
+
+
+def test_builder_keeps_browser_safe_post_fields():
+    # Only the forbidden keys are dropped — post_id, post_url and the
+    # browser-safe relative screenshot_path must survive so the public
+    # UI still renders.
+    out = build_web_snapshot_payload(LEAKY_SNAPSHOT, dry_run_alert=None, generated_at="now")
+    post = out["posts"][0]
+    assert post["post_id"] == "p1"
+    assert post["post_url"] == "https://www.threads.net/@example/post/p1"
+    assert post["screenshot_path"] == "screenshots/p1.png"
+
+
+def test_builder_sanitized_payload_has_no_forbidden_key_anywhere():
+    # End-to-end: the serialized public payload must not carry either
+    # forbidden key.
+    out = build_web_snapshot_payload(LEAKY_SNAPSHOT, dry_run_alert=None, generated_at="now")
+    serialized = json.dumps(out)
+    assert '"screenshot_png"' not in serialized
+    assert '"local_path"' not in serialized
+
+
+def test_builder_does_not_mutate_the_input_snapshot():
+    # Pure builder — sanitisation must produce new post dicts, not
+    # delete keys from the caller's snapshot (watcher._write_web_
+    # snapshot_from_db keeps using it).
+    snap = json.loads(json.dumps(LEAKY_SNAPSHOT))
+    build_web_snapshot_payload(snap, dry_run_alert=None, generated_at="now")
+    assert "screenshot_png" in snap["posts"][0]
+    assert "local_path" in snap["posts"][0]
+
+
+def test_builder_tolerates_a_non_dict_post_entry():
+    # Defensive: a malformed posts list must not crash the build.
+    snap = dict(LEAKY_SNAPSHOT)
+    snap["posts"] = [{"post_id": "ok", "local_path": "/x"}, "not-a-dict", None]
+    out = build_web_snapshot_payload(snap, dry_run_alert=None, generated_at="now")
+    assert "local_path" not in out["posts"][0]
+    assert out["posts"][1] == "not-a-dict"
+    assert out["posts"][2] is None
+
+
 # ── HTML banner contract pin ────────────────────────────────────────────
 
 
