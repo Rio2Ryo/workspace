@@ -1151,3 +1151,117 @@ img[src$="interaugh-logo.png"] { max-width: 100%; max-height: 100%; object-fit: 
 .order-mark img { width: auto !important; max-width: 100% !important; max-height: 100% !important; height: auto !important; object-fit: contain; }
 .usage-center .ring img { width: 70% !important; height: auto !important; object-fit: contain; }
 .final-mark, .final-mark img { width: 280px !important; height: auto !important; }
+
+/* === Mobile responsive repair (2026-05-23): prevent visual/illustration overflow === */
+html, body { overflow-x: hidden; }
+
+@media (max-width: 560px) {
+  .wrap, .wrap-narrow { padding: 0 14px; }
+  .nav { height: 64px; }
+  .nav-logo img { height: 32px !important; max-width: 156px; }
+  .nav-cta { padding: 9px 14px; font-size: 11px; }
+
+  .btn { width: 100%; justify-content: center; padding: 14px 18px; font-size: 13px; }
+  .card { padding: 32px 16px; border-radius: 18px; }
+  .card .sect-num.tl { top: 20px; left: 16px; font-size: 30px; }
+  .card .body { padding-top: 38px; }
+  .sect-title { font-size: 25px; line-height: 1.5; }
+  .sect-lead { font-size: 14px; line-height: 1.9; }
+
+  .hero { padding: 88px 0 18px; }
+  .hero-card { padding: 36px 18px 28px; border-radius: 20px; }
+  .hero h1 { font-size: 30px; line-height: 1.45; margin-bottom: 20px; }
+  .hero p.lead { font-size: 14.5px; line-height: 1.9; margin-bottom: 24px; }
+  .hero-eyebrow { max-width: 100%; white-space: normal; line-height: 1.45; font-size: 10px; }
+  .hero-actions { gap: 10px; }
+  .hero-trust { margin-top: 26px; padding-top: 22px; }
+  .hero-stage { aspect-ratio: auto; min-height: 360px; border-radius: 18px; }
+  .hero-stage .bcard.b1 { width: 210px; top: 8%; left: 5%; }
+  .hero-stage .bcard.b2 { width: 205px; bottom: 11%; left: 8%; }
+  .hero-stage .phone { width: 118px; height: 246px; right: 4%; bottom: 7%; }
+  .bcard { padding: 16px 18px; }
+  .bcard .bco { font-size: 10.5px; }
+  .bcard .bname { font-size: 18px; }
+  .bcard .logo-mini { height: 18px !important; }
+  .phone { border-radius: 26px; }
+  .phone .scr { border-radius: 21px; }
+  .phone::before { width: 44px; height: 11px; }
+  .app-ic { width: 31px; height: 31px; border-radius: 8px; }
+  .phone-content { padding: 6px 9px 9px; }
+  .app-row { gap: 8px; padding: 7px 3px; }
+
+  .industry-strip { margin: 18px 0; padding: 16px; border-radius: 18px; }
+
+  .touch-stage {
+    min-height: 0;
+    padding: 18px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 16px;
+    overflow: visible;
+  }
+  .touch-stage::after { display: none; }
+  .stage-cap { position: static; align-self: stretch; text-align: center; font-size: 11px; line-height: 1.5; }
+  .touch-stage .bcard.b1,
+  .touch-stage .bcard.b2,
+  .touch-stage .phone {
+    position: relative;
+    inset: auto;
+    transform: none;
+  }
+  .touch-stage .bcard.b1,
+  .touch-stage .bcard.b2 { width: min(100%, 278px); }
+  .touch-stage .phone { width: 172px; height: 340px; }
+  .touch-stage .bcard.b1::after,
+  .touch-stage .bcard.b2::after,
+  .touch-stage .phone::after { top: -10px; left: 12px; font-size: 9px; padding: 5px 8px; }
+  .signal-arc { position: static; transform: rotate(90deg); font-size: 22px; }
+
+  .flow-card { padding: 22px 16px; }
+  .flow-step { min-width: 0; width: 100%; }
+  .apps-grid { grid-template-columns: 1fr; }
+
+  .order-vis { padding: 34px 16px 24px; }
+  .order-row { flex-direction: column; gap: 24px; width: 100%; }
+  .order-mark { width: 170px; max-width: 80%; }
+  .order-arrows { width: 100%; }
+  .order-pill { justify-content: center; }
+  .order-pill::before { display: none; }
+  .order-pill .pill { width: 100%; text-align: center; font-size: 13px; padding: 10px 14px; }
+  .order-result { padding: 22px 16px 18px; }
+
+  .points-flow { flex-direction: column; align-items: stretch; padding: 18px; }
+  .points-step { width: 100%; min-width: 0; }
+  .points-arrow { align-self: center; transform: rotate(90deg); }
+  .points-card { flex-direction: column; align-items: stretch; text-align: center; padding: 18px; }
+  .points-calc { justify-content: center; }
+  .points-back-pill { width: 100%; }
+
+  .cont-stage { padding: 24px 12px; border-radius: 18px; }
+  .cont-card { max-width: 250px; padding: 18px; }
+  .cont-phone { width: 205px; }
+  .cont-bridge-line { width: 48px; }
+
+  .ai-chat { border-radius: 18px; }
+  .ai-chat-head { padding: 12px 14px; font-size: 10px; letter-spacing: 0.08em; }
+  .ai-chat-body { padding: 16px 12px 18px; gap: 12px; }
+  .msg { gap: 8px; }
+  .msg-av { width: 28px; height: 28px; }
+  .msg-bubble { max-width: calc(100vw - 112px); padding: 10px 12px; font-size: 12.5px; line-height: 1.65; }
+  .ai-verdict { padding: 16px 14px; }
+  .ai-verdict-row { gap: 10px; flex-wrap: wrap; }
+  .ai-verdict-label { min-width: auto; }
+  .ai-verdict-bar { flex-basis: 100%; order: 3; }
+
+  .usage-tile { padding: 26px 20px; }
+  .partners-grid { grid-template-columns: 1fr; }
+  .final-card { padding: 64px 18px; }
+  .final-mark, .final-mark img { width: min(210px, 72vw) !important; }
+  .ctastrip { padding: 36px 18px; border-radius: 18px; }
+  .ctastrip-actions { width: 100%; }
+  .contact-grid { gap: 26px; }
+  footer { padding: 56px 0 28px; margin-top: 40px; }
+  .foot-grid { grid-template-columns: 1fr; gap: 30px; }
+  .foot-bottom { align-items: flex-start; flex-direction: column; }
+}
