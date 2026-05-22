@@ -27,6 +27,7 @@ from health import (
     judge_heartbeat_alert,
     judge_partial_error,
     previous_max_found,
+    should_resend_heartbeat_alert,
 )
 from playwright.sync_api import (
     Browser,
@@ -600,6 +601,49 @@ def _notify_stale_heartbeat(handle: str, reason: str) -> None:
         print(f"[notify-warn] failed to send heartbeat alert for {handle}: {exc}", file=sys.stderr)
 
 
+# State file recording when the last heartbeat Discord alert was sent.
+# Each --health-check run is a fresh process (cron / launchd), so the
+# de-dupe cooldown can't live in memory — it persists here, mirroring
+# sync.py's logs/dry-run-state.json approach.
+HEARTBEAT_ALERT_STATE_FILE = PROJECT_ROOT / "logs" / "heartbeat-alert-state.json"
+
+
+def _load_heartbeat_alert_iso() -> str | None:
+    """ISO timestamp of the last sent heartbeat alert, or None when no
+    alert has been sent (file missing) or the file is unreadable /
+    corrupt. None makes should_resend_heartbeat_alert treat the next
+    stale tick as the first alert of a fresh outage."""
+    try:
+        data = json.loads(HEARTBEAT_ALERT_STATE_FILE.read_text(encoding="utf-8"))
+        value = data.get("last_alert_iso")
+        return str(value) if value else None
+    except (FileNotFoundError, ValueError, OSError, AttributeError):
+        return None
+
+
+def _save_heartbeat_alert_iso(iso: str) -> None:
+    """Record that an alert was just sent. Best-effort: a write failure
+    only means the next tick may re-alert sooner than the cooldown — far
+    less bad than crashing the health check."""
+    try:
+        HEARTBEAT_ALERT_STATE_FILE.parent.mkdir(parents=True, exist_ok=True)
+        HEARTBEAT_ALERT_STATE_FILE.write_text(
+            json.dumps({"last_alert_iso": iso}), encoding="utf-8"
+        )
+    except OSError as exc:
+        print(f"[heartbeat-warn] could not persist alert state: {exc}", file=sys.stderr)
+
+
+def _clear_heartbeat_alert_state() -> None:
+    """Drop the state file once the heartbeat is healthy again, so the
+    NEXT outage alerts immediately instead of waiting out a cooldown
+    left over from the previous one."""
+    try:
+        HEARTBEAT_ALERT_STATE_FILE.unlink(missing_ok=True)
+    except OSError:
+        pass
+
+
 def run_health_check(handle: str, threshold: int = 3) -> int:
     """Run audit-log-based health checks. Returns 0 if healthy, 1 if any regression.
 
@@ -625,9 +669,22 @@ def run_health_check(handle: str, threshold: int = 3) -> int:
 
     # Discord anomaly report fires ONLY for a stale heartbeat — the
     # judge_heartbeat_alert gate guarantees fresh / cold-start / corrupt
-    # / clock-skew cases never reach here.
+    # / clock-skew cases never reach here. The cooldown gate then
+    # suppresses re-sends within the same ongoing outage so a watcher
+    # that stays dead across many cron ticks pages hourly, not per tick.
     if heartbeat_should_alert:
-        _notify_stale_heartbeat(handle, heartbeat_report.reason)
+        now = _now_iso()
+        if should_resend_heartbeat_alert(
+            is_stale=True,
+            last_alert_iso=_load_heartbeat_alert_iso(),
+            now_iso=now,
+        ):
+            _notify_stale_heartbeat(handle, heartbeat_report.reason)
+            _save_heartbeat_alert_iso(now)
+    else:
+        # Heartbeat is fresh (or cold-start / corrupt / skew). Reset the
+        # de-dupe state so a genuine outage later alerts immediately.
+        _clear_heartbeat_alert_state()
 
     exit_code = 0 if all(r.is_healthy for r in reports) else 1
     for r in reports:

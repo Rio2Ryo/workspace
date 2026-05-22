@@ -433,3 +433,64 @@ def judge_heartbeat_alert(
         reason=f"heartbeat fresh: newest check is {age:.0f}s old (< {stale_after_seconds}s)",
         age_seconds=age,
     )
+
+
+# ── heartbeat alert de-duplication (cooldown) ───────────────────────────
+#
+# judge_heartbeat_alert returns should_alert=True on EVERY tick while the
+# heartbeat stays stale. run_health_check is cron-callable, so a watcher
+# that dies stays dead across many ticks — sending a Discord report each
+# time would bury the operator in duplicates of the same outage.
+#
+# should_resend_heartbeat_alert is the second gate: given when the last
+# alert was actually sent, it suppresses re-sends inside a cooldown
+# window. A multi-hour outage then pages on a fixed cadence (hourly by
+# default) instead of every tick. The caller persists the last-sent
+# timestamp across processes (each cron tick is a fresh process).
+
+DEFAULT_HEARTBEAT_ALERT_COOLDOWN_SECONDS = 3600
+"""Minimum gap between two Discord alerts for the SAME ongoing outage.
+3600s = re-page hourly. Long enough not to spam, short enough that the
+alert stays visible in a busy channel until the watcher is restarted."""
+
+
+def should_resend_heartbeat_alert(
+    *,
+    is_stale: bool,
+    last_alert_iso: str | None,
+    now_iso: str,
+    cooldown_seconds: int = DEFAULT_HEARTBEAT_ALERT_COOLDOWN_SECONDS,
+) -> bool:
+    """Decide whether to ACTUALLY send a heartbeat alert now, given the
+    staleness verdict and when the last alert for this outage was sent.
+
+    Pure function: the caller resolves `last_alert_iso` (from a persisted
+    state file) and `now_iso`, so the cooldown rule is unit-testable
+    without a clock or filesystem.
+
+    Rule:
+      - not stale            → False (nothing to alert about).
+      - stale, no prior send → True  (first alert of this outage).
+      - stale, prior send    → True only once `cooldown_seconds` have
+                                elapsed since that send.
+
+    Fails OPEN: if either timestamp is unparseable, or the stored
+    timestamp is in the future (state-file clock skew), it returns True.
+    For an outage alert a rare duplicate is far better than going silent
+    on corrupt de-dupe state.
+    """
+    if not is_stale:
+        return False
+    if last_alert_iso is None:
+        return True
+
+    last_dt = _parse_iso_utc(last_alert_iso)
+    now_dt = _parse_iso_utc(now_iso)
+    if last_dt is None or now_dt is None:
+        return True
+
+    elapsed = (now_dt - last_dt).total_seconds()
+    if elapsed < 0:
+        # Stored timestamp is in the future — corrupt state. Fail open.
+        return True
+    return elapsed >= cooldown_seconds
