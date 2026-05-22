@@ -275,10 +275,15 @@ def export_status_screenshots(
     thumbnails without leaking host-local absolute paths or embedding large BLOBs
     in state.json. Returned paths are relative to ``status_root`` and safe for
     browser ``src`` attributes.
+
+    Each post maps to ONE stable asset filename, derived from its
+    post_id. Orphaned PNGs (left by an earlier filename scheme, or by
+    posts since removed from the DB) are pruned so this committed +
+    deployed directory does not grow without bound.
     """
     rows = conn.execute(
         """
-        SELECT post_id, screenshot_png, screenshot_size_bytes, local_path
+        SELECT post_id, screenshot_png
         FROM posts
         WHERE handle = ?
         ORDER BY captured_at DESC
@@ -287,15 +292,18 @@ def export_status_screenshots(
     ).fetchall()
 
     safe_handle = _safe_asset_segment(handle.lstrip("@"), "handle")
+    assets_dir = status_root / "screenshots" / safe_handle
     out: dict[str, str] = {}
+    written: set[str] = set()
     for row in rows:
         post_id = str(row["post_id"])
-        local_name = Path(str(row["local_path"] or "")).name
-        if not local_name.lower().endswith(".png"):
-            local_name = f"{post_id}.png"
-        filename = _safe_asset_segment(local_name, f"{post_id}.png")
-        if not filename.lower().endswith(".png"):
-            filename += ".png"
+        # Filename is derived from the stable post_id, NOT the
+        # local_path basename. _screenshot_post names each capture
+        # `{post_id}__{timestamp}.png`, so deriving the public asset
+        # name from it minted a NEW file on every re-capture and
+        # orphaned the old one. post_id is unique per handle, so a
+        # stable name means a re-capture overwrites the asset in place.
+        filename = _safe_asset_segment(post_id, "post") + ".png"
         rel = Path("screenshots") / safe_handle / filename
         dest = status_root / rel
         png = bytes(row["screenshot_png"])
@@ -309,6 +317,16 @@ def export_status_screenshots(
         if not dest.exists() or dest.read_bytes() != png:
             dest.write_bytes(png)
         out[post_id] = rel.as_posix()
+        written.add(filename)
+
+    # Prune orphaned assets — PNGs in this handle's dir not backed by a
+    # current post. The DB BLOB is the source of truth, so they are
+    # safe to drop; keeping them grows the committed/deployed tree
+    # unbounded (one stale file per re-capture under the old scheme).
+    if assets_dir.is_dir():
+        for existing in assets_dir.glob("*.png"):
+            if existing.name not in written:
+                existing.unlink()
     return out
 
 

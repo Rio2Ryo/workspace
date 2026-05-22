@@ -159,10 +159,78 @@ class TestExportStatusScreenshots:
         # The written file stays inside root/screenshots/.
         assert dest.is_relative_to((root / "screenshots").resolve())
 
-    def test_non_png_local_path_falls_back_to_post_id_filename(self, conn, tmp_path) -> None:
+    def test_filename_is_derived_from_post_id_not_local_path(self, conn, tmp_path) -> None:
+        # The public asset name comes from the stable post_id — never
+        # from the local_path basename (which _screenshot_post stamps
+        # with a per-capture timestamp).
         png = b"\x89PNG\r\n\x1a\n" + b"y"
-        _save(conn, "p9", png, local_path="/tmp/host/capture.bin")
+        _save(conn, "p9", png, local_path="screenshots/h/p9__20260523-010203.png")
         root = tmp_path / "status"
         rel = export_status_screenshots(conn, "@h", root)["p9"]
-        # local_path basename wasn't a .png → filename derived from post_id.
         assert rel.endswith("/p9.png")
+
+    def test_recapture_with_new_timestamped_path_does_not_orphan_a_file(
+        self, conn, tmp_path
+    ) -> None:
+        # The orphan bug: _screenshot_post names each capture
+        # `{post_id}__{timestamp}.png`, so a re-capture changes
+        # local_path. The export must still resolve to ONE stable file
+        # — not mint a second asset and leave the first behind.
+        root = tmp_path / "status"
+        _save(conn, "p1", b"\x89PNG\r\n\x1a\nfirst",
+              local_path="screenshots/h/p1__20260523-010000.png")
+        export_status_screenshots(conn, "@h", root)
+
+        update_post_screenshot(
+            conn, handle="@h", post_id="p1", captured_at="2026-05-23T02:00:00Z",
+            screenshot_png=b"\x89PNG\r\n\x1a\nsecond",
+            local_path="screenshots/h/p1__20260523-020000.png",
+        )
+        export_status_screenshots(conn, "@h", root)
+
+        assets = sorted(p.name for p in (root / "screenshots" / "h").glob("*.png"))
+        assert assets == ["p1.png"]
+        assert (root / "screenshots" / "h" / "p1.png").read_bytes() == b"\x89PNG\r\n\x1a\nsecond"
+
+    def test_orphan_png_not_backed_by_a_post_is_pruned(self, conn, tmp_path) -> None:
+        # A leftover asset (old filename scheme, or a post since deleted
+        # from the DB) must be removed — the DB BLOB is the source of
+        # truth and the dir is committed + deployed.
+        root = tmp_path / "status"
+        _save(conn, "p1", b"\x89PNG\r\n\x1a\ncurrent", local_path="screenshots/h/p1.png")
+        orphan = root / "screenshots" / "h" / "p1__20260101-000000.png"
+        orphan.parent.mkdir(parents=True, exist_ok=True)
+        orphan.write_bytes(b"\x89PNG\r\n\x1a\nstale-orphan")
+
+        export_status_screenshots(conn, "@h", root)
+
+        assert not orphan.exists()
+        assert (root / "screenshots" / "h" / "p1.png").exists()
+
+    def test_prune_leaves_non_png_files_untouched(self, conn, tmp_path) -> None:
+        # The prune is scoped to *.png — a stray non-PNG (e.g. a README
+        # or .gitkeep) in the assets dir must survive.
+        root = tmp_path / "status"
+        _save(conn, "p1", b"\x89PNG\r\n\x1a\nx", local_path="screenshots/h/p1.png")
+        keep = root / "screenshots" / "h" / ".gitkeep"
+        keep.parent.mkdir(parents=True, exist_ok=True)
+        keep.write_text("", encoding="utf-8")
+
+        export_status_screenshots(conn, "@h", root)
+
+        assert keep.exists()
+
+    def test_post_removed_from_db_has_its_asset_pruned(self, conn, tmp_path) -> None:
+        root = tmp_path / "status"
+        _save(conn, "p1", b"\x89PNG\r\n\x1a\np1", local_path="screenshots/h/p1.png")
+        _save(conn, "p2", b"\x89PNG\r\n\x1a\np2", local_path="screenshots/h/p2.png")
+        export_status_screenshots(conn, "@h", root)
+        assert (root / "screenshots" / "h" / "p2.png").exists()
+
+        conn.execute("DELETE FROM posts WHERE post_id = 'p2'")
+        conn.commit()
+        out = export_status_screenshots(conn, "@h", root)
+
+        assert "p2" not in out
+        assert not (root / "screenshots" / "h" / "p2.png").exists()
+        assert (root / "screenshots" / "h" / "p1.png").exists()
