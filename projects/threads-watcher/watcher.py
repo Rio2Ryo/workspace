@@ -143,6 +143,23 @@ def _combined_snapshot(conn: Any, handles: list[str]) -> dict[str, Any]:
     }
 
 
+def _atomic_write_json(path: Path, obj: Any) -> None:
+    """Write JSON to `path` atomically: a temp file in the same directory,
+    then os.replace(). A hard kill mid-write (the watchdog SIGKILLs, OOM)
+    must never leave the snapshot truncated — the public status page and
+    sync.py both read this file, so a reader sees either the old complete
+    file or the new one, never a torn write. On any failure the original
+    file is left intact and the temp is cleaned up.
+    """
+    path.parent.mkdir(parents=True, exist_ok=True)
+    tmp = path.with_name(f"{path.name}.{os.getpid()}.tmp")
+    try:
+        tmp.write_text(json.dumps(obj, ensure_ascii=False, indent=2), encoding="utf-8")
+        os.replace(tmp, path)
+    finally:
+        tmp.unlink(missing_ok=True)
+
+
 def _write_web_snapshot_from_db(conn: Any, handle: str | None = None) -> None:
     """Write a sanitized status snapshot derived from the DB source of truth.
 
@@ -170,7 +187,7 @@ def _write_web_snapshot_from_db(conn: Any, handle: str | None = None) -> None:
         dry_run_alert=get_active_dry_run_alert(),
         generated_at=_now_iso(),
     )
-    WEB_SNAPSHOT_FILE.write_text(json.dumps(payload, ensure_ascii=False, indent=2), encoding="utf-8")
+    _atomic_write_json(WEB_SNAPSHOT_FILE, payload)
 
 
 def _now_iso() -> str:
