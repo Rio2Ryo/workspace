@@ -15,14 +15,26 @@ infrastructure for the --confirm promotion.
 
 from __future__ import annotations
 
+import json
+import os
+import socket
+import subprocess
 import sys
+import time
 from pathlib import Path
 
 import pytest
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
-from sync import acquire_lock, main, release_lock  # noqa: E402
+from sync import (  # noqa: E402
+    DEFAULT_LOCK_STALE_SEC,
+    _LOCK_OWNER_FILENAME,
+    acquire_lock,
+    lock_is_stale,
+    main,
+    release_lock,
+)
 
 
 class TestAcquireRelease:
@@ -122,3 +134,140 @@ class TestMainGate:
 
         # The lock dir should have been released by the finally block.
         assert not lockdir.exists(), "lockdir leaked — release_lock didn't run"
+
+
+class TestStaleLockRecovery:
+    """A SIGKILL / OOM-kill / reboot skips main()'s release_lock finally
+    block, leaving the lockdir behind. Without staleness detection the
+    bare mkdir lock would wedge every future launchd tick: each fires,
+    hits FileExistsError, logs 'skipping', and exits 0 — auto-sync dies
+    silently while looking healthy in `launchctl list`. These pin the
+    recovery — a dead-PID owner, or an age past the TTL, is reclaimed."""
+
+    def _seed_lock(self, lockdir: Path, owner: dict | None) -> None:
+        """Create a held lockdir carrying a given owner.json payload.
+        owner=None writes no owner file (a pre-staleness lockdir, or a
+        lock torn between mkdir and the owner.json write)."""
+        lockdir.mkdir()
+        if owner is not None:
+            (lockdir / _LOCK_OWNER_FILENAME).write_text(
+                json.dumps(owner), encoding="utf-8"
+            )
+
+    def _dead_pid(self) -> int:
+        """A PID guaranteed not to be alive: spawn a trivial child, wait
+        for it to exit and be reaped, then reuse its (now-free) PID."""
+        proc = subprocess.Popen([sys.executable, "-c", ""])
+        proc.wait()
+        return proc.pid
+
+    def _owner(self, pid: int, started_ts: int) -> dict:
+        return {
+            "pid": pid,
+            "host": socket.gethostname(),
+            "started_ts": started_ts,
+            "started_at": "2026-05-23T00:00:00Z",
+        }
+
+    def test_dead_pid_owner_is_stale_and_reclaimed(self, tmp_path: Path):
+        lock = tmp_path / "lock.d"
+        # Recent started_ts — only the dead PID marks it stale.
+        self._seed_lock(lock, self._owner(self._dead_pid(), int(time.time())))
+        assert lock_is_stale(lock, DEFAULT_LOCK_STALE_SEC) is True
+        assert acquire_lock(lock) is True
+        # Reclaim must leave a fresh owner.json naming THIS process.
+        owner = json.loads((lock / _LOCK_OWNER_FILENAME).read_text())
+        assert owner["pid"] == os.getpid()
+
+    def test_live_pid_owner_within_ttl_is_held(self, tmp_path: Path):
+        lock = tmp_path / "lock.d"
+        # os.getpid() is this very test process — unambiguously alive.
+        self._seed_lock(lock, self._owner(os.getpid(), int(time.time())))
+        assert lock_is_stale(lock, DEFAULT_LOCK_STALE_SEC) is False
+        assert acquire_lock(lock) is False
+
+    def test_live_pid_owner_past_ttl_is_reclaimed(self, tmp_path: Path):
+        # A genuinely hung run: PID alive, but started 2h ago. The TTL
+        # backstop reclaims it — no real sync runs for an hour.
+        lock = tmp_path / "lock.d"
+        self._seed_lock(lock, self._owner(os.getpid(), int(time.time()) - 7200))
+        assert lock_is_stale(lock, DEFAULT_LOCK_STALE_SEC) is True
+        assert acquire_lock(lock) is True
+
+    def test_no_owner_file_fresh_lock_is_held(self, tmp_path: Path):
+        # owner.json missing (pre-staleness lockdir) + fresh mtime →
+        # treat as a live holder; never reclaim a just-created lock.
+        lock = tmp_path / "lock.d"
+        self._seed_lock(lock, None)
+        assert lock_is_stale(lock, DEFAULT_LOCK_STALE_SEC) is False
+        assert acquire_lock(lock) is False
+
+    def test_no_owner_file_old_lock_is_reclaimed(self, tmp_path: Path):
+        # owner.json missing + lockdir mtime 2h old → TTL fallback.
+        lock = tmp_path / "lock.d"
+        self._seed_lock(lock, None)
+        old = time.time() - 7200
+        os.utime(lock, (old, old))
+        assert lock_is_stale(lock, DEFAULT_LOCK_STALE_SEC) is True
+        assert acquire_lock(lock) is True
+
+    def test_corrupt_owner_file_falls_back_to_mtime_ttl(self, tmp_path: Path):
+        # owner.json present but not valid JSON → treated as missing,
+        # falls back to the lockdir mtime TTL.
+        lock = tmp_path / "lock.d"
+        lock.mkdir()
+        (lock / _LOCK_OWNER_FILENAME).write_text("{not json", encoding="utf-8")
+        old = time.time() - 7200
+        os.utime(lock, (old, old))
+        assert lock_is_stale(lock, DEFAULT_LOCK_STALE_SEC) is True
+
+    def test_acquire_writes_owner_file_on_fresh_lock(self, tmp_path: Path):
+        lock = tmp_path / "lock.d"
+        assert acquire_lock(lock) is True
+        owner = json.loads((lock / _LOCK_OWNER_FILENAME).read_text())
+        assert owner["pid"] == os.getpid()
+        assert owner["host"] == socket.gethostname()
+
+    def test_release_removes_owner_file_so_rmdir_succeeds(self, tmp_path: Path):
+        lock = tmp_path / "lock.d"
+        acquire_lock(lock)
+        assert (lock / _LOCK_OWNER_FILENAME).exists()
+        release_lock(lock)
+        # owner.json removed first → the rmdir isn't blocked by a
+        # non-empty directory; the whole lockdir is gone.
+        assert not lock.exists()
+
+    def test_reclaim_emits_log_line(self, tmp_path: Path):
+        lock = tmp_path / "lock.d"
+        self._seed_lock(lock, self._owner(self._dead_pid(), int(time.time())))
+        lines: list[str] = []
+        assert acquire_lock(lock, log=lines.append) is True
+        assert any("recovered stale sync lock" in m for m in lines)
+
+    def test_main_recovers_stale_lock_instead_of_skipping(self, tmp_path: Path):
+        # End-to-end wedge scenario: a dead-PID lockdir must NOT make
+        # main() skip — it reclaims, proceeds, and the log says so.
+        db = tmp_path / "db.sqlite"
+        db.touch()
+        snap = tmp_path / "state.json"
+        snap.write_text("{}", encoding="utf-8")
+        lock = tmp_path / "lock.d"
+        self._seed_lock(lock, self._owner(self._dead_pid(), int(time.time())))
+
+        # main may raise/exit non-zero (the empty DB has no `posts`
+        # table) — we only assert it got PAST the lock gate.
+        try:
+            main([
+                "--db", str(db),
+                "--snapshot", str(snap),
+                "--cursor", str(tmp_path / ".cursor"),
+                "--log", str(tmp_path / "sync.log"),
+                "--workspace", str(tmp_path),
+                "--lockdir", str(lock),
+            ])
+        except Exception:
+            pass
+
+        log_text = (tmp_path / "sync.log").read_text(encoding="utf-8")
+        assert "recovered stale sync lock" in log_text
+        assert "another sync.py is in progress — skipping" not in log_text

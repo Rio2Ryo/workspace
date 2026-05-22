@@ -23,12 +23,15 @@ Exit codes:
 from __future__ import annotations
 
 import argparse
+import json
 import os
 import shlex
+import socket
 import sqlite3
 import subprocess
 import sys
 import time
+from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import datetime, timezone
 from pathlib import Path
@@ -59,6 +62,16 @@ SCREENSHOT_ASSETS_REL_FROM_WORKSPACE = "projects/threads-watcher/threads-watcher
 # of pending — long enough to skip flapping deltas, short enough to
 # surface in a single morning scroll of the log.
 DRY_RUN_ALERT_THRESHOLD = 3
+
+# A held lockdir older than this — or owned by a PID that is no longer
+# alive — is treated as stale and reclaimed. sync.py runs for seconds;
+# the launchd cadence is 30 min, so an hour-old lock cannot belong to a
+# live run. Without staleness detection a sync.py killed by SIGKILL /
+# OOM / reboot (all of which skip release_lock's finally block) wedges
+# the lockdir forever: every later launchd tick hits FileExistsError,
+# logs "skipping", and exits 0 — auto-sync silently dies while looking
+# healthy in `launchctl list`.
+DEFAULT_LOCK_STALE_SEC = 3600
 
 
 # ── pure helpers (unit-tested) ──────────────────────────────────────────
@@ -408,6 +421,19 @@ def parse_args(argv: list[str] | None) -> argparse.Namespace:
             "tenants. Only one sync.py can hold this directory at a time."
         ),
     )
+    p.add_argument(
+        "--lock-stale-sec",
+        type=int,
+        default=DEFAULT_LOCK_STALE_SEC,
+        help=(
+            "A held --lockdir is reclaimed as stale when it is owned "
+            "by a dead PID, or older than N seconds. Default "
+            f"{DEFAULT_LOCK_STALE_SEC} (1h) — longer than any real "
+            "sync run, so a live run is never reclaimed, but short "
+            "enough that a lock wedged by a SIGKILL / OOM / reboot "
+            "(which all skip release_lock) self-heals."
+        ),
+    )
     p.add_argument("--enable-push", action="store_true",
                    help="Also push after commit. Only effective with --confirm.")
     p.add_argument(
@@ -455,9 +481,91 @@ def parse_args(argv: list[str] | None) -> argparse.Namespace:
     return p.parse_args(argv)
 
 
-def acquire_lock(lockdir: Path) -> bool:
+_LOCK_OWNER_FILENAME = "owner.json"
+
+
+def _pid_alive(pid: int) -> bool:
+    """True if a process with `pid` currently exists. `os.kill(pid, 0)`
+    sends no signal — it only probes existence. PermissionError means
+    the PID exists but is owned by another user, so it is still alive."""
+    if not isinstance(pid, int) or pid <= 0:
+        return False
+    try:
+        os.kill(pid, 0)
+    except ProcessLookupError:
+        return False
+    except PermissionError:
+        return True
+    return True
+
+
+def _write_lock_owner(lockdir: Path) -> None:
+    """Record who holds the lock so a later contender can tell a live
+    holder from a crashed one. Best-effort: the mkdir IS the lock and
+    this file is only staleness metadata, so a failed write must not
+    abort acquisition — the TTL fallback still works without it."""
+    owner = {
+        "pid": os.getpid(),
+        "host": socket.gethostname(),
+        "started_ts": int(time.time()),
+        "started_at": now_iso(),
+    }
+    try:
+        (lockdir / _LOCK_OWNER_FILENAME).write_text(
+            json.dumps(owner), encoding="utf-8"
+        )
+    except OSError:
+        pass
+
+
+def _read_lock_owner(lockdir: Path) -> dict | None:
+    """Parse the lockdir's owner.json; None when missing or corrupt."""
+    try:
+        owner = json.loads(
+            (lockdir / _LOCK_OWNER_FILENAME).read_text(encoding="utf-8")
+        )
+        return owner if isinstance(owner, dict) else None
+    except (OSError, ValueError):
+        return None
+
+
+def lock_is_stale(lockdir: Path, stale_after_sec: int) -> bool:
+    """Decide whether an existing lockdir was abandoned by a dead run.
+
+    Two signals, in priority order:
+      1. A same-host owner.json naming a PID that is no longer alive →
+         unambiguously stale (recovers on the very next tick after a
+         crash, without waiting for the TTL).
+      2. Age > stale_after_sec → stale. The fallback for when owner.json
+         is missing/corrupt (a pre-staleness lockdir, or the holder died
+         in the window between mkdir and the owner.json write), when the
+         PID lives on another host we can't probe, or when a same-host
+         PID is alive but has hung far past any plausible sync duration.
+
+    A live same-host PID still inside the TTL window is treated as a
+    genuine holder (returns False)."""
+    owner = _read_lock_owner(lockdir)
+    if owner is not None and owner.get("host") == socket.gethostname():
+        pid = owner.get("pid")
+        if isinstance(pid, int) and not _pid_alive(pid):
+            return True
+    started_ts = owner.get("started_ts") if owner else None
+    if not isinstance(started_ts, (int, float)):
+        try:
+            started_ts = lockdir.stat().st_mtime
+        except OSError:
+            return False
+    return (time.time() - started_ts) > stale_after_sec
+
+
+def acquire_lock(
+    lockdir: Path,
+    *,
+    stale_after_sec: int = DEFAULT_LOCK_STALE_SEC,
+    log: Callable[[str], None] | None = None,
+) -> bool:
     """mkdir-atomic lock. Returns True on success, False if another sync
-    is already in progress. Matches restart-watcher.sh's lock pattern
+    is genuinely in progress. Matches restart-watcher.sh's lock pattern
     (4355a8a) — portable across macOS / Linux without flock(1) which
     macOS doesn't ship.
 
@@ -469,12 +577,47 @@ def acquire_lock(lockdir: Path) -> bool:
       --enable-push, both push, second push fast-forwards over the
       first.
 
-    Caller is responsible for releasing via release_lock() in a finally
-    block — there's no os.atexit wiring so an unhandled exception still
-    cleans up (vs leaving the lockdir wedged across reboots).
+    Stale-lock recovery: release_lock only runs in main()'s finally
+    block, so a SIGKILL / OOM-kill / power loss leaves the lockdir
+    behind. A bare mkdir lock would then wedge every future tick. So a
+    contended lock is probed via lock_is_stale(); a dead owner PID or
+    an age past stale_after_sec means the holder is gone, and the lock
+    is reclaimed (rmdir + one retry mkdir). If a competitor reclaims
+    first, the retry mkdir fails and we correctly return False — the
+    residual reclaim race needs two live syncs starting within the same
+    microsecond against a pre-existing stale lock, which a 30-min
+    periodic job does not produce.
+
+    Caller releases via release_lock() in a finally block.
     """
     try:
         lockdir.mkdir(parents=False, exist_ok=False)
+        _write_lock_owner(lockdir)
+        return True
+    except FileExistsError:
+        pass
+
+    if not lock_is_stale(lockdir, stale_after_sec):
+        return False
+
+    if log is not None:
+        log(
+            f"recovered stale sync lock {lockdir} — previous run did "
+            f"not release it (SIGKILL / OOM / reboot)"
+        )
+    try:
+        (lockdir / _LOCK_OWNER_FILENAME).unlink()
+    except OSError:
+        pass
+    try:
+        lockdir.rmdir()
+    except OSError:
+        # Another contender is mid-reclaim, or the dir gained content
+        # we don't own — yield rather than risk clobbering it.
+        return False
+    try:
+        lockdir.mkdir(parents=False, exist_ok=False)
+        _write_lock_owner(lockdir)
         return True
     except FileExistsError:
         return False
@@ -482,8 +625,14 @@ def acquire_lock(lockdir: Path) -> bool:
 
 def release_lock(lockdir: Path) -> None:
     """Best-effort lock release. Idempotent — repeated calls are safe.
-    Swallows OSError so a missing/already-removed lockdir doesn't mask
-    the real error that brought us here."""
+    Removes the owner.json metadata file first so the rmdir does not
+    fail on a non-empty directory. Swallows OSError so a missing /
+    already-removed lockdir doesn't mask the real error that brought
+    us here."""
+    try:
+        (lockdir / _LOCK_OWNER_FILENAME).unlink()
+    except OSError:
+        pass
     try:
         lockdir.rmdir()
     except OSError:
@@ -516,7 +665,9 @@ def main(argv: list[str] | None = None) -> int:
     # Lock BEFORE opening the DB / reading the cursor. The launchd cycle
     # is purely periodic — if another sync is in progress, skipping this
     # tick is the right answer (the next tick will catch up).
-    if not acquire_lock(args.lockdir):
+    if not acquire_lock(
+        args.lockdir, stale_after_sec=args.lock_stale_sec, log=log.log
+    ):
         log.log(
             f"another sync.py is in progress — skipping "
             f"(lock dir {args.lockdir} exists)"
