@@ -153,3 +153,37 @@ def test_main_function_direct(monkeypatch, capsys):
     monkeypatch.setattr("sys.stdin", io.StringIO(HUNG_LOOP))
     assert main() == 0
     assert capsys.readouterr().out.strip() == "hung-loop"
+
+
+# ── producer/consumer contract with health.py ─────────────────────────
+#
+# restart_decision matches STALE_CODE_MARKER / HUNG_LOOP_MARKER as
+# substrings of whatever `watcher.py --health-check` prints — text built
+# from health.py's reason strings. The tests above feed the classifier
+# hand-written samples; if health.py reworded a reason and dropped a
+# marker, they would stay green while auto-restart silently stopped
+# firing (the exact 13h-silent-breakage class the self-heal system
+# exists to prevent). These two drive health.py's REAL reason builders
+# so a wording drift fails loudly here.
+
+from health import check_process_staleness, judge_heartbeat_alert  # noqa: E402
+
+
+def test_health_stale_code_reason_is_recognized_by_classifier():
+    report = check_process_staleness(
+        process_start_iso="2026-05-17T20:00:00Z",
+        source_files=[("health.py", "2026-05-17T23:16:00Z")],  # edited after start
+    )
+    assert report.is_healthy is False
+    assert is_restart_triggering(report.reason)
+    assert restart_reason(report.reason) == "stale-code"
+
+
+def test_health_hung_loop_reason_is_recognized_by_classifier():
+    alert = judge_heartbeat_alert(
+        last_check_iso="2026-05-17T20:00:00Z",
+        now_iso="2026-05-17T21:00:00Z",  # 3600s old >> 300s threshold
+    )
+    assert alert.is_stale is True
+    assert is_restart_triggering(alert.reason)
+    assert restart_reason(alert.reason) == "hung-loop"
