@@ -9,7 +9,13 @@ cd "$(dirname "$0")"
 LOG="logs/publish.log"
 mkdir -p logs
 
-ts_log() { printf '%s publish-if-delta.sh: %s\n' "$(date -u +%FT%TZ)" "$*" | tee -a "$LOG" >&2; }
+# Routine progress lines go to the log file + stdout. Errors go to
+# ts_err (log file + stderr). Previously every line was teed to stderr,
+# so launchd's StandardErrorPath (logs/publish.err.log) filled with a
+# routine "skip: no unpublished delta" line every tick — burying real
+# errors and growing the err log unbounded.
+ts_log() { printf '%s publish-if-delta.sh: %s\n' "$(date -u +%FT%TZ)" "$*" | tee -a "$LOG"; }
+ts_err() { printf '%s publish-if-delta.sh: %s\n' "$(date -u +%FT%TZ)" "$*" | tee -a "$LOG" >&2; }
 
 read_state() {
   venv/bin/python - <<'PY'
@@ -32,7 +38,7 @@ print(max_id, cursor, max_id - cursor)
 PY
 }
 
-state_before=$(read_state) || { ts_log "ERROR: failed to read DB/cursor state"; exit 1; }
+state_before=$(read_state) || { ts_err "ERROR: failed to read DB/cursor state"; exit 1; }
 read -r db_max_before cursor_before delta_before <<< "$state_before"
 
 if [ "${delta_before:-0}" -le 0 ]; then
@@ -54,22 +60,22 @@ if ! venv/bin/python sync.py \
   --max-log-bytes 1048576 \
   --log-backup-count 5 \
   --tee-stderr; then
-  ts_log "ERROR: sync.py failed or guards blocked"
+  ts_err "ERROR: sync.py failed or guards blocked"
   exit 1
 fi
 
-state_after=$(read_state) || { ts_log "ERROR: failed to read DB/cursor after sync"; exit 1; }
+state_after=$(read_state) || { ts_err "ERROR: failed to read DB/cursor after sync"; exit 1; }
 read -r db_max_after cursor_after delta_after <<< "$state_after"
 
 if [ "$cursor_after" -lt "$db_max_before" ]; then
-  ts_log "ERROR: sync did not advance cursor enough (before_db=$db_max_before after_cursor=$cursor_after after_db=$db_max_after)"
+  ts_err "ERROR: sync did not advance cursor enough (before_db=$db_max_before after_cursor=$cursor_after after_db=$db_max_after)"
   exit 1
 fi
 
 ts_log "sync complete: db_max=$db_max_after cursor=$cursor_after delta=$delta_after; deploying"
 
-if ! ./threads-watcher-status/deploy.sh 2>&1 | tee -a "$LOG" >&2; then
-  ts_log "ERROR: deploy failed"
+if ! ./threads-watcher-status/deploy.sh 2>&1 | tee -a "$LOG"; then
+  ts_err "ERROR: deploy failed"
   exit 1
 fi
 

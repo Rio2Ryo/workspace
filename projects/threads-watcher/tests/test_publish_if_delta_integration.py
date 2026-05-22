@@ -213,3 +213,41 @@ def test_missing_db_aborts_with_error(sandbox: Path) -> None:
     code, out, synced, deployed = _run(sandbox, db_max=0, cursor=0, make_db=False)
     assert code == 1
     assert synced is False and deployed is False
+
+
+# ── stderr hygiene: launchd's StandardErrorPath is errors-only ────────
+#
+# ts_log used to tee every line to stderr, so launchd's
+# logs/publish.err.log filled with a routine "skip: no unpublished
+# delta" line every tick (90 KB and growing in the live deployment) —
+# burying real errors. Routine progress now goes to stdout / the log
+# file; only ts_err lines reach stderr.
+
+
+def test_routine_skip_message_does_not_pollute_stderr(sandbox: Path) -> None:
+    _make_db(sandbox / "threads_watcher.db", 10)
+    (sandbox / ".sync_cursor").write_text("10", encoding="utf-8")
+    proc = subprocess.run(
+        ["bash", "publish-if-delta.sh"],
+        cwd=str(sandbox), capture_output=True, text=True, timeout=30,
+    )
+    assert proc.returncode == 0
+    # The skip is still logged — to stdout and the log file — just not stderr.
+    assert "skip: no unpublished delta" in proc.stdout
+    assert "skip: no unpublished delta" not in proc.stderr
+    log = (sandbox / "logs" / "publish.log").read_text(encoding="utf-8")
+    assert "skip: no unpublished delta" in log
+
+
+def test_real_error_still_reaches_stderr(sandbox: Path) -> None:
+    # sync.py failing is a real error — it MUST stay on stderr so
+    # launchd's error log and any monitor catch it.
+    _make_db(sandbox / "threads_watcher.db", 20)
+    (sandbox / ".sync_cursor").write_text("10", encoding="utf-8")
+    (sandbox / ".sync-should-fail").write_text("", encoding="utf-8")
+    proc = subprocess.run(
+        ["bash", "publish-if-delta.sh"],
+        cwd=str(sandbox), capture_output=True, text=True, timeout=30,
+    )
+    assert proc.returncode == 1
+    assert "ERROR: sync.py failed" in proc.stderr
