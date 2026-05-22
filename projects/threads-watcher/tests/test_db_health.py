@@ -243,3 +243,146 @@ def test_main_returns_one_on_corrupt_db(tmp_path: Path, capsys) -> None:
     # Either "failed to read" or "not a database" — we accept any
     # SQLite-originated error message via the broad DatabaseError catch.
     assert "ERROR" in err
+
+
+# ── Page-level metrics (page_count / freelist / free_ratio) ───────────
+#
+# These pin the "would VACUUM help?" diagnostic added for the
+# AUTO_SYNC_DESIGN.md §4 #7 operational concern. Before this:
+# operators saw "file is N MB" with no way to distinguish reclaimable
+# free pages from real growth.
+
+
+def test_empty_db_reports_page_metrics_with_zero_freelist(db_path: Path) -> None:
+    r = collect_report(db_path)
+    # SQLite always allocates at least 1 page for the schema header,
+    # so page_count > 0 even for a freshly-init'd empty DB.
+    assert r.page_count > 0
+    assert r.page_size > 0
+    assert r.freelist_count == 0
+    assert r.free_ratio == 0.0
+
+
+def test_free_ratio_is_positive_after_delete_without_vacuum(db_path: Path) -> None:
+    # Insert a substantial amount of BLOB data, then DELETE it. SQLite
+    # does NOT auto-VACUUM by default (auto_vacuum is OFF unless
+    # explicitly set at DB creation), so the freed pages land on the
+    # freelist and free_ratio goes up. This is exactly the case the new
+    # --threshold-free-ratio flag is meant to flag: file_bytes still
+    # large, but most of it is reclaimable via VACUUM.
+    conn = connect(db_path)
+    try:
+        for i in range(50):
+            _add_post(conn, handle="h", post_id=f"p{i}", png_size=4096)
+        conn.commit()
+        before = collect_report(db_path)
+        assert before.freelist_count == 0  # no deletes yet
+
+        conn.execute("DELETE FROM posts")
+        conn.commit()
+    finally:
+        conn.close()
+    after = collect_report(db_path)
+    assert after.freelist_count > 0, "DELETE without VACUUM should leave freelist pages"
+    assert after.free_ratio > 0.0
+
+
+def test_threshold_free_ratio_not_tripped_when_under(db_path: Path) -> None:
+    # Empty DB: free_ratio = 0.0. A 0.5 threshold (50% free) must not trip.
+    r = collect_report(db_path, threshold_free_ratio=0.5)
+    assert r.thresholds_tripped == []
+
+
+def test_threshold_free_ratio_trips_at_or_above(db_path: Path) -> None:
+    # Populate, delete, then assert the trip. The deleted-everything
+    # ratio is implementation-dependent (table_root pages stay
+    # allocated), so we don't pin an exact value — instead, query the
+    # actual ratio first and set the threshold below it.
+    conn = connect(db_path)
+    try:
+        for i in range(100):
+            _add_post(conn, handle="h", post_id=f"p{i}", png_size=4096)
+        conn.commit()
+        conn.execute("DELETE FROM posts")
+        conn.commit()
+    finally:
+        conn.close()
+    actual = collect_report(db_path)
+    assert actual.free_ratio > 0.0
+    # Set the threshold strictly below the actual ratio → must trip.
+    threshold = actual.free_ratio * 0.5
+    tripped = collect_report(db_path, threshold_free_ratio=threshold)
+    assert len(tripped.thresholds_tripped) == 1
+    assert "free_ratio" in tripped.thresholds_tripped[0]
+    assert "VACUUM" in tripped.thresholds_tripped[0]
+
+
+def test_threshold_free_ratio_zero_page_count_does_not_divide_by_zero() -> None:
+    # Pure-property test: ensure DbHealthReport.free_ratio handles
+    # the page_count=0 case (defensive — collect_report can't actually
+    # produce this since init_db creates pages, but the dataclass is
+    # frozen-public and may be constructed by external callers).
+    from db_health import DbHealthReport
+
+    r = DbHealthReport(
+        db_path="/nonexistent",
+        file_bytes=0,
+        posts_count=0,
+        checks_count=0,
+        blob_bytes_total=0,
+        handles=[],
+        page_size=4096,
+        page_count=0,
+        freelist_count=0,
+        thresholds_tripped=[],
+    )
+    assert r.free_ratio == 0.0
+
+
+def test_text_output_includes_page_metrics_line(db_path: Path) -> None:
+    r = collect_report(db_path)
+    text = r.to_text()
+    # The page line is what operators visually scan for when deciding
+    # between VACUUM and a row-level cleanup — pin its presence and
+    # the labels so a future format tweak doesn't drop them.
+    assert "page_size=" in text
+    assert "page_count=" in text
+    assert "freelist=" in text
+    assert "used=" in text
+    assert "free=" in text
+
+
+def test_json_output_includes_page_metrics(db_path: Path) -> None:
+    r = collect_report(db_path)
+    payload = json.loads(r.to_json())
+    # asdict serialises the dataclass fields verbatim — free_ratio is a
+    # @property, so it is NOT in the JSON. Consumers must compute it
+    # themselves; this test pins that contract.
+    assert payload["page_size"] > 0
+    assert payload["page_count"] > 0
+    assert payload["freelist_count"] == 0
+    assert "free_ratio" not in payload
+
+
+def test_main_returns_two_when_free_ratio_threshold_tripped(
+    db_path: Path, capsys
+) -> None:
+    # End-to-end CLI: populate + delete to create freelist, run main()
+    # with a 1% threshold (well under whatever DELETE-without-VACUUM
+    # produces), expect exit 2 + TRIPPED line + non-zero pages reported.
+    conn = connect(db_path)
+    try:
+        for i in range(50):
+            _add_post(conn, handle="h", post_id=f"p{i}", png_size=4096)
+        conn.commit()
+        conn.execute("DELETE FROM posts")
+        conn.commit()
+    finally:
+        conn.close()
+
+    rc = main(["--db", str(db_path), "--threshold-free-ratio", "0.01"])
+    out = capsys.readouterr().out
+    assert rc == 2
+    assert "TRIPPED" in out
+    assert "free_ratio" in out
+    assert "VACUUM" in out

@@ -65,15 +65,35 @@ class DbHealthReport:
     checks_count: int
     blob_bytes_total: int
     handles: list[HandleStats]
+    # Page-level metrics — answer "would VACUUM help?" without the
+    # operator having to drop into sqlite3 manually. SQLite never
+    # auto-VACUUMs by default, so a slow stream of DELETEs (e.g.,
+    # checks pruning) leaves freelist pages that count toward file
+    # size but hold no data.
+    page_size: int
+    page_count: int
+    freelist_count: int
     thresholds_tripped: list[str]
+
+    @property
+    def free_ratio(self) -> float:
+        """Fraction of pages on the freelist (0.0–1.0). Returns 0.0 for
+        empty DBs to avoid ZeroDivisionError in callers."""
+        return self.freelist_count / self.page_count if self.page_count > 0 else 0.0
 
     def to_text(self) -> str:
         mb = self.file_bytes / (1024 * 1024)
+        used_pages = self.page_count - self.freelist_count
+        used_mb = (used_pages * self.page_size) / (1024 * 1024)
+        free_mb = (self.freelist_count * self.page_size) / (1024 * 1024)
         lines = [
             f"db_path={self.db_path}",
             f"file_size={self.file_bytes} bytes ({mb:.2f} MB)",
             f"posts={self.posts_count} checks={self.checks_count}",
             f"blob_bytes_total={self.blob_bytes_total}",
+            f"pages page_size={self.page_size} page_count={self.page_count} "
+            f"freelist={self.freelist_count} ({self.free_ratio:.1%}) "
+            f"used={used_mb:.2f}MB free={free_mb:.2f}MB",
         ]
         for h in self.handles:
             hmb = h.blob_bytes / (1024 * 1024)
@@ -94,6 +114,7 @@ def collect_report(
     *,
     threshold_mb: float | None = None,
     threshold_checks: int | None = None,
+    threshold_free_ratio: float | None = None,
 ) -> DbHealthReport:
     # File-level metric BEFORE opening the connection: sqlite3.connect()
     # creates the file if missing, which would silently turn a "DB gone"
@@ -122,6 +143,13 @@ def collect_report(
             """
         ).fetchall()
         handles = [HandleStats(handle=r["handle"], posts=r["c"], blob_bytes=r["b"]) for r in handle_rows]
+        # PRAGMA returns a single row; .fetchone()[0] is the value.
+        # These three together let us reconstruct "would VACUUM help":
+        # high freelist_count = reclaimable; high page_count with low
+        # freelist = real data growth.
+        page_size = conn.execute("PRAGMA page_size").fetchone()[0]
+        page_count = conn.execute("PRAGMA page_count").fetchone()[0]
+        freelist_count = conn.execute("PRAGMA freelist_count").fetchone()[0]
     finally:
         conn.close()
 
@@ -135,6 +163,16 @@ def collect_report(
             tripped.append(f"file_size>={threshold_mb}MB ({file_bytes} bytes)")
     if threshold_checks is not None and checks_count >= threshold_checks:
         tripped.append(f"checks_count>={threshold_checks} ({checks_count})")
+    # Compute free_ratio inline rather than using the property: the
+    # report doesn't exist yet at this point. Empty DB → ratio 0.0 so
+    # a positive threshold never trips on a fresh file.
+    if threshold_free_ratio is not None and page_count > 0:
+        ratio = freelist_count / page_count
+        if ratio >= threshold_free_ratio:
+            tripped.append(
+                f"free_ratio>={threshold_free_ratio:.2f} "
+                f"({ratio:.2%}, {freelist_count}/{page_count} pages reclaimable via VACUUM)"
+            )
 
     return DbHealthReport(
         db_path=str(db_path),
@@ -143,6 +181,9 @@ def collect_report(
         checks_count=checks_count,
         blob_bytes_total=blob_bytes_total,
         handles=handles,
+        page_size=page_size,
+        page_count=page_count,
+        freelist_count=freelist_count,
         thresholds_tripped=tripped,
     )
 
@@ -169,6 +210,15 @@ def _build_parser() -> argparse.ArgumentParser:
         help="Exit code 2 if checks row count >= this many rows. Off by default.",
     )
     p.add_argument(
+        "--threshold-free-ratio",
+        type=float,
+        default=None,
+        help=(
+            "Exit code 2 if freelist_count / page_count >= this fraction (0.0-1.0). "
+            "Suggests VACUUM would reclaim space. Off by default."
+        ),
+    )
+    p.add_argument(
         "--json",
         action="store_true",
         help="Emit single-line JSON instead of the text report.",
@@ -183,6 +233,7 @@ def main(argv: list[str] | None = None) -> int:
             Path(args.db),
             threshold_mb=args.threshold_mb,
             threshold_checks=args.threshold_checks,
+            threshold_free_ratio=args.threshold_free_ratio,
         )
     except FileNotFoundError as e:
         sys.stderr.write(f"ERROR: {e}\n")
