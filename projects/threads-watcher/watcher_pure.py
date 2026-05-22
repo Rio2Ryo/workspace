@@ -196,7 +196,11 @@ def capture_with_retry(
             # one-shot, so it never gets another chance to cut the run
             # off. Propagate so run_once aborts as intended.
             raise
-        except BaseException as exc:  # noqa: BLE001 — we record + re-decide
+        except Exception as exc:  # noqa: BLE001 — record every failure + re-decide
+            # `Exception`, not `BaseException`: KeyboardInterrupt and
+            # SystemExit are process-termination signals, not flaky
+            # captures — retrying (record + sleep) them is wrong. They
+            # are BaseException-not-Exception, so they propagate here.
             errors.append(f"attempt {attempt}/{policy.max_attempts}: {exc}")
             if not should_retry(attempt, policy.max_attempts, exc):
                 break

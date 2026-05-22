@@ -207,6 +207,25 @@ def test_watchdog_timeout_propagates_and_is_not_retried():
     assert sleeps == []
 
 
+def test_keyboard_interrupt_propagates_and_is_not_retried():
+    # KeyboardInterrupt / SystemExit are process-termination signals,
+    # not flaky captures. capture_with_retry catches `Exception`, so
+    # these BaseException-only types propagate untouched — never
+    # recorded + retried.
+    sleeps, sleep_fn = _make_sleep_recorder()
+
+    def interrupted():
+        raise KeyboardInterrupt()
+
+    with pytest.raises(KeyboardInterrupt):
+        capture_with_retry(
+            interrupted,
+            policy=RetryPolicy(max_attempts=3, initial_delay_s=0.1),
+            sleep_fn=sleep_fn,
+        )
+    assert sleeps == []
+
+
 def test_returns_falsy_results_unchanged_not_treated_as_failure():
     # A capture_fn that returns 0, '', or [] is still a success — only
     # raised exceptions trigger retry. Pin so a future refactor that
