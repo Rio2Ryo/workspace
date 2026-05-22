@@ -378,7 +378,6 @@ def _screenshot_post(
 def run_once(handle: str, *, baseline_lookback_days: int | None = None) -> int:
     handle = _normalize_handle(handle)
     conn = connect(DB_FILE)
-    init_db(conn)
 
     checked_at = _now_iso()
     found_count = 0
@@ -387,6 +386,10 @@ def run_once(handle: str, *, baseline_lookback_days: int | None = None) -> int:
     error: str | None = None
 
     try:
+        # init_db is inside the try so a failure (disk full, corrupt or
+        # locked DB) routes through the finally below and closes conn —
+        # outside the try it leaked the connection on every such tick.
+        init_db(conn)
         with sync_playwright() as p:
             browser = p.chromium.launch(headless=True)
             try:
