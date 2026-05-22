@@ -458,18 +458,28 @@ def run_once(handle: str, *, baseline_lookback_days: int | None = None) -> int:
         error = str(e)
         raise
     finally:
-        record_check(
-            conn,
-            handle=handle,
-            checked_at=_now_iso(),
-            found_count=found_count,
-            new_count=new_count,
-            status=status,
-            error=error,
-        )
-        if handle in WEB_SNAPSHOT_HANDLES:
-            _write_web_snapshot_from_db(conn)
-        conn.close()
+        # Cleanup-path failures (a DB hiccup in record_check, a disk-full
+        # during the snapshot write) must NOT mask the real run_once
+        # error nor skip conn.close() and leak the connection. Swallow +
+        # log them; conn.close() is in the inner finally so it always
+        # runs. A missed record_check is self-healing — the heartbeat
+        # staleness detector restarts a watcher that stops writing.
+        try:
+            record_check(
+                conn,
+                handle=handle,
+                checked_at=_now_iso(),
+                found_count=found_count,
+                new_count=new_count,
+                status=status,
+                error=error,
+            )
+            if handle in WEB_SNAPSHOT_HANDLES:
+                _write_web_snapshot_from_db(conn)
+        except Exception as e:  # noqa: BLE001
+            print(f"[warn] run_once finalize step failed: {e}", file=sys.stderr)
+        finally:
+            conn.close()
 
     print(f"[done] {handle} found={found_count} new_saved_to_db={new_count} at={checked_at}")
     return new_count
