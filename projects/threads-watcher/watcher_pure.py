@@ -301,12 +301,26 @@ def process_post_capture(
             posted_at=captured.get("posted_at"),
         )
     except Exception as e:  # noqa: BLE001 — must catch sqlite errors
+        # File deliberately NOT deleted on DB-write failure: it's the
+        # orphan correlated with the error_log line and helps operators
+        # diagnose what got captured but didn't land.
         return CaptureOutcome(
             new_inserted=False,
             capture_error=f"{pid}: db write failed: {e}",
             became_partial_error=True,
             error_log=[f"[error] DB write failed for {pid}: {e}"],
         )
+
+    # The DB BLOB is the source of truth; the on-disk capture file
+    # (just written by Playwright into screenshots/) has no further
+    # role — export_status_screenshots derives the public asset name
+    # from post_id, not local_path. Drop it so screenshots/ doesn't
+    # grow unbounded across captures and retries. Live deploy was at
+    # 47 MB across ~100 orphans per handle when this lands.
+    try:
+        Path(captured["path"]).unlink(missing_ok=True)
+    except OSError:
+        pass
 
     if inserted:
         retry_note = (

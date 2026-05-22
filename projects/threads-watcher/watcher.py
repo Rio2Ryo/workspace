@@ -865,6 +865,14 @@ def recapture_existing(handle: str, *, limit: int | None = None) -> int:
                 ):
                     updated += 1
                     print(f"[recaptured] {pid} bytes={len(captured['png'])} local={local_rel_path}")
+                # DB BLOB is the source of truth — drop the on-disk
+                # capture file so the recapture loop doesn't accumulate
+                # one orphan per post per run (same fix class as
+                # process_post_capture in watcher_pure.py).
+                try:
+                    Path(captured["path"]).unlink(missing_ok=True)
+                except OSError:
+                    pass
         finally:
             browser.close()
 

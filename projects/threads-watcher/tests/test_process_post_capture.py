@@ -328,3 +328,106 @@ def test_capture_outcome_is_immutable():
     )
     with pytest.raises((AttributeError, Exception)):
         outcome.new_inserted = False  # type: ignore[misc]
+
+
+# ── On-disk capture-file cleanup ────────────────────────────────────────
+#
+# Playwright writes the captured PNG to `out_dir / {post_id}__{ts}.png`
+# inside the project's `screenshots/` directory. Until this turn the
+# file was never deleted — even though save_post_screenshot stores the
+# bytes as a DB BLOB and nothing downstream reads local_path. Live
+# deploy was at 47 MB across ~100 orphans per handle. process_post_
+# capture now drops the file after a successful DB write, and keeps
+# it on a DB-write exception (the orphan is debug evidence
+# correlatable with the error_log line).
+
+
+def test_capture_file_is_unlinked_after_successful_insert(tmp_path):
+    capture_path = tmp_path / "screenshots" / "PID_cleanup.png"
+    capture_path.parent.mkdir(parents=True)
+    capture_path.write_bytes(b"\x89PNG-payload")
+
+    outcome = process_post_capture(
+        pid="PID_cleanup",
+        handle="@hal.lifedesign",
+        project_root=tmp_path,
+        screenshot_fn=lambda: _fake_captured(capture_path),
+        save_fn=lambda **_: True,
+        now_iso_fn=_frozen_now(["t0", "t1"]),
+        sleep_fn=_no_sleep,
+    )
+
+    assert outcome.new_inserted is True
+    assert not capture_path.exists()
+
+
+def test_capture_file_is_unlinked_when_db_reports_duplicate(tmp_path):
+    # save_fn returns False for an already-seen post. The capture file
+    # is just as orphan in that case — the DB BLOB is already there —
+    # so it should be dropped too.
+    capture_path = tmp_path / "screenshots" / "PID_dup.png"
+    capture_path.parent.mkdir(parents=True)
+    capture_path.write_bytes(b"\x89PNG-dup")
+
+    outcome = process_post_capture(
+        pid="PID_dup",
+        handle="@hal.lifedesign",
+        project_root=tmp_path,
+        screenshot_fn=lambda: _fake_captured(capture_path),
+        save_fn=lambda **_: False,
+        now_iso_fn=_frozen_now(["t0", "t1"]),
+        sleep_fn=_no_sleep,
+    )
+
+    assert outcome.new_inserted is False
+    assert outcome.capture_error is None
+    assert not capture_path.exists()
+
+
+def test_capture_file_is_kept_when_db_write_raises(tmp_path):
+    # On DB-write exception the file is kept so an operator can
+    # correlate the on-disk orphan with the error_log line.
+    capture_path = tmp_path / "screenshots" / "PID_dberr.png"
+    capture_path.parent.mkdir(parents=True)
+    capture_path.write_bytes(b"\x89PNG-dberr")
+
+    def boom(**_):
+        raise RuntimeError("simulated D1 outage")
+
+    outcome = process_post_capture(
+        pid="PID_dberr",
+        handle="@hal.lifedesign",
+        project_root=tmp_path,
+        screenshot_fn=lambda: _fake_captured(capture_path),
+        save_fn=boom,
+        now_iso_fn=_frozen_now(["t0", "t1"]),
+        sleep_fn=_no_sleep,
+    )
+
+    assert outcome.new_inserted is False
+    assert outcome.became_partial_error is True
+    assert "db write failed" in (outcome.capture_error or "")
+    # Orphan deliberately preserved as debug evidence.
+    assert capture_path.exists()
+    assert capture_path.read_bytes() == b"\x89PNG-dberr"
+
+
+def test_unlink_swallows_missing_file_after_save(tmp_path):
+    # The cleanup must be defensive — a test that doesn't actually
+    # write the file (or a file that vanished between capture and
+    # save) must not turn a successful run into an error.
+    capture_path = tmp_path / "screenshots" / "PID_never_written.png"
+    capture_path.parent.mkdir(parents=True)
+    # NOT writing the file.
+
+    outcome = process_post_capture(
+        pid="PID_never_written",
+        handle="@hal.lifedesign",
+        project_root=tmp_path,
+        screenshot_fn=lambda: _fake_captured(capture_path),
+        save_fn=lambda **_: True,
+        now_iso_fn=_frozen_now(["t0", "t1"]),
+        sleep_fn=_no_sleep,
+    )
+
+    assert outcome.new_inserted is True
