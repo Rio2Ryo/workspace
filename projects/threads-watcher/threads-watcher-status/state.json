@@ -5,14 +5,27 @@
     "@bmw_intokyo"
   ],
   "last_check": {
-    "checked_at": "2026-05-21T23:11:22Z",
-    "found_count": 6,
-    "new_count": 0,
+    "checked_at": "2026-05-22T01:21:35Z",
+    "found_count": 4,
+    "new_count": 1,
     "status": "partial_error",
-    "error": "profile extraction returned partial result: found=6 previous_max=15"
+    "error": "profile extraction returned partial result: found=4 previous_max=15"
   },
-  "saved_count": 49,
+  "saved_count": 50,
   "posts": [
+    {
+      "handle": "@hal.lifedesign",
+      "post_id": "DYn06I1D8PM",
+      "post_url": "https://www.threads.com/@hal.lifedesign/post/DYn06I1D8PM",
+      "first_seen_at": "2026-05-22T01:21:26Z",
+      "captured_at": "2026-05-22T01:21:30Z",
+      "screenshot_size_bytes": 170984,
+      "screenshot_width": 1280,
+      "screenshot_height": 1800,
+      "post_text": "「わかればわかるほど、わかってねえってわかるようになってくんだ」 Dr.STONEのクロムのセリフだけど、ほんとこれだよね。 何かについてわかったふりしてる人たちがいっぱいいるけどさ、わかればわかるほどにわかってないことがわかって、そこにワクワクできる人たち、謙虚になれる人たち、ディープダイブしていく人たちもいる。 自分はいつだって後者でありたい。",
+      "posted_at": "2026-05-22T01:20:51.000Z",
+      "screenshot_path": "screenshots/hal.lifedesign/DYn06I1D8PM__20260522T012130Z.png"
+    },
     {
       "handle": "@hal.lifedesign",
       "post_id": "DYnlrzIktpI",
@@ -653,12 +666,12 @@
   ],
   "recent_stats": {
     "window_hours": 24,
-    "total": 1004,
-    "ok": 177,
-    "partial_error": 827,
+    "total": 1005,
+    "ok": 205,
+    "partial_error": 800,
     "error": 0,
     "other": 0,
-    "success_rate": 0.17629482071713148
+    "success_rate": 0.20398009950248755
   },
   "recent_stats_by_window": {
     "1": {
@@ -672,26 +685,26 @@
     },
     "24": {
       "window_hours": 24,
-      "total": 1004,
-      "ok": 177,
-      "partial_error": 827,
+      "total": 1005,
+      "ok": 205,
+      "partial_error": 800,
       "error": 0,
       "other": 0,
-      "success_rate": 0.17629482071713148
+      "success_rate": 0.20398009950248755
     },
     "168": {
       "window_hours": 168,
-      "total": 4123,
-      "ok": 2081,
-      "partial_error": 2041,
+      "total": 4214,
+      "ok": 2110,
+      "partial_error": 2103,
       "error": 1,
       "other": 0,
-      "success_rate": 0.5047295658501092
+      "success_rate": 0.5007119126720455
     }
   },
   "sync_state": {
-    "cursor": 71,
-    "db_max": 72,
+    "cursor": 72,
+    "db_max": 73,
     "delta": 1,
     "cursor_file_exists": true
   },
@@ -700,5 +713,5 @@
     "since": "2026-05-19T15:01:42Z",
     "delta": 3
   },
-  "snapshot_generated_at": "2026-05-21T23:11:22Z"
+  "snapshot_generated_at": "2026-05-22T01:21:36Z"
 }
