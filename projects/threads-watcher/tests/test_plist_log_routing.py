@@ -28,6 +28,7 @@ key surfaces immediately:
 from __future__ import annotations
 
 import json
+import os
 import shutil
 import subprocess
 from pathlib import Path
@@ -87,6 +88,69 @@ def test_auto_restart_plist_keeps_stdout_path():
     plist = _load(AUTO_RESTART_PLIST)
     out_path = plist.get("StandardOutPath", "")
     assert out_path.endswith("/logs/auto-restart.out.log")
+
+
+def test_auto_restart_plist_keeps_stderr_path():
+    # Symmetric with the sync plist: uncaught shell/Python failures
+    # bypass ts_log(). Without StandardErrorPath a crash that kills the
+    # launchd tick leaves no trace at all.
+    plist = _load(AUTO_RESTART_PLIST)
+    err_path = plist.get("StandardErrorPath", "")
+    assert err_path.endswith("/logs/auto-restart.err.log")
+
+
+def test_auto_restart_plist_invokes_the_self_heal_script():
+    # Pin the invocation: a single ProgramArgument, the self-heal
+    # script. A refactor that renames the script or points the plist
+    # elsewhere fails here, not silently at the next launchd tick.
+    plist = _load(AUTO_RESTART_PLIST)
+    args = plist.get("ProgramArguments", [])
+    assert len(args) == 1, f"expected exactly one ProgramArgument, got {args}"
+    assert args[0].endswith("/auto-restart-if-stale.sh"), (
+        f"auto-restart plist must invoke auto-restart-if-stale.sh; got {args[0]}"
+    )
+
+
+def test_auto_restart_plist_target_exists_and_is_executable():
+    # The plist references the script by ABSOLUTE path. launchd execs
+    # it directly, so it must exist AND carry the exec bit — a rename,
+    # a move, or a lost chmod +x makes every 5-min tick fail silently,
+    # which is exactly the silent-breakage class this subsystem exists
+    # to prevent. Also pin that the absolute path matches where the
+    # script actually lives in the repo.
+    plist = _load(AUTO_RESTART_PLIST)
+    target = Path(plist["ProgramArguments"][0])
+    assert target == PROJECT_ROOT / "auto-restart-if-stale.sh", (
+        f"plist path {target} does not match the script's repo location"
+    )
+    assert target.is_file(), f"{target} does not exist"
+    assert os.access(target, os.X_OK), f"{target} is not executable (launchd cannot run it)"
+
+
+def test_auto_restart_plist_uses_five_minute_interval():
+    # 5-min cadence: fast enough that a dead/hung watcher is revived
+    # within ~5 min, matched to restart-if-stale.sh's own 5-min
+    # cooldown so consecutive ticks don't fight.
+    plist = _load(AUTO_RESTART_PLIST)
+    assert plist.get("StartInterval") == 300
+
+
+def test_auto_restart_plist_working_directory_is_the_project_root():
+    # auto-restart-if-stale.sh self-anchors via `cd "$(dirname "$0")"`,
+    # but the plist's WorkingDirectory must still resolve to a real
+    # directory or launchd refuses to spawn the job.
+    plist = _load(AUTO_RESTART_PLIST)
+    wd = Path(plist.get("WorkingDirectory", ""))
+    assert wd == PROJECT_ROOT, f"WorkingDirectory {wd} is not the threads-watcher dir"
+    assert wd.is_dir()
+
+
+def test_auto_restart_plist_does_not_run_at_load():
+    # RunAtLoad=false is the documented default — installing the plist
+    # should not fire an immediate restart, just wait for the first
+    # scheduled tick.
+    plist = _load(AUTO_RESTART_PLIST)
+    assert plist.get("RunAtLoad") is False
 
 
 def test_both_plists_validate_as_well_formed_xml():
