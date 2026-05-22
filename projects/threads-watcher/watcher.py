@@ -9,7 +9,9 @@ from __future__ import annotations
 
 import argparse
 import json
+import os
 import re
+import subprocess
 import sys
 import time
 from datetime import datetime, timezone
@@ -18,9 +20,11 @@ from typing import Any
 
 from db import connect, export_status_screenshots, get_seen_post_ids, init_db, latest_snapshot, record_check, save_post_screenshot, update_post_screenshot
 from health import (
+    HealthReport,
     check_dom_regression,
     check_process_staleness,
     check_recent_errors,
+    judge_heartbeat_alert,
     judge_partial_error,
     previous_max_found,
 )
@@ -56,6 +60,56 @@ DEFAULT_USER_AGENT = (
 )
 PROFILE_LOAD_TIMEOUT_MS = 30_000
 POST_LOAD_TIMEOUT_MS = 30_000
+
+
+def _parse_notify_handles(raw: str) -> set[str]:
+    return {_normalize_handle(h.strip()) for h in raw.split(",") if h.strip()}
+
+
+def _notify_new_post(handle: str, post_id: str, captured: dict[str, Any]) -> None:
+    """Best-effort Discord notification for newly persisted target posts.
+
+    Notification is explicitly opt-in via env vars so normal local runs remain
+    read-only apart from the SQLite/screenshot artifacts. The live Mac mini
+    runner sets these for @bmw_intokyo → the dedicated Discord thread.
+    """
+    target = os.environ.get("THREADS_WATCHER_NOTIFY_TARGET", "").strip()
+    if not target:
+        return
+
+    notify_handles = _parse_notify_handles(os.environ.get("THREADS_WATCHER_NOTIFY_HANDLES", ""))
+    if notify_handles and _normalize_handle(handle) not in notify_handles:
+        return
+
+    post_url = str(captured.get("post_url") or f"https://www.threads.com/{handle}/post/{post_id}")
+    text = str(captured.get("post_text") or "").strip()
+    posted_at = str(captured.get("posted_at") or "").strip()
+    lines = [
+        f"🧵 {handle} に新規投稿がありました",
+        f"{post_url}",
+    ]
+    if posted_at:
+        lines.append(f"posted_at: {posted_at}")
+    if text:
+        snippet = text.replace("\n", " ")[:280]
+        lines.append(f"本文: {snippet}")
+
+    try:
+        subprocess.run(
+            [
+                "openclaw", "message", "send",
+                "--channel", os.environ.get("THREADS_WATCHER_NOTIFY_CHANNEL", "discord"),
+                "--target", target,
+                "--message", "\n".join(lines),
+            ],
+            cwd=str(PROJECT_ROOT),
+            stdout=subprocess.DEVNULL,
+            stderr=subprocess.DEVNULL,
+            timeout=20,
+            check=False,
+        )
+    except Exception as exc:
+        print(f"[notify-warn] failed to send notification for {handle}/{post_id}: {exc}", file=sys.stderr)
 
 
 def _normalize_handle(handle: str) -> str:
@@ -364,6 +418,11 @@ def run_once(handle: str, *, baseline_lookback_days: int | None = None) -> int:
                     )
                     if outcome.new_inserted:
                         new_count += 1
+                        _notify_new_post(
+                            handle,
+                            pid,
+                            {"post_url": f"https://www.threads.com/@{handle_no_at}/post/{pid}"},
+                        )
                     if outcome.capture_error:
                         capture_errors.append(outcome.capture_error)
                     if outcome.became_partial_error:
@@ -477,15 +536,81 @@ def _collect_source_mtimes() -> list[tuple[str, str | None]]:
     return out
 
 
+def _latest_check_iso(conn, handle: str) -> str | None:
+    """Newest `checks.checked_at` for `handle`, or None when the handle
+    has no checks yet. This is the watcher's heartbeat — the loop writes
+    one check row per handle per iteration."""
+    row = conn.execute(
+        "SELECT checked_at FROM checks WHERE handle = ? ORDER BY checked_at DESC LIMIT 1",
+        (handle,),
+    ).fetchone()
+    return str(row["checked_at"]) if row and row["checked_at"] else None
+
+
+def _heartbeat_health_report(conn, handle: str) -> tuple[HealthReport, bool]:
+    """Run judge_heartbeat_alert against the newest check and adapt the
+    result into a HealthReport so it joins the other health checks.
+
+    Returns (report, should_alert). The bool is the Discord gate — kept
+    separate from report.is_healthy because a None/corrupt heartbeat is
+    'not healthy to reason about' but explicitly NOT an alert."""
+    alert = judge_heartbeat_alert(
+        last_check_iso=_latest_check_iso(conn, handle),
+        now_iso=_now_iso(),
+    )
+    report = HealthReport(
+        handle=handle,
+        is_healthy=not alert.is_stale,
+        reason=alert.reason,
+        recent_checks=[],
+    )
+    return report, alert.should_alert
+
+
+def _notify_stale_heartbeat(handle: str, reason: str) -> None:
+    """Best-effort Discord anomaly report for a stale watcher heartbeat.
+
+    Opt-in via THREADS_WATCHER_NOTIFY_TARGET — identical gating to
+    _notify_new_post, so a normal local `--health-check` stays
+    side-effect-free. Only ever called when judge_heartbeat_alert
+    returned should_alert=True."""
+    target = os.environ.get("THREADS_WATCHER_NOTIFY_TARGET", "").strip()
+    if not target:
+        return
+    message = "\n".join([
+        f"⚠️ threads-watcher heartbeat 異常 ({handle})",
+        reason,
+        "対応: ./restart-watcher.sh で watcher ループを再起動してください",
+    ])
+    try:
+        subprocess.run(
+            [
+                "openclaw", "message", "send",
+                "--channel", os.environ.get("THREADS_WATCHER_NOTIFY_CHANNEL", "discord"),
+                "--target", target,
+                "--message", message,
+            ],
+            cwd=str(PROJECT_ROOT),
+            stdout=subprocess.DEVNULL,
+            stderr=subprocess.DEVNULL,
+            timeout=20,
+            check=False,
+        )
+    except Exception as exc:
+        print(f"[notify-warn] failed to send heartbeat alert for {handle}: {exc}", file=sys.stderr)
+
+
 def run_health_check(handle: str, threshold: int = 3) -> int:
     """Run audit-log-based health checks. Returns 0 if healthy, 1 if any regression.
 
-    Cron-friendly: no network calls, no Chromium, reads only the SQLite audit log
-    plus the process table (for staleness).
+    Cron-friendly: reads the SQLite audit log plus the process table (for
+    staleness). The only outbound call is the opt-in Discord heartbeat
+    alert, which fires exclusively when the heartbeat is genuinely stale.
     """
     conn = connect(DB_FILE)
     init_db(conn)
     try:
+        heartbeat_report, heartbeat_should_alert = _heartbeat_health_report(conn, handle)
         reports = [
             check_dom_regression(conn, handle, threshold=threshold),
             check_recent_errors(conn, handle, threshold=threshold),
@@ -493,9 +618,16 @@ def run_health_check(handle: str, threshold: int = 3) -> int:
                 process_start_iso=_find_watcher_process_start_iso(),
                 source_files=_collect_source_mtimes(),
             ),
+            heartbeat_report,
         ]
     finally:
         conn.close()
+
+    # Discord anomaly report fires ONLY for a stale heartbeat — the
+    # judge_heartbeat_alert gate guarantees fresh / cold-start / corrupt
+    # / clock-skew cases never reach here.
+    if heartbeat_should_alert:
+        _notify_stale_heartbeat(handle, heartbeat_report.reason)
 
     exit_code = 0 if all(r.is_healthy for r in reports) else 1
     for r in reports:

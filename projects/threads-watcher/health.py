@@ -287,3 +287,149 @@ def check_recent_errors(
         reason=f"recent checks include only {len(bad_statuses)}/{threshold} non-ok",
         recent_checks=recent,
     )
+
+
+# ── heartbeat staleness → Discord anomaly alert ─────────────────────────
+#
+# The watcher writes one `checks` row per loop iteration (default 60s
+# interval, THREADS_WATCHER_INTERVAL). The freshness of the most recent
+# `checks.checked_at` is the watcher's heartbeat: while the loop is
+# alive it keeps ticking, and a heartbeat that stops advancing means the
+# loop has hung or died.
+#
+# This is a DIFFERENT failure mode from check_process_staleness (stale
+# *code*) and check_recent_errors (checks running but failing). Here the
+# checks simply STOP — no error rows, no partial_error, just silence.
+# The audit-log-based checks above can't see that, because they only
+# inspect rows that exist; a row that was never written is invisible to
+# them.
+#
+# judge_heartbeat_alert is the gate for sending a Discord anomaly
+# report. The rule the task pins: alert ONLY when the heartbeat is
+# genuinely stale — never on a fresh heartbeat, never on cold start
+# (no heartbeat established yet), never on an unparseable timestamp
+# (that is data corruption, a separate concern we don't conflate).
+
+DEFAULT_HEARTBEAT_STALE_SECONDS = 300
+"""Heartbeat is stale once the newest check is this many seconds old.
+300s = 5 missed 60s beats — long enough that a single slow Playwright
+run (Chromium cold start, network retry) doesn't trip a false alert,
+short enough that a genuinely dead loop is caught within ~5 minutes."""
+
+
+@dataclass(frozen=True)
+class HeartbeatAlert:
+    """Outcome of the heartbeat-staleness judgment.
+
+    `should_alert` is the single bit the caller acts on: True → send the
+    Discord anomaly report, False → stay quiet. `is_stale` and
+    `should_alert` are equal today, but kept distinct so a future
+    de-dupe layer (e.g. "don't re-alert every tick") can set
+    should_alert=False while is_stale stays True.
+    """
+    is_stale: bool
+    should_alert: bool
+    reason: str
+    age_seconds: float | None
+
+
+def _parse_iso_utc(value: str) -> "datetime | None":
+    """Parse the watcher's `%Y-%m-%dT%H:%M:%SZ` timestamps (and the
+    ISO variants datetime.fromisoformat accepts). Returns None on any
+    failure so the caller can branch instead of catching."""
+    from datetime import datetime, timezone
+
+    try:
+        # fromisoformat in 3.11+ accepts the trailing 'Z'; be explicit
+        # for 3.10 and earlier by swapping 'Z' → '+00:00'.
+        normalised = value.strip()
+        if normalised.endswith("Z"):
+            normalised = normalised[:-1] + "+00:00"
+        parsed = datetime.fromisoformat(normalised)
+    except (ValueError, AttributeError):
+        return None
+    # Treat a naive timestamp as UTC — the watcher only ever writes UTC.
+    if parsed.tzinfo is None:
+        return parsed.replace(tzinfo=timezone.utc)
+    return parsed
+
+
+def judge_heartbeat_alert(
+    *,
+    last_check_iso: str | None,
+    now_iso: str,
+    stale_after_seconds: int = DEFAULT_HEARTBEAT_STALE_SECONDS,
+) -> HeartbeatAlert:
+    """Decide whether to send a Discord anomaly report for a stale
+    watcher heartbeat.
+
+    `last_check_iso` is the newest `checks.checked_at` value, or None
+    when the `checks` table is empty. `now_iso` is the current time in
+    the same `%Y-%m-%dT%H:%M:%SZ` shape.
+
+    Pure function: no DB, no clock, no network. The caller resolves both
+    timestamps and feeds them in, so the staleness rule is unit-testable
+    without a live watcher or a mutable clock.
+
+    Decision rule (the contract the unit tests pin):
+      - last_check_iso is None        → no heartbeat established yet
+                                        (cold start). NOT an alert.
+      - now or last_check unparseable → cannot judge staleness; data
+                                        corruption is a separate
+                                        concern. NOT an alert.
+      - last_check in the future      → clock skew; a future heartbeat
+                                        is by definition not stale.
+                                        NOT an alert.
+      - age >= stale_after_seconds    → STALE. Alert.
+      - age <  stale_after_seconds    → fresh. NOT an alert.
+    """
+    if last_check_iso is None:
+        return HeartbeatAlert(
+            is_stale=False,
+            should_alert=False,
+            reason="no checks recorded yet — heartbeat not established (cold start)",
+            age_seconds=None,
+        )
+
+    now_dt = _parse_iso_utc(now_iso)
+    last_dt = _parse_iso_utc(last_check_iso)
+    if now_dt is None or last_dt is None:
+        bad = "now_iso" if now_dt is None else "last_check_iso"
+        return HeartbeatAlert(
+            is_stale=False,
+            should_alert=False,
+            reason=f"unparseable timestamp ({bad}) — cannot judge staleness",
+            age_seconds=None,
+        )
+
+    age = (now_dt - last_dt).total_seconds()
+
+    if age < 0:
+        return HeartbeatAlert(
+            is_stale=False,
+            should_alert=False,
+            reason=(
+                f"last check is {abs(age):.0f}s in the future — clock skew, "
+                f"treating heartbeat as fresh"
+            ),
+            age_seconds=age,
+        )
+
+    if age >= stale_after_seconds:
+        return HeartbeatAlert(
+            is_stale=True,
+            should_alert=True,
+            reason=(
+                f"heartbeat stale: newest check is {age:.0f}s old "
+                f"(>= {stale_after_seconds}s threshold) — watcher loop "
+                f"likely hung or dead"
+            ),
+            age_seconds=age,
+        )
+
+    return HeartbeatAlert(
+        is_stale=False,
+        should_alert=False,
+        reason=f"heartbeat fresh: newest check is {age:.0f}s old (< {stale_after_seconds}s)",
+        age_seconds=age,
+    )
