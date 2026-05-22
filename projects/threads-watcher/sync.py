@@ -782,36 +782,48 @@ def _do_commit_and_maybe_push(
             log.log(f"ERROR: git add screenshots failed: {asset_add_res.stderr}")
             return 1
 
-    # If staged diff is empty for *just the snapshot*, the in-DB snapshot
-    # already matches what git has — bump the cursor anyway so we don't
-    # keep re-checking, but skip the commit (mirrors sync.sh §5).
+    # If the staged diff is empty for the snapshot, the in-DB snapshot
+    # already matches what git has — skip the commit (mirrors sync.sh
+    # §5). This is also the push-RETRY path: a previous tick may have
+    # committed here and then failed to push, leaving the cursor un-
+    # advanced (see below), so we re-enter with the same delta. The
+    # push step still runs, carrying the stranded commit to origin.
     diff_check = run_cmd(build_git_diff_cached_allowed_args(args.workspace, args.snapshot_rel, asset_relpaths))
-    if diff_check.returncode == 0:
-        log.log("snapshot and screenshot assets already match git index; no commit needed")
-        write_cursor(args.cursor, current_max)
-        clear_dry_run_state(args.dry_state)
-        return 0
+    snapshot_already_committed = diff_check.returncode == 0
 
-    message = build_commit_message(now_iso(), decision.delta)
-    commit_res = run_cmd(build_git_commit_args(args.workspace, message, args.snapshot_rel, asset_relpaths))
-    if commit_res.returncode != 0:
-        log.log(f"ERROR: git commit failed: {commit_res.stderr}")
-        return 1
-    log.log(f"committed: {message}")
+    if snapshot_already_committed:
+        log.log("snapshot and screenshot assets already match git index; no commit needed")
+    else:
+        message = build_commit_message(now_iso(), decision.delta)
+        commit_res = run_cmd(build_git_commit_args(args.workspace, message, args.snapshot_rel, asset_relpaths))
+        if commit_res.returncode != 0:
+            log.log(f"ERROR: git commit failed: {commit_res.stderr}")
+            return 1
+        log.log(f"committed: {message}")
+
+    # Push BEFORE advancing the cursor. The cursor records "everything
+    # up to here is synced"; with --enable-push that is only true once
+    # the commit is on origin. The old order advanced the cursor right
+    # after the commit, so a failed push stranded the local commit —
+    # the next tick saw delta=0, returned early, and never retried,
+    # leaving local/remote divergence for a human to spot.
+    if args.enable_push:
+        push_res = run_cmd(build_git_push_args(args.workspace, args.branch))
+        if push_res.returncode != 0:
+            log.log(f"ERROR: git push failed: {push_res.stderr}")
+            # Cursor deliberately NOT advanced — the next tick re-enters
+            # with the same delta, finds the snapshot already committed
+            # (the branch above), and retries the push until it lands.
+            return 1
+        log.log(f"pushed to origin {args.branch}")
+    else:
+        log.log("ENABLE_PUSH not set, skipping push (commit local only)")
+
+    # Synced: the snapshot is committed and, when enabled, on origin.
     write_cursor(args.cursor, current_max)
     # The pending delta is now in git — resolve any dry-run streak so a
     # stale "dry-run stuck" alert can't outlive the work it tracked.
     clear_dry_run_state(args.dry_state)
-
-    if not args.enable_push:
-        log.log("ENABLE_PUSH not set, skipping push (commit local only)")
-        return 0
-
-    push_res = run_cmd(build_git_push_args(args.workspace, args.branch))
-    if push_res.returncode != 0:
-        log.log(f"ERROR: git push failed: {push_res.stderr}")
-        return 1
-    log.log(f"pushed to origin {args.branch}")
     return 0
 
 

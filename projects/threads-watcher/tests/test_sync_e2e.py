@@ -386,11 +386,47 @@ def test_enable_push_failure_returns_1_and_logs_error(tmp_path):
     assert rc == 1
     log_text = paths["log"].read_text(encoding="utf-8")
     assert "git push failed" in log_text
-    # The local commit still happened — only the push failed. That's the
-    # current behaviour, pinned: a follow-up run will skip (no-delta) but
-    # leave the divergence between local and remote for the human.
+    # The local commit still happened — only the push failed.
     ws_commits = _commit_count(paths["workspace"])
     assert ws_commits == 2  # initial + the one sync just made
+    # The cursor must NOT have advanced: the commit is local-only, not
+    # synced to origin, so the next tick must re-enter and retry the
+    # push (see test_failed_push_is_retried_on_next_run). Advancing it
+    # here would strand the commit forever (delta would read 0).
+    assert not paths["cursor"].exists()
+
+
+def test_failed_push_is_retried_on_next_run(tmp_path):
+    """A push failure must not strand the local commit. The cursor is
+    advanced only once the commit reaches origin, so the next run
+    re-enters with the same delta, finds the snapshot already
+    committed, and retries the push until it lands."""
+    paths = _seed_repo(tmp_path)
+    # A real bare origin captured at the INITIAL commit (no sync commit).
+    bare = _make_bare_origin(tmp_path, paths["workspace"])
+    initial_tip = _bare_branch_tip(bare, "main")
+    _mutate_snapshot(paths["snapshot"], n=1)
+
+    # Run 1: break origin so the push fails after a successful commit.
+    _run("git", "remote", "set-url", "origin", str(tmp_path / "missing.git"), cwd=paths["workspace"])
+    rc1 = sync_mod.main(_argv(paths, "--branch", "main", "--confirm", "--enable-push"))
+    assert rc1 == 1
+    assert not paths["cursor"].exists()                    # cursor NOT advanced
+    assert _bare_branch_tip(bare, "main") == initial_tip   # origin still at initial
+    commits_after_run1 = _commit_count(paths["workspace"])
+    assert commits_after_run1 == 2                         # initial + sync commit
+
+    # Run 2: restore origin → the stranded commit's push is retried.
+    _run("git", "remote", "set-url", "origin", str(bare), cwd=paths["workspace"])
+    rc2 = sync_mod.main(_argv(paths, "--branch", "main", "--confirm", "--enable-push"))
+    assert rc2 == 0
+    # No NEW commit — run 2 only retried the push of run 1's commit.
+    assert _commit_count(paths["workspace"]) == commits_after_run1
+    # The stranded commit is now on origin, and the cursor finally advances.
+    assert _bare_branch_tip(bare, "main") != initial_tip
+    assert paths["cursor"].read_text(encoding="utf-8").strip() == "3"
+    log_text = paths["log"].read_text(encoding="utf-8")
+    assert "pushed to origin main" in log_text
 
 
 def test_enable_push_targets_the_requested_branch(tmp_path):
