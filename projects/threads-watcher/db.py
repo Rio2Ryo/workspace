@@ -300,7 +300,13 @@ def export_status_screenshots(
         dest = status_root / rel
         png = bytes(row["screenshot_png"])
         dest.parent.mkdir(parents=True, exist_ok=True)
-        if not dest.exists() or dest.stat().st_size != len(png):
+        # Re-export only when the on-disk asset differs. The check
+        # compares CONTENT, not size: update_post_screenshot replaces
+        # the BLOB when a re-capture improves quality, and two PNGs of
+        # the same post can compress to an identical byte length —
+        # a size-only check then skipped the rewrite and left the
+        # public page showing the stale screenshot.
+        if not dest.exists() or dest.read_bytes() != png:
             dest.write_bytes(png)
         out[post_id] = rel.as_posix()
     return out
