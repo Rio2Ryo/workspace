@@ -103,6 +103,74 @@ def test_alert_reason_mentions_age_and_threshold():
     assert str(DEFAULT_HEARTBEAT_STALE_SECONDS) in r.reason
 
 
+# ── Restart grace period: a just-started watcher is NOT "hung" ─────────
+#
+# Regression guard for a self-perpetuating restart loop observed
+# 2026-05-22: a watcher restarted seconds ago has no fresh check yet,
+# so the newest checks row predates the restart and reads stale. Before
+# the grace period, that flagged the watcher "hung" → auto-restart
+# killed it → the replacement was equally young → stale → killed → ...
+
+
+def test_stale_heartbeat_with_young_process_is_grace_not_stale():
+    # Newest check 1h old, but the watcher process started 30s ago →
+    # it simply hasn't completed its first iteration. NOT hung.
+    r = judge_heartbeat_alert(
+        last_check_iso="2026-05-22T09:00:00Z",
+        now_iso="2026-05-22T10:00:00Z",
+        process_start_iso="2026-05-22T09:59:30Z",
+    )
+    assert r.is_stale is False
+    assert r.should_alert is False
+    assert "grace period" in r.reason
+
+
+def test_stale_heartbeat_with_old_process_is_genuinely_hung():
+    # Same stale check, but the process has been alive 1h — long past
+    # the window in which it should have beaten. Genuinely hung.
+    r = judge_heartbeat_alert(
+        last_check_iso="2026-05-22T09:00:00Z",
+        now_iso="2026-05-22T10:00:00Z",
+        process_start_iso="2026-05-22T09:00:00Z",
+    )
+    assert r.is_stale is True
+    assert r.should_alert is True
+
+
+def test_stale_heartbeat_without_process_start_iso_stays_stale():
+    # Backward compatibility: when the caller can't resolve the process
+    # start (no live --watch process, or omitted), the grace period
+    # can't apply — the stale verdict stands.
+    r = judge_heartbeat_alert(
+        last_check_iso="2026-05-22T09:00:00Z",
+        now_iso="2026-05-22T10:00:00Z",
+    )
+    assert r.is_stale is True
+
+
+def test_process_exactly_at_uptime_threshold_is_stale():
+    # Uptime == stale_after_seconds → grace period is over (`< window`
+    # boundary), the watcher has had its full window to beat.
+    r = judge_heartbeat_alert(
+        last_check_iso="2026-05-22T09:00:00Z",
+        now_iso="2026-05-22T10:00:00Z",
+        process_start_iso="2026-05-22T09:55:00Z",  # uptime exactly 300s
+    )
+    assert r.is_stale is True
+
+
+def test_grace_period_irrelevant_when_heartbeat_is_fresh():
+    # A fresh check is fresh regardless of process age — the grace
+    # branch is only consulted when the heartbeat would read stale.
+    r = judge_heartbeat_alert(
+        last_check_iso="2026-05-22T09:59:30Z",
+        now_iso="2026-05-22T10:00:00Z",
+        process_start_iso="2026-05-22T09:59:00Z",
+    )
+    assert r.is_stale is False
+    assert "fresh" in r.reason
+
+
 # ── Cold start: no heartbeat established → never alerts ───────────────
 
 

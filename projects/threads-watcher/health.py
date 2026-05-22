@@ -359,6 +359,7 @@ def judge_heartbeat_alert(
     last_check_iso: str | None,
     now_iso: str,
     stale_after_seconds: int = DEFAULT_HEARTBEAT_STALE_SECONDS,
+    process_start_iso: str | None = None,
 ) -> HeartbeatAlert:
     """Decide whether to send a Discord anomaly report for a stale
     watcher heartbeat.
@@ -367,9 +368,20 @@ def judge_heartbeat_alert(
     when the `checks` table is empty. `now_iso` is the current time in
     the same `%Y-%m-%dT%H:%M:%SZ` shape.
 
-    Pure function: no DB, no clock, no network. The caller resolves both
-    timestamps and feeds them in, so the staleness rule is unit-testable
-    without a live watcher or a mutable clock.
+    `process_start_iso` is when the live `--watch` process started, or
+    None when the caller didn't resolve it. It guards against a
+    SELF-PERPETUATING RESTART LOOP: a watcher that was just restarted
+    has not completed its first loop iteration, so the newest
+    `checks` row predates the restart and looks stale — but the
+    watcher is healthy, just young. Flagging that as "hung" makes the
+    auto-restart wrapper kill it, and the replacement is equally young
+    → stale → killed → ... forever. So a heartbeat that would read
+    stale is NOT flagged while the process uptime is still within
+    `stale_after_seconds` (the watcher hasn't had time to beat yet).
+
+    Pure function: no DB, no clock, no network. The caller resolves the
+    timestamps and feeds them in, so the rule is unit-testable without
+    a live watcher or a mutable clock.
 
     Decision rule (the contract the unit tests pin):
       - last_check_iso is None        → no heartbeat established yet
@@ -380,7 +392,10 @@ def judge_heartbeat_alert(
       - last_check in the future      → clock skew; a future heartbeat
                                         is by definition not stale.
                                         NOT an alert.
-      - age >= stale_after_seconds    → STALE. Alert.
+      - age >= stale_after_seconds AND
+        process uptime >= stale_after_seconds → STALE. Alert.
+      - age >= stale_after_seconds but the process started < that
+        window ago → grace period. NOT an alert.
       - age <  stale_after_seconds    → fresh. NOT an alert.
     """
     if last_check_iso is None:
@@ -416,6 +431,24 @@ def judge_heartbeat_alert(
         )
 
     if age >= stale_after_seconds:
+        # Grace period: a just-restarted watcher legitimately has no
+        # fresh check yet. Only a watcher alive LONGER than the
+        # staleness window can truthfully be called hung — otherwise
+        # the auto-restart wrapper kills young watchers forever.
+        proc_dt = _parse_iso_utc(process_start_iso) if process_start_iso else None
+        if proc_dt is not None and now_dt is not None:
+            uptime = (now_dt - proc_dt).total_seconds()
+            if 0 <= uptime < stale_after_seconds:
+                return HeartbeatAlert(
+                    is_stale=False,
+                    should_alert=False,
+                    reason=(
+                        f"heartbeat {age:.0f}s old but watcher started only "
+                        f"{uptime:.0f}s ago (< {stale_after_seconds}s) — "
+                        f"restart grace period, not yet judged hung"
+                    ),
+                    age_seconds=age,
+                )
         return HeartbeatAlert(
             is_stale=True,
             should_alert=True,

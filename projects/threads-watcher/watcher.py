@@ -610,9 +610,14 @@ def _heartbeat_health_report(conn, handle: str) -> tuple[HealthReport, bool]:
     Returns (report, should_alert). The bool is the Discord gate — kept
     separate from report.is_healthy because a None/corrupt heartbeat is
     'not healthy to reason about' but explicitly NOT an alert."""
+    # process_start_iso lets judge_heartbeat_alert apply its restart
+    # grace period: a watcher restarted seconds ago has no fresh check
+    # yet, and flagging that as "hung" would make auto-restart kill it
+    # in a loop.
     alert = judge_heartbeat_alert(
         last_check_iso=_latest_check_iso(conn, handle),
         now_iso=_now_iso(),
+        process_start_iso=_find_watcher_process_start_iso(),
     )
     report = HealthReport(
         handle=handle,

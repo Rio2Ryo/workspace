@@ -83,14 +83,33 @@ def test_report_fresh_heartbeat_healthy_no_alert(conn) -> None:
     assert "fresh" in report.reason
 
 
-def test_report_stale_heartbeat_unhealthy_and_alerts(conn) -> None:
-    """A check from well in the past → stale heartbeat, Discord alert."""
+def test_report_stale_heartbeat_unhealthy_and_alerts(conn, monkeypatch) -> None:
+    """A check from well in the past → stale heartbeat, Discord alert.
+    The process-start probe is stubbed to None (no live --watch
+    process) so the restart grace period does not apply — this test
+    pins the genuinely-hung verdict, not the just-restarted case."""
+    monkeypatch.setattr(watcher, "_find_watcher_process_start_iso", lambda: None)
     record_check(conn, handle="@h", checked_at="2020-01-01T00:00:00Z",
                  found_count=1, new_count=0, status="ok", error=None)
     report, should_alert = watcher._heartbeat_health_report(conn, "@h")
     assert report.is_healthy is False
     assert should_alert is True
     assert "stale" in report.reason
+
+
+def test_report_stale_heartbeat_but_young_process_is_grace_period(conn, monkeypatch) -> None:
+    """A stale check but the --watch process started seconds ago →
+    grace period, NOT flagged hung. This is the regression guard for
+    the self-perpetuating restart loop: a freshly-restarted watcher
+    must not be classified hung before it can write its first check."""
+    recent_start = datetime.now(timezone.utc) - timedelta(seconds=20)
+    monkeypatch.setattr(watcher, "_find_watcher_process_start_iso", lambda: _iso(recent_start))
+    record_check(conn, handle="@h", checked_at="2020-01-01T00:00:00Z",
+                 found_count=1, new_count=0, status="ok", error=None)
+    report, should_alert = watcher._heartbeat_health_report(conn, "@h")
+    assert report.is_healthy is True
+    assert should_alert is False
+    assert "grace period" in report.reason
 
 
 # ── _notify_stale_heartbeat gating ────────────────────────────────────
