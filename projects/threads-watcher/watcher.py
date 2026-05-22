@@ -457,21 +457,50 @@ def run_once(handle: str, *, baseline_lookback_days: int | None = None) -> int:
     return new_count
 
 
-def run_watch(handle: str, interval_s: int, *, baseline_lookback_days: int | None = None) -> None:
-    if interval_s < 60:
+WATCH_MIN_INTERVAL_S = 60
+
+
+def clamp_watch_interval(interval_s: int) -> int:
+    """Floor the watch interval at WATCH_MIN_INTERVAL_S. Threads is rate-
+    sensitive and a sub-minute loop adds no value — the profile barely
+    changes that fast. Pure so the clamp is unit-testable."""
+    if interval_s < WATCH_MIN_INTERVAL_S:
         print("[warn] interval below 60s is not allowed; clamping to 60s", file=sys.stderr)
-        interval_s = 60
+        return WATCH_MIN_INTERVAL_S
+    return interval_s
+
+
+def run_watch_tick(handles: list[str], *, baseline_lookback_days: int | None = None) -> None:
+    """One pass over every watched handle.
+
+    A failure on one handle is logged and MUST NOT abort the others or
+    the surrounding loop — a transient error on @a (network blip, DOM
+    hiccup) should never starve @b of monitoring. KeyboardInterrupt is
+    the one exception that propagates, so Ctrl-C / SIGINT still stops
+    the watcher.
+
+    Extracted from run_watch's `while True` body so this resilience
+    contract is unit-testable without an infinite loop.
+    """
+    for h in handles:
+        try:
+            run_once(h, baseline_lookback_days=baseline_lookback_days)
+        except KeyboardInterrupt:
+            raise
+        except Exception as e:
+            print(f"[watch] iteration failed for {h}: {e}", file=sys.stderr)
+
+
+def run_watch(handle: str, interval_s: int, *, baseline_lookback_days: int | None = None) -> None:
+    interval_s = clamp_watch_interval(interval_s)
     handles = _parse_handles(handle)
     print(f"[watch] handles={handles} interval={interval_s}s lookback_days={baseline_lookback_days}")
     while True:
-        for h in handles:
-            try:
-                run_once(h, baseline_lookback_days=baseline_lookback_days)
-            except KeyboardInterrupt:
-                print("[watch] interrupted")
-                return
-            except Exception as e:
-                print(f"[watch] iteration failed for {h}: {e}", file=sys.stderr)
+        try:
+            run_watch_tick(handles, baseline_lookback_days=baseline_lookback_days)
+        except KeyboardInterrupt:
+            print("[watch] interrupted")
+            return
         time.sleep(interval_s)
 
 
