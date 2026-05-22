@@ -42,12 +42,16 @@ import argparse
 import json
 import sqlite3
 import sys
-from dataclasses import asdict, dataclass
+from dataclasses import asdict, dataclass, field
+from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
 
 PROJECT_ROOT = Path(__file__).resolve().parent
 DEFAULT_DB_FILE = PROJECT_ROOT / "threads_watcher.db"
+DEFAULT_BACKUP_DIR = PROJECT_ROOT / "backups"
+# Matches backup_db.py's threads_watcher-YYYYMMDDTHHMMSSZ.db convention.
+BACKUP_GLOB = "threads_watcher-*.db"
 
 
 @dataclass(frozen=True)
@@ -74,6 +78,14 @@ class DbHealthReport:
     page_count: int
     freelist_count: int
     thresholds_tripped: list[str]
+    # Backup observability — pairs with backup_db.py to close the
+    # "did backups stop happening?" gap. All three are None when
+    # --backup-dir was not passed (caller opted out of the check).
+    # Defaulted so existing call sites and tests constructing
+    # DbHealthReport directly don't have to pass them.
+    backup_dir: str | None = None
+    latest_backup: str | None = None
+    backup_age_hours: float | None = None
 
     @property
     def free_ratio(self) -> float:
@@ -98,6 +110,14 @@ class DbHealthReport:
         for h in self.handles:
             hmb = h.blob_bytes / (1024 * 1024)
             lines.append(f"  - {h.handle}: posts={h.posts} blob={h.blob_bytes} bytes ({hmb:.2f} MB)")
+        if self.backup_dir is not None:
+            if self.latest_backup is None:
+                lines.append(f"backup_dir={self.backup_dir} latest=NONE (no backups found)")
+            else:
+                lines.append(
+                    f"backup_dir={self.backup_dir} latest={self.latest_backup} "
+                    f"age={self.backup_age_hours:.1f}h"
+                )
         if self.thresholds_tripped:
             lines.append("TRIPPED: " + ", ".join(self.thresholds_tripped))
         return "\n".join(lines)
@@ -109,12 +129,28 @@ class DbHealthReport:
         return json.dumps(asdict(self), separators=(",", ":"))
 
 
+def find_latest_backup(backup_dir: Path) -> Path | None:
+    """Return the most-recently-modified backup file, or None if the
+    directory is missing/empty. mtime (not filename) is intentional:
+    catches manual `cp` backups and rsync-style copies that don't
+    follow the timestamp filename convention."""
+    if not backup_dir.exists():
+        return None
+    candidates = list(backup_dir.glob(BACKUP_GLOB))
+    if not candidates:
+        return None
+    return max(candidates, key=lambda p: p.stat().st_mtime)
+
+
 def collect_report(
     db_path: Path,
     *,
     threshold_mb: float | None = None,
     threshold_checks: int | None = None,
     threshold_free_ratio: float | None = None,
+    backup_dir: Path | None = None,
+    threshold_backup_age_hours: float | None = None,
+    now: datetime | None = None,
 ) -> DbHealthReport:
     # File-level metric BEFORE opening the connection: sqlite3.connect()
     # creates the file if missing, which would silently turn a "DB gone"
@@ -174,6 +210,34 @@ def collect_report(
                 f"({ratio:.2%}, {freelist_count}/{page_count} pages reclaimable via VACUUM)"
             )
 
+    # Backup-age check. None for backup_dir means "operator didn't ask"
+    # — skip silently. Empty/missing backup dir AND a threshold means
+    # the check IS asked-for but no backups exist → trip with a
+    # distinct message.
+    latest_backup_str: str | None = None
+    backup_age_hours: float | None = None
+    backup_dir_str: str | None = None
+    if backup_dir is not None:
+        backup_dir_str = str(backup_dir)
+        latest = find_latest_backup(backup_dir)
+        ref_time = (now or datetime.now(tz=timezone.utc))
+        if latest is not None:
+            latest_backup_str = latest.name
+            mtime = datetime.fromtimestamp(latest.stat().st_mtime, tz=timezone.utc)
+            # Clock skew can put the backup mtime in the future; clamp
+            # to 0 so a negative "age" never trips a positive threshold.
+            backup_age_hours = max(0.0, (ref_time - mtime).total_seconds() / 3600.0)
+        if threshold_backup_age_hours is not None:
+            if latest is None:
+                tripped.append(
+                    f"backup_age: no backups in {backup_dir} (threshold >= {threshold_backup_age_hours}h)"
+                )
+            elif backup_age_hours is not None and backup_age_hours >= threshold_backup_age_hours:
+                tripped.append(
+                    f"backup_age>={threshold_backup_age_hours}h "
+                    f"(latest={latest_backup_str} age={backup_age_hours:.1f}h)"
+                )
+
     return DbHealthReport(
         db_path=str(db_path),
         file_bytes=file_bytes,
@@ -184,6 +248,9 @@ def collect_report(
         page_size=page_size,
         page_count=page_count,
         freelist_count=freelist_count,
+        backup_dir=backup_dir_str,
+        latest_backup=latest_backup_str,
+        backup_age_hours=backup_age_hours,
         thresholds_tripped=tripped,
     )
 
@@ -219,6 +286,24 @@ def _build_parser() -> argparse.ArgumentParser:
         ),
     )
     p.add_argument(
+        "--backup-dir",
+        default=None,
+        help=(
+            f"Backup directory to inspect for latest-backup age (default off; "
+            f"pass {DEFAULT_BACKUP_DIR} to match backup_db.py)."
+        ),
+    )
+    p.add_argument(
+        "--threshold-backup-age-hours",
+        type=float,
+        default=None,
+        help=(
+            "Exit code 2 if the most recent backup in --backup-dir is older "
+            "than this many hours, OR if --backup-dir is empty. Requires "
+            "--backup-dir to be set. Off by default."
+        ),
+    )
+    p.add_argument(
         "--json",
         action="store_true",
         help="Emit single-line JSON instead of the text report.",
@@ -229,11 +314,20 @@ def _build_parser() -> argparse.ArgumentParser:
 def main(argv: list[str] | None = None) -> int:
     args = _build_parser().parse_args(argv)
     try:
+        # --threshold-backup-age-hours without --backup-dir is an
+        # invocation error; the threshold has nowhere to look.
+        if args.threshold_backup_age_hours is not None and args.backup_dir is None:
+            sys.stderr.write(
+                "ERROR: --threshold-backup-age-hours requires --backup-dir\n"
+            )
+            return 1
         report = collect_report(
             Path(args.db),
             threshold_mb=args.threshold_mb,
             threshold_checks=args.threshold_checks,
             threshold_free_ratio=args.threshold_free_ratio,
+            backup_dir=Path(args.backup_dir) if args.backup_dir else None,
+            threshold_backup_age_hours=args.threshold_backup_age_hours,
         )
     except FileNotFoundError as e:
         sys.stderr.write(f"ERROR: {e}\n")
