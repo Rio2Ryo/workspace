@@ -460,6 +460,21 @@ def run_once(handle: str, *, baseline_lookback_days: int | None = None) -> int:
 
 WATCH_MIN_INTERVAL_S = 60
 
+# Hard ceiling on a single run_once. A normal iteration (Chromium
+# launch + goto + stable-collect + screenshots) is ~15-75s; 180s is
+# generous. Without it, a wedged Playwright call (Chromium launch
+# deadlock, a socket read with no timeout) hangs the whole watcher
+# indefinitely — observed 2026-05-22: PID 32781 alive 3m44s with zero
+# checks written. The watchdog converts that hang into a bounded,
+# logged, recoverable per-iteration failure.
+RUN_ONCE_TIMEOUT_S = 180
+
+
+class WatchIterationTimeout(Exception):
+    """run_once exceeded RUN_ONCE_TIMEOUT_S — raised by the SIGALRM
+    watchdog. An Exception (not BaseException) so run_watch_tick's
+    `except Exception` catches it and the loop continues."""
+
 
 def clamp_watch_interval(interval_s: int) -> int:
     """Floor the watch interval at WATCH_MIN_INTERVAL_S. Threads is rate-
@@ -471,21 +486,53 @@ def clamp_watch_interval(interval_s: int) -> int:
     return interval_s
 
 
+def run_once_with_watchdog(handle: str, *, timeout_s: int | None = None,
+                           baseline_lookback_days: int | None = None) -> None:
+    """Run one iteration under a SIGALRM watchdog. If run_once does not
+    return within `timeout_s`, the alarm fires and raises
+    WatchIterationTimeout — turning an indefinite hang into a bounded
+    failure the loop can log and move past.
+
+    `timeout_s` defaults to the module-level RUN_ONCE_TIMEOUT_S,
+    resolved at call time (not bound into the signature) so a test or
+    operator override of the module global takes effect.
+
+    SIGALRM is delivered to the main thread (where the watch loop
+    runs); the previous handler + any pending alarm are restored in
+    `finally` so this never leaks watchdog state.
+    """
+    if timeout_s is None:
+        timeout_s = RUN_ONCE_TIMEOUT_S
+
+    def _on_alarm(signum: int, frame: Any) -> None:
+        _ = signum, frame
+        raise WatchIterationTimeout(f"run_once for {handle} exceeded {timeout_s}s")
+
+    previous = signal.signal(signal.SIGALRM, _on_alarm)
+    signal.alarm(timeout_s)
+    try:
+        run_once(handle, baseline_lookback_days=baseline_lookback_days)
+    finally:
+        signal.alarm(0)
+        signal.signal(signal.SIGALRM, previous)
+
+
 def run_watch_tick(handles: list[str], *, baseline_lookback_days: int | None = None) -> None:
     """One pass over every watched handle.
 
     A failure on one handle is logged and MUST NOT abort the others or
     the surrounding loop — a transient error on @a (network blip, DOM
-    hiccup) should never starve @b of monitoring. KeyboardInterrupt is
-    the one exception that propagates, so Ctrl-C / SIGINT still stops
-    the watcher.
+    hiccup) should never starve @b of monitoring. A handle whose
+    run_once hangs is cut off by the watchdog after RUN_ONCE_TIMEOUT_S.
+    KeyboardInterrupt is the one exception that propagates, so Ctrl-C /
+    SIGINT still stops the watcher.
 
     Extracted from run_watch's `while True` body so this resilience
     contract is unit-testable without an infinite loop.
     """
     for h in handles:
         try:
-            run_once(h, baseline_lookback_days=baseline_lookback_days)
+            run_once_with_watchdog(h, baseline_lookback_days=baseline_lookback_days)
         except KeyboardInterrupt:
             raise
         except Exception as e:
