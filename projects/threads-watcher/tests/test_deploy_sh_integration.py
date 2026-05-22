@@ -79,12 +79,17 @@ def _run(
     sb: Path,
     *,
     local_state: dict | None,
+    local_state_raw: str | None = None,
     remote_state: str | None = None,
     deploy_fail: bool = False,
     no_url: bool = False,
 ) -> tuple[int, str]:
     state_path = sb / "state.json"
-    if local_state is None:
+    if local_state_raw is not None:
+        # Write the file verbatim — used to exercise corrupt / non-object
+        # JSON that json.dumps(local_state) could never produce.
+        state_path.write_text(local_state_raw, encoding="utf-8")
+    elif local_state is None:
         state_path.unlink(missing_ok=True)
     else:
         state_path.write_text(json.dumps(local_state), encoding="utf-8")
@@ -133,6 +138,25 @@ def test_local_state_missing_a_required_field_aborts(sandbox: Path) -> None:
     assert code == 1
     assert "missing required fields" in out
     assert "sync_state" in out
+
+
+def test_local_state_invalid_json_aborts_with_clear_message(sandbox: Path) -> None:
+    # A corrupt state.json must be diagnosed as invalid JSON, not
+    # misreported as "missing required fields" (the old 2>&1 folded the
+    # Python traceback into the field list).
+    code, out = _run(sandbox, local_state=None, local_state_raw="{not valid json")
+    assert code == 1
+    assert "not valid JSON" in out
+    assert "missing required fields" not in out
+
+
+def test_local_state_non_object_aborts_with_clear_message(sandbox: Path) -> None:
+    # Valid JSON whose top level is a list must be rejected as
+    # not-an-object, not crash the `k not in data` check into a
+    # misleading all-fields-missing report.
+    code, out = _run(sandbox, local_state=None, local_state_raw="[]")
+    assert code == 1
+    assert "not a JSON object" in out
 
 
 def test_complete_local_state_passes_preflight(sandbox: Path) -> None:

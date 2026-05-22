@@ -59,18 +59,40 @@ fi
 # the latest_snapshot/watcher payload contract — keep aligned with
 # db.latest_snapshot if that grows.
 REQUIRED_FIELDS_CSV="handle,last_check,saved_count,recent_stats,recent_stats_by_window,sync_state,snapshot_generated_at"
-missing=$(REQ="$REQUIRED_FIELDS_CSV" python3 -c "
+# Classify the local payload: PARSE_ERROR (corrupt JSON), NOT_OBJECT
+# (valid JSON but not a dict), MISSING:<fields>, or OK. Mirrors the
+# post-deploy REMOTE_VERIFY block below so a corrupt state.json gets a
+# clear message instead of a Python traceback misreported as "missing
+# required fields" — the old `2>&1` folded stderr into the field list.
+PREFLIGHT=$(REQ="$REQUIRED_FIELDS_CSV" STATE="$STATE_JSON" python3 -c "
 import json, os, sys
-data = json.load(open('$STATE_JSON'))
+try:
+    with open(os.environ['STATE']) as f:
+        data = json.load(f)
+except json.JSONDecodeError as e:
+    print(f'PARSE_ERROR:{e}'); sys.exit(0)
+if not isinstance(data, dict):
+    print('NOT_OBJECT:' + type(data).__name__); sys.exit(0)
 required = os.environ['REQ'].split(',')
 missing = [k for k in required if k not in data]
-sys.stdout.write(','.join(missing))
+print(('MISSING:' + ','.join(missing)) if missing else 'OK')
 " 2>&1)
-if [ -n "$missing" ]; then
-  ts_log "ERROR: local $STATE_JSON missing required fields: $missing"
-  ts_log "  (deploying this would regress the UI to an older shape)"
-  exit 1
-fi
+case "$PREFLIGHT" in
+  OK) ;;
+  MISSING:*)
+    ts_log "ERROR: local $STATE_JSON missing required fields: ${PREFLIGHT#MISSING:}"
+    ts_log "  (deploying this would regress the UI to an older shape)"
+    exit 1 ;;
+  PARSE_ERROR:*)
+    ts_log "ERROR: local $STATE_JSON is not valid JSON: ${PREFLIGHT#PARSE_ERROR:}"
+    exit 1 ;;
+  NOT_OBJECT:*)
+    ts_log "ERROR: local $STATE_JSON is not a JSON object (got ${PREFLIGHT#NOT_OBJECT:})"
+    exit 1 ;;
+  *)
+    ts_log "ERROR: pre-flight check produced unexpected output: $PREFLIGHT"
+    exit 1 ;;
+esac
 
 old_ts=$(python3 -c "import json; print(json.load(open('$STATE_JSON'))['snapshot_generated_at'])" 2>/dev/null || echo "?")
 ts_log "pre-flight OK: local snapshot_generated_at=$old_ts"
