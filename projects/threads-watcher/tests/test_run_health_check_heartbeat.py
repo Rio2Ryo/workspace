@@ -149,6 +149,12 @@ def test_run_health_check_fires_discord_only_when_stale(monkeypatch, tmp_path) -
     db_file = tmp_path / "rhc.db"
     monkeypatch.setattr(watcher, "DB_FILE", db_file)
     monkeypatch.setenv("THREADS_WATCHER_NOTIFY_TARGET", "thread_x")
+    # Redirect the cooldown state file into tmp — otherwise run_health_check
+    # reads/writes the real logs/heartbeat-alert-state.json, so a prior
+    # --health-check run (or another test) leaves a recent last_alert_iso
+    # that the cooldown gate then uses to suppress this test's expected
+    # send. Hermetic state file = order-independent test.
+    monkeypatch.setattr(watcher, "HEARTBEAT_ALERT_STATE_FILE", tmp_path / "hb-state.json")
     # Neutralise the unrelated process-staleness probe so it can't flip
     # exit_code independently of the heartbeat path under test.
     monkeypatch.setattr(watcher, "_find_watcher_process_start_iso", lambda: None)
@@ -174,6 +180,8 @@ def test_run_health_check_silent_when_fresh(monkeypatch, tmp_path) -> None:
     db_file = tmp_path / "rhc2.db"
     monkeypatch.setattr(watcher, "DB_FILE", db_file)
     monkeypatch.setenv("THREADS_WATCHER_NOTIFY_TARGET", "thread_x")
+    # Hermetic cooldown state file — see the sibling test for why.
+    monkeypatch.setattr(watcher, "HEARTBEAT_ALERT_STATE_FILE", tmp_path / "hb-state.json")
     monkeypatch.setattr(watcher, "_find_watcher_process_start_iso", lambda: None)
     monkeypatch.setattr(watcher, "_collect_source_mtimes", lambda: [])
 

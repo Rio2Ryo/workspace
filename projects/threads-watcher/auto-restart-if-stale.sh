@@ -140,15 +140,21 @@ python watcher.py --health-check >"$HEALTH_LOG" 2>&1
 health_exit=$?
 ts_log "health-check exit=$health_exit"
 
-# ── decide if staleness is the reason ──────────────────────────────────
-# The detector's exact phrasing (from health.check_process_staleness):
-#   "watcher started at ... but N source file(s) have been edited since"
-# Pin against that phrase so other --health-check failures (DOM
-# regression, recent errors) don't trigger a restart — they're real
-# issues that need operator attention, not code reload.
-if ! grep -q "source file(s) have been edited since" "$HEALTH_LOG"; then
+# ── decide if a reload-fixable signal is the reason ────────────────────
+# restart_decision.py classifies the --health-check output: it triggers
+# a restart for STALE CODE (process behind on-disk source) and for a
+# HUNG LOOP (heartbeat stale — loop stopped writing checks while the
+# PID lingers). It does NOT trigger for DOM regression / recent errors,
+# which need operator attention, not a reload.
+#
+# The earlier inline grep matched only the stale-code phrase, so a hung
+# loop with a live PID was never auto-revived — that gap is why this
+# went through a classifier.
+if restart_reason=$(python restart_decision.py <"$HEALTH_LOG"); then
+  ts_log "restart-triggering signal detected (${restart_reason})"
+else
   if [ "$health_exit" != 0 ]; then
-    ts_log "health-check unhealthy but NOT staleness — leaving for operator"
+    ts_log "health-check unhealthy but NOT reload-fixable — leaving for operator"
     grep -E "^reason=" "$HEALTH_LOG" | head -5 | sed "s/^/  /" | while read -r l; do ts_log "  $l"; done
   else
     ts_log "watcher is healthy — no action"
@@ -156,11 +162,9 @@ if ! grep -q "source file(s) have been edited since" "$HEALTH_LOG"; then
   exit 0
 fi
 
-ts_log "staleness signal detected"
-
 # ── cooldown gate + restart ────────────────────────────────────────────
 if check_cooldown; then
-  do_restart "staleness"
+  do_restart "$restart_reason"
   exit $?
 fi
 exit 1
