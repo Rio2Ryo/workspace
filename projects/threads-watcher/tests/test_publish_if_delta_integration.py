@@ -58,15 +58,21 @@ def _make_sandbox(tmp_path: Path) -> Path:
 
     # Stub python: the read_state heredoc (`python - `) runs for real;
     # `python sync.py ...` is simulated. A successful sync advances
-    # .sync_cursor to MAX(id) — exactly what the real sync.py does —
-    # unless `.sync-skip-cursor` is present (to exercise the wrapper's
-    # post-sync cursor guard). `.sync-should-fail` makes sync exit 1.
+    # .sync_cursor to MAX(id) — exactly what the real sync.py does.
+    # `.sync-skip-cursor` simulates a guard SKIP: sync.py exits 0
+    # WITHOUT advancing the cursor and logs `guard: SKIP | <reason>`
+    # (mirrored to stderr by --tee-stderr); the reason defaults but is
+    # overridable via `.sync-skip-reason`. `.sync-should-fail` -> exit 1.
     _write_exec(sb / "venv" / "bin" / "python", (
         "#!/bin/sh\n"
         'if [ "$1" = "sync.py" ]; then\n'
         "  touch .sync-called\n"
         '  [ -f .sync-should-fail ] && exit 1\n'
-        '  if [ ! -f .sync-skip-cursor ]; then\n'
+        '  if [ -f .sync-skip-cursor ]; then\n'
+        '    reason="leaked forbidden key at posts[0].local_path"\n'
+        '    [ -f .sync-skip-reason ] && reason=$(cat .sync-skip-reason)\n'
+        '    echo "2026-05-23T00:00:00Z   guard: SKIP | $reason" >&2\n'
+        "  else\n"
         "    python3 -c \"import sqlite3; "
         "open('.sync_cursor','w').write(str(sqlite3.connect('threads_watcher.db')"
         ".execute('select coalesce(max(id),0) from posts').fetchone()[0]))\"\n"
@@ -95,6 +101,7 @@ def _run(
     make_db: bool = True,
     sync_fails: bool = False,
     sync_skips_cursor: bool = False,
+    sync_skip_reason: str | None = None,
     deploy_fails: bool = False,
 ) -> tuple[int, str, bool, bool]:
     """Run publish-if-delta.sh. Returns
@@ -119,6 +126,11 @@ def _run(
         p.unlink(missing_ok=True)
         if flag:
             p.write_text("", encoding="utf-8")
+
+    skip_reason_p = sb / ".sync-skip-reason"
+    skip_reason_p.unlink(missing_ok=True)
+    if sync_skip_reason is not None:
+        skip_reason_p.write_text(sync_skip_reason, encoding="utf-8")
 
     proc = subprocess.run(
         ["bash", "publish-if-delta.sh"],
@@ -187,16 +199,36 @@ def test_sync_failure_aborts_before_deploy(sandbox: Path) -> None:
 
 
 def test_sync_that_does_not_advance_cursor_is_caught(sandbox: Path) -> None:
-    # The subtle guard: sync.py exits 0 but .sync_cursor never moved
-    # past db_max_before. The wrapper must catch this and abort before
-    # deploy rather than publish a half-synced state.
+    # sync.py exits 0 but .sync_cursor never moved past db_max_before —
+    # a guard blocked the sync. The wrapper must catch this and abort
+    # before deploy rather than publish a half-synced state.
     code, out, synced, deployed = _run(
         sandbox, db_max=20, cursor=10, sync_skips_cursor=True,
     )
     assert code == 1
     assert synced is True
     assert deployed is False
-    assert "did not advance cursor" in out
+    assert "guard blocked the sync" in out
+    # The legacy message blamed the cursor logic — a misdiagnosis that
+    # sent operators to the wrong place. It must be gone.
+    assert "did not advance cursor" not in out
+
+
+def test_guard_skip_reason_is_surfaced_in_the_error(sandbox: Path) -> None:
+    # When a guard blocks the sync, publish-if-delta must report the
+    # guard's OWN reason (from sync.py's `guard: SKIP | ...` log line),
+    # so an operator sees the real cause — e.g. a leaked private field
+    # in state.json — instead of being misdirected to the cursor logic.
+    reason = "leaked forbidden key at last_check.error.local_path: 'local_path'"
+    code, out, synced, deployed = _run(
+        sandbox, db_max=20, cursor=10,
+        sync_skips_cursor=True, sync_skip_reason=reason,
+    )
+    assert code == 1
+    assert synced is True
+    assert deployed is False
+    assert reason in out
+    assert "did not advance cursor" not in out
 
 
 def test_deploy_failure_surfaces_exit_1(sandbox: Path) -> None:

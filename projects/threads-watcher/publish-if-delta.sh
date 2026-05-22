@@ -52,15 +52,22 @@ ts_log "delta detected: db_max=$db_max_before cursor=$cursor_before delta=$delta
 # partials mean the live Threads page returned fewer visible cards than usual;
 # already-saved DB posts remain valid, and blocking publication here makes the
 # public page stale even though monitoring is working.
-if ! venv/bin/python sync.py \
+#
+# Capture sync.py's output (it mirrors every log line to stderr via
+# --tee-stderr) so a guard SKIP reason can be surfaced precisely below,
+# then re-emit it so launchd's StandardErrorPath still receives it.
+sync_out=$(venv/bin/python sync.py \
   --confirm \
   --enable-push \
   --min-gap-sec 0 \
   --window 0 \
   --max-log-bytes 1048576 \
   --log-backup-count 5 \
-  --tee-stderr; then
-  ts_err "ERROR: sync.py failed or guards blocked"
+  --tee-stderr 2>&1)
+sync_rc=$?
+[ -n "$sync_out" ] && printf '%s\n' "$sync_out" >&2
+if [ "$sync_rc" -ne 0 ]; then
+  ts_err "ERROR: sync.py failed (exit=$sync_rc) — see logs/sync.log"
   exit 1
 fi
 
@@ -68,7 +75,15 @@ state_after=$(read_state) || { ts_err "ERROR: failed to read DB/cursor after syn
 read -r db_max_after cursor_after delta_after <<< "$state_after"
 
 if [ "$cursor_after" -lt "$db_max_before" ]; then
-  ts_err "ERROR: sync did not advance cursor enough (before_db=$db_max_before after_cursor=$cursor_after after_db=$db_max_after)"
+  # sync.py exited 0 but the cursor did not advance. Under these flags
+  # (--min-gap-sec 0 --window 0) the only exit-0 non-advance path is a
+  # guard skip — in practice snapshot_sanity_check refusing to publish a
+  # corrupt or field-leaking state.json. The old message blamed the
+  # "cursor", sending operators to the DB/cursor logic when the real
+  # cause is whatever the guard reported. Surface the guard's own SKIP
+  # reason (logged by sync.py as `guard: SKIP | <reason>`) instead.
+  skip_reason=$(printf '%s\n' "$sync_out" | grep -E 'guard: SKIP' | tail -1 | sed 's/.*guard: SKIP | //')
+  ts_err "ERROR: snapshot guard blocked the sync — public page not updated: ${skip_reason:-<no guard reason captured; see logs/sync.log> (db=$db_max_before cursor=$cursor_after)}"
   exit 1
 fi
 
