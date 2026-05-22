@@ -38,6 +38,7 @@ from playwright.sync_api import (
     sync_playwright,
 )
 from watcher_pure import (
+    WatchIterationTimeout,
     _extract_post_ids,
     capture_with_retry,
     collect_post_ids_until_stable,
@@ -495,12 +496,6 @@ WATCH_MIN_INTERVAL_S = 60
 # checks written. The watchdog converts that hang into a bounded,
 # logged, recoverable per-iteration failure.
 RUN_ONCE_TIMEOUT_S = 180
-
-
-class WatchIterationTimeout(Exception):
-    """run_once exceeded RUN_ONCE_TIMEOUT_S — raised by the SIGALRM
-    watchdog. An Exception (not BaseException) so run_watch_tick's
-    `except Exception` catches it and the loop continues."""
 
 
 def clamp_watch_interval(interval_s: int) -> int:

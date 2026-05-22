@@ -22,6 +22,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
 from watcher_pure import (  # noqa: E402
     RetryPolicy,
+    WatchIterationTimeout,
     capture_with_retry,
     delay_for_attempt,
     should_retry,
@@ -184,6 +185,26 @@ def test_custom_policy_changes_backoff_sequence():
     )
     # 3 sleeps (between 4 attempts), each multiplied by backoff^(attempt-1)
     assert sleeps == [0.1, 1.0, 10.0]
+
+
+def test_watchdog_timeout_propagates_and_is_not_retried():
+    # WatchIterationTimeout means the SIGALRM watchdog fired — run_once
+    # is over budget. capture_with_retry must re-raise it, NOT record it
+    # and retry: the alarm is one-shot, so swallowing it here defeats
+    # the watchdog (the run would continue past its deadline).
+    sleeps, sleep_fn = _make_sleep_recorder()
+
+    def times_out():
+        raise WatchIterationTimeout("run_once for @a exceeded 180s")
+
+    with pytest.raises(WatchIterationTimeout):
+        capture_with_retry(
+            times_out,
+            policy=RetryPolicy(max_attempts=3, initial_delay_s=0.1),
+            sleep_fn=sleep_fn,
+        )
+    # No retry sleep — it aborted on the first occurrence.
+    assert sleeps == []
 
 
 def test_returns_falsy_results_unchanged_not_treated_as_failure():

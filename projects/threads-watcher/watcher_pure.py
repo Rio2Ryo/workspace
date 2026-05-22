@@ -25,6 +25,16 @@ from pathlib import Path
 from typing import Any, Callable, TypeVar
 
 
+class WatchIterationTimeout(Exception):
+    """run_once exceeded RUN_ONCE_TIMEOUT_S — raised by the SIGALRM
+    watchdog. An Exception (not BaseException) so run_watch_tick's
+    `except Exception` catches it and the loop continues.
+
+    Lives here (not watcher.py) so capture_with_retry can re-raise it
+    without importing the playwright-bound watcher module.
+    """
+
+
 def extract_post_ids_from_hrefs(hrefs: list[str | None], handle: str) -> list[str]:
     """Pure helper: extract unique Threads post IDs from anchor hrefs.
 
@@ -179,6 +189,13 @@ def capture_with_retry(
         try:
             result = capture_fn()
             return result, errors
+        except WatchIterationTimeout:
+            # The SIGALRM watchdog fired — run_once is over budget.
+            # Swallowing it here (recording an error + retrying with a
+            # sleep) would defeat the watchdog entirely: the alarm is
+            # one-shot, so it never gets another chance to cut the run
+            # off. Propagate so run_once aborts as intended.
+            raise
         except BaseException as exc:  # noqa: BLE001 — we record + re-decide
             errors.append(f"attempt {attempt}/{policy.max_attempts}: {exc}")
             if not should_retry(attempt, policy.max_attempts, exc):
