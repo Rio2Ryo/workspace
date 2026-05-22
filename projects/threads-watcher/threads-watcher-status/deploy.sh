@@ -27,10 +27,10 @@
 # Exit codes
 # ----------
 #   0  deploy + verify succeeded
-#   1  local state.json fails the pre-flight schema check
+#   1  local state.json fails the pre-flight schema / privacy check
 #   2  vercel --prod itself failed
 #   3  post-deploy verification failed (deploy went through but the
-#      payload is missing fields)
+#      payload is missing fields or leaks a private one)
 #
 # Usage
 # -----
@@ -59,12 +59,22 @@ fi
 # the latest_snapshot/watcher payload contract — keep aligned with
 # db.latest_snapshot if that grows.
 REQUIRED_FIELDS_CSV="handle,last_check,saved_count,recent_stats,recent_stats_by_window,sync_state,snapshot_generated_at"
+# Private fields that must NEVER reach the public page: raw screenshot
+# bytes (privacy + payload size) and local filesystem paths (info
+# disclosure). Mirrors sync_guards.FORBIDDEN_POST_KEYS — sync.py's
+# snapshot_sanity_check enforces the same set, but deploy.sh is
+# independently runnable AND the watcher may rewrite state.json between
+# sync.py's check and this deploy, so this public-facing gate must
+# re-verify rather than trust the upstream check.
+FORBIDDEN_KEYS_CSV="screenshot_png,local_path"
 # Classify the local payload: PARSE_ERROR (corrupt JSON), NOT_OBJECT
-# (valid JSON but not a dict), MISSING:<fields>, or OK. Mirrors the
-# post-deploy REMOTE_VERIFY block below so a corrupt state.json gets a
-# clear message instead of a Python traceback misreported as "missing
-# required fields" — the old `2>&1` folded stderr into the field list.
-PREFLIGHT=$(REQ="$REQUIRED_FIELDS_CSV" STATE="$STATE_JSON" python3 -c "
+# (valid JSON but not a dict), MISSING:<fields>, LEAKED:<key>@<path>
+# (a forbidden private field present anywhere in the tree), or OK.
+# Mirrors the post-deploy REMOTE_VERIFY block below so a corrupt
+# state.json gets a clear message instead of a Python traceback
+# misreported as "missing required fields" — the old `2>&1` folded
+# stderr into the field list.
+PREFLIGHT=$(REQ="$REQUIRED_FIELDS_CSV" FORBIDDEN="$FORBIDDEN_KEYS_CSV" STATE="$STATE_JSON" python3 -c "
 import json, os, sys
 try:
     with open(os.environ['STATE']) as f:
@@ -75,13 +85,36 @@ if not isinstance(data, dict):
     print('NOT_OBJECT:' + type(data).__name__); sys.exit(0)
 required = os.environ['REQ'].split(',')
 missing = [k for k in required if k not in data]
-print(('MISSING:' + ','.join(missing)) if missing else 'OK')
+if missing:
+    print('MISSING:' + ','.join(missing)); sys.exit(0)
+forbidden = set(os.environ['FORBIDDEN'].split(','))
+def find_forbidden(node, trail):
+    if isinstance(node, dict):
+        for k, v in node.items():
+            here = (trail + '.' + k) if trail else k
+            if k in forbidden:
+                return k, here
+            hit = find_forbidden(v, here)
+            if hit:
+                return hit
+    elif isinstance(node, list):
+        for i, item in enumerate(node):
+            hit = find_forbidden(item, trail + '[' + str(i) + ']')
+            if hit:
+                return hit
+    return None
+leak = find_forbidden(data, '')
+print(('LEAKED:' + leak[0] + '@' + leak[1]) if leak else 'OK')
 " 2>&1)
 case "$PREFLIGHT" in
   OK) ;;
   MISSING:*)
     ts_log "ERROR: local $STATE_JSON missing required fields: ${PREFLIGHT#MISSING:}"
     ts_log "  (deploying this would regress the UI to an older shape)"
+    exit 1 ;;
+  LEAKED:*)
+    ts_log "ERROR: local $STATE_JSON exposes a forbidden private field: ${PREFLIGHT#LEAKED:}"
+    ts_log "  (raw screenshot bytes / local filesystem paths must never reach the public page)"
     exit 1 ;;
   PARSE_ERROR:*)
     ts_log "ERROR: local $STATE_JSON is not valid JSON: ${PREFLIGHT#PARSE_ERROR:}"
@@ -129,7 +162,7 @@ ts_log "verifying deployed state.json shape..."
 # the JSON parser gets a clean payload. Send stderr to /dev/null.
 RAW=$(vercel curl --deployment "$NEW_URL" /state.json 2>/dev/null)
 REMOTE=$(printf '%s' "$RAW" | sed -n '/^{/,$p')
-REMOTE_VERIFY=$(REQ="$REQUIRED_FIELDS_CSV" REMOTE="$REMOTE" python3 -c "
+REMOTE_VERIFY=$(REQ="$REQUIRED_FIELDS_CSV" FORBIDDEN="$FORBIDDEN_KEYS_CSV" REMOTE="$REMOTE" python3 -c "
 import json, os, sys
 try:
   data = json.loads(os.environ['REMOTE'])
@@ -140,6 +173,26 @@ required = os.environ['REQ'].split(',')
 missing = [k for k in required if k not in data]
 if missing:
   print('MISSING:' + ','.join(missing))
+  sys.exit(0)
+forbidden = set(os.environ['FORBIDDEN'].split(','))
+def find_forbidden(node, trail):
+    if isinstance(node, dict):
+        for k, v in node.items():
+            here = (trail + '.' + k) if trail else k
+            if k in forbidden:
+                return k, here
+            hit = find_forbidden(v, here)
+            if hit:
+                return hit
+    elif isinstance(node, list):
+        for i, item in enumerate(node):
+            hit = find_forbidden(item, trail + '[' + str(i) + ']')
+            if hit:
+                return hit
+    return None
+leak = find_forbidden(data, '')
+if leak:
+  print('LEAKED:' + leak[0] + '@' + leak[1])
 else:
   print('OK:' + data.get('snapshot_generated_at', '?'))
 " 2>&1)
@@ -153,6 +206,11 @@ case "$REMOTE_VERIFY" in
   MISSING:*)
     ts_log "ERROR: deployed state.json missing fields: ${REMOTE_VERIFY#MISSING:}"
     ts_log "  (deploy went through but the payload doesn't match local — investigate)"
+    exit 3
+    ;;
+  LEAKED:*)
+    ts_log "ERROR: deployed state.json exposes a forbidden private field: ${REMOTE_VERIFY#LEAKED:}"
+    ts_log "  (raw screenshot bytes / local filesystem paths are public on this deployment — investigate)"
     exit 3
     ;;
   PARSE_ERROR:*)

@@ -218,3 +218,65 @@ def test_verify_strips_vercel_curl_progress_noise_before_json(sandbox: Path) -> 
     code, out = _run(sandbox, local_state=_valid_state(), remote_state=noisy)
     assert code == 0
     assert "post-deploy OK" in out
+
+
+# ── pre-flight privacy guard: forbidden private fields (exit 1) ────────
+#
+# deploy.sh is the LAST gate before the public Vercel page. sync.py's
+# snapshot_sanity_check rejects forbidden keys, but deploy.sh is
+# independently runnable and the watcher may rewrite state.json between
+# sync.py's check and the deploy — so deploy.sh must re-verify that no
+# screenshot_png / local_path key reaches the public payload.
+
+
+def test_local_state_with_leaked_screenshot_bytes_aborts(sandbox: Path) -> None:
+    # screenshot_png (raw image bytes) must never reach the public page.
+    # The payload carries every required field, so the schema check
+    # passes — only the privacy check can stop it.
+    leaky = _valid_state()
+    leaky["posts"] = [{"id": "p1", "screenshot_png": "iVBORw0KGgo="}]
+    code, out = _run(sandbox, local_state=leaky)
+    assert code == 1
+    assert "forbidden private field" in out
+    assert "screenshot_png" in out
+
+
+def test_local_state_with_nested_local_path_aborts(sandbox: Path) -> None:
+    # A local filesystem path leaked anywhere in the tree (not just
+    # posts[i]) — here under last_check.error — is information
+    # disclosure and must block the deploy.
+    leaky = _valid_state()
+    leaky["last_check"] = {"error": {"local_path": "/Users/umi/.openclaw/x.png"}}
+    code, out = _run(sandbox, local_state=leaky)
+    assert code == 1
+    assert "forbidden private field" in out
+    assert "local_path" in out
+
+
+def test_local_state_string_value_named_like_a_key_does_not_false_positive(
+    sandbox: Path,
+) -> None:
+    # Only dict KEYS trip the guard. A string VALUE that merely contains
+    # the text 'local_path' (e.g. a human-readable error message) is
+    # legitimate and must deploy cleanly.
+    ok = _valid_state()
+    ok["last_check"] = {"status": "error", "message": "failed to read local_path for post"}
+    code, out = _run(sandbox, local_state=ok, remote_state=json.dumps(ok))
+    assert code == 0
+    assert "pre-flight OK" in out
+
+
+# ── post-deploy privacy guard: forbidden field on the live page (exit 3) ─
+
+
+def test_remote_state_with_leaked_field_surfaces_exit_3(sandbox: Path) -> None:
+    # The local payload is clean but the live deployment exposes a
+    # private field — the post-deploy verify must catch it.
+    leaky_remote = _valid_state()
+    leaky_remote["posts"] = [{"id": "p1", "local_path": "/Users/umi/x.png"}]
+    code, out = _run(
+        sandbox, local_state=_valid_state(), remote_state=json.dumps(leaky_remote),
+    )
+    assert code == 3
+    assert "forbidden private field" in out
+    assert "local_path" in out
