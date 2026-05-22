@@ -11,6 +11,7 @@ import argparse
 import json
 import os
 import re
+import signal
 import subprocess
 import sys
 import time
@@ -491,8 +492,33 @@ def run_watch_tick(handles: list[str], *, baseline_lookback_days: int | None = N
             print(f"[watch] iteration failed for {h}: {e}", file=sys.stderr)
 
 
+def _sigterm_to_keyboard_interrupt(signum: int, frame: Any) -> None:
+    """SIGTERM handler: log the signal, then raise KeyboardInterrupt so
+    the watch loop unwinds through its context managers — run_once's
+    `finally: browser.close()` and `with sync_playwright()` exit — for
+    a clean shutdown instead of the default abrupt terminate that
+    orphans the Chromium / Playwright-driver child processes.
+
+    The log line also makes a death diagnosable: restart-watcher.sh
+    stops the watcher with SIGTERM, so a crash WITH a
+    `[watch] received SIGTERM` line was an expected restart, while a
+    crash WITHOUT one was a SIGKILL (OOM, `kill -9`) — which narrows
+    root-cause analysis of the recurring crash loop.
+    """
+    _ = frame
+    print(f"[watch] received signal {signum} (SIGTERM) at {_now_iso()} — shutting down", file=sys.stderr)
+    raise KeyboardInterrupt
+
+
+def install_watch_signal_handler() -> None:
+    """Route SIGTERM through the same clean-shutdown path as SIGINT.
+    Separated from run_watch so the registration is unit-testable."""
+    signal.signal(signal.SIGTERM, _sigterm_to_keyboard_interrupt)
+
+
 def run_watch(handle: str, interval_s: int, *, baseline_lookback_days: int | None = None) -> None:
     interval_s = clamp_watch_interval(interval_s)
+    install_watch_signal_handler()
     handles = _parse_handles(handle)
     print(f"[watch] handles={handles} interval={interval_s}s lookback_days={baseline_lookback_days}")
     while True:
