@@ -1462,3 +1462,114 @@ class TestSummariseMttr:
         }
         out = summarise_mttr(records)
         assert [r['handle'] for r in out] == ['@alpha', '@middle', '@zeta']
+
+
+# ── hysteresis: bucket oscillation suppression ──────────────────────────
+#
+# Production observation 2026-05-23: @hal.lifedesign partial_error_rate
+# was oscillating 0.595 ↔ 0.619 — both above threshold, but the boundary
+# at 0.6 between bucket 0.5 and bucket 0.6 meant every tick crossed the
+# boundary, re-emitting a warn line. Observed cadence ~10 emits/hour/handle
+# (design target: ~1 emit/hour via heartbeat). Hysteresis adds a 0.2
+# minimum bucket-delta — adjacent-bucket wobble no longer re-emits.
+
+
+class TestHysteresisBucketOscillation:
+    def _w(self, handle: str, rate: float) -> dict:
+        return {
+            'handle': handle, 'rate': rate, 'threshold': 0.5,
+            'window_hours': 1, 'total': 30, 'top_reason': 'x',
+        }
+
+    def test_adjacent_bucket_oscillation_suppresses(self, tmp_path):
+        # The exact production scenario: rate 0.595 → 0.619 → 0.595 → 0.619
+        # The bucket alternates 0.5 ↔ 0.6 every tick. Pre-hysteresis this
+        # emitted every tick; with hysteresis (delta < 0.2), only the
+        # first emits.
+        from sync_guards import filter_warnings_for_emit
+        state_path = tmp_path / "s.json"
+        rates = [0.595, 0.619, 0.595, 0.619, 0.595, 0.619]
+        emit_count = 0
+        for i, rate in enumerate(rates):
+            emit, _rec, new_state = filter_warnings_for_emit(
+                [self._w('@osc', rate)],
+                state_path,
+                now_ts=1000 + i * 60,
+                heartbeat_sec=3600,  # default; well over the 360s elapsed
+            )
+            emit_count += len(emit)
+            state_path.write_text(json.dumps(new_state), encoding='utf-8')
+        assert emit_count == 1, (
+            f"Expected exactly 1 emit across 6 ticks of bucket-boundary "
+            f"oscillation (0.595↔0.619, bucket 0.5↔0.6); got {emit_count}. "
+            f"Hysteresis is the production fix for this exact pattern."
+        )
+
+    def test_significant_jump_re_emits(self, tmp_path):
+        # 0.5 → 0.8 is a real regime change (60% jump in absolute rate).
+        # Hysteresis must allow re-emit on big jumps; only adjacent
+        # bucket wobble is suppressed.
+        from sync_guards import filter_warnings_for_emit
+        state_path = tmp_path / "s.json"
+        state_path.write_text(
+            json.dumps({'@h': {'bucket': 0.5, 'ts': 1000}}), encoding='utf-8',
+        )
+        emit, _rec, _ = filter_warnings_for_emit(
+            [self._w('@h', 0.85)], state_path, now_ts=1100, heartbeat_sec=3600,
+        )
+        assert len(emit) == 1
+
+    def test_boundary_exactly_0_2_delta_re_emits(self, tmp_path):
+        # Bucket delta of EXACTLY 0.2 (the threshold) emits — uses >=
+        # comparison, not strict >. Pin so a future ">" tweak breaks here.
+        from sync_guards import filter_warnings_for_emit
+        state_path = tmp_path / "s.json"
+        state_path.write_text(
+            json.dumps({'@h': {'bucket': 0.5, 'ts': 1000}}), encoding='utf-8',
+        )
+        # rate 0.7 buckets to 0.6 (floor) — wait, that's only 0.1 delta.
+        # Need rate 0.7 actually buckets to: floor(0.7/0.1)*0.1 = 7*0.1
+        # = 0.7 (under int float math)? Let's use 0.75 to get bucket 0.7
+        # → delta 0.5 to 0.7 = 0.2 → emit.
+        emit, _rec, _ = filter_warnings_for_emit(
+            [self._w('@h', 0.75)], state_path, now_ts=1100, heartbeat_sec=3600,
+        )
+        assert len(emit) == 1, (
+            "delta=0.2 (exactly at threshold) must emit per >= comparison"
+        )
+
+    def test_adjacent_bucket_first_emit_NOT_suppressed(self, tmp_path):
+        # prev_bucket is None → first emit ALWAYS fires regardless of
+        # hysteresis (otherwise the first-ever warning for a new handle
+        # would be silenced forever).
+        from sync_guards import filter_warnings_for_emit
+        state_path = tmp_path / "never.json"
+        emit, _rec, _ = filter_warnings_for_emit(
+            [self._w('@new', 0.55)],  # bucket 0.5, only just above threshold
+            state_path, now_ts=1000,
+        )
+        assert len(emit) == 1, (
+            "First emit for a handle MUST fire even at small bucket "
+            "value — hysteresis only applies between prev and cur"
+        )
+
+    def test_oscillation_still_heartbeats_after_interval(self, tmp_path):
+        # Oscillation suppression must NOT prevent the heartbeat. After
+        # heartbeat_sec elapses, emit fires even if the bucket is the
+        # same (or only adjacent).
+        from sync_guards import filter_warnings_for_emit
+        state_path = tmp_path / "s.json"
+        # Seed with old timestamp + bucket 0.5
+        state_path.write_text(
+            json.dumps({'@h': {'bucket': 0.5, 'ts': 1000}}), encoding='utf-8',
+        )
+        # Now is 1h+ later. Adjacent bucket (0.6) — hysteresis would
+        # suppress on its own, but heartbeat takes over.
+        emit, _rec, _ = filter_warnings_for_emit(
+            [self._w('@h', 0.62)],  # bucket 0.6, adjacent to prev 0.5
+            state_path, now_ts=1000 + 3601, heartbeat_sec=3600,
+        )
+        assert len(emit) == 1, (
+            "Heartbeat must override hysteresis suppression so operator "
+            "sees 'still warning' even when rate is stable"
+        )

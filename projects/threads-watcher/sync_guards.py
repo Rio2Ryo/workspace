@@ -385,17 +385,49 @@ DEFAULT_WARN_WINDOW_HOURS = 1
 # the same "is anything alive?" cadence.
 DEFAULT_WARN_HEARTBEAT_SEC = 3600
 
-# Bucket the rate to 0.1 granularity. A 92.9% → 93.1% twitch is not
-# an operationally interesting state change; a 50% → 70% jump is.
-# Bucketing avoids re-emit storms when partial_error_rate flickers
-# around a threshold edge tick-over-tick.
+# Bucket the rate to 0.1 granularity for the emitted-line value. The
+# bucket itself is just a labelling convenience; the emit-or-suppress
+# decision uses HYSTERESIS (see _bucket_change_is_significant below).
 _RATE_BUCKET_GRANULARITY = 0.1
+
+# Minimum bucket-distance for a state change to count as "significant"
+# enough to re-emit. Without this, a rate that oscillates across a
+# bucket boundary (e.g., @hal.lifedesign hovering between 0.595 and
+# 0.619 → bucket 0.5 ↔ 0.6) would re-emit every tick. Production
+# observation 2026-05-23: 10 emits/hour/handle instead of the
+# designed ~1 emit/hour (heartbeat). 0.2 = "rate must move at least
+# 2 buckets" to count as significant — absorbs ±0.05 wobble around
+# any boundary, still surfaces real regime shifts (0.5 → 0.7+, etc.).
+_SIGNIFICANT_BUCKET_DELTA = 0.2
 
 
 def _rate_bucket(rate: float) -> float:
     """Round `rate` DOWN to the nearest 0.1. 0.929 → 0.9, 0.5 → 0.5,
     0.4999 → 0.4. Stable string representation for state-file storage."""
     return round((int(rate / _RATE_BUCKET_GRANULARITY) * _RATE_BUCKET_GRANULARITY), 1)
+
+
+def _bucket_change_is_significant(
+    prev_bucket: float | None, cur_bucket: float,
+) -> bool:
+    """Decide whether the bucket has moved enough to re-emit a warn.
+
+    Returns True when:
+      - prev_bucket is None (first-ever emit for this handle), OR
+      - abs(cur_bucket - prev_bucket) >= _SIGNIFICANT_BUCKET_DELTA
+
+    Adjacent-bucket oscillation (0.5 ↔ 0.6, delta = 0.1) is treated
+    as the same regime — the heartbeat is what surfaces the
+    'still warning' signal, not boundary wobble.
+    """
+    if prev_bucket is None:
+        return True
+    # Round the delta to 2 dp to defeat IEEE 754 surprise: 0.7 - 0.5
+    # = 0.19999999999999996 in float math, which is < 0.2 by literal
+    # comparison but obviously >= 0.2 by intent. The buckets are
+    # 0.1-granular so 2dp suffices to canonicalise the delta.
+    delta = round(abs(cur_bucket - prev_bucket), 2)
+    return delta >= _SIGNIFICANT_BUCKET_DELTA
 
 
 def filter_warnings_for_emit(
@@ -466,8 +498,12 @@ def filter_warnings_for_emit(
         prev_bucket = prev.get('bucket') if isinstance(prev, dict) else None
         prev_ts = int(prev.get('ts', 0)) if isinstance(prev, dict) else 0
         elapsed = now_ts - prev_ts
+        # HYSTERESIS: require abs(prev_bucket - cur_bucket) >=
+        # _SIGNIFICANT_BUCKET_DELTA. Without it, a rate oscillating
+        # across a bucket boundary (e.g., 0.595 ↔ 0.619) re-emits
+        # every tick. The heartbeat handles "still warning" signal.
         should_emit = (
-            prev_bucket != bucket
+            _bucket_change_is_significant(prev_bucket, bucket)
             or elapsed >= heartbeat_sec
         )
         if should_emit:
