@@ -38,8 +38,11 @@ from pathlib import Path
 
 from sync_guards import (
     DEFAULT_COMMIT_MIN_GAP_SEC,
+    DEFAULT_PARTIAL_ERROR_RATE_THRESHOLD,
     DEFAULT_RECENT_CHECKS_WINDOW,
+    DEFAULT_WARN_WINDOW_HOURS,
     SyncDecision,
+    compute_partial_error_rate_warnings,
     evaluate_all,
     format_outcome_event,
 )
@@ -712,6 +715,28 @@ def main(argv: list[str] | None = None) -> int:
         )
 
         _log_decision(log, decision, current_max, last_cursor)
+
+        # Per-handle health warnings (partial_error_rate). Emitted BEFORE
+        # the outcome event so the operator's `tail -20 logs/sync.log`
+        # shows the warning context immediately above the skipped/
+        # committed/etc. event line. See sync_guards.compute_partial_error_rate_warnings
+        # for the threshold + rationale (mirrors dashboard `.err` cue).
+        for w in compute_partial_error_rate_warnings(
+            conn,
+            threshold=DEFAULT_PARTIAL_ERROR_RATE_THRESHOLD,
+            window_hours=DEFAULT_WARN_WINDOW_HOURS,
+        ):
+            log.log(format_outcome_event(
+                'warn', delta=0,
+                extra={
+                    'type': 'partial_error_rate',
+                    'handle': w['handle'],
+                    'rate': w['rate'],
+                    'threshold': w['threshold'],
+                    'window_hours': w['window_hours'],
+                    'total': w['total'],
+                },
+            ))
 
         if not decision.proceed:
             # Structured outcome event — see sync_guards.format_outcome_event.

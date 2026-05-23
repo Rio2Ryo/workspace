@@ -277,6 +277,24 @@ OUTCOME_EVENTS = frozenset({
     'pushed',
     # something bailed (lock contention, git failure, etc.)
     'error',
+    # health-signal alert (not a sync outcome per se — fired separately
+    # when an observed metric crosses a threshold). Requires `type=<known>`
+    # in extra; see WARN_TYPES below.
+    'warn',
+})
+
+
+# Vocabulary for the `warn` outcome's `type=` field. Closed set so a
+# future typo on the caller side ('partial_error_rates' with trailing 's')
+# raises ValueError instead of silently shipping a line operators won't
+# grep for. Mirror of KNOWN_BLOCKER_KINDS shape.
+WARN_TYPES = frozenset({
+    # partial_error rate (recent_stats() per-handle) above threshold —
+    # signals a sticky DOM-regression regime that the dashboard already
+    # shows in red. Brings the signal into the grep-able log surface
+    # so external alerting (Discord, monitoring tools) can latch onto it
+    # without depending on the dashboard render layer.
+    'partial_error_rate',
 })
 
 
@@ -316,6 +334,18 @@ def format_outcome_event(
         raise ValueError(
             f"unknown outcome {outcome!r}; must be one of {sorted(OUTCOME_EVENTS)}",
         )
+    if outcome == 'warn':
+        # warn lines MUST carry a `type=<known>` so operator-side grep
+        # by type ('grep "type=partial_error_rate"') is dependable.
+        # A missing or unknown type means the helper's call site was
+        # wrong; raise loudly instead of silently emitting a line
+        # operators can't filter on.
+        warn_type = (extra or {}).get('type')
+        if warn_type not in WARN_TYPES:
+            raise ValueError(
+                f"warn outcome requires extra['type'] in {sorted(WARN_TYPES)}; "
+                f"got {warn_type!r}",
+            )
     parts = [f"sync_event: {outcome}", f"delta={delta}"]
     if outcome == 'skipped':
         # Required for skipped — without the kind, the entire reason
@@ -329,6 +359,76 @@ def format_outcome_event(
             sv = str(v).replace(' ', '_').replace('"', '').replace("'", '')
             parts.append(f"{k}={sv}")
     return ' '.join(parts)
+
+
+# ── Per-handle health-signal warnings (partial_error_rate) ─────────────
+
+
+# Default threshold for surfacing a partial_error_rate warning. Matches
+# the dashboard's `.err` class threshold (commit e759120 surfaces this
+# visually); duplicated as a constant so the log surface uses the same
+# number.
+DEFAULT_PARTIAL_ERROR_RATE_THRESHOLD = 0.5
+DEFAULT_WARN_WINDOW_HOURS = 1
+
+
+def compute_partial_error_rate_warnings(
+    conn: sqlite3.Connection,
+    *,
+    threshold: float = DEFAULT_PARTIAL_ERROR_RATE_THRESHOLD,
+    window_hours: int = DEFAULT_WARN_WINDOW_HOURS,
+) -> list[dict]:
+    """Per-handle warning list when partial_error_rate >= threshold.
+
+    Returns one dict per offending handle:
+        { handle, rate (rounded to 3dp), threshold, window_hours,
+          total (checks in window), top_reason (str or '') }
+
+    Order is deterministic (sorted by handle) so the emitted log
+    lines have stable order tick-over-tick — easier for diff-based
+    monitoring.
+
+    Why this exists
+    ---------------
+    The dashboard UI already shows partial_error_rate >= 0.5 in red
+    (commit e759120). But the dashboard is a poll-only signal — no
+    external alerting tool can latch onto a red CSS class without
+    rendering the page. Surfacing the same threshold check as a
+    structured `sync_event: warn type=partial_error_rate …` line
+    in logs/sync.log gives Discord/Slack/PagerDuty hooks a grep
+    pattern to alert on:
+
+        grep "sync_event: warn type=partial_error_rate" logs/sync.log
+
+    Window default = 1h matches the dashboard's most-recent window,
+    so the log signal lines up with what an operator sees there.
+    """
+    # Late import to keep sync_guards otherwise dependency-free for the
+    # synthetic-data tests that import the helpers without a DB.
+    from db import recent_stats
+
+    handles = [
+        str(row[0])
+        for row in conn.execute(
+            "SELECT DISTINCT handle FROM checks ORDER BY handle"
+        ).fetchall()
+    ]
+    warnings: list[dict] = []
+    for h in handles:
+        s = recent_stats(conn, h, window_hours=window_hours)
+        rate = s['partial_error_rate']
+        if rate is None or rate < threshold:
+            continue
+        top = s.get('top_partial_error_reason') or {}
+        warnings.append({
+            'handle': h,
+            'rate': round(float(rate), 3),
+            'threshold': threshold,
+            'window_hours': window_hours,
+            'total': s['total'],
+            'top_reason': str(top.get('reason', '')),
+        })
+    return warnings
 
 
 # ── 5. Composite: run all guards in shell order ─────────────────────────

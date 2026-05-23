@@ -748,9 +748,12 @@ class TestFormatOutcomeEvent:
 
     def test_outcome_events_set_covers_every_path(self):
         # Pin the set so a future caller adding a new outcome must
-        # also update this constant — drift-proof.
+        # also update this constant — drift-proof. `warn` joined the
+        # set when partial_error_rate alerting landed; the corresponding
+        # TestPartialErrorRateWarnings + TestWarnOutcomeEvent classes
+        # below exercise the new path.
         assert OUTCOME_EVENTS == {
-            'skipped', 'dry_run', 'committed', 'pushed', 'error',
+            'skipped', 'dry_run', 'committed', 'pushed', 'error', 'warn',
         }
 
     def test_known_blocker_kinds_set_matches_all_guard_functions(self):
@@ -794,3 +797,154 @@ class TestSkippedEventEndToEnd:
             'skipped', delta=decision.delta, blocker_kind=blocker.kind,
         )
         assert line == 'sync_event: skipped delta=75 blocker=recent_failures'
+
+
+# ── partial_error_rate warnings ────────────────────────────────────────
+
+
+class TestPartialErrorRateWarnings:
+    """compute_partial_error_rate_warnings(conn) brings the dashboard's
+    visual >= 0.5 partial_error_rate alert into the grep-able log
+    surface. Sticky-regime case: 28 partial_error rows out of 30 in
+    the last hour → rate ~0.93 → emit a warning row for that handle."""
+
+    def _seed_partial(self, conn, handle: str, count: int, reason: str = 'found=4 prev=15'):
+        from datetime import datetime, timedelta, timezone
+        for i in range(count):
+            ts = (datetime.now(timezone.utc) - timedelta(minutes=i)).strftime('%Y-%m-%dT%H:%M:%SZ')
+            record_check(
+                conn, handle=handle, checked_at=ts,
+                found_count=4, new_count=0, status='partial_error', error=reason,
+            )
+
+    def _seed_ok(self, conn, handle: str, count: int):
+        from datetime import datetime, timedelta, timezone
+        for i in range(count):
+            ts = (datetime.now(timezone.utc) - timedelta(minutes=i)).strftime('%Y-%m-%dT%H:%M:%SZ')
+            record_check(
+                conn, handle=handle, checked_at=ts,
+                found_count=15, new_count=0, status='ok', error=None,
+            )
+
+    def test_returns_empty_when_no_handles_above_threshold(self, conn):
+        from sync_guards import compute_partial_error_rate_warnings
+        # All-healthy handle → no warning
+        self._seed_ok(conn, '@healthy', 10)
+        assert compute_partial_error_rate_warnings(conn) == []
+
+    def test_returns_warning_when_handle_above_threshold(self, conn):
+        from sync_guards import compute_partial_error_rate_warnings
+        # 28 partial + 2 ok = 93% partial_error_rate → warning
+        self._seed_partial(conn, '@hot', 28)
+        self._seed_ok(conn, '@hot', 2)
+        warnings = compute_partial_error_rate_warnings(conn)
+        assert len(warnings) == 1
+        w = warnings[0]
+        assert w['handle'] == '@hot'
+        assert w['rate'] >= 0.9
+        assert w['threshold'] == 0.5
+        assert w['window_hours'] == 1
+        assert w['total'] == 30
+        assert w['top_reason'] == 'found=4 prev=15'
+
+    def test_threshold_param_is_respected(self, conn):
+        from sync_guards import compute_partial_error_rate_warnings
+        # 3 partial + 7 ok = 30% → below default 0.5, but above 0.2
+        self._seed_partial(conn, '@blip', 3)
+        self._seed_ok(conn, '@blip', 7)
+        assert compute_partial_error_rate_warnings(conn, threshold=0.5) == []
+        warnings = compute_partial_error_rate_warnings(conn, threshold=0.2)
+        assert len(warnings) == 1
+        assert warnings[0]['handle'] == '@blip'
+
+    def test_window_hours_param_isolates_recent_rows(self, conn):
+        from sync_guards import compute_partial_error_rate_warnings
+        from datetime import datetime, timedelta, timezone
+        # OLD partial_error rows (25h ago) should NOT count under 1h window
+        for i in range(28):
+            ts = (datetime.now(timezone.utc) - timedelta(hours=25, minutes=i)).strftime('%Y-%m-%dT%H:%M:%SZ')
+            record_check(
+                conn, handle='@old', checked_at=ts,
+                found_count=4, new_count=0, status='partial_error', error='old',
+            )
+        # 1 fresh ok within 1h
+        self._seed_ok(conn, '@old', 1)
+        # Default window=1 → only 1 ok seen → 0% partial → no warning
+        assert compute_partial_error_rate_warnings(conn, window_hours=1) == []
+        # 168h window → old + new visible → 28/29 ~ 96% partial → warning
+        warnings = compute_partial_error_rate_warnings(conn, window_hours=168)
+        assert len(warnings) == 1
+
+    def test_returns_one_warning_per_offending_handle(self, conn):
+        from sync_guards import compute_partial_error_rate_warnings
+        self._seed_partial(conn, '@hot1', 28, reason='reason A')
+        self._seed_ok(conn, '@hot1', 2)
+        self._seed_partial(conn, '@hot2', 25, reason='reason B')
+        self._seed_ok(conn, '@hot2', 5)
+        self._seed_ok(conn, '@cool', 10)
+        warnings = compute_partial_error_rate_warnings(conn)
+        # Deterministic order — sorted by handle.
+        assert [w['handle'] for w in warnings] == ['@hot1', '@hot2']
+        assert warnings[0]['top_reason'] == 'reason A'
+        assert warnings[1]['top_reason'] == 'reason B'
+
+    def test_no_checks_at_all_yields_empty(self, conn):
+        from sync_guards import compute_partial_error_rate_warnings
+        # Empty DB → no handles → no warnings (not a crash)
+        assert compute_partial_error_rate_warnings(conn) == []
+
+
+class TestWarnOutcomeEvent:
+    """format_outcome_event('warn', ...) brings the partial_error_rate
+    surface into the canonical sync_event log line."""
+
+    def test_warn_line_shape(self):
+        line = format_outcome_event(
+            'warn', delta=0,
+            extra={
+                'type': 'partial_error_rate',
+                'handle': '@hal.lifedesign',
+                'rate': 0.929,
+                'threshold': 0.5,
+                'window_hours': 1,
+            },
+        )
+        assert line.startswith('sync_event: warn ')
+        assert 'type=partial_error_rate' in line
+        assert 'handle=@hal.lifedesign' in line
+        assert 'rate=0.929' in line
+        assert 'threshold=0.5' in line
+        assert 'window_hours=1' in line
+
+    def test_warn_without_type_raises(self):
+        # The whole point of WARN_TYPES is that ALL warn lines have a
+        # known type=. Calling without one is a bug at the call site,
+        # not a graceful degradation case.
+        with pytest.raises(ValueError, match='extra\\[.type.\\]'):
+            format_outcome_event('warn', delta=0)
+
+    def test_warn_with_unknown_type_raises(self):
+        with pytest.raises(ValueError, match='extra\\[.type.\\]'):
+            format_outcome_event(
+                'warn', delta=0, extra={'type': 'partial_error_rates'},  # trailing 's'
+            )
+
+    def test_known_warn_types_pinned(self):
+        # Drift guard: future callers adding a new warn type MUST
+        # also update WARN_TYPES; this test makes that mandatory.
+        from sync_guards import WARN_TYPES
+        assert WARN_TYPES == {'partial_error_rate'}
+
+    def test_warn_extras_sorted_for_stable_diff(self):
+        # The composite check: every value-bearing field appears in
+        # sorted order so `tail -f | grep warn` produces stable lines
+        # tick-over-tick (easier to spot real changes).
+        line = format_outcome_event(
+            'warn', delta=0,
+            extra={'type': 'partial_error_rate', 'handle': '@x', 'rate': 0.6},
+        )
+        # Find positions
+        h = line.index('handle=')
+        r = line.index('rate=')
+        t = line.index('type=')
+        assert h < r < t  # lex order: handle < rate < type
