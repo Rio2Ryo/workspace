@@ -20,7 +20,7 @@ import pytest
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(PROJECT_ROOT))
 
-from status import _render_json, _render_text  # noqa: E402
+from status import _render_json, _render_text, _watch_loop  # noqa: E402
 from discord_payload import (  # noqa: E402
     build_payload_from_state,
 )
@@ -207,3 +207,127 @@ class TestCli:
         r = self._run(str(path), cwd=tmp_path)
         assert r.returncode == 1
         assert "failed to parse" in r.stderr.lower()
+
+
+# ── --watch loop (tmux pane常駐 mode) ──────────────────────────────────
+
+
+class TestWatchLoop:
+    """Pure helper tests — sleep_fn injection lets these run
+    instantly without real time.sleep. CLI-level --watch is
+    covered by TestCliWatch below via subprocess + timeout."""
+
+    def _write_state(self, tmp_path, **overrides):
+        return _write_state(tmp_path, **overrides)
+
+    def test_renders_each_tick_until_keyboard_interrupt(self, tmp_path, capsys):
+        # Mock sleep raises KeyboardInterrupt after 3 calls — that's
+        # the operator pressing Ctrl+C mid-loop. Pin: 3 renders
+        # happened (one per tick before each sleep), exit 0.
+        # _render_once uses real time.time() for elapsed math, so
+        # the fixture warn_ts must be real-time-relative to land in
+        # the YELLOW band (1h-24h). Pre-fix bug: a 1_000_000-epoch
+        # warn_ts was ~56 years old, classified RED — test asserted
+        # YELLOW substring + got 0 matches.
+        import time as _time
+        path = self._write_state(tmp_path, open_incidents=[
+            {"handle": "@x", "warn_ts": int(_time.time()) - 2 * 3600, "current_bucket": 0.6},
+        ])
+        calls = []
+        def mock_sleep(seconds):
+            calls.append(seconds)
+            if len(calls) >= 3:
+                raise KeyboardInterrupt
+        rc = _watch_loop(path, interval=60, json_mode=False, sleep_fn=mock_sleep)
+        assert rc == 0
+        out = capsys.readouterr().out
+        # ANSI clear-screen escape MUST appear (one per tick).
+        # The header "🟡 1 warning" appears AFTER each clear.
+        assert out.count("🟡 1 warning") == 3, (
+            f"Expected 3 renders, got {out.count('🟡 1 warning')}. "
+            f"stdout: {out[:300]!r}"
+        )
+        # Sleep was called with the interval value.
+        assert calls == [60, 60, 60]
+
+    def test_ansi_clear_screen_emitted_each_tick(self, tmp_path, capsys):
+        # 🔒 The whole point of --watch over `while true; status.py`
+        # is the tidy redraw. Pin the ANSI escape so a future
+        # refactor that drops it (or switches to scrolling) trips
+        # here.
+        path = self._write_state(tmp_path)
+        def one_then_kbd(_secs):
+            raise KeyboardInterrupt
+        rc = _watch_loop(path, interval=60, json_mode=False, sleep_fn=one_then_kbd)
+        assert rc == 0
+        out = capsys.readouterr().out
+        # \033[2J = clear screen, \033[H = home cursor.
+        assert "\033[2J" in out
+        assert "\033[H" in out
+
+    def test_json_mode_renders_json_each_tick(self, tmp_path, capsys):
+        # --watch + --json: machine-readable per-tick, useful for
+        # piping into a downstream tool that polls every minute.
+        path = self._write_state(tmp_path)
+        def one_then_kbd(_secs):
+            raise KeyboardInterrupt
+        rc = _watch_loop(path, interval=60, json_mode=True, sleep_fn=one_then_kbd)
+        assert rc == 0
+        out = capsys.readouterr().out
+        # Output should contain the JSON `description` field — even
+        # after the ANSI escape strip.
+        assert '"description"' in out
+
+    def test_parse_failure_mid_loop_does_not_crash(self, tmp_path, capsys):
+        # 🔒 Operational realism: state.json gets atomically replaced
+        # by sync.py (write tmpfile + rename), but between the writer
+        # opening the tmpfile and renaming, a watcher reader catching
+        # the partial-write window would see corrupt JSON. The loop
+        # MUST log WARN + continue, not crash the tmux pane.
+        path = tmp_path / "state.json"
+        path.write_text("not json {{{", encoding="utf-8")
+        calls = []
+        def mock_sleep(seconds):
+            calls.append(seconds)
+            if len(calls) >= 2:
+                raise KeyboardInterrupt
+        rc = _watch_loop(path, interval=60, json_mode=False, sleep_fn=mock_sleep)
+        assert rc == 0  # Ctrl+C exit, not parse failure exit
+        err = capsys.readouterr().err
+        # Each tick warned about the parse failure.
+        assert err.count("render tick failed") == 2
+
+
+class TestCliWatch:
+    """CLI-level — exercises argparse + watch dispatch via the
+    public _cli_main entry. Uses keyboard-interrupt-like injection
+    via a state file that gets unlinked between ticks (forces a
+    NEXT tick's parse failure to verify continuity, not via
+    subprocess + signal which is platform-fragile)."""
+
+    def test_invalid_interval_exits_two(self, tmp_path, capsys, monkeypatch):
+        # 🔒 Operator footgun: --interval 0 or negative would spin
+        # at 100% CPU. argparse type=int doesn't reject these — our
+        # explicit range check does.
+        from status import _cli_main
+        path = _write_state(tmp_path)
+        rc = _cli_main([str(path), "--watch", "--interval", "0"])
+        assert rc == 2
+        err = capsys.readouterr().err
+        assert "interval must be > 0" in err.lower()
+
+    def test_interval_default_is_60(self, tmp_path, capsys, monkeypatch):
+        # Default-value pin so a future help-text refactor that
+        # silently changes the default trips here.
+        import status
+        path = _write_state(tmp_path)
+        # Replace _watch_loop with a capture so we don't actually
+        # spin. monkeypatch the module attribute.
+        captured = {}
+        def fake_loop(state_path, interval, **kw):
+            captured["interval"] = interval
+            return 0
+        monkeypatch.setattr(status, "_watch_loop", fake_loop)
+        rc = status._cli_main([str(path), "--watch"])
+        assert rc == 0
+        assert captured["interval"] == 60

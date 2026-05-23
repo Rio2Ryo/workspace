@@ -130,24 +130,99 @@ def _cli_main(argv: list[str] | None = None) -> int:
         action="store_true",
         help="Emit structured JSON instead of human-readable text.",
     )
+    p.add_argument(
+        "--watch",
+        action="store_true",
+        help=(
+            "Re-render every --interval seconds until Ctrl+C. tmux "
+            "pane常駐 use case — operator keeps a live status pane "
+            "open during incident triage. Clears the screen between "
+            "iterations (ANSI escape) so the pane stays tidy."
+        ),
+    )
+    p.add_argument(
+        "--interval",
+        type=int,
+        default=60,
+        help=(
+            "Seconds between renders in --watch mode. Default 60. "
+            "Ignored without --watch."
+        ),
+    )
     args = p.parse_args(argv)
+
+    if args.watch and args.interval <= 0:
+        # 🔒 Catch the operator footgun BEFORE entering the loop —
+        # interval <= 0 would spin at 100% CPU. argparse type=int
+        # already rejects non-numeric; range check is the second
+        # layer.
+        sys.stderr.write(
+            f"ERROR: --interval must be > 0, got {args.interval}\n"
+        )
+        return 2
 
     if not args.state_path.is_file():
         sys.stderr.write(f"ERROR: state file not found: {args.state_path}\n")
         return 1
 
+    if args.watch:
+        return _watch_loop(args.state_path, args.interval, json_mode=args.json)
+    return _render_once(args.state_path, json_mode=args.json)
+
+
+def _render_once(state_path: Path, *, json_mode: bool) -> int:
+    """Read state.json + render once. Returns 0 on success, 1 on
+    parse failure. Extracted so --watch can re-invoke it per tick
+    without duplicating the dispatch logic."""
     try:
-        state = json.loads(args.state_path.read_text(encoding="utf-8"))
+        state = json.loads(state_path.read_text(encoding="utf-8"))
     except json.JSONDecodeError as e:
-        sys.stderr.write(f"ERROR: failed to parse {args.state_path}: {e}\n")
+        sys.stderr.write(f"ERROR: failed to parse {state_path}: {e}\n")
         return 1
 
     now_ts = int(time.time())
-    if args.json:
+    if json_mode:
         sys.stdout.write(json.dumps(_render_json(state, now_ts=now_ts), indent=2) + "\n")
     else:
         sys.stdout.write(_render_text(state, now_ts=now_ts) + "\n")
     return 0
+
+
+def _watch_loop(
+    state_path: Path, interval: int, *, json_mode: bool,
+    sleep_fn=None,
+) -> int:
+    """Re-render every `interval` seconds until KeyboardInterrupt.
+    sleep_fn override exists for tests so they don't actually block
+    (default: time.sleep).
+
+    Ctrl+C exits 0 — operator-initiated, not a failure. Any other
+    exception propagates; --watch is a thin loop, not a try/except
+    swallower.
+    """
+    sleep = sleep_fn if sleep_fn is not None else time.sleep
+    # ANSI escape: 2J = clear screen, H = home cursor. Combined,
+    # gives `watch(1)`-like behaviour: each render replaces the
+    # prior view rather than scrolling.
+    CLEAR = "\033[2J\033[H"
+    try:
+        while True:
+            sys.stdout.write(CLEAR)
+            sys.stdout.flush()
+            # Re-read state on each tick — that's the whole point
+            # of --watch (file changes between ticks become visible).
+            rc = _render_once(state_path, json_mode=json_mode)
+            if rc != 0:
+                # Parse failure during a tick (e.g., mid-write
+                # corruption). Surface but keep watching — the next
+                # tick may succeed once the writer finishes.
+                sys.stderr.write(
+                    f"WARN: render tick failed (rc={rc}); continuing\n"
+                )
+            sleep(interval)
+    except KeyboardInterrupt:
+        sys.stderr.write("\n--watch interrupted; exiting cleanly\n")
+        return 0
 
 
 if __name__ == "__main__":
