@@ -51,7 +51,7 @@ usage() {
   cat <<'EOF'
 Usage: apply.sh [--mode sqlite|wrangler-local|wrangler-remote] --migration <down.sql>
                 [--db <path>] [--wrangler-cwd <path>] [--wrangler-db <name>]
-                [--confirm] [--allow-prod] [--print-only]
+                [--confirm] [--allow-prod] [--print-only] [--wrap-in-transaction]
 Modes:
   --mode sqlite            (default) operate on local sqlite file (--db required)
   --mode wrangler-local    operate on miniflare D1 dev state
@@ -75,6 +75,7 @@ MIGRATION=""
 CONFIRM=0
 ALLOW_PROD=0
 PRINT_ONLY=0
+WRAP_IN_TRANSACTION=0
 
 while [ $# -gt 0 ]; do
   case "$1" in
@@ -86,6 +87,7 @@ while [ $# -gt 0 ]; do
     --confirm) CONFIRM=1; shift ;;
     --allow-prod) ALLOW_PROD=1; shift ;;
     --print-only) PRINT_ONLY=1; shift ;;
+    --wrap-in-transaction) WRAP_IN_TRANSACTION=1; shift ;;
     -h|--help) usage ;;
     *) echo "unknown arg: $1" >&2; usage ;;
   esac
@@ -175,17 +177,58 @@ query_one() {
   esac
 }
 
+# Build the SQL payload to send to the executor. When
+# --wrap-in-transaction, prefix with BEGIN; and suffix with COMMIT;
+# so partial-failure on a non-idempotent down (down_0048's 3 DROP
+# COLUMNs, down_0052's recreate-dance) auto-rollbacks instead of
+# leaving the DB in half-applied state.
+#
+# Empirical safety net for the wrap shape:
+#   qa-reports/migrations-down/test_down_idempotency_runtime.py
+#   ::TestDown0048AtomicWrappingProof (commit 09ed88f) — proves the
+#   sqlite3 leg. D1 leg (wrangler --file behaviour with BEGIN/COMMIT
+#   inside the file) verified at operator's miniflare instance.
+build_sql_payload() {
+  if [ "$WRAP_IN_TRANSACTION" = 1 ]; then
+    # Emit BEGIN/COMMIT bookends around the migration file content.
+    # Use a temp file so wrangler-* modes (which need --file path)
+    # have something to read.
+    local wrapped
+    wrapped=$(mktemp -t "wrapped-${MIGRATION%.*}-XXXXXX.sql")
+    {
+      echo "-- BEGIN/COMMIT wrap added by apply.sh --wrap-in-transaction"
+      echo "-- (commit 09ed88f sqlite3-side empirical proof: rollback"
+      echo "--  restores all DROP COLUMN columns on mid-script failure)"
+      echo "BEGIN;"
+      cat "$MIGRATION_PATH"
+      echo "COMMIT;"
+    } > "$wrapped"
+    echo "$wrapped"
+  else
+    echo "$MIGRATION_PATH"
+  fi
+}
+
 # Execute the down migration SQL.
 apply_migration() {
+  local payload
+  payload=$(build_sql_payload)
+  # Cleanup the temp file (if any) on function exit.
+  local cleanup=""
+  if [ "$payload" != "$MIGRATION_PATH" ]; then
+    cleanup="$payload"
+  fi
+  trap '[ -n "'"$cleanup"'" ] && rm -f "'"$cleanup"'"' RETURN
+
   case "$MODE" in
     sqlite)
-      sqlite3 "$DB" < "$MIGRATION_PATH"
+      sqlite3 "$DB" < "$payload"
       ;;
     wrangler-local)
-      ( cd "$WRANGLER_CWD" && $WRANGLER_CMD d1 execute "$WRANGLER_DB" --local --file "$MIGRATION_PATH" )
+      ( cd "$WRANGLER_CWD" && $WRANGLER_CMD d1 execute "$WRANGLER_DB" --local --file "$payload" )
       ;;
     wrangler-remote)
-      ( cd "$WRANGLER_CWD" && $WRANGLER_CMD d1 execute "$WRANGLER_DB" --remote --file "$MIGRATION_PATH" )
+      ( cd "$WRANGLER_CWD" && $WRANGLER_CMD d1 execute "$WRANGLER_DB" --remote --file "$payload" )
       ;;
   esac
 }

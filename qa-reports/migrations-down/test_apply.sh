@@ -161,6 +161,63 @@ set -e
 assert_eq "exit code on unknown --mode" "2" "$rc"
 assert_contains "unknown --mode error msg" "unknown --mode" "$out"
 
+# ── --wrap-in-transaction (commit a18eacc + 09ed88f atomicity proof) ──
+#
+# Operator opts in via --wrap-in-transaction; apply.sh prepends
+# BEGIN; + appends COMMIT; to the migration SQL via a tempfile,
+# then invokes sqlite3/wrangler against the wrapped tempfile.
+# Catches mid-script failure on non-idempotent down scripts.
+
+# ── Test 8: sqlite + --wrap-in-transaction → still drops table ────────
+echo "[8] sqlite + --wrap-in-transaction (happy path)"
+DB_WRAP="$TMPDIR_TEST/wrap-happy.db"
+sqlite3 "$DB_WRAP" "CREATE TABLE automation_fire_log (id INTEGER PRIMARY KEY);"
+out=$(run_apply --mode sqlite --db "$DB_WRAP" \
+  --migration 0056_automation_fire_log_DOWN.sql \
+  --confirm --wrap-in-transaction 2>&1)
+assert_contains "sqlite wrap happy: drops the table" "automation_fire_log: dropped" "$out"
+remaining=$(sqlite3 "$DB_WRAP" "SELECT name FROM sqlite_master WHERE type='table' AND name='automation_fire_log';")
+assert_eq "sqlite wrap happy: actually removed" "" "$remaining"
+
+# ── Test 9: wrangler-local + --wrap-in-transaction → wrapped tempfile ─
+echo "[9] wrangler-local + --wrap-in-transaction passes wrapped tempfile"
+: >"$WRANGLER_LOG"
+run_apply --mode wrangler-local \
+  --wrangler-cwd "$FAKE_WRANGLER_CWD" --wrangler-db second_brain \
+  --migration 0056_automation_fire_log_DOWN.sql \
+  --confirm --wrap-in-transaction >/dev/null 2>&1 || true
+log_content=$(cat "$WRANGLER_LOG" 2>/dev/null || true)
+# 🔒 The wrangler --file path should reference a wrapped-* tempfile
+# (not the original migration path). Pin the prefix so a future
+# refactor that bypasses build_sql_payload trips here.
+assert_contains "wrangler-local wrap: --file points at wrapped-* tempfile" "wrapped-" "$log_content"
+
+# ── Test 10: wrangler-local WITHOUT --wrap-in-transaction → original ──
+# Regression guard: no false-positive wrapped-* path on non-wrap path.
+echo "[10] wrangler-local without --wrap-in-transaction passes raw migration"
+: >"$WRANGLER_LOG"
+run_apply --mode wrangler-local \
+  --wrangler-cwd "$FAKE_WRANGLER_CWD" --wrangler-db second_brain \
+  --migration 0056_automation_fire_log_DOWN.sql \
+  --confirm >/dev/null 2>&1 || true
+log_content=$(cat "$WRANGLER_LOG" 2>/dev/null || true)
+# Without --wrap-in-transaction, --file should be the original path,
+# NOT a wrapped tempfile.
+wrapped_in_log=$(echo "$log_content" | grep -c "wrapped-" || true)
+assert_eq "wrangler-local no-wrap: no wrapped-* in log" "0" "$wrapped_in_log"
+
+# ── Test 11: --wrap-in-transaction tempfile auto-cleanup ──────────────
+# build_sql_payload uses mktemp + RETURN trap cleanup. Verify no
+# leftover wrapped-* files in $TMPDIR_TEST after run completes.
+echo "[11] --wrap-in-transaction tempfile auto-cleanup"
+run_apply --mode sqlite --db "$DB_WRAP" \
+  --migration 0056_automation_fire_log_DOWN.sql \
+  --print-only --wrap-in-transaction >/dev/null 2>&1 || true
+# Glob $TMPDIR (system temp dir where mktemp lands) for leftover wrap
+# tempfiles. Tolerant check: any wrapped-0056* should be 0.
+leftover=$(find /tmp -maxdepth 1 -name "wrapped-0056*" 2>/dev/null | wc -l | tr -d ' ')
+assert_eq "no wrapped-* tempfiles leaked after apply.sh exit" "0" "$leftover"
+
 # ── Summary ────────────────────────────────────────────────────────────
 echo
 echo "=================================="
