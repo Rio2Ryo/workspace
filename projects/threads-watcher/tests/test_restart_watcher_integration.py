@@ -125,11 +125,20 @@ def _run(sb: Path, *, pgrep_mode: str = "empty", diefast: bool = False,
     # (restart-watcher.sh defaults: KILL_WAIT=1s × 10 iters + 1s
     # SIGKILL + LIVENESS=3s = 14s worst-case wall time). Tests don't
     # need real kernel signal grace — they use fake pgrep/run-watcher
-    # stubs, so much shorter waits are fine. KILL_WAIT=0.3 (not 0.1)
-    # leaves enough time for the `once` pgrep stub's non-atomic
-    # counter-file IO to settle between iterations (the stub uses
-    # cat + arithmetic + redirect — sub-100ms race window observed
-    # under pre-commit pre-flight CPU load).
+    # stubs, so much shorter waits are fine.
+    #
+    # 0.3s sweet spot (NOT 0.1s) verified empirically across all
+    # 5 tests in this file:
+    #   - 0.1s: test_watcher_dying_within_3s_surfaces_exit_1 fails
+    #     consistently (diefast script `exit 1` doesn't fully unwind
+    #     before kill -0 check probes; the 0.1s window is too tight
+    #     for the post-launch liveness assertion to observe a dead
+    #     child reliably even on idle system)
+    #   - 0.3s: 5/5 stable solo AND under 4× yes background load
+    #     (measured 2026-05-23 in commits 3b1b25b + this turn)
+    # The pgrep stub race (commit 3b1b25b) is now eliminated by the
+    # mkdir-based atomic lock, so we no longer NEED 0.3 for that
+    # specific race — but the liveness assertion still does.
     env["THREADS_WATCHER_RESTART_KILL_WAIT_SEC"] = "0.3"
     env["THREADS_WATCHER_RESTART_LIVENESS_WAIT_SEC"] = "0.3"
 
