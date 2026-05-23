@@ -255,23 +255,59 @@ def recent_stats(
 
     Returns a dict with keys:
         window_hours, total, ok, partial_error, error, other,
-        success_rate (float in [0, 1] — total `ok` / total).
+        success_rate (float in [0, 1] — `ok` / total),
+        partial_error_rate (float in [0, 1] — `partial_error` / total),
+        top_partial_error_reason — see below.
     `other` catches future status strings so the schema is
-    forward-compatible. `total == 0` returns `success_rate=None`.
+    forward-compatible. `total == 0` returns *_rate=None.
+
+    Why `partial_error_rate` is its own field
+    -----------------------------------------
+    The operator can compute it as partial_error/total, but observed
+    2026-05-23: a 93% partial_error regime went unnoticed for ~5 days
+    because the dashboard surfaced only `success_rate` and the raw
+    counts. With an EXPLICIT `partial_error_rate` field, the UI can
+    show it directly (and future alerting can threshold on it without
+    arithmetic).
+
+    Why `top_partial_error_reason` is its own field
+    -----------------------------------------------
+    The `error` column on each partial_error row carries the
+    diagnostic shape (e.g. "found=4 previous_max=15"). When 28 of 30
+    recent checks share the IDENTICAL error string, that's the
+    smoking-gun for the sticky-regime case that
+    `--allow-sticky-partial-error-regime` was built for (commit
+    e11e130). Surfacing it as `{reason: str, count: int}` lets the
+    dashboard show the operator WHY partial_error is dominating,
+    without requiring them to SQL the DB themselves. `None` when
+    total partial_error in the window is 0.
     """
     handle = normalize_handle(handle)
     rows = conn.execute(
-        "SELECT status FROM checks "
+        "SELECT status, error FROM checks "
         "WHERE handle = ? "
         "AND checked_at > strftime('%Y-%m-%dT%H:%M:%SZ', datetime('now', ? || ' hours'))",
         (handle, f"-{int(window_hours)}"),
     ).fetchall()
     statuses = [str(r[0]) for r in rows]
+    partial_error_reasons = [
+        str(r[1]) for r in rows if str(r[0]) == "partial_error" and r[1] is not None
+    ]
     ok_count = sum(1 for s in statuses if s == "ok")
     partial_count = sum(1 for s in statuses if s == "partial_error")
     error_count = sum(1 for s in statuses if s == "error")
     other_count = len(statuses) - ok_count - partial_count - error_count
     total = len(statuses)
+
+    top_reason: dict[str, Any] | None = None
+    if partial_error_reasons:
+        counts: dict[str, int] = {}
+        for r in partial_error_reasons:
+            counts[r] = counts.get(r, 0) + 1
+        # max by count; ties broken by the reason string for stable output
+        reason, count = max(counts.items(), key=lambda kv: (kv[1], kv[0]))
+        top_reason = {"reason": reason, "count": count}
+
     return {
         "window_hours": window_hours,
         "total": total,
@@ -280,6 +316,8 @@ def recent_stats(
         "error": error_count,
         "other": other_count,
         "success_rate": (ok_count / total) if total > 0 else None,
+        "partial_error_rate": (partial_count / total) if total > 0 else None,
+        "top_partial_error_reason": top_reason,
     }
 
 

@@ -168,7 +168,12 @@
       <div class="row"><span class="label">success rate</span><span id="rs-rate">—</span></div>
       <div class="row"><span class="label">ok</span><span id="rs-ok">—</span></div>
       <div class="row"><span class="label">partial_error</span><span id="rs-partial">—</span></div>
+      <div class="row"><span class="label">partial_error rate</span><span id="rs-partial-rate">—</span></div>
       <div class="row"><span class="label">error</span><span id="rs-error">—</span></div>
+      <div class="row" id="rs-top-reason-row" style="display:none;align-items:flex-start">
+        <span class="label">top partial reason</span>
+        <span id="rs-top-reason" style="text-align:right;max-width:75%;word-break:break-word">—</span>
+      </div>
     </section>
 
     <section class="card" id="sync-state">
@@ -246,6 +251,31 @@
           document.getElementById('rs-ok').textContent = rs.ok;
           document.getElementById('rs-partial').textContent = rs.partial_error;
           document.getElementById('rs-error').textContent = rs.error;
+
+          // partial_error_rate: explicit field so the operator
+          // doesn't have to mentally compute partial/total. Threshold
+          // ≥50% triggers .err styling because the sticky-regime
+          // signature (commit e11e130) shows up as a dominant rate.
+          const peRate = rs.partial_error_rate;
+          const peEl = document.getElementById('rs-partial-rate');
+          if (typeof peRate === 'number') {
+            peEl.textContent = (peRate * 100).toFixed(1) + '%';
+            if (peRate >= 0.5) peEl.classList.add('err');
+          } else {
+            peEl.textContent = 'n/a';
+          }
+
+          // top_partial_error_reason: the smoking-gun. When ≥1
+          // partial_error in the window, show the most common
+          // reason + count. Was unreachable from the dashboard until
+          // now — operators had to SQL the DB to see WHY partial_error
+          // was dominating.
+          const topReason = rs.top_partial_error_reason;
+          if (topReason && typeof topReason.reason === 'string') {
+            document.getElementById('rs-top-reason').textContent =
+              topReason.reason + ' (×' + topReason.count + ')';
+            document.getElementById('rs-top-reason-row').style.display = 'flex';
+          }
         }
 
         const ss = data.sync_state;

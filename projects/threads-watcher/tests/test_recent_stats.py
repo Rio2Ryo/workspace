@@ -42,6 +42,10 @@ class TestRecentStatsEmptyHistory:
             "error": 0,
             "other": 0,
             "success_rate": None,
+            # New observability fields. Both None on empty window —
+            # operator dashboards should treat None as "no data" not "0%".
+            "partial_error_rate": None,
+            "top_partial_error_reason": None,
         }
 
 
@@ -72,6 +76,12 @@ class TestRecentStatsCounts:
             "error": 1,
             "other": 0,
             "success_rate": pytest.approx(10 / 13),
+            "partial_error_rate": pytest.approx(2 / 13),
+            # No `error` text was seeded on the partial_error rows
+            # (default None), so the top-reason aggregator finds nothing
+            # to count → None. The new test class below pins the
+            # populated case.
+            "top_partial_error_reason": None,
         }
 
     def test_forward_compatible_other_bucket(self, conn: sqlite3.Connection) -> None:
@@ -100,6 +110,156 @@ class TestRecentStatsWindow:
         rs = recent_stats(conn, "@h", window_hours=4)
         assert rs["total"] == 1
         assert rs["window_hours"] == 4
+
+
+class TestPartialErrorRate:
+    """The partial_error_rate field is the dashboard metric that would
+    have surfaced the 2026-05-23 regime shift days earlier (93% rate
+    went unnoticed because operators only saw success_rate)."""
+
+    def _seed_with_reason(
+        self, conn: sqlite3.Connection, status: str, reason: str | None
+    ) -> None:
+        from datetime import datetime, timedelta, timezone
+
+        ts = (datetime.now(timezone.utc) - timedelta(hours=0.5)).strftime(
+            "%Y-%m-%dT%H:%M:%SZ"
+        )
+        record_check(
+            conn,
+            handle="@h",
+            checked_at=ts,
+            found_count=4 if status == "partial_error" else 15,
+            new_count=0,
+            status=status,
+            error=reason,
+        )
+
+    def test_zero_partial_error_yields_zero_rate(self, conn: sqlite3.Connection) -> None:
+        for _ in range(5):
+            _seed(conn, "@h", "ok")
+        rs = recent_stats(conn, "@h")
+        assert rs["partial_error_rate"] == 0.0
+
+    def test_all_partial_error_yields_one_point_zero(self, conn: sqlite3.Connection) -> None:
+        # The sticky-regime case — 100% partial_error.
+        for _ in range(5):
+            _seed(conn, "@h", "partial_error")
+        rs = recent_stats(conn, "@h")
+        assert rs["partial_error_rate"] == 1.0
+        # And success_rate is correspondingly 0 — pin both sides for
+        # the operator dashboard's coherency.
+        assert rs["success_rate"] == 0.0
+
+    def test_realistic_93pct_regime(self, conn: sqlite3.Connection) -> None:
+        # The exact shape observed 2026-05-23: 28 partial_error + 2 ok.
+        for _ in range(2):
+            _seed(conn, "@h", "ok")
+        for _ in range(28):
+            _seed(conn, "@h", "partial_error")
+        rs = recent_stats(conn, "@h")
+        assert rs["partial_error_rate"] == pytest.approx(28 / 30)
+        assert rs["partial_error_rate"] > 0.9  # easy operator threshold
+
+    def test_empty_window_returns_none_not_zero(self, conn: sqlite3.Connection) -> None:
+        # 0% != "no data". Dashboards must show "—" not "0%" when there
+        # is nothing to report; the None signal carries that.
+        rs = recent_stats(conn, "@h")
+        assert rs["partial_error_rate"] is None
+        assert rs["success_rate"] is None
+
+
+class TestTopPartialErrorReason:
+    """top_partial_error_reason surfaces WHY partial_error dominates,
+    which is the smoking-gun signal the operator needs to recognise a
+    sticky-DOM-regression regime in a single glance at the dashboard."""
+
+    def _seed_reason(
+        self, conn: sqlite3.Connection, status: str, reason: str | None
+    ) -> None:
+        from datetime import datetime, timedelta, timezone
+
+        ts = (datetime.now(timezone.utc) - timedelta(hours=0.5)).strftime(
+            "%Y-%m-%dT%H:%M:%SZ"
+        )
+        record_check(
+            conn,
+            handle="@h",
+            checked_at=ts,
+            found_count=1,
+            new_count=0,
+            status=status,
+            error=reason,
+        )
+
+    def test_no_partial_error_returns_none(self, conn: sqlite3.Connection) -> None:
+        for _ in range(3):
+            _seed(conn, "@h", "ok")
+        assert recent_stats(conn, "@h")["top_partial_error_reason"] is None
+
+    def test_uniform_reason_is_returned_with_count(self, conn: sqlite3.Connection) -> None:
+        # 3 partial_error rows, all the same reason → reason + count=3.
+        for _ in range(3):
+            self._seed_reason(
+                conn, "partial_error",
+                "profile extraction returned partial result: found=4 previous_max=15",
+            )
+        rs = recent_stats(conn, "@h")
+        top = rs["top_partial_error_reason"]
+        assert top is not None
+        assert top["reason"] == (
+            "profile extraction returned partial result: found=4 previous_max=15"
+        )
+        assert top["count"] == 3
+
+    def test_picks_majority_reason_when_mixed(self, conn: sqlite3.Connection) -> None:
+        # Two reasons: "A" x 4 and "B" x 1 → top is "A" with count 4.
+        for _ in range(4):
+            self._seed_reason(conn, "partial_error", "reason A: found=4")
+        self._seed_reason(conn, "partial_error", "reason B: found=2")
+        top = recent_stats(conn, "@h")["top_partial_error_reason"]
+        assert top == {"reason": "reason A: found=4", "count": 4}
+
+    def test_ignores_error_text_from_status_error_rows(self, conn: sqlite3.Connection) -> None:
+        # A row with status='error' (full failure) should NOT contribute
+        # its error text to the partial-error reason aggregator. Pin
+        # the scoping so a full outage doesn't pollute the partial-
+        # regression diagnostic.
+        self._seed_reason(conn, "error", "playwright timeout")
+        self._seed_reason(conn, "partial_error", "found=4 previous_max=15")
+        top = recent_stats(conn, "@h")["top_partial_error_reason"]
+        assert top is not None
+        assert top["reason"] == "found=4 previous_max=15"
+        assert top["count"] == 1
+        # The "playwright timeout" must NOT appear anywhere in the
+        # top-reason dict.
+        assert "playwright" not in top["reason"]
+
+    def test_ignores_rows_with_null_error(self, conn: sqlite3.Connection) -> None:
+        # partial_error with NULL `error` carries no diagnostic; it
+        # shouldn't get rolled in as a phantom reason string.
+        self._seed_reason(conn, "partial_error", None)
+        self._seed_reason(conn, "partial_error", None)
+        # Only one row has a real reason — but that one row is still
+        # enough to be the "top" reason.
+        self._seed_reason(conn, "partial_error", "found=4 previous_max=15")
+        top = recent_stats(conn, "@h")["top_partial_error_reason"]
+        assert top is not None
+        assert top["reason"] == "found=4 previous_max=15"
+        assert top["count"] == 1
+
+    def test_stable_tie_breaking_uses_reason_string(self, conn: sqlite3.Connection) -> None:
+        # Tie: two reasons each with count 2 → break by the reason
+        # string so the dashboard doesn't flicker between equally-
+        # frequent reasons each load.
+        for _ in range(2):
+            self._seed_reason(conn, "partial_error", "alpha")
+        for _ in range(2):
+            self._seed_reason(conn, "partial_error", "beta")
+        top = recent_stats(conn, "@h")["top_partial_error_reason"]
+        # Among ties (count=2 vs count=2), max() with key=(count, reason)
+        # picks the lexicographically larger reason → "beta".
+        assert top == {"reason": "beta", "count": 2}
 
 
 class TestRecentStatsHandleIsolation:

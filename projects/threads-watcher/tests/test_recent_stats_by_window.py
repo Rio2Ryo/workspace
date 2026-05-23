@@ -49,6 +49,11 @@ class TestLatestSnapshotMultiWindow:
             expected_keys = {
                 "window_hours", "total", "ok", "partial_error",
                 "error", "other", "success_rate",
+                # Observability extension (db.py recent_stats docstring):
+                # partial_error_rate + top_partial_error_reason. Both
+                # MUST appear on every window so the UI can render
+                # 1h / 24h / 168h regimes consistently.
+                "partial_error_rate", "top_partial_error_reason",
             }
             assert set(w.keys()) == expected_keys, f"window {key} shape drifted"
 
