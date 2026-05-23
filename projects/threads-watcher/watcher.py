@@ -116,7 +116,18 @@ def _notify_new_post(handle: str, post_id: str, captured: dict[str, Any]) -> Non
 
 
 def _normalize_handle(handle: str) -> str:
-    return handle if handle.startswith("@") else f"@{handle}"
+    """Canonical form for a Threads handle: lowercase, exactly one '@'.
+
+    Threads URLs are case-insensitive (/@Foo and /@foo resolve to the
+    same profile) so set/list membership checks must compare on the
+    lowercased form. Paste-error inputs like "@@foo" or "" are
+    normalised rather than passed through verbatim. Returns "" for
+    empty / all-'@' input so callers' truthiness checks filter cleanly.
+    """
+    stripped = handle.lstrip("@")
+    if not stripped:
+        return ""
+    return f"@{stripped.lower()}"
 
 
 def _parse_handles(raw: str) -> list[str]:
