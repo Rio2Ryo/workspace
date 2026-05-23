@@ -290,3 +290,184 @@ def test_main_returns_two_when_keep_invalid(src_db: Path, backup_dir: Path, caps
     rc = main(["--db", str(src_db), "--dir", str(backup_dir), "--keep", "0"])
     assert rc == 2
     assert "ERROR" in capsys.readouterr().err
+
+
+# ── Production-shape volume e2e ────────────────────────────────────────
+#
+# Existing 17 tests use 5-row src_db (~12KB). Real production
+# threads_watcher.db is 29MB+ with screenshot_png BLOBs (post rows
+# carry PNG bytes of variable size, typically 50-500KB each). BLOB-
+# heavy DBs exercise different code paths than empty-table tests:
+#   - SQLite backup API copies pages; performance scales with DB size
+#   - integrity_check walks every page including BLOB extensions
+#   - retention with many backups stresses the filename listing/sort
+#
+# This block validates correctness + performance at production scale:
+#   - 5MB DB with BLOB column (mirrors real screenshot_png shape)
+#   - 10 retained generations (production --keep 7 + headroom)
+#   - <5s budget per backup (real production runs are sub-second
+#     under macOS APFS; pin against future fsync regression)
+
+
+def _make_production_shape_db(path: Path, *, num_rows: int = 100,
+                              blob_bytes: int = 50_000) -> int:
+    """Create a DB mirroring the production threads_watcher.db shape:
+    posts table with screenshot_png BLOB column. Total file size
+    ≈ num_rows × blob_bytes (default 5MB). Returns actual file size."""
+    conn = sqlite3.connect(path)
+    try:
+        conn.executescript("""
+            CREATE TABLE posts (
+                id INTEGER PRIMARY KEY,
+                handle TEXT NOT NULL,
+                post_id TEXT NOT NULL,
+                post_url TEXT,
+                first_seen_at TEXT NOT NULL DEFAULT (datetime('now')),
+                captured_at TEXT NOT NULL DEFAULT (datetime('now')),
+                screenshot_png BLOB NOT NULL,
+                screenshot_content_type TEXT,
+                screenshot_size_bytes INTEGER,
+                screenshot_width INTEGER,
+                screenshot_height INTEGER,
+                local_path TEXT
+            );
+            CREATE UNIQUE INDEX idx_posts_handle_post ON posts (handle, post_id);
+        """)
+        # Use deterministic content so a corrupted backup would mismatch
+        # at a specific byte position — easier to debug than random.
+        marker_byte = b'\xab'
+        blob_payload = marker_byte * blob_bytes
+        conn.executemany(
+            "INSERT INTO posts (handle, post_id, screenshot_png, "
+            "screenshot_size_bytes) VALUES (?, ?, ?, ?)",
+            [(f"@h{i % 5}", f"post{i:06d}", blob_payload, blob_bytes)
+             for i in range(num_rows)],
+        )
+        conn.commit()
+    finally:
+        conn.close()
+    return path.stat().st_size
+
+
+def test_production_shape_backup_preserves_byte_identical_copy(tmp_path):
+    # 🔒 Headline correctness pin: BLOB-heavy DB round-trips through
+    # backup byte-for-byte. SQLite backup API uses page-level copy;
+    # any bug in the BLOB-page handling would surface here as a
+    # checksum mismatch.
+    src = tmp_path / "src.db"
+    backup_dir = tmp_path / "backups"
+    src_size = _make_production_shape_db(src, num_rows=100, blob_bytes=50_000)
+    assert src_size > 4_000_000, f"fixture too small: {src_size} bytes"
+
+    backup_path = run_backup(
+        db_path=src, backup_dir=backup_dir, keep=7,
+        now=datetime(2026, 5, 23, tzinfo=timezone.utc),
+    ).backup_path
+    assert backup_path.exists()
+    # Backup file size matches source.
+    backup_size = backup_path.stat().st_size
+    assert backup_size == src_size, (
+        f"backup size {backup_size} != source size {src_size}; "
+        f"BLOB pages dropped?"
+    )
+    # 🔒 Content match: read all BLOBs from both DBs, compare.
+    src_conn = sqlite3.connect(src)
+    bk_conn = sqlite3.connect(backup_path)
+    try:
+        src_blobs = src_conn.execute(
+            "SELECT post_id, screenshot_png FROM posts ORDER BY id"
+        ).fetchall()
+        bk_blobs = bk_conn.execute(
+            "SELECT post_id, screenshot_png FROM posts ORDER BY id"
+        ).fetchall()
+        assert len(src_blobs) == len(bk_blobs) == 100
+        for s, b in zip(src_blobs, bk_blobs):
+            assert s[0] == b[0], f"post_id mismatch: {s[0]} vs {b[0]}"
+            assert s[1] == b[1], (
+                f"BLOB mismatch for {s[0]}: lengths {len(s[1])} vs {len(b[1])}"
+            )
+    finally:
+        src_conn.close()
+        bk_conn.close()
+
+
+def test_production_shape_backup_passes_integrity_check(tmp_path):
+    # 🔒 Backup integrity verified via PRAGMA integrity_check (same
+    # check backup_db.py uses internally). For a BLOB-heavy DB,
+    # integrity_check walks every page including BLOB extensions —
+    # surfaces page corruption that a row-count alone would miss.
+    src = tmp_path / "src.db"
+    backup_dir = tmp_path / "backups"
+    _make_production_shape_db(src, num_rows=100, blob_bytes=50_000)
+    backup_path = run_backup(
+        db_path=src, backup_dir=backup_dir, keep=7,
+        now=datetime(2026, 5, 23, tzinfo=timezone.utc),
+    ).backup_path
+    conn = sqlite3.connect(backup_path)
+    try:
+        result = conn.execute("PRAGMA integrity_check").fetchall()
+        # `ok` is the single-row response for a clean DB.
+        assert result == [("ok",)], f"integrity_check failed: {result}"
+    finally:
+        conn.close()
+
+
+def test_production_shape_backup_completes_under_5s(tmp_path):
+    # 🔒 Performance budget: 5MB DB backup should be sub-second on
+    # macOS APFS. Pin 5s ceiling against future fsync / page-copy
+    # regression that would compound at production 29MB+ scale
+    # (running every 3 AM cron tick — slow backup risks overlap
+    # with watcher's next tick).
+    import time as _time
+    src = tmp_path / "src.db"
+    backup_dir = tmp_path / "backups"
+    _make_production_shape_db(src, num_rows=100, blob_bytes=50_000)
+    start = _time.monotonic()
+    run_backup(
+        db_path=src, backup_dir=backup_dir, keep=7,
+        now=datetime(2026, 5, 23, tzinfo=timezone.utc),
+    )
+    elapsed = _time.monotonic() - start
+    assert elapsed < 5.0, (
+        f"backup of 5MB DB took {elapsed:.2f}s; budget 5s. "
+        f"At production 29MB+ scale this would proportionally "
+        f"impact the 3 AM cron window."
+    )
+
+
+def test_production_shape_retention_prunes_oldest_across_10_generations(tmp_path):
+    # 🔒 Retention scaling: --keep 7 with 10 existing backups should
+    # delete 3 oldest, leave 7 newest. Catches lexicographic-sort
+    # regression in list_existing_backups that would mis-order
+    # YYYYMMDD-formatted filenames at the boundary.
+    src = tmp_path / "src.db"
+    backup_dir = tmp_path / "backups"
+    _make_production_shape_db(src, num_rows=20, blob_bytes=10_000)
+    # Create 10 backups across consecutive days. The filename uses
+    # ISO timestamp, so daily-incremented ts sorts lexicographically
+    # in the same order as chronologically.
+    backups_created: list[Path] = []
+    for day in range(10):
+        ts = datetime(2026, 5, 1 + day, tzinfo=timezone.utc)
+        result = run_backup(db_path=src, backup_dir=backup_dir, keep=999, now=ts)
+        backups_created.append(result.backup_path)
+    # All 10 should exist.
+    assert all(p.exists() for p in backups_created)
+    # Now run with --keep 7: oldest 3 should be deleted.
+    ts = datetime(2026, 5, 11, tzinfo=timezone.utc)
+    run_backup(db_path=src, backup_dir=backup_dir, keep=7, now=ts)
+    remaining = list_existing_backups(backup_dir)
+    # 7 oldest-day backups + the newest one we just created = 8.
+    # The --keep 7 trims to 7 NEWEST.
+    assert len(remaining) == 7, (
+        f"expected 7 backups after --keep 7; got {len(remaining)}: "
+        f"{[p.name for p in remaining]}"
+    )
+    # 🔒 Oldest 3 (May 1, 2, 3) should be gone.
+    for old_day in (1, 2, 3):
+        old_p = next((p for p in backups_created
+                      if f"-{2026:04d}{5:02d}{old_day:02d}T" in p.name), None)
+        if old_p:
+            assert not old_p.exists(), (
+                f"oldest backup {old_p.name} should have been pruned"
+            )
