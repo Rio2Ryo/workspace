@@ -96,6 +96,17 @@ def _run(sb: Path, *, pgrep_mode: str = "empty", diefast: bool = False,
 
     env = dict(os.environ)
     env["PATH"] = f"{sb / 'stub-bin'}:{env['PATH']}"
+    # 🔒 Test-injection of the production env-tunable sleep durations
+    # (restart-watcher.sh defaults: KILL_WAIT=1s × 10 iters + 1s
+    # SIGKILL + LIVENESS=3s = 14s worst-case wall time). Tests don't
+    # need real kernel signal grace — they use fake pgrep/run-watcher
+    # stubs, so much shorter waits are fine. KILL_WAIT=0.3 (not 0.1)
+    # leaves enough time for the `once` pgrep stub's non-atomic
+    # counter-file IO to settle between iterations (the stub uses
+    # cat + arithmetic + redirect — sub-100ms race window observed
+    # under pre-commit pre-flight CPU load).
+    env["THREADS_WATCHER_RESTART_KILL_WAIT_SEC"] = "0.3"
+    env["THREADS_WATCHER_RESTART_LIVENESS_WAIT_SEC"] = "0.3"
 
     proc = subprocess.run(
         ["bash", "restart-watcher.sh"],
@@ -159,7 +170,9 @@ def test_watcher_dying_within_3s_surfaces_exit_1(sandbox: Path) -> None:
     code, out, launched = _run(sandbox, pgrep_mode="empty", diefast=True)
     assert code == 1
     assert launched is True
-    assert "exited within 3s" in out
+    # Liveness-wait message includes the configured wait (the test
+    # sandbox sets it to 0.1s). Match the stable prefix only.
+    assert "exited within" in out and "of launch" in out
 
 
 def test_unkillable_process_aborts_before_launch(sandbox: Path) -> None:

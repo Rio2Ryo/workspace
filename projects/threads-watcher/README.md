@@ -93,6 +93,8 @@ operator が launchd plist / シェル経由で tune できる環境変数の完
 | `THREADS_WATCHER_HEARTBEAT_SEC` | `3600` (1h) | int, `(0, 86400]` | sticky regime の "still active" 再 emit 間隔。0 や > 24h は invalid (loud raise) | `sync_guards.py` |
 | `THREADS_WATCHER_SIGNIFICANT_BUCKET_DELTA` | `0.2` | float, `[0.0, 1.0]` | warn-emit dedup 閾値 (バケット 0.1 単位の最小差)。range外は invalid | `sync_guards.py` |
 | `THREADS_WATCHER_DISCORD_WEBHOOK_URL` | (未設定 = dry-run mode) | URL string | `discord_post.py` の Discord webhook 送信先。未設定 / 空で安全 dry-run | `discord_post.py` |
+| `THREADS_WATCHER_RESTART_KILL_WAIT_SEC` | `1` | numeric (>0) | `restart-watcher.sh` の SIGTERM→SIGKILL grace per-iteration。fast incident-redeploy 時 `0.5` 等で短縮可能 | `restart-watcher.sh` |
+| `THREADS_WATCHER_RESTART_LIVENESS_WAIT_SEC` | `3` | numeric (>0) | `restart-watcher.sh` の post-launch liveness check 待機。default で 3 秒 grace | `restart-watcher.sh` |
 
 ### よくある operator usage
 

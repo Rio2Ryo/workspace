@@ -59,15 +59,35 @@ trap 'rmdir "$LOCKDIR" 2>/dev/null || true' EXIT
 # so we don't catch unrelated python processes.
 PIDS=$(pgrep -f 'watcher\.py --watch' 2>/dev/null || true)
 
+# Per-iteration kill-wait + post-launch liveness wait are env-tunable.
+# Defaults give the safe 10s + 3s margin production has always used.
+# Operator can shorten KILL_WAIT during fast incident-redeploy
+# (e.g., =0.5 → 5s total grace). Tests inject 0.1 to drop the 13s
+# worst case to ~1.3s, cutting threads-watcher pre-commit pre-flight
+# by ~22s. Loud range check rejects 0 / negative (would skip the
+# kernel signal grace entirely → SIGTERM-then-SIGKILL race).
+KILL_WAIT_SEC="${THREADS_WATCHER_RESTART_KILL_WAIT_SEC:-1}"
+LIVENESS_WAIT_SEC="${THREADS_WATCHER_RESTART_LIVENESS_WAIT_SEC:-3}"
+# Range validation. awk handles fractional seconds cleanly without
+# needing bc/python dependency.
+if ! awk -v v="$KILL_WAIT_SEC" 'BEGIN{exit !(v+0 > 0)}'; then
+  echo "ERROR: THREADS_WATCHER_RESTART_KILL_WAIT_SEC must be > 0, got '$KILL_WAIT_SEC'" >&2
+  exit 1
+fi
+if ! awk -v v="$LIVENESS_WAIT_SEC" 'BEGIN{exit !(v+0 > 0)}'; then
+  echo "ERROR: THREADS_WATCHER_RESTART_LIVENESS_WAIT_SEC must be > 0, got '$LIVENESS_WAIT_SEC'" >&2
+  exit 1
+fi
+
 if [ -n "$PIDS" ]; then
   echo "stopping existing watcher PID(s): $PIDS"
   # SIGTERM first
   for pid in $PIDS; do
     kill "$pid" 2>/dev/null || true
   done
-  # wait up to 10s for graceful exit
+  # wait up to 10 iterations for graceful exit (each = KILL_WAIT_SEC)
   for i in 1 2 3 4 5 6 7 8 9 10; do
-    sleep 1
+    sleep "$KILL_WAIT_SEC"
     still=$(pgrep -f 'watcher\.py --watch' 2>/dev/null || true)
     [ -z "$still" ] && break
   done
@@ -78,7 +98,7 @@ if [ -n "$PIDS" ]; then
     for pid in $still; do
       kill -9 "$pid" 2>/dev/null || true
     done
-    sleep 1
+    sleep "$KILL_WAIT_SEC"
   fi
 else
   echo "no existing watcher process; launching fresh"
@@ -119,10 +139,11 @@ nohup ./run-watcher.sh >> "$LOG_FILE" 2>&1 &
 NEW_PID=$!
 echo "new watcher PID: $NEW_PID"
 
-# Give it ~3s to actually start, then sanity-check it's still alive.
-sleep 3
+# Give it the liveness-wait window to actually start, then sanity-
+# check it's still alive. Default 3s (production margin).
+sleep "$LIVENESS_WAIT_SEC"
 if ! kill -0 "$NEW_PID" 2>/dev/null; then
-  echo "ERROR: new watcher exited within 3s of launch; tail of log:" >&2
+  echo "ERROR: new watcher exited within ${LIVENESS_WAIT_SEC}s of launch; tail of log:" >&2
   tail -20 "$LOG_FILE" >&2
   exit 1
 fi
