@@ -1,0 +1,81 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  launchd template — sticky-regime transition alerter
+
+  目的:
+    sticky_regime_diagnosis.py を hourly cron 化し、recommendation の
+    transition (WAIT → STRONG_ENABLE 等 actionable moments) を
+    operator に通知する。silent-on-no-change の cron-friendly behaviour
+    (commit de9369a)。
+
+  配置先:
+    ~/Library/LaunchAgents/com.shiro.threads-watcher-sticky-regime-alert.plist
+
+  有効化:
+    launchctl load -w ~/Library/LaunchAgents/com.shiro.threads-watcher-sticky-regime-alert.plist
+
+  無効化(ロールバック):
+    launchctl unload -w ~/Library/LaunchAgents/com.shiro.threads-watcher-sticky-regime-alert.plist
+
+  デフォルト挙動 (本テンプレが設定する値):
+    - 3600 秒 (1h) ごとに sticky_regime_diagnosis.py を起動
+    - `- -alert-on-transition` mode  → recommendation の delta 検出のみ
+                                        silent-on-no-change (cron 入力 24/日
+                                        → transition 時のみ logs/alert.log
+                                        に 1 line emit)
+    - RunAtLoad=false       → load 時 fire しない、first-install
+                               spam guard (check_transition の no-prior-
+                               state 仕様と整合)
+
+  Operator triage workflow:
+    # 1. transition 発生時のみ log にエントリ追加
+    tail -f projects/threads-watcher/logs/sticky-regime-alert.out.log
+    # 2. Discord URL provision 済なら shell pipe で notifier 連携可能
+    #    (cron→pipe→discord_post.py の launchd chain は別 plist で構成)
+
+  事前要件:
+    - threads_watcher.db に最低 3 件の checks 履歴
+      (`sticky_regime_diagnosis.py - -recommendation` で INSUFFICIENT_DATA
+       なら本 plist 起動しても silent recording のみで通知ゼロ、害なし)
+
+  ロールバック手順:
+    本テンプレ load しただけでは alert state file (threads-watcher-
+    status/sticky-regime-last-recommendation.json) のみ書き込み、
+    DB / dashboard / Discord channel への副作用ゼロ。万一不要時:
+      1. launchctl unload -w ~/Library/LaunchAgents/com.shiro.threads-watcher-sticky-regime-alert.plist
+      2. (Optional) rm projects/threads-watcher/threads-watcher-status/sticky-regime-last-recommendation.json
+-->
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+  <key>Label</key>
+  <string>com.shiro.threads-watcher-sticky-regime-alert</string>
+
+  <key>ProgramArguments</key>
+  <array>
+    <string>/Users/umi/.openclaw/workspace/projects/threads-watcher/.venv/bin/python</string>
+    <string>/Users/umi/.openclaw/workspace/projects/threads-watcher/sticky_regime_diagnosis.py</string>
+    <string>--alert-on-transition</string>
+  </array>
+
+  <key>EnvironmentVariables</key>
+  <dict>
+    <key>PATH</key>
+    <string>/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin</string>
+  </dict>
+
+  <key>StartInterval</key>
+  <integer>3600</integer>
+
+  <key>RunAtLoad</key>
+  <false/>
+
+  <key>StandardOutPath</key>
+  <string>/Users/umi/.openclaw/workspace/projects/threads-watcher/logs/sticky-regime-alert.out.log</string>
+  <key>StandardErrorPath</key>
+  <string>/Users/umi/.openclaw/workspace/projects/threads-watcher/logs/sticky-regime-alert.err.log</string>
+
+  <key>WorkingDirectory</key>
+  <string>/Users/umi/.openclaw/workspace/projects/threads-watcher</string>
+</dict>
+</plist>

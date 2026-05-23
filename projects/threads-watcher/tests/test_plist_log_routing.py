@@ -349,3 +349,78 @@ def test_discord_post_plist_working_directory_is_project_root():
         f"plist WorkingDirectory must be the project root so state.json "
         f"default path resolves; got {wd}"
     )
+
+
+# ── sticky-regime-alert .example template (commit de9369a) ─────────────
+
+
+STICKY_REGIME_PLIST = PROJECT_ROOT / "com.shiro.threads-watcher-sticky-regime-alert.plist.example"
+
+
+def test_sticky_regime_plist_example_validates_as_well_formed_xml():
+    _load(STICKY_REGIME_PLIST)
+
+
+def test_sticky_regime_plist_targets_sticky_regime_diagnosis_py():
+    plist = _load(STICKY_REGIME_PLIST)
+    args = plist.get("ProgramArguments", [])
+    assert any(a.endswith("sticky_regime_diagnosis.py") for a in args), (
+        f"plist must invoke sticky_regime_diagnosis.py; got {args}"
+    )
+
+
+def test_sticky_regime_plist_includes_alert_on_transition_flag():
+    # 🔒 The whole point: cron-friendly silent-on-no-change mode.
+    # Without --alert-on-transition, each tick would dump the full
+    # recommendation block, spamming the log file 24x/day.
+    plist = _load(STICKY_REGIME_PLIST)
+    args = plist["ProgramArguments"]
+    assert "--alert-on-transition" in args, (
+        f"plist must pass --alert-on-transition; got {args}"
+    )
+
+
+def test_sticky_regime_plist_script_path_exists():
+    plist = _load(STICKY_REGIME_PLIST)
+    args = plist["ProgramArguments"]
+    script_path = Path(args[1])
+    assert script_path.is_file(), (
+        f"sticky_regime_diagnosis.py path {script_path} doesn't exist"
+    )
+
+
+def test_sticky_regime_plist_does_not_run_at_load():
+    # RunAtLoad=true would fire an alert at operator install time —
+    # but the check_transition first-run no-alert guard would suppress
+    # it. Pinning RunAtLoad=false documents the intended cron-only
+    # cadence regardless.
+    plist = _load(STICKY_REGIME_PLIST)
+    assert plist.get("RunAtLoad") is False
+
+
+def test_sticky_regime_plist_uses_hourly_cadence():
+    # 3600s pairs with sync.plist's 5-min publish cadence: by the time
+    # 12 publish ticks accumulate, recommendation has fresh signal
+    # without sub-hour churn on the alert state file.
+    plist = _load(STICKY_REGIME_PLIST)
+    assert plist.get("StartInterval") == 3600
+
+
+def test_sticky_regime_plist_routes_stdout_to_alert_log():
+    # 🔒 Operator triage workflow: tail -f logs/sticky-regime-alert.out.log
+    # gives 1 line per transition. Mis-routing to stderr would mix
+    # transition signal with Python tracebacks.
+    plist = _load(STICKY_REGIME_PLIST)
+    out = plist.get("StandardOutPath", "")
+    assert out.endswith("logs/sticky-regime-alert.out.log"), (
+        f"stdout should route to logs/sticky-regime-alert.out.log; got {out!r}"
+    )
+
+
+def test_sticky_regime_plist_working_directory_is_project_root():
+    # State file path (threads-watcher-status/sticky-regime-last-
+    # recommendation.json) is relative; needs cwd at project root
+    # to resolve.
+    plist = _load(STICKY_REGIME_PLIST)
+    wd = Path(plist.get("WorkingDirectory", ""))
+    assert wd == PROJECT_ROOT
