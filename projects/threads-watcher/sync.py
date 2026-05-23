@@ -40,7 +40,6 @@ from sync_guards import (
     DEFAULT_COMMIT_MIN_GAP_SEC,
     DEFAULT_PARTIAL_ERROR_RATE_THRESHOLD,
     DEFAULT_RECENT_CHECKS_WINDOW,
-    DEFAULT_WARN_HEARTBEAT_SEC,
     DEFAULT_WARN_WINDOW_HOURS,
     SyncDecision,
     compute_partial_error_rate_warnings,
@@ -715,11 +714,15 @@ def main(argv: list[str] | None = None) -> int:
                 window_hours=DEFAULT_WARN_WINDOW_HOURS,
             )
             warn_state_path = args.log.parent / '.sync-warn-last-state'
+            # heartbeat_sec omitted so filter_warnings_for_emit reads
+            # THREADS_WATCHER_HEARTBEAT_SEC env (default 3600). Passing
+            # the constant explicitly would block operator tuning at
+            # the launchd plist level — silent override defeats the
+            # whole point of the env var.
             emittable, recovered, new_state = filter_warnings_for_emit(
                 all_warnings,
                 warn_state_path,
                 now_ts=int(time.time()),
-                heartbeat_sec=DEFAULT_WARN_HEARTBEAT_SEC,
             )
             for w in emittable:
                 log.log(format_outcome_event(
@@ -795,8 +798,9 @@ def main(argv: list[str] | None = None) -> int:
         #
         # Dedup: warnings pass through filter_warnings_for_emit, which
         # suppresses per-handle repeats unless the rate bucket changed
-        # OR DEFAULT_WARN_HEARTBEAT_SEC (1h) elapsed since the last
-        # logged tick. Without this, a sustained 90% regime emits
+        # OR the heartbeat window has elapsed (default 1h, env-tunable
+        # via THREADS_WATCHER_HEARTBEAT_SEC). Without this, a
+        # sustained 90% regime emits
         # ~288 lines/day/handle at the 5-min launchd cadence.
         # State persisted at logs/.sync-warn-last-state (gitignored
         # via logs/ rule).
@@ -806,11 +810,11 @@ def main(argv: list[str] | None = None) -> int:
             window_hours=DEFAULT_WARN_WINDOW_HOURS,
         )
         warn_state_path = args.log.parent / '.sync-warn-last-state'
+        # heartbeat_sec omitted — see comment at first call site above.
         emittable, recovered, new_state = filter_warnings_for_emit(
             all_warnings,
             warn_state_path,
             now_ts=int(time.time()),
-            heartbeat_sec=DEFAULT_WARN_HEARTBEAT_SEC,
         )
         for w in emittable:
             log.log(format_outcome_event(

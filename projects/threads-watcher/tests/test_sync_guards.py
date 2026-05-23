@@ -1843,3 +1843,128 @@ class TestSignificantBucketDeltaEnv:
             f"(delta 0.2 == threshold). Got {default_emits}. If "
             f"this drops, the boundary became exclusive — investigate."
         )
+
+
+# ── THREADS_WATCHER_HEARTBEAT_SEC env-tuning ─────────────────────────────
+#
+# Twin of TestSignificantBucketDeltaEnv. heartbeat_sec controls how
+# often the watcher re-emits a warn line for a sticky regime so
+# operators see "still active" without bucket movement. Default 3600
+# matches publish.log / auto-restart cadence; operator might tune to
+# 1800 (noisier debug) or 21600 (quiet ops).
+
+
+class TestHeartbeatSecEnv:
+    def _w(self, handle: str, rate: float) -> dict:
+        return {
+            'handle': handle, 'rate': rate, 'threshold': 0.5,
+            'window_hours': 1, 'total': 30, 'top_reason': 'x',
+        }
+
+    def test_default_applies_when_env_unset(self, monkeypatch):
+        from sync_guards import (
+            ENV_HEARTBEAT_SEC, DEFAULT_WARN_HEARTBEAT_SEC,
+            _get_default_heartbeat_sec,
+        )
+        monkeypatch.delenv(ENV_HEARTBEAT_SEC, raising=False)
+        assert _get_default_heartbeat_sec() == DEFAULT_WARN_HEARTBEAT_SEC == 3600
+
+    def test_empty_string_treated_as_unset(self, monkeypatch):
+        # launchd plist with empty StringValue → exports as "". Must
+        # fall back, not crash. Same lesson as commit 785a75d
+        # (discord_post empty-URL handling).
+        from sync_guards import ENV_HEARTBEAT_SEC, _get_default_heartbeat_sec
+        monkeypatch.setenv(ENV_HEARTBEAT_SEC, "")
+        assert _get_default_heartbeat_sec() == 3600
+
+    def test_integer_override(self, monkeypatch):
+        from sync_guards import ENV_HEARTBEAT_SEC, _get_default_heartbeat_sec
+        monkeypatch.setenv(ENV_HEARTBEAT_SEC, "1800")
+        assert _get_default_heartbeat_sec() == 1800
+
+    def test_max_boundary_accepted(self, monkeypatch):
+        # 86400 (24h) is the documented upper bound — operator wanting
+        # "once per day" heartbeat. Pin inclusive.
+        from sync_guards import ENV_HEARTBEAT_SEC, _get_default_heartbeat_sec
+        monkeypatch.setenv(ENV_HEARTBEAT_SEC, "86400")
+        assert _get_default_heartbeat_sec() == 86400
+
+    def test_non_numeric_raises_with_actionable_message(self, monkeypatch):
+        # 🔒 Silent fallback would mask a plist typo. Raise loud.
+        from sync_guards import ENV_HEARTBEAT_SEC, _get_default_heartbeat_sec
+        monkeypatch.setenv(ENV_HEARTBEAT_SEC, "30min")
+        with pytest.raises(ValueError, match="not a valid integer"):
+            _get_default_heartbeat_sec()
+
+    def test_zero_raises(self, monkeypatch):
+        # 0 heartbeat would mean "always emit" — silently kills the
+        # whole dedup mechanism. Loud > silent.
+        from sync_guards import ENV_HEARTBEAT_SEC, _get_default_heartbeat_sec
+        monkeypatch.setenv(ENV_HEARTBEAT_SEC, "0")
+        with pytest.raises(ValueError, match="out of valid range"):
+            _get_default_heartbeat_sec()
+
+    def test_negative_raises(self, monkeypatch):
+        from sync_guards import ENV_HEARTBEAT_SEC, _get_default_heartbeat_sec
+        monkeypatch.setenv(ENV_HEARTBEAT_SEC, "-3600")
+        with pytest.raises(ValueError, match="out of valid range"):
+            _get_default_heartbeat_sec()
+
+    def test_over_cap_raises(self, monkeypatch):
+        # > 24h defeats the heartbeat purpose. Pin: operator setting
+        # "100000s" (~27h) is almost certainly a typo for
+        # 100s or 1000s — raise to surface it.
+        from sync_guards import ENV_HEARTBEAT_SEC, _get_default_heartbeat_sec
+        monkeypatch.setenv(ENV_HEARTBEAT_SEC, "100000")
+        with pytest.raises(ValueError, match="out of valid range"):
+            _get_default_heartbeat_sec()
+
+    def test_explicit_arg_overrides_env(self, tmp_path, monkeypatch):
+        # 🔒 Backward-compat: tests + any caller that NEEDS deterministic
+        # heartbeat (e.g., test fixtures) can still pass an explicit
+        # value. The env-default only kicks in when arg is None.
+        from sync_guards import ENV_HEARTBEAT_SEC, filter_warnings_for_emit
+        monkeypatch.setenv(ENV_HEARTBEAT_SEC, "1")  # env: 1s heartbeat
+        state_path = tmp_path / "s.json"
+        # Pass explicit 3600 — must dominate the 1s env value, so
+        # second tick within 5 min should suppress (not heartbeat).
+        emit1, _, new = filter_warnings_for_emit(
+            [self._w('@x', 0.91)], state_path,
+            now_ts=1000, heartbeat_sec=3600,
+        )
+        state_path.write_text(json.dumps(new), encoding="utf-8")
+        emit2, _, _ = filter_warnings_for_emit(
+            [self._w('@x', 0.91)], state_path,
+            now_ts=1300, heartbeat_sec=3600,  # 300s later
+        )
+        assert len(emit1) == 1 and len(emit2) == 0, (
+            f"Explicit heartbeat_sec=3600 must override env=1; got "
+            f"first emit {len(emit1)}, second emit {len(emit2)}"
+        )
+
+    def test_env_tuning_changes_dedup_decision_end_to_end(self, tmp_path, monkeypatch):
+        # End-to-end: same bucket-stable rates, two different env
+        # heartbeats. With short heartbeat (60s), the second tick at
+        # 100s elapsed re-emits as heartbeat. With long heartbeat
+        # (3600s), the second tick suppresses. Proves env var is
+        # honored by filter_warnings_for_emit's default-resolution.
+        from sync_guards import ENV_HEARTBEAT_SEC, filter_warnings_for_emit
+
+        def _emits_at_second_tick(heartbeat_env: str) -> int:
+            monkeypatch.setenv(ENV_HEARTBEAT_SEC, heartbeat_env)
+            state_path = tmp_path / f"s-{heartbeat_env}.json"
+            # First tick: always emits (no prior state).
+            _, _, new = filter_warnings_for_emit(
+                [self._w('@h', 0.91)], state_path, now_ts=1000,
+            )
+            state_path.write_text(json.dumps(new), encoding="utf-8")
+            # Second tick: SAME bucket, 100s elapsed.
+            emit, _, _ = filter_warnings_for_emit(
+                [self._w('@h', 0.91)], state_path, now_ts=1100,
+            )
+            return len(emit)
+
+        # Short heartbeat: 100s elapsed >= 60s → heartbeat emit.
+        assert _emits_at_second_tick("60") == 1
+        # Long heartbeat: 100s elapsed < 3600s → suppress.
+        assert _emits_at_second_tick("3600") == 0

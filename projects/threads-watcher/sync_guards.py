@@ -384,7 +384,41 @@ DEFAULT_WARN_WINDOW_HOURS = 1
 # from the log file alone. 1 hour matches the existing publish.log /
 # auto-restart.out.log dedup intervals so all three log surfaces have
 # the same "is anything alive?" cadence.
+#
+# Operator-tunable via env var THREADS_WATCHER_HEARTBEAT_SEC. Same
+# pattern + validation as THREADS_WATCHER_SIGNIFICANT_BUCKET_DELTA
+# (commit 2ce832b). Lazy-read so a launchd plist edit takes effect
+# at next watcher restart, no rebuild. Range clamped to (0, 86400]
+# — zero/negative breaks heartbeat semantics ("always emit" or
+# infinite suppress); > 86400s (24h) starts to defeat the heartbeat
+# purpose (operator should see "still alive" at least daily). Loud
+# error on out-of-range surfaces a launchd-plist typo at startup.
 DEFAULT_WARN_HEARTBEAT_SEC = 3600
+ENV_HEARTBEAT_SEC = "THREADS_WATCHER_HEARTBEAT_SEC"
+_HEARTBEAT_SEC_MAX = 86400
+
+
+def _get_default_heartbeat_sec() -> int:
+    raw = os.environ.get(ENV_HEARTBEAT_SEC, "").strip()
+    if not raw:
+        return DEFAULT_WARN_HEARTBEAT_SEC
+    try:
+        value = int(raw)
+    except ValueError as e:
+        raise ValueError(
+            f"{ENV_HEARTBEAT_SEC}={raw!r} is not a valid integer. "
+            f"Default is {DEFAULT_WARN_HEARTBEAT_SEC} (seconds); unset "
+            f"the env var to restore default."
+        ) from e
+    if not 0 < value <= _HEARTBEAT_SEC_MAX:
+        raise ValueError(
+            f"{ENV_HEARTBEAT_SEC}={value} is out of valid range "
+            f"(0, {_HEARTBEAT_SEC_MAX}]. Heartbeat <= 0 breaks "
+            f"semantics (would always emit OR never emit); > 24h "
+            f"defeats the 'still alive' purpose. Default is "
+            f"{DEFAULT_WARN_HEARTBEAT_SEC} (1h)."
+        )
+    return value
 
 # Bucket the rate to 0.1 granularity for the emitted-line value. The
 # bucket itself is just a labelling convenience; the emit-or-suppress
@@ -467,7 +501,7 @@ def filter_warnings_for_emit(
     state_path: Path,
     *,
     now_ts: int,
-    heartbeat_sec: int = DEFAULT_WARN_HEARTBEAT_SEC,
+    heartbeat_sec: int | None = None,
 ) -> tuple[list[dict], list[dict], dict]:
     """Apply heartbeat + rate-bucket dedup to a list of warning dicts,
     AND detect handle recoveries (warned previously, not in this tick).
@@ -510,6 +544,13 @@ def filter_warnings_for_emit(
     alerting can pair (warn, recovered) for incident MTTR + Slack
     "@channel partial_error regime for @hot cleared".
     """
+    # Resolve default at call time so an env var change takes effect
+    # at the next watcher restart, no module reload required. Callers
+    # passing an explicit int (e.g., tests) override the env default
+    # — that lets test fixtures pin behaviour deterministically while
+    # production gets operator tunability.
+    if heartbeat_sec is None:
+        heartbeat_sec = _get_default_heartbeat_sec()
     state: dict = {}
     try:
         state = json.loads(state_path.read_text(encoding='utf-8'))
