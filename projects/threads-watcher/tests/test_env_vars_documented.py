@@ -231,3 +231,60 @@ class TestCliToolsDocumented:
             f"Source scanner is broken — known CLI tools not "
             f"detected:\n  " + "\n  ".join(sorted(missing_from_scan))
         )
+
+
+# ── plist template documentation parity ──────────────────────────────
+
+
+def _scan_for_plist_templates() -> set[str]:
+    """Return the set of `.plist.example` filenames in the project root.
+    These are operator-install templates that ship with the repo and
+    require Yakon approval before going live in ~/Library/LaunchAgents."""
+    return {p.name for p in PROJECT_ROOT.glob("*.plist.example")}
+
+
+class TestPlistTemplatesDocumented:
+    """README ↔ source consistency for operator-install plist templates.
+    Each `.plist.example` MUST be mentioned in README.md so operators
+    can discover via Ctrl-F. Same bidirectional shape as env-var docs
+    (commit 99d373f) and CLI tool docs (commit 833c094)."""
+
+    def test_every_plist_template_is_mentioned_in_readme(self):
+        # 🔒 Headline: new plist template lands → must be named in
+        # README before commit. Caught at PR time vs operator
+        # tribal-knowledge discovery later.
+        in_repo = _scan_for_plist_templates()
+        readme_text = README.read_text(encoding="utf-8")
+        # Look for the template stem WITHOUT `.example` (operator
+        # workflow refers to the live plist name, e.g.,
+        # "com.shiro.threads-watcher-backup.plist", not ".plist.example").
+        missing = [
+            tmpl for tmpl in in_repo
+            if tmpl not in readme_text and tmpl.replace(".example", "") not in readme_text
+        ]
+        assert not missing, (
+            f"{len(missing)} plist template(s) ship in repo but not "
+            f"mentioned in README.md:\n  " +
+            "\n  ".join(sorted(missing)) + "\n\n"
+            f"Add an install workflow section (cp → preflight → "
+            f"launchctl load → verify) for each, matching the pattern "
+            f"in the 'Discord webhook 自動 POST セットアップ' section. "
+            f"Operator runbook discoverability — operator can't install "
+            f"a template they can't find in README."
+        )
+
+    def test_minimum_known_plist_templates_present(self):
+        # Sanity: catch regression in glob scan (e.g., template renamed
+        # and we lose track of all installers).
+        in_repo = _scan_for_plist_templates()
+        known = {
+            "com.shiro.threads-watcher-backup.plist.example",
+            "com.shiro.threads-watcher-discord-post.plist.example",
+            "com.shiro.threads-watcher-sticky-regime-alert.plist.example",
+            "com.shiro.threads-watcher-sync.plist.example",
+        }
+        missing_from_scan = known - in_repo
+        assert not missing_from_scan, (
+            f"Scanner missing known plist templates:\n  " +
+            "\n  ".join(sorted(missing_from_scan))
+        )

@@ -122,7 +122,8 @@ operator-facing 一発実行用 Python CLI 群。**この表は `tests/test_env_
 
 ### Discord webhook 自動 POST セットアップ (Yakon URL 待ち)
 
-URL provision 後 7 step:
+`com.shiro.threads-watcher-discord-post.plist.example` を ~/Library/
+LaunchAgents/ に cp + URL provision 後 7 step:
 
 ```bash
 # 1. Discord channel → Integrations → Webhooks → New Webhook → URL コピー
@@ -148,6 +149,62 @@ tail -f projects/threads-watcher/logs/discord-post.err.log
 .venv/bin/python projects/threads-watcher/sticky_regime_diagnosis.py
 # → 🟢 SAFE_TO_ENABLE なら sync.plist に --allow-sticky-partial-error-regime 追加
 # → 🟡 NO_OP なら待機 (regime が pure sticky に固まるまで)
+```
+
+### 既デプロイ済: publish-if-delta sync cron
+
+`com.shiro.threads-watcher-sync.plist` は既に ~/Library/LaunchAgents/ に
+ライブで運用中 (`launchctl list | grep threads-watcher-sync` で確認可能)。
+`com.shiro.threads-watcher-sync.plist.example` は legacy reference のみ
+(operator 再インストール時の参照用、通常は触らない)。詳細は live plist
+ファイルの先頭 docstring を参照。
+
+### Sticky-regime transition alert cron (Yakon 承認待ち)
+
+`com.shiro.threads-watcher-sticky-regime-alert.plist.example` を hourly
+launchd 化すると、sticky-regime recommendation が flip した時のみ log
+にエントリ追加 (silent-on-no-change cron-friendly behaviour、commit
+de9369a)。
+
+```bash
+# 1. テンプレートを LaunchAgents へコピー (placeholder なし、no edit 不要)
+cp projects/threads-watcher/com.shiro.threads-watcher-sticky-regime-alert.plist.example \
+   ~/Library/LaunchAgents/com.shiro.threads-watcher-sticky-regime-alert.plist
+
+# 2. preflight (XML + paths + WorkingDirectory)
+bash qa-reports/preflight-plist.sh --check-only \
+  ~/Library/LaunchAgents/com.shiro.threads-watcher-sticky-regime-alert.plist
+
+# 3. cron 有効化
+launchctl load -w ~/Library/LaunchAgents/com.shiro.threads-watcher-sticky-regime-alert.plist
+
+# 4. Verify + triage workflow
+tail -f projects/threads-watcher/logs/sticky-regime-alert.out.log
+# → 通常 silent。transition 発生時のみ 1 line:
+#   TRANSITION: WAIT → STRONG_ENABLE
+#     rationale: Every evaluable window (...) reports SAFE_TO_ENABLE...
+```
+
+### DB hot-snapshot backup cron (Yakon 承認待ち)
+
+`com.shiro.threads-watcher-backup.plist.example` で daily 03:00 JST に
+`backup_db.py` を hot-safe SQLite snapshot 起動、`backups/` に世代管理
+(`--keep 7` で 7 generations retain)。
+
+```bash
+# 1. テンプレートを LaunchAgents へコピー (placeholder なし、no edit 不要)
+cp projects/threads-watcher/com.shiro.threads-watcher-backup.plist.example \
+   ~/Library/LaunchAgents/com.shiro.threads-watcher-backup.plist
+
+# 2. preflight
+bash qa-reports/preflight-plist.sh --check-only \
+  ~/Library/LaunchAgents/com.shiro.threads-watcher-backup.plist
+
+# 3. cron 有効化
+launchctl load -w ~/Library/LaunchAgents/com.shiro.threads-watcher-backup.plist
+
+# 4. Verify (daily 03:00 fire 待ち、または手動 dry-run)
+.venv/bin/python projects/threads-watcher/backup_db.py --dry-run --keep 7
 ```
 
 ## 既知の制約 / TODO
