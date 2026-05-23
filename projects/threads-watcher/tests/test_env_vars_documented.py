@@ -156,3 +156,78 @@ def test_readme_env_table_exists_with_anchor():
         "Operators discover the env-var table by scanning section "
         "headings — this is the entry point."
     )
+
+
+# ── CLI tool documentation parity ──────────────────────────────────────
+
+
+# Match `prog="<name>.py"` in argparse.ArgumentParser declarations.
+# We anchor on .py specifically so unrelated `prog=` strings (e.g.,
+# nested helper functions) don't trip the scan.
+_PROG_NAME_RE = re.compile(r'prog\s*=\s*"([a-z_]+\.py)"')
+
+
+def _scan_source_for_prog_names() -> set[str]:
+    """Walk every top-level *.py in the project and extract any
+    argparse.ArgumentParser `prog=` declarations. Returns the set
+    of CLI tool names operator-facing today."""
+    found: set[str] = set()
+    for path in PROJECT_ROOT.glob("*.py"):
+        try:
+            text = path.read_text(encoding="utf-8")
+        except (UnicodeDecodeError, OSError):
+            continue
+        for match in _PROG_NAME_RE.findall(text):
+            found.add(match)
+    return found
+
+
+class TestCliToolsDocumented:
+    """README ↔ source consistency for operator-facing CLI tools.
+    Each *.py with an explicit argparse `prog="<name>.py"` declaration
+    MUST be mentioned in README.md so operators can discover it via
+    a Ctrl-F scan. Same bidirectional shape as env-var docs (commit
+    99d373f)."""
+
+    def test_every_cli_tool_with_prog_is_documented_in_readme(self):
+        # 🔒 Headline pin: new operator CLI lands in code → must be
+        # named in README before commit. Catches "shipped a tool
+        # but operator can't find it" hazard at PR time.
+        in_code = _scan_source_for_prog_names()
+        readme_text = README.read_text(encoding="utf-8")
+        missing = [name for name in in_code if name not in readme_text]
+        assert not missing, (
+            f"{len(missing)} CLI tool(s) declared via argparse prog= "
+            f"but not mentioned in README.md:\n  " +
+            "\n  ".join(sorted(missing)) + "\n\n"
+            f"Add a row to the 'オペレーター CLI ツール' table in "
+            f"README.md describing each one (one-line description, "
+            f"key flags, commit-of-origin). This test pins the "
+            f"operator-runbook discoverability contract."
+        )
+
+    def test_cli_tools_section_anchor_exists(self):
+        # Operator entry point — Ctrl-F on "CLI ツール" must land.
+        text = README.read_text(encoding="utf-8")
+        assert "## オペレーター CLI ツール" in text, (
+            "README.md missing the '## オペレーター CLI ツール' "
+            "section header. Without it, operators can't navigate "
+            "from a vague 'what CLI tools are available?' question "
+            "to the actual inventory."
+        )
+
+    def test_minimum_known_cli_set_present(self):
+        # Sanity: catch a regression that makes _scan_source_for_prog_names
+        # return empty (e.g., regex breakage). The 5 tools below all
+        # ship today; if any disappears from the scan, fix the
+        # scanner OR remove the tool deliberately.
+        in_code = _scan_source_for_prog_names()
+        known = {
+            "discord_payload.py", "discord_post.py", "mttr.py",
+            "status.py", "sticky_regime_diagnosis.py",
+        }
+        missing_from_scan = known - in_code
+        assert not missing_from_scan, (
+            f"Source scanner is broken — known CLI tools not "
+            f"detected:\n  " + "\n  ".join(sorted(missing_from_scan))
+        )

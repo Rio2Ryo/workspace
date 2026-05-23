@@ -108,6 +108,48 @@ export THREADS_WATCHER_DISCORD_WEBHOOK_URL='https://discord.com/api/webhooks/...
 .venv/bin/python discord_post.py --min-severity warn --cooldown 21600
 ```
 
+## オペレーター CLI ツール
+
+operator-facing 一発実行用 Python CLI 群。**この表は `tests/test_env_vars_documented.py::TestCliToolsDocumented` で source との整合性が CI で保証される**。
+
+| ツール | 一行説明 |
+|---|---|
+| `status.py` | state.json から severity / open incidents / mttr を render。Discord embed と byte-identical の 1-line summary 込み。`--watch` で tmux pane 常駐運用 (commit 32afd2b + 97f76ba) |
+| `discord_payload.py` | state.json → Discord webhook embed dict builder。pure helper (no network)。Discord URL なしで dry-run JSON 出力可能 (commit cedc586) |
+| `discord_post.py` | Discord webhook poster。`--dry-run` / `--min-severity warn` / `--cooldown 21600` / `--max-retries 1` で sticky-regime spam 制御 + 429 retry + URL token redaction (commits 785a75d, ce5ca04, 23ef7fc, 334c6cb) |
+| `mttr.py` | sync.log の warn/recovered ペアから per-handle MTTR 統計。`--json` で machine-readable |
+| `sticky_regime_diagnosis.py` | `--allow-sticky-partial-error-regime` enable の empirical decision tool。production DB に対し guard を両モード実行 + 比較で `SAFE_TO_ENABLE` / `NO_OP` / `INSUFFICIENT_DATA` verdict (commit e7b568d)。`--watch` で transition tracking (9f03dc9) |
+
+### Discord webhook 自動 POST セットアップ (Yakon URL 待ち)
+
+URL provision 後 7 step:
+
+```bash
+# 1. Discord channel → Integrations → Webhooks → New Webhook → URL コピー
+# 2. テンプレートを LaunchAgents へコピー
+cp projects/threads-watcher/com.shiro.threads-watcher-discord-post.plist.example \
+   ~/Library/LaunchAgents/com.shiro.threads-watcher-discord-post.plist
+
+# 3. __SET_BY_OPERATOR__ を実 webhook URL で置換 (in-place edit)
+# 4. install-time 3-layer 安全網 (preflight) で検証
+bash qa-reports/preflight-plist.sh --check-only \
+  ~/Library/LaunchAgents/com.shiro.threads-watcher-discord-post.plist
+# → expected: "all invariants pass"
+# → fails if: placeholder 残存 / URL shape 不正 / CLI flag (--min-severity / --cooldown / --max-retries) 値不正
+
+# 5. cron 有効化
+launchctl load -w ~/Library/LaunchAgents/com.shiro.threads-watcher-discord-post.plist
+
+# 6. Verify
+launchctl list | grep com.shiro.threads-watcher-discord-post
+tail -f projects/threads-watcher/logs/discord-post.err.log
+
+# 7. (Optional) sticky-regime flag の有効化判断
+.venv/bin/python projects/threads-watcher/sticky_regime_diagnosis.py
+# → 🟢 SAFE_TO_ENABLE なら sync.plist に --allow-sticky-partial-error-regime 追加
+# → 🟡 NO_OP なら待機 (regime が pure sticky に固まるまで)
+```
+
 ## 既知の制約 / TODO
 
 - Threads の DOM 構造変更でセレクタが壊れる可能性。フォールバックとして anchor href の正規表現抽出を併用
