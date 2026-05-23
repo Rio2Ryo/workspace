@@ -110,6 +110,11 @@
       .post-link { display: none; }
     }
     .err { color: #c33; }
+    .warn { color: #b86b00; }
+    /* Open-incident row severity by elapsed time. Triage at a glance:
+       yellow = recent regime, red = stuck regime requiring intervention. */
+    tr.oi-warn td { color: #b86b00; }
+    tr.oi-err td { color: #c33; font-weight: 600; }
     .pill {
       display: inline-block; padding: 2px 8px; border-radius: 999px;
       background: var(--border); font-size: 11px; color: var(--muted);
@@ -346,8 +351,26 @@
             const d = new Date(Number(warn_ts) * 1000);
             return isNaN(d.getTime()) ? '?' : d.toISOString().replace('T', ' ').slice(0, 19) + 'Z';
           };
+          // Severity thresholds for the row's elapsed time. Operator
+          // triage:
+          //   >= 24h → .oi-err (red bold) — stuck regime, needs intervention
+          //   >=  1h → .oi-warn (yellow) — recent regime, monitor
+          //   else  → no styling — fresh, normal
+          // Numbers picked from the recent operational pattern: any
+          // partial_error_rate regime under 1h is likely transient flake;
+          // anything past 24h is structurally stuck (DOM regression,
+          // account suspension, etc.) and a human needs to look.
+          const OI_WARN_S = 3600;       // 1 hour
+          const OI_ERR_S = 24 * 3600;   // 24 hours
+          const now = Math.floor(Date.now() / 1000);
           for (const row of openIncs) {
             const tr = document.createElement('tr');
+            const elapsedS = Math.max(0, now - (Number(row.warn_ts) || 0));
+            if (elapsedS >= OI_ERR_S) {
+              tr.className = 'oi-err';
+            } else if (elapsedS >= OI_WARN_S) {
+              tr.className = 'oi-warn';
+            }
             const bucket = typeof row.current_bucket === 'number'
               ? (row.current_bucket * 100).toFixed(0) + '%'
               : '?';

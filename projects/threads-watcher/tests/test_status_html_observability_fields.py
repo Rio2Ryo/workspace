@@ -284,3 +284,53 @@ def test_silent_failure_on_subsequent_ticks(html: str):
         "The error renderer must be wrapped in `if (firstTick)` so "
         "transient blips on auto-refresh don't flash an error every tick"
     )
+
+
+# ── open_incidents row severity (elapsed-based triage colors) ──────────
+
+
+def test_oi_warn_and_oi_err_css_classes_defined(html: str):
+    # Two severity classes for open-incident rows. Pin both so a
+    # CSS cleanup that drops one breaks here, not in operator
+    # incident response.
+    assert "tr.oi-warn" in html, "oi-warn CSS rule missing"
+    assert "tr.oi-err" in html, "oi-err CSS rule missing"
+
+
+def test_oi_thresholds_present_in_js(html: str):
+    # Thresholds: OI_WARN_S=3600 (1h), OI_ERR_S=24*3600 (24h).
+    # Operator triage at a glance — pin so a future refactor that
+    # silently changes the thresholds trips here.
+    import re
+    assert re.search(r"OI_WARN_S\s*=\s*3600\b", html), (
+        "OI_WARN_S must be 3600 (1 hour) — pins operator triage threshold"
+    )
+    assert re.search(r"OI_ERR_S\s*=\s*24\s*\*\s*3600\b", html), (
+        "OI_ERR_S must be 24 * 3600 (24 hours) — pins stuck-regime threshold"
+    )
+
+
+def test_oi_severity_applied_via_classname(html: str):
+    # The JS must apply `tr.className = 'oi-warn'` or 'oi-err' based
+    # on elapsedS comparison. Pin the assignment so a future tweak
+    # that drops the styling silently still trips a test.
+    assert "tr.className = 'oi-err'" in html, (
+        "Open-incident row must get className='oi-err' when elapsed >= 24h"
+    )
+    assert "tr.className = 'oi-warn'" in html, (
+        "Open-incident row must get className='oi-warn' when elapsed >= 1h"
+    )
+
+
+def test_oi_err_takes_priority_over_oi_warn_in_js(html: str):
+    # The branch ordering matters: must check >= OI_ERR_S FIRST
+    # (else-if OI_WARN_S). Otherwise a 25h-old incident would be
+    # styled as merely warn instead of err. Pin the branch order.
+    import re
+    pattern = re.compile(
+        r"if\s*\(\s*elapsedS\s*>=\s*OI_ERR_S\s*\)[\s\S]{0,200}else if\s*\(\s*elapsedS\s*>=\s*OI_WARN_S",
+    )
+    assert pattern.search(html), (
+        "elapsed-threshold branch must check OI_ERR_S first, then "
+        "OI_WARN_S — otherwise a 24h+ incident incorrectly styles as warn"
+    )
