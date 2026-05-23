@@ -176,6 +176,23 @@
       </div>
     </section>
 
+    <section class="card" id="open-incidents" style="display:none">
+      <div class="label" style="margin-bottom:8px">
+        currently warning (open partial_error_rate incidents)
+      </div>
+      <table id="open-incidents-table" style="width:100%;border-collapse:collapse;text-align:right">
+        <thead>
+          <tr>
+            <th style="text-align:left">handle</th>
+            <th>open since</th>
+            <th>elapsed</th>
+            <th>current bucket</th>
+          </tr>
+        </thead>
+        <tbody id="open-incidents-tbody"></tbody>
+      </table>
+    </section>
+
     <section class="card" id="mttr-summary" style="display:none">
       <div class="label" style="margin-bottom:8px">
         MTTR (closed partial_error_rate incidents)
@@ -294,6 +311,45 @@
               topReason.reason + ' (×' + topReason.count + ')';
             document.getElementById('rs-top-reason-row').style.display = 'flex';
           }
+        }
+
+        // open_incidents: per-handle STILL-WARNING regimes (added in
+        // the same commit as the mttr_summary widget extension).
+        // Complements MTTR (closed incidents) — operator sees "what's
+        // active right now" at a glance, including how long since the
+        // warning opened. Hidden when there are no open incidents.
+        const openIncs = Array.isArray(data.open_incidents) ? data.open_incidents : [];
+        if (openIncs.length > 0) {
+          const tbody = document.getElementById('open-incidents-tbody');
+          tbody.innerHTML = '';
+          const fmtElapsed = (warn_ts) => {
+            const now = Math.floor(Date.now() / 1000);
+            const elapsed = Math.max(0, now - (Number(warn_ts) || 0));
+            if (elapsed < 60) return elapsed + 's';
+            if (elapsed < 3600) return Math.round(elapsed / 60) + 'm';
+            const h = Math.floor(elapsed / 3600);
+            const m = Math.round((elapsed - h * 3600) / 60);
+            return m === 0 ? h + 'h' : h + 'h ' + m + 'm';
+          };
+          const fmtTs = (warn_ts) => {
+            const d = new Date(Number(warn_ts) * 1000);
+            return isNaN(d.getTime()) ? '?' : d.toISOString().replace('T', ' ').slice(0, 19) + 'Z';
+          };
+          for (const row of openIncs) {
+            const tr = document.createElement('tr');
+            const bucket = typeof row.current_bucket === 'number'
+              ? (row.current_bucket * 100).toFixed(0) + '%'
+              : '?';
+            const tds = [row.handle || '?', fmtTs(row.warn_ts), fmtElapsed(row.warn_ts), bucket];
+            tds.forEach((v, i) => {
+              const td = document.createElement('td');
+              td.textContent = String(v);
+              if (i === 0) td.style.textAlign = 'left';
+              tr.appendChild(td);
+            });
+            tbody.appendChild(tr);
+          }
+          document.getElementById('open-incidents').style.display = 'block';
         }
 
         // mttr_summary: per-handle incident history from

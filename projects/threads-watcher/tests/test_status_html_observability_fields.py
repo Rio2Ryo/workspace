@@ -186,3 +186,41 @@ def test_mttr_table_renders_expected_columns(html: str):
         # Use a permissive substring check; the table THEAD contains
         # <th>{col}</th> with possible attributes.
         assert col in html, f"MTTR table missing column header for {col!r}"
+
+
+# ── open_incidents widget (added 2026-05-23, still-warning state) ──────
+
+
+def test_open_incidents_card_section_exists(html: str):
+    assert _has_id(html, "open-incidents"), (
+        "index.html must declare <section id=\"open-incidents\"> for the "
+        "still-warning incidents widget."
+    )
+
+
+def test_open_incidents_table_anchors_exist(html: str):
+    assert _has_id(html, "open-incidents-table")
+    assert _has_id(html, "open-incidents-tbody")
+
+
+def test_open_incidents_card_starts_hidden(html: str):
+    import re
+    m = re.search(r'id="open-incidents"[^>]*style="([^"]*)"', html)
+    assert m is not None
+    assert "display:none" in m.group(1).replace(" ", "")
+
+
+def test_js_reads_open_incidents_from_payload(html: str):
+    assert "data.open_incidents" in html, (
+        "JS must read data.open_incidents from the state.json payload."
+    )
+
+
+def test_js_handles_non_array_open_incidents_defensively(html: str):
+    assert "Array.isArray(data.open_incidents)" in html
+
+
+def test_open_incidents_table_renders_expected_columns(html: str):
+    # The 4 column headers — operator + accessibility-script contract.
+    for col in ["handle", "open since", "elapsed", "current bucket"]:
+        assert col in html, f"open-incidents table missing column {col!r}"

@@ -606,8 +606,62 @@ def compute_mttr_from_log(
     Filters on `warn_type` — defaults to 'partial_error_rate' (the
     only type today), but accepts future types as they land.
     """
+    closed, _open = _scan_log_for_incidents(log_lines, warn_type=warn_type)
+    return closed
+
+
+def extract_open_incidents(
+    log_lines: 'Iterable[str]',  # type: ignore[name-defined]
+    *,
+    warn_type: str = 'partial_error_rate',
+) -> list[dict]:
+    """Return the still-open incidents at end of log.
+
+    For each handle with a `warn` line but no matching `recovered`
+    line in `log_lines`, return one record:
+        { handle, warn_ts: int, current_bucket: float | None }
+
+    `warn_ts` is the FIRST warn's timestamp (when the incident opened).
+    `current_bucket` is the LAST seen bucket from warn re-emits (the
+    rate may have moved within the regime — the dashboard wants the
+    latest snapshot, not the opening value).
+
+    Records sorted by `warn_ts` ASC so the longest-running incident
+    appears first (operator triage priority).
+
+    Why this is separate from compute_mttr_from_log
+    -----------------------------------------------
+    compute_mttr_from_log drops still-open incidents — its contract
+    is "closed incidents only, for MTTR math". The dashboard MTTR
+    widget (commit 60d2b51) renders that. But operators also want
+    "what's actively warning right now?" which the closed-only
+    surface can't answer. This helper closes that gap.
+
+    Output drives the open_incidents field in state.json (added in
+    the same commit), surfaced by the dashboard as a per-handle
+    "still warning since X (elapsed Y)" widget.
+    """
+    _closed, open_recs = _scan_log_for_incidents(log_lines, warn_type=warn_type)
+    return sorted(open_recs, key=lambda r: r['warn_ts'])
+
+
+def _scan_log_for_incidents(
+    log_lines: 'Iterable[str]',  # type: ignore[name-defined]
+    *,
+    warn_type: str,
+) -> tuple[dict[str, list[dict]], list[dict]]:
+    """Shared scan: returns (closed_records_by_handle, open_records).
+
+    Closed records have warn_ts + recovered_ts + duration_s + prev_bucket.
+    Open records have warn_ts + handle + current_bucket (rate may have
+    moved via re-emits since the opening warn — current_bucket reflects
+    the latest seen).
+    """
     open_incidents: dict[str, int] = {}  # handle → warn_ts (epoch)
     open_prev_bucket: dict[str, float | None] = {}
+    # Track the LATEST bucket per open incident — warn re-emits update
+    # this even though they don't reopen the incident.
+    open_current_bucket: dict[str, float | None] = {}
     closed: dict[str, list[dict]] = {}
 
     for raw in log_lines:
@@ -624,18 +678,20 @@ def compute_mttr_from_log(
         outcome = m.group('outcome')
 
         if outcome == 'warn':
+            # Parse rate ONCE — used for both first-time open and
+            # re-emit current_bucket update.
+            try:
+                rate_val = float(kvs.get('rate', '0'))
+                cur_bucket: float | None = _rate_bucket(rate_val)
+            except ValueError:
+                cur_bucket = None
             if handle not in open_incidents:
                 # Open a new incident.
                 open_incidents[handle] = ts_epoch
-                # Capture prev_bucket from the warn's `rate` (it's the
-                # CURRENT bucket since this is the first warn).
-                try:
-                    rate = float(kvs.get('rate', '0'))
-                    open_prev_bucket[handle] = _rate_bucket(rate)
-                except ValueError:
-                    open_prev_bucket[handle] = None
-            # Heartbeat / bucket-crossing re-emit — incident already open;
-            # skip (don't reopen).
+                open_prev_bucket[handle] = cur_bucket
+            # ALWAYS update the latest-seen bucket (covers heartbeat
+            # / bucket-crossing re-emits during an open incident).
+            open_current_bucket[handle] = cur_bucket
         elif outcome == 'recovered':
             if handle not in open_incidents:
                 # Recovery without a preceding warn (log was truncated
@@ -643,6 +699,7 @@ def compute_mttr_from_log(
                 continue
             warn_ts = open_incidents.pop(handle)
             prev_bucket = open_prev_bucket.pop(handle, None)
+            open_current_bucket.pop(handle, None)
             # The recovered line may also carry prev_bucket; prefer it
             # since it's stamped at recovery time (= the bucket from
             # the LAST persisted warn state, which may differ from the
@@ -660,7 +717,15 @@ def compute_mttr_from_log(
                 'prev_bucket': prev_bucket,
             })
 
-    return closed
+    # Build the open-records list from the residual open_incidents dict.
+    open_records: list[dict] = []
+    for handle, warn_ts in open_incidents.items():
+        open_records.append({
+            'handle': handle,
+            'warn_ts': warn_ts,
+            'current_bucket': open_current_bucket.get(handle),
+        })
+    return closed, open_records
 
 
 def summarise_mttr(

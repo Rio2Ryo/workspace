@@ -406,6 +406,7 @@ def build_web_snapshot_payload(
     dry_run_alert: dict | None,
     generated_at: str,
     mttr_summary: list[dict] | None = None,
+    open_incidents: list[dict] | None = None,
 ) -> dict[str, Any]:
     """Pure builder for the threads-watcher-status/state.json payload.
 
@@ -457,5 +458,6 @@ def build_web_snapshot_payload(
         "sync_state": snapshot.get("sync_state"),
         "dry_run_alert": dry_run_alert,
         "mttr_summary": mttr_summary or [],
+        "open_incidents": open_incidents or [],
         "snapshot_generated_at": generated_at,
     }

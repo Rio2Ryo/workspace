@@ -1573,3 +1573,120 @@ class TestHysteresisBucketOscillation:
             "Heartbeat must override hysteresis suppression so operator "
             "sees 'still warning' even when rate is stable"
         )
+
+
+# ── extract_open_incidents (still-warning state for dashboard) ─────────
+
+
+class TestExtractOpenIncidents:
+    """The companion to compute_mttr_from_log — returns incidents
+    that have a warn line with no matching recovered (= still active
+    at log EOF). Drives the dashboard "still warning since X" widget."""
+
+    def _warn(self, ts: str, handle: str, rate: float) -> str:
+        return (
+            f'{ts} sync_event: warn delta=0 handle={handle} rate={rate} '
+            f'threshold=0.5 total=30 type=partial_error_rate window_hours=1'
+        )
+
+    def _recovered(self, ts: str, handle: str, prev_bucket: float) -> str:
+        return (
+            f'{ts} sync_event: recovered delta=0 handle={handle} '
+            f'prev_bucket={prev_bucket} type=partial_error_rate'
+        )
+
+    def test_single_unmatched_warn_returns_one_open_incident(self):
+        from sync_guards import extract_open_incidents
+        lines = [self._warn('2026-05-23T04:00:00Z', '@hot', 0.9)]
+        open_recs = extract_open_incidents(lines)
+        assert len(open_recs) == 1
+        assert open_recs[0]['handle'] == '@hot'
+        assert open_recs[0]['current_bucket'] == 0.9
+
+    def test_warn_followed_by_recovered_is_NOT_open(self):
+        from sync_guards import extract_open_incidents
+        lines = [
+            self._warn('2026-05-23T04:00:00Z', '@hot', 0.9),
+            self._recovered('2026-05-23T05:00:00Z', '@hot', 0.9),
+        ]
+        assert extract_open_incidents(lines) == []
+
+    def test_current_bucket_reflects_latest_warn_re_emit(self):
+        # 🔒 Key contract: the dashboard wants the CURRENT bucket
+        # (latest seen in re-emits), not the opening bucket. If a
+        # regime opens at 0.9 then drifts down to 0.5 without
+        # clearing, dashboard should show "0.5" not "0.9".
+        from sync_guards import extract_open_incidents
+        lines = [
+            self._warn('2026-05-23T04:00:00Z', '@hot', 0.9),
+            self._warn('2026-05-23T04:30:00Z', '@hot', 0.75),  # heartbeat
+            self._warn('2026-05-23T05:00:00Z', '@hot', 0.55),  # heartbeat
+        ]
+        recs = extract_open_incidents(lines)
+        assert len(recs) == 1
+        assert recs[0]['current_bucket'] == 0.5  # 0.55 buckets to 0.5
+        # warn_ts is still the FIRST warn (incident open time).
+        # 2026-05-23T04:00:00Z = epoch 1779508800 (verified via _ts_to_epoch
+        # in earlier tests).
+        assert recs[0]['warn_ts'] == 1779508800
+
+    def test_results_sorted_by_warn_ts_ascending(self):
+        # Longest-running incident first — operator triage priority.
+        from sync_guards import extract_open_incidents
+        lines = [
+            self._warn('2026-05-23T06:00:00Z', '@b', 0.7),
+            self._warn('2026-05-23T04:00:00Z', '@a', 0.7),  # older
+            self._warn('2026-05-23T05:00:00Z', '@c', 0.7),
+        ]
+        recs = extract_open_incidents(lines)
+        assert [r['handle'] for r in recs] == ['@a', '@c', '@b']
+
+    def test_independent_handles_tracked_separately(self):
+        # @a still open, @b recovered → only @a appears.
+        from sync_guards import extract_open_incidents
+        lines = [
+            self._warn('2026-05-23T04:00:00Z', '@a', 0.9),
+            self._warn('2026-05-23T04:10:00Z', '@b', 0.7),
+            self._recovered('2026-05-23T05:00:00Z', '@b', 0.7),
+        ]
+        recs = extract_open_incidents(lines)
+        assert [r['handle'] for r in recs] == ['@a']
+
+    def test_filters_by_warn_type(self):
+        # An open incident under a different warn_type doesn't
+        # appear when filtering for partial_error_rate.
+        from sync_guards import extract_open_incidents
+        lines = [
+            self._warn('2026-05-23T04:00:00Z', '@partial', 0.9),
+            ('2026-05-23T04:00:00Z sync_event: warn delta=0 handle=@other '
+             'rate=10 threshold=5 type=other_metric window_hours=1'),
+        ]
+        recs = extract_open_incidents(lines, warn_type='partial_error_rate')
+        assert [r['handle'] for r in recs] == ['@partial']
+        recs2 = extract_open_incidents(lines, warn_type='other_metric')
+        assert [r['handle'] for r in recs2] == ['@other']
+
+    def test_empty_input_returns_empty(self):
+        from sync_guards import extract_open_incidents
+        assert extract_open_incidents([]) == []
+
+    def test_unmatched_recovered_does_NOT_create_phantom_open(self):
+        # Recovered without a preceding warn (log was truncated, scan
+        # window started mid-regime) — must not appear as an open
+        # incident under some negative-elapsed contortion.
+        from sync_guards import extract_open_incidents
+        lines = [self._recovered('2026-05-23T05:00:00Z', '@hot', 0.9)]
+        assert extract_open_incidents(lines) == []
+
+    def test_existing_compute_mttr_still_works_after_refactor(self):
+        # The shared _scan_log_for_incidents helper was extracted from
+        # the pre-existing compute_mttr_from_log. Pin that the public
+        # MTTR API still returns the same closed-records dict.
+        from sync_guards import compute_mttr_from_log
+        lines = [
+            self._warn('2026-05-23T04:00:00Z', '@hot', 0.9),
+            self._recovered('2026-05-23T05:00:00Z', '@hot', 0.9),
+        ]
+        records = compute_mttr_from_log(lines)
+        assert '@hot' in records
+        assert records['@hot'][0]['duration_s'] == 3600

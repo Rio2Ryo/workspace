@@ -200,22 +200,30 @@ def _write_web_snapshot_from_db(conn: Any, handle: str | None = None) -> None:
     # yields an empty mttr_summary — dashboard treats [] as "no
     # incidents recorded yet" rather than crashing.
     mttr_summary: list[dict] = []
+    open_incidents: list[dict] = []
     try:
-        from sync_guards import compute_mttr_from_log, summarise_mttr
+        from sync_guards import (
+            compute_mttr_from_log,
+            extract_open_incidents,
+            summarise_mttr,
+        )
         sync_log_path = WEB_SNAPSHOT_FILE.parent.parent / "logs" / "sync.log"
         if sync_log_path.is_file():
-            with sync_log_path.open("r", encoding="utf-8") as fh:
-                records = compute_mttr_from_log(fh)
+            text = sync_log_path.read_text(encoding="utf-8")
+            records = compute_mttr_from_log(text.splitlines())
             mttr_summary = summarise_mttr(records)
+            open_incidents = extract_open_incidents(text.splitlines())
     except Exception:
-        # MTTR is a nice-to-have; never block the snapshot write.
+        # MTTR + open-incidents are nice-to-have; never block the snapshot write.
         mttr_summary = []
+        open_incidents = []
 
     payload = build_web_snapshot_payload(
         snapshot,
         dry_run_alert=get_active_dry_run_alert(),
         generated_at=_now_iso(),
         mttr_summary=mttr_summary,
+        open_incidents=open_incidents,
     )
     _atomic_write_json(WEB_SNAPSHOT_FILE, payload)
 
