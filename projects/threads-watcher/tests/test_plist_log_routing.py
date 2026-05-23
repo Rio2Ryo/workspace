@@ -207,3 +207,145 @@ def test_sync_plist_uses_five_minute_run_at_load_publish_cycle():
     plist = _load(SYNC_PLIST)
     assert plist.get("StartInterval") == 300
     assert plist.get("RunAtLoad") is True
+
+
+# ── discord-post .example template ─────────────────────────────────────
+#
+# Template (not a live plist) for operator-time install once a Discord
+# webhook URL is provisioned. Tests pin shape + paths so a future
+# refactor to discord_post.py (renamed flags, moved file, etc.) trips
+# here before operator copies a broken template to LaunchAgents.
+
+
+DISCORD_POST_PLIST = PROJECT_ROOT / "com.shiro.threads-watcher-discord-post.plist.example"
+
+
+def test_discord_post_plist_example_validates_as_well_formed_xml():
+    # _load raises on malformed plist — operator launchctl-load of a
+    # broken file would silently no-op. Pin at test time.
+    _load(DISCORD_POST_PLIST)
+
+
+def test_discord_post_plist_targets_discord_post_py():
+    plist = _load(DISCORD_POST_PLIST)
+    args = plist.get("ProgramArguments", [])
+    assert any(a.endswith("discord_post.py") for a in args), (
+        f"plist must invoke discord_post.py; got {args}"
+    )
+
+
+def test_discord_post_plist_script_path_exists():
+    # 🔒 launchd execs by absolute path. A typo / repo move would
+    # make every cron tick fail silently with "no such file". Pin
+    # the path resolves to a real file in the repo.
+    plist = _load(DISCORD_POST_PLIST)
+    args = plist["ProgramArguments"]
+    py_path = Path(args[0])
+    script_path = Path(args[1])
+    assert script_path.is_file(), (
+        f"discord_post.py path {script_path} doesn't exist. Plist will "
+        f"fail at every cron tick — fix the path or restore the file."
+    )
+    # The Python interpreter is the .venv interpreter — same one
+    # the pre-commit hook uses; operator must `python -m venv .venv`
+    # at the documented location before loading the plist.
+    assert ".venv" in str(py_path), (
+        f"plist should use the .venv interpreter for consistency with "
+        f"the pre-commit hook + dev workflow; got {py_path}"
+    )
+
+
+def test_discord_post_plist_includes_safety_flags():
+    # 🔒 The whole point of this template: ship safety flags by
+    # default so operator doesn't have to remember them.
+    plist = _load(DISCORD_POST_PLIST)
+    args = plist["ProgramArguments"]
+    # --min-severity warn → no GREEN spam (ce5ca04)
+    assert "--min-severity" in args
+    assert args[args.index("--min-severity") + 1] == "warn"
+    # --cooldown 21600 → 6h sticky-regime dedup (23ef7fc)
+    assert "--cooldown" in args
+    assert args[args.index("--cooldown") + 1] == "21600"
+    # --max-retries 1 → 429 retry (334c6cb)
+    assert "--max-retries" in args
+    assert args[args.index("--max-retries") + 1] == "1"
+
+
+def test_discord_post_plist_declares_webhook_url_env():
+    # 🔒 Operator runbook contract: the env var MUST be declared in
+    # EnvironmentVariables (even as placeholder) so operator knows
+    # where to paste the URL. Missing key = operator has to read
+    # discord_post.py source to learn the env name.
+    plist = _load(DISCORD_POST_PLIST)
+    env = plist.get("EnvironmentVariables", {})
+    assert "THREADS_WATCHER_DISCORD_WEBHOOK_URL" in env, (
+        f"plist EnvironmentVariables must declare "
+        f"THREADS_WATCHER_DISCORD_WEBHOOK_URL (even as placeholder) "
+        f"so operator sees where to paste their URL. Got keys: "
+        f"{list(env.keys())}"
+    )
+    # 🔒 The committed value MUST be a placeholder, NEVER a real URL.
+    # Catches the operational hazard of accidentally committing a
+    # real webhook (which would leak in git history → token rotation).
+    placeholder = env["THREADS_WATCHER_DISCORD_WEBHOOK_URL"]
+    assert "__SET_BY_OPERATOR__" in placeholder or "placeholder" in placeholder.lower(), (
+        f"The committed plist value must be an obvious placeholder, "
+        f"not a real webhook URL. Got: {placeholder!r}. If this is "
+        f"a real URL the channel was JUST exposed in git history — "
+        f"rotate the webhook immediately + redact this value."
+    )
+    assert "discord.com" not in placeholder, (
+        f"🚨 REAL DISCORD WEBHOOK URL committed: {placeholder!r}. "
+        f"Rotate it NOW (delete + recreate in Discord channel "
+        f"settings) — git history retains it forever."
+    )
+
+
+def test_discord_post_plist_does_not_run_at_load():
+    # RunAtLoad=true would fire one post at operator install time,
+    # which is surprising (test post lands in channel without
+    # explicit operator intent). Pin RunAtLoad=false so the first
+    # post waits for a deliberate operator action OR the next
+    # natural hour tick.
+    plist = _load(DISCORD_POST_PLIST)
+    assert plist.get("RunAtLoad") is False, (
+        f"discord-post should NOT fire on launchctl load — operator "
+        f"first invocation should be deliberate (manually run + verify "
+        f"the post landed) before the cron takes over. Got "
+        f"RunAtLoad={plist.get('RunAtLoad')!r}"
+    )
+
+
+def test_discord_post_plist_uses_hourly_cadence():
+    # 3600s matches the default cron operator expectation + pairs
+    # naturally with --cooldown 21600 (6h = 6 ticks → 1 post / 6h
+    # for sticky regime).
+    plist = _load(DISCORD_POST_PLIST)
+    interval = plist.get("StartInterval")
+    assert interval == 3600, (
+        f"discord-post cadence should be hourly (3600s); got {interval}. "
+        f"If tuning, also reconsider --cooldown value in ProgramArguments "
+        f"so the two stay coherent."
+    )
+
+
+def test_discord_post_plist_keeps_stderr_path():
+    # urllib transport failures / unexpected Python tracebacks land
+    # in stderr. Operator triages via tail -f logs/discord-post.err.log.
+    plist = _load(DISCORD_POST_PLIST)
+    err = plist.get("StandardErrorPath", "")
+    assert err.endswith("logs/discord-post.err.log"), (
+        f"plist must route stderr to logs/discord-post.err.log; got {err!r}"
+    )
+
+
+def test_discord_post_plist_working_directory_is_project_root():
+    # state.json default path is relative to cwd. Without an explicit
+    # WorkingDirectory, launchd defaults to "/" and discord_post.py
+    # fails with "state.json not found".
+    plist = _load(DISCORD_POST_PLIST)
+    wd = Path(plist.get("WorkingDirectory", ""))
+    assert wd == PROJECT_ROOT, (
+        f"plist WorkingDirectory must be the project root so state.json "
+        f"default path resolves; got {wd}"
+    )

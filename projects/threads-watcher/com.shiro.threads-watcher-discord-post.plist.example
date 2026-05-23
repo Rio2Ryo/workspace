@@ -1,0 +1,89 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  launchd template (draft / Yakon 承認待ち)
+
+  目的:
+    discord_post.py を hourly cron 化して threads-watcher の severity を
+    Discord webhook に POST する。前提として
+    THREADS_WATCHER_DISCORD_WEBHOOK_URL が provisioned 済みで
+    EnvironmentVariables 側に貼ってあること。
+
+  配置先:
+    ~/Library/LaunchAgents/com.shiro.threads-watcher-discord-post.plist
+    (このテンプレを cp で配置し、URL placeholder を実 webhook URL に置換)
+
+  有効化(URL 設定後):
+    launchctl load -w ~/Library/LaunchAgents/com.shiro.threads-watcher-discord-post.plist
+
+  無効化(ロールバック):
+    launchctl unload -w ~/Library/LaunchAgents/com.shiro.threads-watcher-discord-post.plist
+
+  デフォルト挙動 (本テンプレが設定する値):
+    - 3600 秒 (1h) ごとに discord_post.py を起動
+    - `- -min-severity warn`  → GREEN spam を抑制、YELLOW/RED のみ POST
+    - `- -cooldown 21600`     → 同 severity の連続 post を 6h 抑制 (commit 23ef7fc)
+                                 hourly fire と組み合わせて sticky regime も 1 post / 6h に
+    - `- -max-retries 1`      → Discord 429 (rate limit) 時 1 回 Retry-After 尊重で retry
+                                 (commit 334c6cb)
+    - RunAtLoad=false      → load 時に即 fire せず、次の hour tick を待つ
+                              (load タイミングの test post を operator 制御下に)
+
+  Yakon 判断が必要な最小項目:
+    1. THREADS_WATCHER_DISCORD_WEBHOOK_URL を実 webhook URL に置換
+       (Discord channel の Integrations → Webhooks → New Webhook で発行)
+    2. このテンプレを本物 plist にして launchctl load
+
+  オプション env (operator が tune したい場合の追加 row):
+    THREADS_WATCHER_HEARTBEAT_SEC (default 3600, range (0, 86400])
+    THREADS_WATCHER_SIGNIFICANT_BUCKET_DELTA (default 0.2, range [0.0, 1.0])
+    README.md の「環境変数 (operator runbook)」section 参照。
+
+  ロールバック手順 (URL がリーク, channel が破壊された等):
+    1. launchctl unload -w ~/Library/LaunchAgents/com.shiro.threads-watcher-discord-post.plist
+    2. Discord 側で webhook URL を rotate (旧 URL を delete + new URL を発行)
+    3. EnvironmentVariables の URL を更新 → 再 load
+    本テンプレ自体は state.json を read するだけで書き換えないため、unload
+    だけなら DB / dashboard には影響ゼロ。
+-->
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+  <key>Label</key>
+  <string>com.shiro.threads-watcher-discord-post</string>
+
+  <key>ProgramArguments</key>
+  <array>
+    <string>/Users/umi/.openclaw/workspace/projects/threads-watcher/.venv/bin/python</string>
+    <string>/Users/umi/.openclaw/workspace/projects/threads-watcher/discord_post.py</string>
+    <string>--min-severity</string>
+    <string>warn</string>
+    <string>--cooldown</string>
+    <string>21600</string>
+    <string>--max-retries</string>
+    <string>1</string>
+  </array>
+
+  <key>EnvironmentVariables</key>
+  <dict>
+    <key>PATH</key>
+    <string>/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin</string>
+    <!-- Yakon が webhook URL を発行したら placeholder を実 URL に置換 -->
+    <key>THREADS_WATCHER_DISCORD_WEBHOOK_URL</key>
+    <string>__SET_BY_OPERATOR__</string>
+  </dict>
+
+  <key>StartInterval</key>
+  <integer>3600</integer>
+
+  <key>RunAtLoad</key>
+  <false/>
+
+  <key>StandardOutPath</key>
+  <string>/Users/umi/.openclaw/workspace/projects/threads-watcher/logs/discord-post.out.log</string>
+  <key>StandardErrorPath</key>
+  <string>/Users/umi/.openclaw/workspace/projects/threads-watcher/logs/discord-post.err.log</string>
+
+  <key>WorkingDirectory</key>
+  <string>/Users/umi/.openclaw/workspace/projects/threads-watcher</string>
+</dict>
+</plist>
