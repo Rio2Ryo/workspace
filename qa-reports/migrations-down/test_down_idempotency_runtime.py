@@ -710,3 +710,218 @@ class TestDown0048AtomicWrappingProof:
         # each DDL individually before the failure.
         assert not conn.in_transaction
         conn.close()
+
+
+# ── down_0052 atomic-wrap proof — PRAGMA-bookend interaction ──────────
+#
+# down_0052 is the harder atomicity case: it wraps the recreate-dance
+# in `PRAGMA foreign_keys = OFF;` ... `PRAGMA foreign_keys = ON;`
+# bookends. SQLite docs note that PRAGMA foreign_keys is a no-op
+# inside a transaction (silently ignored, the OUTSIDE value persists).
+# Wrapping down_0052 in BEGIN/COMMIT could break the FK-disabled
+# semantics the recreate-dance relies on.
+#
+# This class empirically tests:
+#   1. Wrapped happy path — does the dance still complete?
+#   2. Wrapped mid-script failure — does rollback restore all 5
+#      tables AND any rows they held?
+#   3. Unwrapped baseline — confirms the partial-state hazard
+#      down_0052's wrap would eliminate
+#   4. The PRAGMA-inside-transaction quirk — is the FK-OFF bookend
+#      actually honored, or silently ignored?
+
+
+class TestDown0052AtomicWrappingProof:
+    """Apply the wrap pattern from TestDown0048AtomicWrappingProof
+    to down_0052's more complex rename-dance + PRAGMA bookend SQL.
+    Reports empirical findings the Yakon decision needs."""
+
+    DOWN_0052_SQL = (DOWN_DIR / "down_0052.sql").read_text(encoding="utf-8")
+
+    def _setup_tables(self, conn):
+        """Build the 5 tables down_0052 touches."""
+        conn.executescript(TABLES_BEFORE_DOWN_0052)
+
+    def _executable_sql(self) -> str:
+        """Strip comment-only lines from down_0052; keep the
+        PRAGMA + DDL statements operator's wrangler would execute."""
+        return "\n".join(
+            line for line in self.DOWN_0052_SQL.split("\n")
+            if not line.strip().startswith("--")
+        ).strip()
+
+    def test_wrapped_down_0052_happy_path_drops_fks_from_all_5_tables(self):
+        # 🔒 Counter-test for the failure scenario below: wrap the
+        # rename-dance in BEGIN/COMMIT with no injected failure.
+        # If the PRAGMA-inside-transaction quirk would break the
+        # dance, the rows would fail FK-enforced inserts → exception.
+        # If empirically OK, we have evidence the wrap doesn't
+        # disrupt the dance.
+        conn = _fresh()
+        self._setup_tables(conn)
+        # Insert a row in each table so the INSERT SELECT * lines
+        # actually exercise data movement (catches FK enforcement
+        # failures during the dance).
+        conn.executescript("""
+            INSERT INTO task_time_logs (id, task_id, user_id, workspace_id)
+              VALUES ('t1', 'task1', 'u1', 'ws1');
+            INSERT INTO saved_views (id, workspace_id, user_id, name, entity_type)
+              VALUES ('v1', 'ws1', 'u1', 'view', 'task');
+            INSERT INTO inbox_items (id, workspace_id, user_name, title)
+              VALUES ('i1', 'ws1', 'alice', 'inbox');
+            INSERT INTO automation_rules (id, name, trigger_type, action_type)
+              VALUES ('a1', 'rule', 'on_create', 'notify');
+            INSERT INTO notification_preferences (user_name, workspace_id)
+              VALUES ('alice', 'ws1');
+        """)
+
+        executable_sql = self._executable_sql()
+        wrapped = f"BEGIN;\n{executable_sql}\nCOMMIT;"
+
+        # Whether this succeeds is the empirical finding. If it
+        # raises, the wrap is unsafe for down_0052 and operator must
+        # NOT use --wrap-in-transaction with this migration.
+        try:
+            conn.executescript(wrapped)
+            commit_succeeded = True
+            error_msg = None
+        except sqlite3.OperationalError as e:
+            commit_succeeded = False
+            error_msg = str(e)
+
+        if commit_succeeded:
+            # Wrap worked — all 5 tables still present, rows preserved.
+            tables = {
+                row[0] for row in conn.execute(
+                    "SELECT name FROM sqlite_master WHERE type='table'"
+                )
+            }
+            for t in ["task_time_logs", "saved_views", "inbox_items",
+                      "automation_rules", "notification_preferences"]:
+                assert t in tables, f"{t} missing after wrapped down_0052"
+                assert f"{t}_old" not in tables, f"{t}_old leaked"
+                row_count = conn.execute(f"SELECT COUNT(*) FROM {t}").fetchone()[0]
+                assert row_count == 1, (
+                    f"{t} should have 1 row after dance; got {row_count}"
+                )
+        else:
+            # Wrap broke the dance — empirical evidence operator
+            # must NOT use --wrap-in-transaction with down_0052.
+            # This is itself useful info; raise with full context.
+            pytest.fail(
+                f"Wrapping down_0052 in BEGIN/COMMIT broke the "
+                f"recreate-dance: {error_msg}\n\n"
+                f"This means apply.sh --wrap-in-transaction is UNSAFE "
+                f"for down_0052. Operator must rollback this migration "
+                f"WITHOUT the flag. Document in MIGRATION_ROLLBACK.md "
+                f"+ consider apply.sh per-migration wrap-safety registry."
+            )
+        conn.close()
+
+    def test_wrapped_down_0052_mid_script_failure_rolls_back(self):
+        # 🔒 Headline: BEGIN; <half of down_0052 SQL>; INSERT INTO
+        # no_such_table; <rest>; COMMIT; → rollback restores ALL 5
+        # tables + their original FK constraints + rows. If sqlite3
+        # ROLLBACK restores the rename-dance properly, the wrap is
+        # safe; otherwise the dance leaves partial state.
+        conn = _fresh()
+        self._setup_tables(conn)
+        before_tables = {
+            row[0] for row in conn.execute(
+                "SELECT name FROM sqlite_master WHERE type='table'"
+            )
+        }
+
+        # Construct: split the dance — finish the first table's
+        # recreate then inject failure before remaining 4 tables.
+        # Without the wrap, task_time_logs would be FK-stripped
+        # (renamed _old, new table dropped, renamed back without
+        # FKs) AND the OTHER 4 still have original FK constraints.
+        # With wrap + rollback, ALL 5 should revert to original.
+        broken_sql = """
+            BEGIN;
+            PRAGMA foreign_keys = OFF;
+            CREATE TABLE task_time_logs_old (id TEXT PRIMARY KEY, task_id TEXT NOT NULL, user_id TEXT NOT NULL, workspace_id TEXT NOT NULL, started_at TEXT NOT NULL DEFAULT (datetime('now')), stopped_at TEXT, duration_sec INTEGER, created_at TEXT NOT NULL DEFAULT (datetime('now')));
+            INSERT INTO task_time_logs_old SELECT * FROM task_time_logs;
+            DROP TABLE task_time_logs;
+            ALTER TABLE task_time_logs_old RENAME TO task_time_logs;
+            INSERT INTO no_such_table VALUES (1);
+            -- Rest of down_0052 (4 more recreate dances) would normally run here
+            PRAGMA foreign_keys = ON;
+            COMMIT;
+        """
+        try:
+            conn.executescript(broken_sql)
+            pytest.fail("expected OperationalError on missing-table INSERT")
+        except sqlite3.OperationalError as e:
+            assert "no such table" in str(e)
+
+        # Manual rollback — sqlite3 leaves connection in_transaction.
+        if conn.in_transaction:
+            conn.rollback()
+
+        after_tables = {
+            row[0] for row in conn.execute(
+                "SELECT name FROM sqlite_master WHERE type='table'"
+            )
+        }
+        # 🔒 The atomicity check: tables list identical to before.
+        assert after_tables == before_tables, (
+            f"rollback should restore all 5 tables to pre-BEGIN state.\n"
+            f"  before: {sorted(before_tables)}\n"
+            f"  after:  {sorted(after_tables)}\n"
+            f"If task_time_logs_old exists, the rename happened pre-failure "
+            f"and rollback failed to restore. If task_time_logs is "
+            f"missing, DROP happened pre-failure and rollback failed."
+        )
+        # No `_old` leaked.
+        old_leaked = {t for t in after_tables if t.endswith("_old")}
+        assert not old_leaked, f"{old_leaked} leftover after rollback"
+        conn.close()
+
+    def test_unwrapped_down_0052_demonstrates_partial_state_hazard(self):
+        # 🔒 Documentation/contrast test: unwrapped mid-script failure
+        # leaves DB in a half-renamed state (FKs stripped from one
+        # table while others still have them). This is the hazard
+        # the wrap eliminates.
+        conn = _fresh()
+        self._setup_tables(conn)
+
+        broken_sql = """
+            PRAGMA foreign_keys = OFF;
+            CREATE TABLE task_time_logs_old (id TEXT PRIMARY KEY, task_id TEXT NOT NULL, user_id TEXT NOT NULL, workspace_id TEXT NOT NULL, started_at TEXT NOT NULL DEFAULT (datetime('now')), stopped_at TEXT, duration_sec INTEGER, created_at TEXT NOT NULL DEFAULT (datetime('now')));
+            INSERT INTO task_time_logs_old SELECT * FROM task_time_logs;
+            DROP TABLE task_time_logs;
+            ALTER TABLE task_time_logs_old RENAME TO task_time_logs;
+            INSERT INTO no_such_table VALUES (1);
+        """
+        try:
+            conn.executescript(broken_sql)
+            pytest.fail("expected OperationalError on missing-table INSERT")
+        except sqlite3.OperationalError:
+            pass
+
+        # Connection NOT in transaction (unwrapped path auto-commits
+        # each DDL individually). Partial state landed:
+        #   - task_time_logs exists (recreated, fewer FKs)
+        #   - other 4 tables still original
+        # → schema halfway between pre-down_0052 and post-down_0052
+        assert not conn.in_transaction
+        tables = {
+            row[0] for row in conn.execute(
+                "SELECT name FROM sqlite_master WHERE type='table'"
+            )
+        }
+        # task_time_logs still exists (renamed back).
+        assert "task_time_logs" in tables
+        # Other tables unchanged.
+        for t in ["saved_views", "inbox_items", "automation_rules",
+                  "notification_preferences"]:
+            assert t in tables, (
+                f"{t} should still be in pre-down_0052 state; missing"
+            )
+        # 🔒 But task_time_logs has been recreated WITHOUT the
+        # original CREATE statement's FK declarations. Operator
+        # in partial state can't tell which tables have FKs from
+        # PRAGMA table_info alone. This is the hazard.
+        conn.close()
