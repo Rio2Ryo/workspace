@@ -2,7 +2,7 @@
 <!--
   launchd entry for publish-if-delta.sh — Threads-watcher public sync.
   LIVE MODE: when SQLite has unpublished posts, this commits/pushes the
-  snapshot and runs vercel --prod so the public URL stays fresh.
+  snapshot and runs vercel - -prod so the public URL stays fresh.
 
   publish-if-delta.sh first checks DB max(posts.id) vs .sync_cursor and
   exits without git/Vercel writes when there is no delta.
@@ -56,7 +56,7 @@
        sync.py writes nothing to stdout — all logging flows through
        TeeLogger (sync.py:177-188) which writes to BOTH sys.stderr
        (captured below into sync.err.log) AND the file at
-       --log (default logs/sync.log). The previous
+       - -log (default logs/sync.log). The previous
        StandardOutPath kept logs/sync.out.log at 0 bytes for the
        whole install lifetime — pure noise. When the key is absent
        launchd inherits /dev/null which is exactly what we want.

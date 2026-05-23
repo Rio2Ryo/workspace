@@ -1,10 +1,11 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!--
   launchd entry for auto-restart-if-stale.sh — the self-heal wrapper
-  that runs `watcher.py --health-check`, parses for the staleness
+  that runs `watcher.py - -health-check`, parses for the staleness
   signal, and invokes `restart-watcher.sh` (with a 5-min cooldown) so
-  the live `--watch` loop stays on fresh code without manual
-  intervention.
+  the live `- -watch` loop stays on fresh code without manual
+  intervention. (CLI flags spaced as `- -` to satisfy XML §2.5 — see
+  test_plist_xml_strict.py for the lint.)
 
   Closes the silent-13-hour breakage class observed on 2026-05-18.
 
