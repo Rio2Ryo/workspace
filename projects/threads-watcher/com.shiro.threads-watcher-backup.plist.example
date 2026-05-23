@@ -1,0 +1,91 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  launchd template (draft / Yakon 承認待ち)
+
+  配置先候補:
+    ~/Library/LaunchAgents/com.shiro.threads-watcher-backup.plist
+
+  有効化(承認後):
+    launchctl load -w ~/Library/LaunchAgents/com.shiro.threads-watcher-backup.plist
+
+  無効化(ロールバック):
+    launchctl unload -w ~/Library/LaunchAgents/com.shiro.threads-watcher-backup.plist
+
+  デフォルト挙動:
+    - 毎日 03:00 JST/host-local に backup_db.py を起動
+    - SQLite の SQLITE_BACKUP API で threads_watcher.db を hot-safe snapshot
+    - threads_watcher-YYYYMMDDTHHMMSSZ.db を backups/ に保存
+    - 整合性チェック (PRAGMA integrity_check) を pass したものだけ retain
+    - 7 世代より古い backup を prune (- -keep 7)
+    - logs/backup.{out,err}.log にローテーションなしで追記
+
+  なぜ 03:00 か:
+    watcher の `- -watch - -interval 60` ループに対する書き込み競合を最小化する
+    ため、典型的な人間操作の谷間を狙う。SQLite の backup API は WAL 中のページ
+    も coherent に取得するため、watcher が動作中でも安全だが、書き込みと同時
+    刻にトリガすると I/O 競合で遅延する可能性がある。
+
+  なぜ StartCalendarInterval (StartInterval ではなく) か:
+    Mac mini が sleep する時間帯 (深夜帯) に launchd が次回 wake 時に
+    fire してくれる挙動を期待。StartInterval (相対秒) だと sleep を挟むと
+    cadence がずれる。
+
+  なぜ /opt/homebrew/bin/python3 (venv ではなく) か:
+    backup_db.py は stdlib のみ (sqlite3, argparse, datetime, pathlib,
+    dataclasses) を使用。sync.plist と同じ system python を再利用すること
+    で operator は venv を別途 provision しなくて済む。
+
+  監視との連携:
+    db_health.py - -backup-dir &lt;dir&gt; - -threshold-backup-age-hours 36 を
+    別 launchd entry (or 既存 sync.plist のチェーン) で daily 実行すると、
+    本 backup が silently 止まった時に exit 2 で通知できる。
+
+  ロールバック手順:
+    本テンプレを load しただけでは backups/ 配下に新ファイルが書かれるだけで
+    既存データを書き換えない。万一 backup ファイルが暴走的に増えた場合:
+      1. launchctl unload -w ~/Library/LaunchAgents/com.shiro.threads-watcher-backup.plist
+      2. rm projects/threads-watcher/backups/threads_watcher-*.db  (古いものから)
+    threads_watcher.db 本体は影響を受けない。
+-->
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+  <key>Label</key>
+  <string>com.shiro.threads-watcher-backup</string>
+
+  <key>ProgramArguments</key>
+  <array>
+    <string>/opt/homebrew/bin/python3</string>
+    <string>/Users/umi/.openclaw/workspace/projects/threads-watcher/backup_db.py</string>
+    <string>--keep</string>
+    <string>7</string>
+    <!-- 初回検証時は - -dry-run を有効化して動作確認推奨: -->
+    <!-- <string>- -dry-run</string> -->
+  </array>
+
+  <key>EnvironmentVariables</key>
+  <dict>
+    <key>PATH</key>
+    <string>/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin</string>
+  </dict>
+
+  <key>StartCalendarInterval</key>
+  <dict>
+    <key>Hour</key>
+    <integer>3</integer>
+    <key>Minute</key>
+    <integer>0</integer>
+  </dict>
+
+  <key>RunAtLoad</key>
+  <false/>
+
+  <key>StandardOutPath</key>
+  <string>/Users/umi/.openclaw/workspace/projects/threads-watcher/logs/backup.out.log</string>
+  <key>StandardErrorPath</key>
+  <string>/Users/umi/.openclaw/workspace/projects/threads-watcher/logs/backup.err.log</string>
+
+  <key>WorkingDirectory</key>
+  <string>/Users/umi/.openclaw/workspace/projects/threads-watcher</string>
+</dict>
+</plist>
