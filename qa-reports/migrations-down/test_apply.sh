@@ -218,6 +218,87 @@ run_apply --mode sqlite --db "$DB_WRAP" \
 leftover=$(find /tmp -maxdepth 1 -name "wrapped-0056*" 2>/dev/null | wc -l | tr -d ' ')
 assert_eq "no wrapped-* tempfiles leaked after apply.sh exit" "0" "$leftover"
 
+# ── DROP COLUMN-only migration regression (0048 / 0052 atomic-wrap path) ─
+#
+# Before the 2026-05-23 `|| true` fix on the TABLES= line, apply.sh
+# ran with `set -euo pipefail` would silently exit 1 with NO banner
+# output when grep found no `DROP TABLE IF EXISTS` matches in the
+# migration file. The 0054–0056 cases above ALL contain DROP TABLE,
+# so they never triggered the bug. 0048 (3× ALTER TABLE DROP COLUMN)
+# and 0052 (recreate-dance — DROP TABLE is there but on the _old
+# intermediates, which the grep regex doesn't match because the
+# rename happens before any operator-meaningful "table in scope"
+# disappears) exposed it. These tests pin the fix.
+
+# ── Test 12: sqlite + DROP COLUMN-only (0048) → banner output + exit 0 ──
+echo "[12] sqlite + 0048 (DROP COLUMN only) — banner output, no silent exit"
+DB48_PO="$TMPDIR_TEST/dropcol-printonly.db"
+sqlite3 "$DB48_PO" "CREATE TABLE agent_states (id INTEGER PRIMARY KEY, name TEXT, status TEXT, current_task TEXT, last_updated TEXT, role TEXT DEFAULT '', project TEXT DEFAULT '', device TEXT DEFAULT '');"
+set +e
+out=$(run_apply --mode sqlite --db "$DB48_PO" \
+  --migration 0048_agent_states_team_columns_DOWN.sql --print-only 2>&1)
+rc=$?
+set -e
+assert_eq      "0048 print-only exit code is 0 (was silent exit=1 before fix)" "0" "$rc"
+assert_contains "0048 print-only emits the mode banner"      "=== mode:      sqlite ===" "$out"
+assert_contains "0048 print-only emits the migration banner" "=== migration: 0048_agent_states_team_columns_DOWN.sql ===" "$out"
+assert_contains "0048 print-only emits the empty tables-in-scope line" "tables in scope:" "$out"
+assert_contains "0048 print-only shows the actual SQL"       "ALTER TABLE agent_states DROP COLUMN device" "$out"
+
+# ── Test 13: sqlite + 0048 + --wrap-in-transaction (runbook command) ──
+echo "[13] sqlite + 0048 + --wrap-in-transaction (runbook-documented path)"
+DB48_W="$TMPDIR_TEST/dropcol-wrap.db"
+sqlite3 "$DB48_W" "CREATE TABLE agent_states (id INTEGER PRIMARY KEY, name TEXT, status TEXT, current_task TEXT, last_updated TEXT, role TEXT DEFAULT '', project TEXT DEFAULT '', device TEXT DEFAULT '');"
+sqlite3 "$DB48_W" "INSERT INTO agent_states (id, name, status, role, project, device) VALUES (1, 'a', 'ready', 'pm', 'sb', 'dx');"
+out=$(run_apply --mode sqlite --db "$DB48_W" \
+  --migration 0048_agent_states_team_columns_DOWN.sql \
+  --confirm --wrap-in-transaction 2>&1)
+# Wrap path doesn't emit a "table dropped" line (no DROP TABLE in
+# 0048). Verify the 3 columns are actually gone post-run.
+cols=$(sqlite3 "$DB48_W" "PRAGMA table_info(agent_states);" | awk -F'|' '{print $2}' | sort | tr '\n' ',')
+# Expected post-drop column set: id,last_updated,name,status,current_task
+# (alphabetically sorted: current_task,id,last_updated,name,status,)
+assert_contains "0048 wrap: role column gone"   ""    "$(echo "$cols" | grep -c '^role$' || true)"
+assert_eq       "0048 wrap: role/project/device all removed" \
+  "current_task,id,last_updated,name,status," "$cols"
+# Row itself survives (non-dropped columns).
+row_count=$(sqlite3 "$DB48_W" "SELECT COUNT(*) FROM agent_states;")
+assert_eq "0048 wrap: agent_states row survives DROP COLUMN" "1" "$row_count"
+
+# ── Test 14: wrangler-local + 0048 + --wrap-in-transaction (runbook) ──
+# This is the EXACT command MIGRATION_ROLLBACK.md tells operators to
+# run for non-idempotent rollback. Before 2026-05-23 the file didn't
+# exist; now it does AND the wrap path passes a wrapped-* tempfile.
+echo "[14] wrangler-local + 0048 + --wrap-in-transaction (runbook command shape)"
+: >"$WRANGLER_LOG"
+run_apply --mode wrangler-local \
+  --wrangler-cwd "$FAKE_WRANGLER_CWD" --wrangler-db second_brain \
+  --migration 0048_agent_states_team_columns_DOWN.sql \
+  --confirm --wrap-in-transaction >/dev/null 2>&1 || true
+log_content=$(cat "$WRANGLER_LOG" 2>/dev/null || true)
+assert_contains "0048 wrangler-local wrap: --file points at wrapped-* tempfile" "wrapped-" "$log_content"
+# And the wrapped file is targeted via --file (not --command).
+assert_contains "0048 wrangler-local wrap: uses --file (not --command)" "--file" "$log_content"
+
+# ── Test 15: 0052 (recreate-dance) print-only is consumable ────────────
+# Full execution requires fixturing 5 tables with FK constraints — out
+# of scope here; the runtime contract is exercised in
+# test_down_idempotency_runtime.py::TestDown0052AtomicWrappingProof
+# against real sqlite3. Here we just verify the file is consumable via
+# apply.sh's --print-only path.
+echo "[15] sqlite + 0052 (recreate-dance) --print-only consumable"
+DB52_PO="$TMPDIR_TEST/dance-printonly.db"
+sqlite3 "$DB52_PO" "CREATE TABLE dummy (x INT);"
+set +e
+out=$(run_apply --mode sqlite --db "$DB52_PO" \
+  --migration 0052_fk_constraints_DOWN.sql --print-only 2>&1)
+rc=$?
+set -e
+assert_eq      "0052 print-only exit code is 0" "0" "$rc"
+assert_contains "0052 print-only emits the migration banner" "=== migration: 0052_fk_constraints_DOWN.sql ===" "$out"
+assert_contains "0052 print-only shows the PRAGMA bookend"   "PRAGMA foreign_keys = OFF" "$out"
+assert_contains "0052 print-only shows the recreate dance"   "RENAME TO task_time_logs" "$out"
+
 # ── Summary ────────────────────────────────────────────────────────────
 echo
 echo "=================================="

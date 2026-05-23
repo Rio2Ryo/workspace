@@ -235,8 +235,16 @@ apply_migration() {
 
 # ── pre-flight: list tables affected + row counts ───────────────────────
 
+# `|| true` on the pipeline: down scripts that only use
+# ALTER TABLE DROP COLUMN (e.g. 0048_agent_states_team_columns_DOWN.sql)
+# have zero DROP TABLE matches → grep exits 1 → pipefail kills the
+# script with no output before any banner. Empirically reproduced
+# 2026-05-23 by running apply.sh --print-only against 0048: silent
+# exit=1. The empty-TABLES case is intentional and handled by the
+# for-loop downstream; we just need to tolerate grep finding nothing.
 TABLES=$(grep -E '^[[:space:]]*DROP TABLE IF EXISTS' "$MIGRATION_PATH" \
-         | sed -E 's/.*DROP TABLE IF EXISTS[[:space:]]+([A-Za-z0-9_]+).*/\1/')
+         | sed -E 's/.*DROP TABLE IF EXISTS[[:space:]]+([A-Za-z0-9_]+).*/\1/' \
+         || true)
 
 echo "=== mode:      $MODE ==="
 echo "=== migration: $MIGRATION ==="

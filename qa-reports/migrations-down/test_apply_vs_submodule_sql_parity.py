@@ -77,14 +77,46 @@ def _matching_submodule_path(apply_path: Path) -> Path:
 
 
 def test_apply_dir_inventory_is_non_empty():
-    # Sanity: scan helper found at least the 3 pairs the test ships
-    # with. A future move/rename of the apply.sh dir without test
-    # update would silently make every parametrized case vacuous.
+    # Sanity: scan helper found at least the 5 pairs the test ships
+    # with (0048, 0052, 0054, 0055, 0056 — 0048+0052 added so the
+    # MIGRATION_ROLLBACK.md atomic-wrap section's documented apply.sh
+    # command actually finds its --migration file at incident time).
+    # A future move/rename of the apply.sh dir without test update
+    # would silently make every parametrized case vacuous.
     inv = _apply_dir_inventory()
-    assert len(inv) >= 3, (
-        f"expected at least 3 *_DOWN.sql files in {APPLY_DIR}; "
+    assert len(inv) >= 5, (
+        f"expected at least 5 *_DOWN.sql files in {APPLY_DIR}; "
         f"got {len(inv)}. Either the dir moved or the inventory "
         f"shrank — investigate."
+    )
+
+
+def test_atomic_wrap_documented_migrations_have_apply_files():
+    # 🔒 Pin the operational link between
+    # MIGRATION_ROLLBACK.md §"Atomic rollback option" and apply.sh:
+    # both 0048 and 0052 — the only two migrations the runbook
+    # specifically tells operators to wrap-in-transaction — MUST
+    # have a corresponding *_DOWN.sql in the apply.sh dir.
+    #
+    # Drift class caught: the runbook is updated to mention a new
+    # non-idempotent migration NNNN without the operator getting a
+    # working apply.sh path for it. Before this test landed, the
+    # runbook said "apply.sh --migration 0048_..._DOWN.sql" but the
+    # file didn't exist → ERROR: migration not found.
+    inv_names = {p.name for p in _apply_dir_inventory()}
+    required = {
+        "0048_agent_states_team_columns_DOWN.sql",
+        "0052_fk_constraints_DOWN.sql",
+    }
+    missing = required - inv_names
+    assert not missing, (
+        f"MIGRATION_ROLLBACK.md atomic-wrap section names "
+        f"migrations whose apply.sh file is missing: {sorted(missing)}\n"
+        f"Operators following the runbook would get "
+        f"'ERROR: migration not found' from apply.sh.\n"
+        f"Either add the file (preserving executable-SQL parity with "
+        f"second-brain/apps/api/src/db/migrations-down/down_NNNN.sql) "
+        f"or remove the runbook reference."
     )
 
 
