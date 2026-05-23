@@ -42,7 +42,29 @@ state_before=$(read_state) || { ts_err "ERROR: failed to read DB/cursor state"; 
 read -r db_max_before cursor_before delta_before <<< "$state_before"
 
 if [ "${delta_before:-0}" -le 0 ]; then
-  ts_log "skip: no unpublished delta (db_max=$db_max_before cursor=$cursor_before)"
+  # No delta. The naive form `ts_log "skip: no unpublished delta …"`
+  # writes one identical line every tick — at 5-min cadence that's
+  # 288 lines/day of pure noise (~12 KB/day) burying any real signal.
+  # Suppress repeated skip lines and emit a heartbeat at most once
+  # per HEARTBEAT_INTERVAL_SEC, OR whenever state changes (cursor or
+  # db_max moved since the last logged tick).
+  #
+  # Operator surface: `tail logs/publish.log` still shows recent
+  # activity instead of 1000 copies of the same skip; `grep "skip:"
+  # logs/publish.log | wc -l` returns the number of distinct
+  # quiescent runs, not the number of ticks.
+  LAST_STATE_FILE="logs/.publish-if-delta-last-skip"
+  HEARTBEAT_INTERVAL_SEC="${PUBLISH_SKIP_HEARTBEAT_SEC:-3600}"
+  cur_state="${db_max_before}:${cursor_before}"
+  now_ts=$(date +%s)
+  last_line=$(cat "$LAST_STATE_FILE" 2>/dev/null || true)
+  last_state=$(printf '%s' "$last_line" | cut -d'|' -f1)
+  last_ts=$(printf '%s' "$last_line" | cut -d'|' -f2)
+  elapsed=$((now_ts - ${last_ts:-0}))
+  if [ "$cur_state" != "$last_state" ] || [ "$elapsed" -ge "$HEARTBEAT_INTERVAL_SEC" ]; then
+    ts_log "skip: no unpublished delta (db_max=$db_max_before cursor=$cursor_before)"
+    printf '%s|%s\n' "$cur_state" "$now_ts" > "$LAST_STATE_FILE"
+  fi
   exit 0
 fi
 

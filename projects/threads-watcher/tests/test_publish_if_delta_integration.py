@@ -283,3 +283,117 @@ def test_real_error_still_reaches_stderr(sandbox: Path) -> None:
     )
     assert proc.returncode == 1
     assert "ERROR: sync.py failed" in proc.stderr
+
+
+# ── skip-line dedup (heartbeat) ────────────────────────────────────────
+#
+# Production observation 2026-05-23: logs/publish.log was 98% identical
+# "skip: no unpublished delta" lines — 5-min cadence × multi-day quiet
+# period = ~288 lines/day of noise. The dedup logic suppresses repeat
+# skip lines so the FIRST tick after a state change OR a heartbeat
+# interval emits the line, every other tick stays silent.
+
+
+def test_first_no_delta_run_emits_the_skip_line(sandbox: Path) -> None:
+    # Fresh sandbox — no last-state file exists, so cur_state != ""
+    # (which is the persisted last_state). The line emits and the
+    # state file is created for subsequent ticks.
+    code, out, synced, _deployed = _run(sandbox, db_max=10, cursor=10)
+    assert code == 0
+    assert synced is False
+    assert "skip: no unpublished delta (db_max=10 cursor=10)" in out
+    # The state file should now exist with `cur_state|now_ts`
+    state_file = sandbox / "logs" / ".publish-if-delta-last-skip"
+    assert state_file.exists()
+    persisted = state_file.read_text(encoding="utf-8").strip()
+    assert persisted.startswith("10:10|")  # db_max:cursor|epoch
+
+
+def test_second_identical_run_suppresses_the_skip_line(sandbox: Path) -> None:
+    # First tick logs + writes state file.
+    _run(sandbox, db_max=10, cursor=10)
+    # Second tick with identical state must NOT re-log.
+    code, out, _synced, _deployed = _run(sandbox, db_max=10, cursor=10)
+    assert code == 0
+    # No skip line in this run's output. (The log file has the prior
+    # tick's line but stdout/stderr captured here is just this run.)
+    assert "skip: no unpublished delta" not in out
+
+
+def test_state_change_re_emits_the_skip_line(sandbox: Path) -> None:
+    # First tick: db_max=10 cursor=10 → log "10:10"
+    _run(sandbox, db_max=10, cursor=10)
+    # State changed (new posts arrived but cursor didn't move — still
+    # no delta because cursor == db_max BEFORE? wait, db_max=15 + cursor=15
+    # would be delta=0; let's use that. The point is the persisted
+    # signature differs: "15:15" != "10:10" → re-log.
+    code, out, _synced, _deployed = _run(sandbox, db_max=15, cursor=15)
+    assert code == 0
+    assert "skip: no unpublished delta (db_max=15 cursor=15)" in out
+
+
+def test_heartbeat_re_emits_after_interval_elapsed(sandbox: Path) -> None:
+    # First tick stamps the state file with the current timestamp.
+    _run(sandbox, db_max=10, cursor=10)
+    state_file = sandbox / "logs" / ".publish-if-delta-last-skip"
+    # Forge the state file's stored timestamp to "long ago" so the
+    # elapsed branch fires regardless of test wall-clock.
+    state_file.write_text("10:10|1700000000\n", encoding="utf-8")
+    # PUBLISH_SKIP_HEARTBEAT_SEC defaults to 3600s; even at the default
+    # the forged 2023-era timestamp is well past it. Run again with the
+    # same state and confirm the line re-emits.
+    code, out, _synced, _deployed = _run(sandbox, db_max=10, cursor=10)
+    assert code == 0
+    assert "skip: no unpublished delta (db_max=10 cursor=10)" in out
+    # And the state file's timestamp should be fresh again.
+    after = state_file.read_text(encoding="utf-8").strip()
+    new_ts = int(after.split("|")[1])
+    assert new_ts > 1700000000
+
+
+def test_three_consecutive_identical_ticks_yield_only_one_log_line(sandbox: Path) -> None:
+    # Tail of logs/publish.log after 3 quiet ticks should contain
+    # exactly one "skip: no unpublished delta" line, not three.
+    _run(sandbox, db_max=10, cursor=10)
+    _run(sandbox, db_max=10, cursor=10)
+    _run(sandbox, db_max=10, cursor=10)
+    log_text = (sandbox / "logs" / "publish.log").read_text(encoding="utf-8")
+    skip_lines = [l for l in log_text.splitlines() if "skip: no unpublished delta" in l]
+    assert len(skip_lines) == 1, (
+        f"Expected exactly one skip line in publish.log after 3 quiet "
+        f"ticks; got {len(skip_lines)}:\n" + "\n".join(skip_lines)
+    )
+
+
+def test_short_heartbeat_env_re_emits_more_often(sandbox: Path) -> None:
+    # Override the heartbeat interval to 1 second via env. A second tick
+    # >= 1 second later should re-emit. We forge the timestamp to make
+    # the test deterministic without sleeping.
+    _run(sandbox, db_max=10, cursor=10)
+    state_file = sandbox / "logs" / ".publish-if-delta-last-skip"
+    # Set stored ts to "now-5s" so the 1s heartbeat fires.
+    import time
+    state_file.write_text(f"10:10|{int(time.time()) - 5}\n", encoding="utf-8")
+
+    env = os.environ.copy()
+    env["PUBLISH_SKIP_HEARTBEAT_SEC"] = "1"
+    proc = subprocess.run(
+        ["bash", "publish-if-delta.sh"],
+        cwd=str(sandbox), capture_output=True, text=True, timeout=30, env=env,
+    )
+    assert proc.returncode == 0
+    assert "skip: no unpublished delta" in proc.stdout + proc.stderr
+
+
+def test_delta_path_unchanged_by_dedup_state_file(sandbox: Path) -> None:
+    # The dedup only touches the no-delta exit path. A real delta tick
+    # must run sync + deploy normally regardless of the state file
+    # contents. Pin so the dedup can't accidentally leak into the
+    # sync path.
+    state_file = sandbox / "logs" / ".publish-if-delta-last-skip"
+    state_file.parent.mkdir(parents=True, exist_ok=True)
+    state_file.write_text("99:99|0\n", encoding="utf-8")  # garbage prior state
+    code, _out, synced, deployed = _run(sandbox, db_max=20, cursor=10)
+    assert code == 0
+    assert synced is True
+    assert deployed is True
