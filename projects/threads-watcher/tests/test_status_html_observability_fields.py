@@ -119,3 +119,70 @@ def test_recent_stats_card_section_exists(html: str):
     assert _has_id(html, "rs-total")
     assert _has_id(html, "rs-rate")
     assert _has_id(html, "rs-partial")  # existing count field
+
+
+# ── MTTR summary widget (added 2026-05-23 after 63cf649 wired
+#    mttr_summary into state.json) ─────────────────────────────────────
+
+
+def test_mttr_summary_card_section_exists(html: str):
+    # The card itself starts hidden (display:none) so a fresh log
+    # without closed incidents doesn't show an empty table; JS reveals
+    # it when mttr.length > 0.
+    assert _has_id(html, "mttr-summary"), (
+        "index.html must declare <section id=\"mttr-summary\"> for the "
+        "MTTR widget that consumes state.json's mttr_summary field."
+    )
+
+
+def test_mttr_table_anchors_exist(html: str):
+    # JS targets these IDs to populate the per-handle rows.
+    assert _has_id(html, "mttr-table")
+    assert _has_id(html, "mttr-tbody")
+
+
+def test_mttr_card_starts_hidden(html: str):
+    # `display:none` initially. Operator with zero closed incidents
+    # doesn't see an empty header — the widget appears only when
+    # there's content.
+    import re
+    m = re.search(
+        r'id="mttr-summary"[^>]*style="([^"]*)"',
+        html,
+    )
+    assert m is not None, "mttr-summary section must have an inline style attribute"
+    assert "display:none" in m.group(1).replace(" ", ""), (
+        f"mttr-summary section must start with display:none. "
+        f"Got style={m.group(1)!r}"
+    )
+
+
+def test_js_reads_mttr_summary_from_payload(html: str):
+    # JS must consume `data.mttr_summary` (the field name pinned by
+    # build_web_snapshot_payload). A typo here means the widget never
+    # populates regardless of how many incidents land in the log.
+    # (The `_js_reads` helper checks `rs.<field>` shapes; this field
+    # is on the top-level `data` object, so use a direct substring.)
+    assert "data.mttr_summary" in html, (
+        "JS must read data.mttr_summary from the state.json payload."
+    )
+
+
+def test_js_handles_non_array_mttr_summary_defensively(html: str):
+    # The JS guard `Array.isArray(data.mttr_summary) ? data.mttr_summary : []`
+    # protects against a malformed/older state.json that has the field
+    # but wrong type. Pin it so a future "cleanup" that removes the
+    # guard fails here.
+    assert "Array.isArray(data.mttr_summary)" in html, (
+        "JS must Array.isArray-guard data.mttr_summary so an older "
+        "state.json (missing field or wrong type) can't NPE the dashboard."
+    )
+
+
+def test_mttr_table_renders_expected_columns(html: str):
+    # Pin the column headers — operator script consumers (screenshot
+    # parsers, accessibility tests) depend on the visible labels.
+    for col in ["handle", "incidents", "mean", "median", "max"]:
+        # Use a permissive substring check; the table THEAD contains
+        # <th>{col}</th> with possible attributes.
+        assert col in html, f"MTTR table missing column header for {col!r}"

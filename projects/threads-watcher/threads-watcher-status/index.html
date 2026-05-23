@@ -176,6 +176,24 @@
       </div>
     </section>
 
+    <section class="card" id="mttr-summary" style="display:none">
+      <div class="label" style="margin-bottom:8px">
+        MTTR (closed partial_error_rate incidents)
+      </div>
+      <table id="mttr-table" style="width:100%;border-collapse:collapse;text-align:right">
+        <thead>
+          <tr>
+            <th style="text-align:left">handle</th>
+            <th>incidents</th>
+            <th>mean</th>
+            <th>median</th>
+            <th>max</th>
+          </tr>
+        </thead>
+        <tbody id="mttr-tbody"></tbody>
+      </table>
+    </section>
+
     <section class="card" id="sync-state">
       <div class="label" style="margin-bottom:8px">sync.py state (cursor vs DB)</div>
       <div class="row"><span class="label">db_max(posts.id)</span><span id="ss-dbmax">—</span></div>
@@ -276,6 +294,47 @@
               topReason.reason + ' (×' + topReason.count + ')';
             document.getElementById('rs-top-reason-row').style.display = 'flex';
           }
+        }
+
+        // mttr_summary: per-handle incident history from
+        // sync_guards.compute_mttr_from_log → summarise_mttr (added
+        // in commit 63cf649). Operator gets at-a-glance "@hot had 3
+        // partial_error_rate incidents in the recent log window,
+        // median MTTR 1500s" without running `python mttr.py`. Hidden
+        // when no incidents have closed yet (the default for a fresh
+        // log or a still-active regime).
+        const mttr = Array.isArray(data.mttr_summary) ? data.mttr_summary : [];
+        if (mttr.length > 0) {
+          const tbody = document.getElementById('mttr-tbody');
+          tbody.innerHTML = '';
+          // Format a duration in seconds as a short human-readable
+          // string: <60s → "Ns", <1h → "Nm", else "Nh Mm".
+          const fmt = (s) => {
+            const n = Number(s) || 0;
+            if (n < 60) return n + 's';
+            if (n < 3600) return Math.round(n / 60) + 'm';
+            const h = Math.floor(n / 3600);
+            const m = Math.round((n - h * 3600) / 60);
+            return m === 0 ? h + 'h' : h + 'h ' + m + 'm';
+          };
+          for (const row of mttr) {
+            const tr = document.createElement('tr');
+            const tds = [
+              row.handle || '?',
+              row.incidents || 0,
+              fmt(row.mean_s),
+              fmt(row.median_s),
+              fmt(row.max_s),
+            ];
+            tds.forEach((v, i) => {
+              const td = document.createElement('td');
+              td.textContent = String(v);
+              if (i === 0) td.style.textAlign = 'left';
+              tr.appendChild(td);
+            });
+            tbody.appendChild(tr);
+          }
+          document.getElementById('mttr-summary').style.display = 'block';
         }
 
         const ss = data.sync_state;
