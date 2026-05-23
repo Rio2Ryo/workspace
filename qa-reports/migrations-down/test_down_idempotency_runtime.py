@@ -426,3 +426,144 @@ def test_runtime_sqlite_supports_drop_column():
         f"ALTER TABLE DROP COLUMN unsupported. Cannot run this test "
         f"file. Upgrade Python (which bundles SQLite) before retrying."
     )
+
+
+# ── Transactional DDL contract pin (preparation for down_0048 atomicity) ─
+#
+# down_0048's `ALTER TABLE agent_states DROP COLUMN device/project/role`
+# sequence is currently 3 separate auto-committed DDL statements.
+# Partial-state hazard: if statement 2 fails mid-script (lock,
+# concurrent write, panic), device column is gone but project + role
+# remain — DB in inconsistent state requiring manual cleanup.
+#
+# The Yakon-pending design question is whether to wrap the sequence
+# in BEGIN/COMMIT for atomic rollback on partial failure. D1's
+# multi-statement transaction semantics in `wrangler d1 execute --file`
+# are not 100% documented; we can't verify D1 directly from here.
+#
+# What we CAN verify, empirically: that the LOCAL test environment
+# (Python's bundled sqlite3) supports transactional DDL rollback
+# correctly. This:
+#   1. Documents the sqlite3 contract for future readers of down_0048
+#   2. Pins the sqlite3 behavior so a future Python upgrade that
+#      changed it would surface here
+#   3. Sets up the empirical safety net for when the actual
+#      down_0048 SQL change ships — its runtime test (above) would
+#      then verify atomic behavior end-to-end
+
+
+class TestSqliteTransactionalDdl:
+    """Pin sqlite3's BEGIN/COMMIT-around-DDL semantics so a future
+    down_0048 atomicity refactor has empirical ground truth."""
+
+    def test_drop_column_inside_transaction_rolls_back_on_mid_script_error(self):
+        # 🔒 Headline: BEGIN; DROP COLUMN X; INSERT INTO no_such_table; COMMIT;
+        # → execute raises OperationalError, connection left in
+        # in_transaction=True, schema state visible WITHOUT rollback
+        # (column X gone), schema state AFTER rollback (column X back).
+        #
+        # The "schema state visible without rollback" is the key
+        # property: sqlite3.executescript() does NOT auto-rollback on
+        # mid-script error. Caller MUST detect + rollback. This is
+        # exactly the wrapping pattern down_0048 would need.
+        conn = _fresh()
+        conn.executescript(
+            "CREATE TABLE agent_states (id TEXT, name TEXT, "
+            "role TEXT, project TEXT, device TEXT);"
+        )
+        before = {row[1] for row in conn.execute("PRAGMA table_info(agent_states)")}
+        assert before == {"id", "name", "role", "project", "device"}
+
+        try:
+            conn.executescript(
+                "BEGIN;\n"
+                "ALTER TABLE agent_states DROP COLUMN device;\n"
+                "INSERT INTO no_such_table VALUES (1);\n"
+                "COMMIT;\n"
+            )
+            pytest.fail("expected OperationalError on missing-table INSERT")
+        except sqlite3.OperationalError as e:
+            assert "no such table" in str(e)
+
+        # 🔒 Connection state observation: still in_transaction after
+        # the exception. This is the failure mode operator code must
+        # handle — sqlite3 does NOT auto-rollback.
+        assert conn.in_transaction, (
+            "sqlite3 did NOT leave connection in_transaction after "
+            "mid-executescript error — semantics changed. down_0048 "
+            "atomicity wrapping needs explicit rollback in caller."
+        )
+
+        # Before rollback: DROP COLUMN already visible (partial state).
+        mid_state = {row[1] for row in conn.execute("PRAGMA table_info(agent_states)")}
+        assert "device" not in mid_state, (
+            f"DROP COLUMN should be visible mid-transaction; got {mid_state}"
+        )
+
+        # 🔒 The crucial property: manual rollback RESTORES the
+        # dropped column. This proves sqlite3 supports transactional
+        # DDL atomicity for the DROP COLUMN pattern down_0048 uses.
+        conn.rollback()
+        after = {row[1] for row in conn.execute("PRAGMA table_info(agent_states)")}
+        assert "device" in after, (
+            f"rollback should have restored 'device' column; got {after}"
+        )
+        assert after == before, (
+            f"rollback should restore exact pre-BEGIN state; "
+            f"got {after}, expected {before}"
+        )
+        conn.close()
+
+    def test_successful_transaction_commits_atomically(self):
+        # Sanity counter-test: BEGIN; <3 DROPs>; COMMIT; all succeed
+        # = all columns gone. This is the happy path down_0048 +
+        # BEGIN/COMMIT would take in production. No mid-script error.
+        conn = _fresh()
+        conn.executescript(
+            "CREATE TABLE agent_states (id TEXT, name TEXT, "
+            "role TEXT, project TEXT, device TEXT);"
+        )
+        conn.executescript(
+            "BEGIN;\n"
+            "ALTER TABLE agent_states DROP COLUMN device;\n"
+            "ALTER TABLE agent_states DROP COLUMN project;\n"
+            "ALTER TABLE agent_states DROP COLUMN role;\n"
+            "COMMIT;\n"
+        )
+        assert not conn.in_transaction
+        cols = {row[1] for row in conn.execute("PRAGMA table_info(agent_states)")}
+        assert cols == {"id", "name"}, (
+            f"3-DROP atomic transaction should leave only id+name; "
+            f"got {cols}"
+        )
+        conn.close()
+
+    def test_pragma_inside_transaction_does_not_break_rollback(self):
+        # Defensive: down_0052 uses `PRAGMA foreign_keys = OFF/ON` as
+        # bookends without explicit BEGIN/COMMIT. If a future
+        # operator wraps down_0052 in BEGIN/COMMIT, PRAGMA might
+        # interact poorly. Pin current sqlite3 behavior so a future
+        # change to wrap down_0052 has empirical ground.
+        conn = _fresh()
+        conn.executescript("CREATE TABLE t (a INT);")
+        # PRAGMA foreign_keys inside a transaction is a documented
+        # SQLite no-op (silently ignored). Pin that it doesn't raise
+        # or corrupt the transaction state.
+        try:
+            conn.executescript(
+                "BEGIN;\n"
+                "PRAGMA foreign_keys = OFF;\n"
+                "ALTER TABLE t ADD COLUMN b INT;\n"
+                "PRAGMA foreign_keys = ON;\n"
+                "COMMIT;\n"
+            )
+        except sqlite3.OperationalError as e:
+            pytest.fail(
+                f"PRAGMA inside BEGIN/COMMIT raised: {e}. If sqlite3 "
+                f"changed PRAGMA-in-transaction behavior, the assumption "
+                f"that down_0052 could be wrapped (Yakon-pending) needs "
+                f"re-evaluation."
+            )
+        cols = {row[1] for row in conn.execute("PRAGMA table_info(t)")}
+        assert cols == {"a", "b"}
+        conn.close()
