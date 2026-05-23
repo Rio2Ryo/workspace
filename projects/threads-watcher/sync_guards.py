@@ -372,6 +372,94 @@ DEFAULT_PARTIAL_ERROR_RATE_THRESHOLD = 0.5
 DEFAULT_WARN_WINDOW_HOURS = 1
 
 
+# Heartbeat: re-emit a warning at least this often even if the bucket
+# hasn't moved, so operators can confirm the regime is still active
+# from the log file alone. 1 hour matches the existing publish.log /
+# auto-restart.out.log dedup intervals so all three log surfaces have
+# the same "is anything alive?" cadence.
+DEFAULT_WARN_HEARTBEAT_SEC = 3600
+
+# Bucket the rate to 0.1 granularity. A 92.9% → 93.1% twitch is not
+# an operationally interesting state change; a 50% → 70% jump is.
+# Bucketing avoids re-emit storms when partial_error_rate flickers
+# around a threshold edge tick-over-tick.
+_RATE_BUCKET_GRANULARITY = 0.1
+
+
+def _rate_bucket(rate: float) -> float:
+    """Round `rate` DOWN to the nearest 0.1. 0.929 → 0.9, 0.5 → 0.5,
+    0.4999 → 0.4. Stable string representation for state-file storage."""
+    return round((int(rate / _RATE_BUCKET_GRANULARITY) * _RATE_BUCKET_GRANULARITY), 1)
+
+
+def filter_warnings_for_emit(
+    warnings: list[dict],
+    state_path: Path,
+    *,
+    now_ts: int,
+    heartbeat_sec: int = DEFAULT_WARN_HEARTBEAT_SEC,
+) -> tuple[list[dict], dict]:
+    """Apply heartbeat + rate-bucket dedup to a list of warning dicts.
+
+    Returns (emittable, new_state):
+        emittable: warnings the caller SHOULD log this tick
+        new_state: dict to persist back to `state_path`
+
+    For each handle in `warnings`:
+      - If the persisted bucket differs from the current bucket (a
+        real regime shift), emit + update state.
+      - Else if more than `heartbeat_sec` has elapsed since the last
+        logged tick, emit a heartbeat + restamp.
+      - Else suppress.
+
+    Handles dropped from the warnings list (recovered) are also dropped
+    from the persisted state — a future tick where they re-trigger
+    starts fresh and emits.
+
+    Why this exists
+    ---------------
+    The warn line from commit 090e9a2 emits per-invocation, so a
+    sustained partial_error_rate regime would emit ~288 lines/day/handle
+    at the launchd 5-min cadence. Operator grep would see the same
+    line in a tight loop; real regime shifts (bucket crossings) would
+    be lost in the noise. Same dedup pattern as
+    publish-if-delta.sh:621d32b / auto-restart-if-stale.sh:e73e85a.
+    """
+    state: dict = {}
+    try:
+        state = json.loads(state_path.read_text(encoding='utf-8'))
+        if not isinstance(state, dict):
+            state = {}
+    except (FileNotFoundError, json.JSONDecodeError):
+        state = {}
+
+    emittable: list[dict] = []
+    new_state: dict = {}
+
+    for w in warnings:
+        handle = w['handle']
+        bucket = _rate_bucket(w['rate'])
+        prev = state.get(handle)
+        prev_bucket = prev.get('bucket') if isinstance(prev, dict) else None
+        prev_ts = int(prev.get('ts', 0)) if isinstance(prev, dict) else 0
+        elapsed = now_ts - prev_ts
+        should_emit = (
+            prev_bucket != bucket
+            or elapsed >= heartbeat_sec
+        )
+        if should_emit:
+            emittable.append(w)
+            new_state[handle] = {'bucket': bucket, 'ts': now_ts}
+        else:
+            # suppress — keep the prior stamp so the heartbeat clock
+            # continues to count from the last EMITTED tick, not the
+            # most recent suppressed one (which would re-set the
+            # heartbeat every tick and emit nothing forever).
+            new_state[handle] = prev
+
+    return emittable, new_state
+
+
 def compute_partial_error_rate_warnings(
     conn: sqlite3.Connection,
     *,

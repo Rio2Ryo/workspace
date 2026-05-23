@@ -40,10 +40,12 @@ from sync_guards import (
     DEFAULT_COMMIT_MIN_GAP_SEC,
     DEFAULT_PARTIAL_ERROR_RATE_THRESHOLD,
     DEFAULT_RECENT_CHECKS_WINDOW,
+    DEFAULT_WARN_HEARTBEAT_SEC,
     DEFAULT_WARN_WINDOW_HOURS,
     SyncDecision,
     compute_partial_error_rate_warnings,
     evaluate_all,
+    filter_warnings_for_emit,
     format_outcome_event,
 )
 
@@ -721,11 +723,27 @@ def main(argv: list[str] | None = None) -> int:
         # shows the warning context immediately above the skipped/
         # committed/etc. event line. See sync_guards.compute_partial_error_rate_warnings
         # for the threshold + rationale (mirrors dashboard `.err` cue).
-        for w in compute_partial_error_rate_warnings(
+        #
+        # Dedup: warnings pass through filter_warnings_for_emit, which
+        # suppresses per-handle repeats unless the rate bucket changed
+        # OR DEFAULT_WARN_HEARTBEAT_SEC (1h) elapsed since the last
+        # logged tick. Without this, a sustained 90% regime emits
+        # ~288 lines/day/handle at the 5-min launchd cadence.
+        # State persisted at logs/.sync-warn-last-state (gitignored
+        # via logs/ rule).
+        all_warnings = compute_partial_error_rate_warnings(
             conn,
             threshold=DEFAULT_PARTIAL_ERROR_RATE_THRESHOLD,
             window_hours=DEFAULT_WARN_WINDOW_HOURS,
-        ):
+        )
+        warn_state_path = args.log.parent / '.sync-warn-last-state'
+        emittable, new_state = filter_warnings_for_emit(
+            all_warnings,
+            warn_state_path,
+            now_ts=int(time.time()),
+            heartbeat_sec=DEFAULT_WARN_HEARTBEAT_SEC,
+        )
+        for w in emittable:
             log.log(format_outcome_event(
                 'warn', delta=0,
                 extra={
@@ -737,6 +755,15 @@ def main(argv: list[str] | None = None) -> int:
                     'total': w['total'],
                 },
             ))
+        try:
+            warn_state_path.parent.mkdir(parents=True, exist_ok=True)
+            warn_state_path.write_text(json.dumps(new_state), encoding='utf-8')
+        except OSError:
+            # State persistence failure must NEVER block sync (operator
+            # cares about commit/push, not warn-dedup bookkeeping). Next
+            # tick will re-emit every warning as if first observation —
+            # noisier but operationally safe.
+            pass
 
         if not decision.proceed:
             # Structured outcome event — see sync_guards.format_outcome_event.

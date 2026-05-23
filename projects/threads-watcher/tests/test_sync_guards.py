@@ -948,3 +948,175 @@ class TestWarnOutcomeEvent:
         r = line.index('rate=')
         t = line.index('type=')
         assert h < r < t  # lex order: handle < rate < type
+
+
+# ── filter_warnings_for_emit (heartbeat dedup) ─────────────────────────
+
+
+class TestFilterWarningsForEmit:
+    """Heartbeat + rate-bucket dedup for partial_error_rate warnings.
+    Without this filter, sustained regimes emit ~288 lines/day/handle
+    at the 5-min launchd cadence. With it: bucket changes + heartbeat
+    every hour, otherwise silent."""
+
+    def _w(self, handle: str, rate: float) -> dict:
+        return {
+            'handle': handle,
+            'rate': rate,
+            'threshold': 0.5,
+            'window_hours': 1,
+            'total': 30,
+            'top_reason': 'x',
+        }
+
+    def test_first_emit_when_state_file_missing(self, tmp_path):
+        from sync_guards import filter_warnings_for_emit
+        state_path = tmp_path / "never.json"
+        warnings = [self._w('@h', 0.9)]
+        emittable, new_state = filter_warnings_for_emit(
+            warnings, state_path, now_ts=1000,
+        )
+        assert len(emittable) == 1
+        assert new_state == {'@h': {'bucket': 0.9, 'ts': 1000}}
+
+    def test_repeat_within_same_bucket_and_heartbeat_suppresses(self, tmp_path):
+        from sync_guards import filter_warnings_for_emit
+        state_path = tmp_path / "s.json"
+        state_path.write_text(
+            json.dumps({'@h': {'bucket': 0.9, 'ts': 1000}}), encoding='utf-8',
+        )
+        # 100s later, same bucket — should suppress.
+        emittable, new_state = filter_warnings_for_emit(
+            [self._w('@h', 0.91)], state_path, now_ts=1100, heartbeat_sec=3600,
+        )
+        assert emittable == []
+        # State preserves the ORIGINAL timestamp so heartbeat clock
+        # keeps counting from last EMITTED tick.
+        assert new_state == {'@h': {'bucket': 0.9, 'ts': 1000}}
+
+    def test_bucket_change_re_emits(self, tmp_path):
+        from sync_guards import filter_warnings_for_emit
+        state_path = tmp_path / "s.json"
+        state_path.write_text(
+            json.dumps({'@h': {'bucket': 0.6, 'ts': 1000}}), encoding='utf-8',
+        )
+        # Rate jumped 0.65 → 0.85 → bucket 0.6 → 0.8 → re-emit.
+        emittable, new_state = filter_warnings_for_emit(
+            [self._w('@h', 0.85)], state_path, now_ts=1100, heartbeat_sec=3600,
+        )
+        assert len(emittable) == 1
+        assert new_state['@h']['bucket'] == 0.8
+        assert new_state['@h']['ts'] == 1100
+
+    def test_heartbeat_elapsed_re_emits(self, tmp_path):
+        from sync_guards import filter_warnings_for_emit
+        state_path = tmp_path / "s.json"
+        state_path.write_text(
+            json.dumps({'@h': {'bucket': 0.9, 'ts': 1000}}), encoding='utf-8',
+        )
+        # Same bucket but >= heartbeat_sec elapsed (3600s default).
+        emittable, _ = filter_warnings_for_emit(
+            [self._w('@h', 0.91)], state_path, now_ts=1000 + 3601,
+            heartbeat_sec=3600,
+        )
+        assert len(emittable) == 1
+
+    def test_heartbeat_exactly_at_interval_re_emits(self, tmp_path):
+        # Boundary: elapsed == heartbeat_sec. The `>=` comparison
+        # means we should re-emit, not wait one more second.
+        from sync_guards import filter_warnings_for_emit
+        state_path = tmp_path / "s.json"
+        state_path.write_text(
+            json.dumps({'@h': {'bucket': 0.9, 'ts': 1000}}), encoding='utf-8',
+        )
+        emittable, _ = filter_warnings_for_emit(
+            [self._w('@h', 0.91)], state_path, now_ts=1000 + 3600,
+            heartbeat_sec=3600,
+        )
+        assert len(emittable) == 1
+
+    def test_recovered_handle_dropped_from_state(self, tmp_path):
+        from sync_guards import filter_warnings_for_emit
+        state_path = tmp_path / "s.json"
+        # @hot was warned previously; this tick it's not in warnings.
+        state_path.write_text(
+            json.dumps({'@hot': {'bucket': 0.9, 'ts': 1000}}), encoding='utf-8',
+        )
+        emittable, new_state = filter_warnings_for_emit(
+            [], state_path, now_ts=1100,
+        )
+        assert emittable == []
+        # State no longer mentions @hot — if it re-triggers later,
+        # the first-emit branch fires (no stale state from history).
+        assert '@hot' not in new_state
+
+    def test_multiple_handles_independent_state(self, tmp_path):
+        # @a is steady-state (bucket unchanged + heartbeat not elapsed
+        # → suppress), @b just crossed a bucket boundary (re-emit).
+        from sync_guards import filter_warnings_for_emit
+        state_path = tmp_path / "s.json"
+        state_path.write_text(json.dumps({
+            '@a': {'bucket': 0.7, 'ts': 1000},
+            '@b': {'bucket': 0.5, 'ts': 1000},
+        }), encoding='utf-8')
+        emittable, new_state = filter_warnings_for_emit(
+            [self._w('@a', 0.72), self._w('@b', 0.85)],
+            state_path, now_ts=1100, heartbeat_sec=3600,
+        )
+        assert [e['handle'] for e in emittable] == ['@b']
+        # @a state preserved, @b state advanced.
+        assert new_state['@a'] == {'bucket': 0.7, 'ts': 1000}
+        assert new_state['@b'] == {'bucket': 0.8, 'ts': 1100}
+
+    def test_corrupt_state_file_treated_as_empty(self, tmp_path):
+        # Operator (or disk corruption) wrote garbage. Don't crash —
+        # treat as no-prior-state so the next tick re-emits everything.
+        from sync_guards import filter_warnings_for_emit
+        state_path = tmp_path / "s.json"
+        state_path.write_text("not valid json {{", encoding='utf-8')
+        emittable, new_state = filter_warnings_for_emit(
+            [self._w('@h', 0.9)], state_path, now_ts=1000,
+        )
+        assert len(emittable) == 1
+        assert new_state == {'@h': {'bucket': 0.9, 'ts': 1000}}
+
+    def test_state_file_with_wrong_top_level_type(self, tmp_path):
+        # Defensive: file contains a JSON array, not an object.
+        # Treat as empty.
+        from sync_guards import filter_warnings_for_emit
+        state_path = tmp_path / "s.json"
+        state_path.write_text("[]", encoding='utf-8')
+        emittable, _ = filter_warnings_for_emit(
+            [self._w('@h', 0.9)], state_path, now_ts=1000,
+        )
+        assert len(emittable) == 1
+
+    def test_rate_bucket_boundary_0_5(self, tmp_path):
+        # Pin bucket math: 0.5 → 0.5, 0.49999 → 0.4. The strict
+        # boundary matters because the default threshold IS 0.5, so a
+        # warning at exactly rate=0.5 must bucket to 0.5 not 0.4.
+        from sync_guards import _rate_bucket
+        assert _rate_bucket(0.5) == 0.5
+        assert _rate_bucket(0.499) == 0.4
+        assert _rate_bucket(0.929) == 0.9
+        assert _rate_bucket(1.0) == 1.0
+
+    def test_three_identical_ticks_yield_exactly_one_emit(self, tmp_path):
+        # 🔒 Core operational win: a sustained regime that would have
+        # emitted 288 lines/day now emits ~24 (1/hour heartbeat) + 1
+        # per bucket crossing. Pin the per-tick suppression.
+        from sync_guards import filter_warnings_for_emit
+        state_path = tmp_path / "s.json"
+        total_emitted = 0
+        for i in range(3):
+            warnings = [self._w('@h', 0.92)]
+            emittable, new_state = filter_warnings_for_emit(
+                warnings, state_path,
+                now_ts=1000 + i * 60,  # 1 min apart, well under 3600s heartbeat
+                heartbeat_sec=3600,
+            )
+            total_emitted += len(emittable)
+            state_path.write_text(json.dumps(new_state), encoding='utf-8')
+        assert total_emitted == 1, (
+            f"Expected 1 emit across 3 identical ticks; got {total_emitted}"
+        )
