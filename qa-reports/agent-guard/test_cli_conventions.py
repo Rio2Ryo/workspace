@@ -67,6 +67,11 @@ TOOLS: list[Tool] = [
         runner=['node', 'scripts/cron-latency.mjs'],
         cwd=WORKSPACE / 'second-brain' / 'apps' / 'api',
     ),
+    Tool(
+        label='discord_payload.py',
+        runner=[sys.executable, 'discord_payload.py'],
+        cwd=WORKSPACE / 'projects' / 'threads-watcher',
+    ),
 ]
 
 
@@ -128,10 +133,17 @@ class TestCliConventions:
         )
 
     def test_json_flag_emits_parseable_json_on_empty_input(self, tool: Tool):
-        # `--json` is the machine-readable surface. Even with empty
-        # input (no events, no records), output MUST be parseable as
-        # JSON (the dashboard/Discord-hook side can `jq` it without a
-        # nullity guard at every consumer).
+        # `--json` is the machine-readable surface. Output MUST be
+        # parseable as JSON so the dashboard / Discord hook / `jq`
+        # consumer doesn't have to special-case the "no input" path.
+        #
+        # Shape varies by tool semantics:
+        #   - log aggregators (mttr.py, cron-latency.mjs): empty stdin
+        #     → empty list [] (no records to aggregate)
+        #   - state-render tools (discord_payload.py): default state
+        #     file → substantive dict (always produces an embed,
+        #     even an "all clear" one)
+        # The hard contract is just "parseable JSON" + "not None".
         r = _run(tool, ['--json'], input_text='')
         assert r.returncode == 0, (
             f"{tool.label}: empty-input --json should exit 0, got "
@@ -144,11 +156,8 @@ class TestCliConventions:
                 f"{tool.label}: --json output is not valid JSON: {e}\n"
                 f"stdout: {r.stdout[:300]}"
             )
-        # Both tools emit either [] (no records) or {} (empty dict).
-        # Pin: empty falsy structure, not null/None.
-        assert parsed in ([], {}) or len(parsed) == 0, (
-            f"{tool.label}: empty-input --json output should be falsy "
-            f"empty (got: {parsed!r})"
+        assert parsed is not None, (
+            f"{tool.label}: --json output must not be JSON null"
         )
 
 
@@ -156,10 +165,10 @@ class TestCliConventions:
 
 
 def test_tools_inventory_is_pinned():
-    # Pin the list so a refactor that adds a 3rd helper has to
+    # Pin the list so a refactor that adds another helper has to
     # deliberately extend this test rather than slip past.
     labels = sorted(t.label for t in TOOLS)
-    assert labels == ['cron-latency.mjs', 'mttr.py'], (
+    assert labels == ['cron-latency.mjs', 'discord_payload.py', 'mttr.py'], (
         f"TOOLS inventory drifted. Got {labels}. "
         f"If you ADDED a CLI helper, register it in TOOLS so the "
         f"shared conventions get tested. If you REMOVED one, update "
