@@ -23,6 +23,7 @@ import shutil
 import signal
 import stat
 import subprocess
+import time
 from pathlib import Path
 
 import pytest
@@ -146,7 +147,32 @@ def _run(sb: Path, *, pgrep_mode: str = "empty", diefast: bool = False,
         ["bash", "restart-watcher.sh"],
         cwd=str(sb), env=env, capture_output=True, text=True, timeout=40,
     )
-    return proc.returncode, proc.stdout + proc.stderr, (sb / ".run-watcher-called").exists()
+    # 🔒 Bounded poll for the launched-marker AFTER the parent exits.
+    # restart-watcher.sh nohup-launches run-watcher.sh in the background,
+    # sleeps LIVENESS_WAIT_SEC (0.3s in tests), then exits — but the
+    # `kill -0 NEW_PID` check inside it only verifies the bash wrapper
+    # PID *exists*, not that the wrapper has executed any of its body
+    # (touch / echo-pid / exec sleep). Under heavy CPU contention (e.g.,
+    # pre-commit hook running 995 tests in 48s on this same machine), the
+    # nohup child can still be in the scheduler's runqueue when the
+    # parent's 0.3s expires — `kill -0` passes (process exists), parent
+    # exits, subprocess.run returns, and a point-in-time existence check
+    # of `.run-watcher-called` observes False because `touch` hasn't run
+    # yet. Empirically reproduced 2026-05-23 in the pre-commit pre-flight
+    # run of commit 5aa44b8: `test_no_existing_process_launches_fresh`
+    # failed once under full-suite load but passed 3/3 in isolation.
+    #
+    # Poll up to 2s after the parent exits. For paths where the launch
+    # never happens (lock_held=True or pgrep_mode="always" + abort), the
+    # marker never appears and the poll just times out — returning False
+    # is the correct answer for those tests.
+    marker = sb / ".run-watcher-called"
+    deadline = time.monotonic() + 2.0
+    while time.monotonic() < deadline:
+        if marker.exists():
+            break
+        time.sleep(0.02)
+    return proc.returncode, proc.stdout + proc.stderr, marker.exists()
 
 
 @pytest.fixture
