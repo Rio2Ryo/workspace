@@ -5,14 +5,27 @@
     "@bmw_intokyo"
   ],
   "last_check": {
-    "checked_at": "2026-05-23T01:16:50Z",
-    "found_count": 13,
+    "checked_at": "2026-05-23T04:02:00Z",
+    "found_count": 4,
     "new_count": 0,
     "status": "partial_error",
-    "error": "profile extraction returned partial result: found=13 previous_max=15"
+    "error": "profile extraction returned partial result: found=4 previous_max=15"
   },
-  "saved_count": 52,
+  "saved_count": 53,
   "posts": [
+    {
+      "handle": "@hal.lifedesign",
+      "post_id": "DYqrpsQEoxK",
+      "post_url": "https://www.threads.com/@hal.lifedesign/post/DYqrpsQEoxK",
+      "first_seen_at": "2026-05-23T03:58:49Z",
+      "captured_at": "2026-05-23T03:58:54Z",
+      "screenshot_size_bytes": 382164,
+      "screenshot_width": 1280,
+      "screenshot_height": 1800,
+      "post_text": "\"情報は贅沢品ではない。生きるための最低必需品だ。体に取り入れる食べ物と同じく、摂取する情報を選ぶことは、われわれの義務であり権利だ。あなたの摂取するものがあなたをつくるーこれは食べ物にも情報にも言えること。\" SECOND BRAIN すごく尖った言い回しだけど、その通りだと思うし、ずっと意識してきたこと。 人は食べた物で身体を、読んだ本で頭を、人との関わりで心をつくる。 食べる物、読む本、関わる人で人はつくられるし、それが変われば人は変わる。 だからこそ、食べる物も、読む本も、関わる人も自分で意志を持って選択しなきゃね。",
+      "posted_at": "2026-05-23T03:57:41.000Z",
+      "screenshot_path": "screenshots/hal.lifedesign/DYqrpsQEoxK.png"
+    },
     {
       "handle": "@hal.lifedesign",
       "post_id": "DYqZJYKkl2U",
@@ -692,48 +705,68 @@
   ],
   "recent_stats": {
     "window_hours": 24,
-    "total": 859,
-    "ok": 347,
-    "partial_error": 496,
-    "error": 16,
+    "total": 858,
+    "ok": 334,
+    "partial_error": 507,
+    "error": 17,
     "other": 0,
-    "success_rate": 0.4039580908032596
+    "success_rate": 0.38927738927738925,
+    "partial_error_rate": 0.5909090909090909,
+    "top_partial_error_reason": {
+      "reason": "profile extraction returned partial result: found=4 previous_max=15",
+      "count": 470
+    }
   },
   "recent_stats_by_window": {
     "1": {
       "window_hours": 1,
-      "total": 38,
+      "total": 40,
       "ok": 12,
-      "partial_error": 22,
-      "error": 4,
+      "partial_error": 27,
+      "error": 1,
       "other": 0,
-      "success_rate": 0.3157894736842105
+      "success_rate": 0.3,
+      "partial_error_rate": 0.675,
+      "top_partial_error_reason": {
+        "reason": "profile extraction returned partial result: found=4 previous_max=15",
+        "count": 26
+      }
     },
     "24": {
       "window_hours": 24,
-      "total": 859,
-      "ok": 347,
-      "partial_error": 496,
-      "error": 16,
+      "total": 858,
+      "ok": 334,
+      "partial_error": 507,
+      "error": 17,
       "other": 0,
-      "success_rate": 0.4039580908032596
+      "success_rate": 0.38927738927738925,
+      "partial_error_rate": 0.5909090909090909,
+      "top_partial_error_reason": {
+        "reason": "profile extraction returned partial result: found=4 previous_max=15",
+        "count": 470
+      }
     },
     "168": {
       "window_hours": 168,
-      "total": 5069,
-      "ok": 2456,
-      "partial_error": 2596,
-      "error": 17,
+      "total": 5183,
+      "ok": 2477,
+      "partial_error": 2688,
+      "error": 18,
       "other": 0,
-      "success_rate": 0.4845137107910831
+      "success_rate": 0.47790854717345166,
+      "partial_error_rate": 0.5186185606791434,
+      "top_partial_error_reason": {
+        "reason": "profile extraction returned partial result: found=4 previous_max=15",
+        "count": 2555
+      }
     }
   },
   "sync_state": {
-    "cursor": 74,
-    "db_max": 75,
+    "cursor": 75,
+    "db_max": 76,
     "delta": 1,
     "cursor_file_exists": true
   },
   "dry_run_alert": null,
-  "snapshot_generated_at": "2026-05-23T01:16:50Z"
+  "snapshot_generated_at": "2026-05-23T04:02:00Z"
 }
