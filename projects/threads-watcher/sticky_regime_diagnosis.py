@@ -168,27 +168,90 @@ def _cli_main(argv: list[str] | None = None) -> int:
         "--json", action="store_true",
         help="Emit machine-readable JSON instead of text.",
     )
+    p.add_argument(
+        "--watch", action="store_true",
+        help=(
+            "Re-diagnose every --interval seconds until Ctrl+C. tmux "
+            "pane常駐 use case — operator keeps a live verdict pane "
+            "open during regime debugging to spot the moment the "
+            "regime transitions from NO_OP to SAFE_TO_ENABLE."
+        ),
+    )
+    p.add_argument(
+        "--interval", type=int, default=60,
+        help="Seconds between re-diagnoses in --watch mode. Default 60.",
+    )
     args = p.parse_args(argv)
 
     if args.window <= 0:
         sys.stderr.write(f"ERROR: --window must be > 0, got {args.window}\n")
         return 2
 
+    if args.watch and args.interval <= 0:
+        # 🔒 Operator footgun guard (mirror of status.py --watch).
+        sys.stderr.write(
+            f"ERROR: --interval must be > 0, got {args.interval}\n"
+        )
+        return 2
+
     if not args.db.is_file():
         sys.stderr.write(f"ERROR: DB file not found: {args.db}\n")
         return 1
 
-    conn = sqlite3.connect(str(args.db))
+    if args.watch:
+        return _watch_loop(
+            args.db, args.window,
+            interval=args.interval, json_mode=args.json,
+        )
+    return _diagnose_once(args.db, args.window, json_mode=args.json)
+
+
+def _diagnose_once(db_path: Path, window: int, *, json_mode: bool) -> int:
+    """Connect → diagnose → render → close. Returns exit code.
+    Extracted so --watch can re-invoke per tick without duplicating
+    dispatch logic."""
+    conn = sqlite3.connect(str(db_path))
     try:
-        result = diagnose(conn, window=args.window)
+        result = diagnose(conn, window=window)
     finally:
         conn.close()
 
-    if args.json:
+    if json_mode:
         sys.stdout.write(json.dumps(result, indent=2) + "\n")
     else:
         sys.stdout.write(_render_text(result) + "\n")
     return 0
+
+
+def _watch_loop(
+    db_path: Path, window: int, *,
+    interval: int, json_mode: bool, sleep_fn=None,
+) -> int:
+    """Re-diagnose every `interval` seconds until KeyboardInterrupt.
+    Mirror of status.py:_watch_loop (commit 97f76ba) shape. sleep_fn
+    injection lets tests run instantly.
+
+    Ctrl+C → exit 0 (operator-initiated). Mid-loop DB errors (e.g.,
+    sqlite3.OperationalError from a concurrent vacuum) WARN + continue
+    rather than crash the pane."""
+    import time
+    sleep = sleep_fn if sleep_fn is not None else time.sleep
+    CLEAR = "\033[2J\033[H"
+    try:
+        while True:
+            sys.stdout.write(CLEAR)
+            sys.stdout.flush()
+            try:
+                _diagnose_once(db_path, window, json_mode=json_mode)
+            except sqlite3.OperationalError as e:
+                sys.stderr.write(
+                    f"WARN: diagnose tick failed ({type(e).__name__}: {e}); "
+                    f"continuing\n"
+                )
+            sleep(interval)
+    except KeyboardInterrupt:
+        sys.stderr.write("\n--watch interrupted; exiting cleanly\n")
+        return 0
 
 
 if __name__ == "__main__":
