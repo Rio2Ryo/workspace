@@ -934,12 +934,24 @@ def _do_commit_and_maybe_push(
         log.log(format_outcome_event('error', delta=decision.delta, extra={'stage': 'git_diff_probe'}))
         return 1
     if other.stdout:
+        # Path count is operator-useful in the structured event so
+        # `grep "sync_event: error" logs/sync.log | grep -o "staged_others_count=[0-9]*"`
+        # gives a histogram of how blocking the WIP was (1 stray file
+        # vs. 20+ paths post-rebase look very different). The human
+        # log line above carries the names; this carries the count
+        # so operators can scan severity without parsing the prose.
+        # Empirically observed 2026-05-23 10:58:43Z when a single
+        # staged test file blocked auto-sync for one 5-min tick.
+        staged_count = sum(1 for line in other.stdout.splitlines() if line.strip())
         log.log(
             "ABORT: unrelated files are already staged in the workspace; "
             "refusing to commit to avoid bundling WIP into the snapshot commit. "
             f"staged-others: {other.stdout.replace(chr(10), ', ')}"
         )
-        log.log(format_outcome_event('error', delta=decision.delta, extra={'stage': 'unrelated_staged'}))
+        log.log(format_outcome_event(
+            'error', delta=decision.delta,
+            extra={'stage': 'unrelated_staged', 'staged_others_count': staged_count},
+        ))
         return 1
 
     add_res = run_cmd(build_git_add_args(args.workspace, args.snapshot_rel))

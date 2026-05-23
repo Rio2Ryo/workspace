@@ -629,6 +629,46 @@ def test_error_event_emitted_when_unrelated_file_staged(tmp_path):
     # to see the histogram of error causes.
     assert "sync_event: error" in log_text
     assert "stage=unrelated_staged" in log_text
+    # 🔒 Pin: the human-readable ABORT line MUST name the staged
+    # file so the operator can `git restore --staged <path>` without
+    # having to `git status` separately. Empirically the live
+    # 2026-05-23T10:58:43Z incident emitted the file name; pinning
+    # so a future refactor of the log format can't strip it silently
+    # (operators would otherwise see only "ABORT: unrelated files
+    # are already staged" with no path to act on).
+    assert "staged-others: foreign.txt" in log_text
+    # 🔒 Pin: the structured event MUST carry a count so
+    #   grep "sync_event: error" logs/sync.log \\
+    #       | grep -o "staged_others_count=[0-9]*"
+    # gives the severity histogram (1 stray file vs 20+ paths
+    # post-rebase look very different).
+    assert "staged_others_count=1" in log_text
+
+
+def test_unrelated_staged_log_lists_multiple_files_with_count(tmp_path):
+    """Multi-file abort: both the human line lists every blocker AND
+    the structured event count matches."""
+    paths = _seed_repo(tmp_path)
+    _mutate_snapshot(paths["snapshot"], n=2)
+    # Stage two unrelated files at once. This is the realistic shape
+    # after an interrupted rebase / `git add -A` mishap.
+    for name in ("alpha.txt", "beta.txt"):
+        (paths["workspace"] / name).write_text("wip", encoding="utf-8")
+        _run("git", "add", name, cwd=paths["workspace"])
+
+    rc = sync_mod.main(_argv(paths, "--confirm"))
+    assert rc == 1
+
+    log_text = paths["log"].read_text(encoding="utf-8")
+    assert "stage=unrelated_staged" in log_text
+    # 🔒 BOTH file names listed in the human ABORT line. If the
+    # log format ever drops the names or only emits the first one,
+    # operators lose the ability to scan the log for the offender
+    # without a separate git command.
+    assert "alpha.txt" in log_text
+    assert "beta.txt" in log_text
+    # 🔒 Count matches the actual blocker cardinality.
+    assert "staged_others_count=2" in log_text
 
 
 def test_committed_event_does_NOT_appear_on_push_retry_when_snapshot_already_committed(tmp_path):
