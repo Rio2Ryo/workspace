@@ -262,6 +262,157 @@ class TestDown0052Idempotency:
         )
 
 
+# ── Idempotent down scripts: runtime proof of pattern-match classification ─
+#
+# The static lint classifies these 9 as idempotent based on shape
+# (DROP TABLE/INDEX IF EXISTS, no rename-dance, no DROP COLUMN). This
+# class is the runtime counterpart — actually executes each one twice
+# against a minimal stub schema and pins that:
+#   1. First run drops the target tables (the script does what it
+#      claims to do).
+#   2. Second run completes silently (the pattern-match
+#      classification holds at runtime, not just at compile time).
+#
+# Catches regressions like: a future down script that ADDS a non-
+# idempotent statement after the DROPs (e.g., an `ALTER TABLE` for
+# cleanup), passes the pattern-match lint because the offending
+# statement type isn't checked, but breaks at runtime on re-run.
+
+
+# Pinned set: idempotent_today from down-script-idempotency-lint.test.ts.
+# This MUST stay in sync with the apps/api lint's `expectedIdempotent`
+# Set — if a script is removed from one place it should be removed
+# from the other (with a deliberate cross-reference in the PR).
+IDEMPOTENT_DOWN_SCRIPTS = [
+    "down_0049.sql", "down_0050.sql", "down_0051.sql",
+    "down_0053.sql", "down_0054.sql", "down_0055.sql",
+    "down_0056.sql", "down_0057.sql", "down_0058.sql",
+]
+
+
+def _extract_drop_table_targets(sql: str) -> list[str]:
+    """Pull every `DROP TABLE [IF EXISTS] <name>` target out of an
+    idempotent down script. The minimal stub schema only needs these
+    tables to exist — DROP INDEX IF EXISTS on a missing index is a
+    no-op, doesn't need preconditions."""
+    matches = re.findall(
+        r"DROP\s+TABLE\s+(?:IF\s+EXISTS\s+)?(\w+)\s*;",
+        sql, re.IGNORECASE,
+    )
+    return matches
+
+
+def _build_stub_schema(table_names: list[str]) -> str:
+    """Minimal stub: just an empty table with a single column for each
+    name. Doesn't need to match the real schema — DROP TABLE doesn't
+    care about column structure, just that the table exists. Skips
+    duplicates so a script that touches the same table twice (rare,
+    but defensive) doesn't fail with `table foo already exists`."""
+    seen: set[str] = set()
+    stmts: list[str] = []
+    for name in table_names:
+        if name in seen:
+            continue
+        seen.add(name)
+        stmts.append(f"CREATE TABLE {name} (id INTEGER PRIMARY KEY);")
+    return "\n".join(stmts)
+
+
+class TestIdempotentDownScriptsRuntime:
+    """Empirical pin: every script the static lint calls idempotent
+    actually IS idempotent when sqlite3 runs it twice."""
+
+    @pytest.mark.parametrize("script_name", IDEMPOTENT_DOWN_SCRIPTS)
+    def test_pinned_idempotent_script_actually_runs_twice_silently(
+        self, script_name,
+    ):
+        path = DOWN_DIR / script_name
+        assert path.is_file(), f"missing pinned script: {path}"
+        sql = path.read_text(encoding="utf-8")
+        targets = _extract_drop_table_targets(sql)
+        # Two legitimate cases here:
+        #   - Script has DROP TABLE targets → build stub schema with
+        #     those tables, verify first run drops them.
+        #   - Script is index-only (e.g., down_0057 reverts a
+        #     standalone CREATE INDEX) → no stub needed; the DROP
+        #     INDEX IF EXISTS clauses are no-ops on empty DB and that
+        #     IS the idempotency proof. Don't surface as a failure.
+
+        conn = _fresh()
+        try:
+            if targets:
+                conn.executescript(_build_stub_schema(targets))
+            # First run — must succeed and remove every target table
+            # (or no-op cleanly when index-only).
+            conn.executescript(sql)
+            after_first = {
+                row[0] for row in conn.execute(
+                    "SELECT name FROM sqlite_master WHERE type='table'"
+                )
+            }
+            for t in targets:
+                assert t not in after_first, (
+                    f"{script_name}: first run did not drop {t!r}. "
+                    f"Remaining tables: {sorted(after_first)}"
+                )
+            # 🔒 Second run — MUST complete silently (this is the
+            # idempotent claim). Any OperationalError = the
+            # pattern-match classification disagrees with runtime.
+            try:
+                conn.executescript(sql)
+            except sqlite3.OperationalError as e:
+                pytest.fail(
+                    f"{script_name}: classifier says idempotent, but "
+                    f"second sqlite3 invocation errored: {e!r}. "
+                    f"Either:\n"
+                    f"  (a) Update down-script-idempotency-lint.test.ts "
+                    f"to remove this from expectedIdempotent + add an "
+                    f"'Idempotent: no' marker to the header + describe "
+                    f"the re-run failure mode (the test you're reading "
+                    f"shipped with that contract for the non-idempotent "
+                    f"down_0048/0052).\n"
+                    f"  (b) Fix the script (probably a missing IF EXISTS "
+                    f"on a newly-added DROP statement)."
+                )
+            # Sanity: second run leaves the schema in the same target-
+            # tables-gone state as the first run.
+            after_second = {
+                row[0] for row in conn.execute(
+                    "SELECT name FROM sqlite_master WHERE type='table'"
+                )
+            }
+            assert after_first == after_second, (
+                f"{script_name}: second run mutated the schema in a way "
+                f"the first didn't. First-after: {sorted(after_first)}. "
+                f"Second-after: {sorted(after_second)}"
+            )
+        finally:
+            conn.close()
+
+    def test_pinned_idempotent_set_matches_disk_inventory(self):
+        # If a NEW down script lands and the workspace test isn't
+        # updated to include it, the test only knows about the 9 pinned
+        # ones — the new script could be non-idempotent and the contract
+        # would silently miss it. Pin: every disk down_NNNN.sql with
+        # NNNN >= 49 (the lint's COVERAGE_FLOOR + 1, since 0048 is
+        # non-idempotent) and != 52 (also non-idempotent) MUST be in
+        # the pinned set above. Forces a deliberate inventory update
+        # at PR time.
+        disk = sorted(
+            p.name for p in DOWN_DIR.glob("down_*.sql")
+            if p.name not in {"down_0048.sql", "down_0052.sql"}
+        )
+        pinned = sorted(IDEMPOTENT_DOWN_SCRIPTS)
+        missing = [d for d in disk if d not in pinned]
+        assert not missing, (
+            f"New down script(s) not pinned in IDEMPOTENT_DOWN_SCRIPTS: "
+            f"{missing}. If the script is intentionally idempotent, add "
+            f"it to the pinned set. If it's intentionally non-idempotent, "
+            f"add a TestDown<NNNN>Idempotency class above following the "
+            f"pattern used by 0048/0052."
+        )
+
+
 # ── Sanity: SQLite version supports ALTER TABLE DROP COLUMN ───────────
 
 
