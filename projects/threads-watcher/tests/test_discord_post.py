@@ -742,3 +742,181 @@ class TestCliCooldownEndToEnd:
             "min-severity-filter skip should NOT create cooldown state; "
             "doing so would corrupt the dedup signal for future calls"
         )
+
+
+# ── End-to-end against a real local HTTP listener ──────────────────────
+#
+# All other discord_post tests mock urlopen. That covers logic
+# correctness but doesn't prove the wire-level chain:
+#   build_request → urllib socket → real HTTP POST → server reads bytes
+# A future change that breaks header serialization, body encoding, or
+# the User-Agent expectation would slip past the mocks. This class
+# stands up a stdlib http.server mock-Discord and asserts on what
+# ACTUALLY reaches the wire.
+
+
+import http.server  # noqa: E402
+import socketserver  # noqa: E402
+import threading  # noqa: E402
+import contextlib  # noqa: E402
+
+
+# Captures (path, body_bytes, headers, status_to_return) per request.
+# Module-level mutable so the handler class can write into it without
+# constructor plumbing. Each test reads + clears before/after.
+_CAPTURED_REQUESTS: list[dict] = []
+_RETURN_STATUS = [204]  # mutable so a test can set 4xx before requesting
+
+
+class _MockDiscordHandler(http.server.BaseHTTPRequestHandler):
+    def do_POST(self):  # noqa: N802 (BaseHTTPRequestHandler convention)
+        length = int(self.headers.get("Content-Length", "0"))
+        body = self.rfile.read(length) if length else b""
+        _CAPTURED_REQUESTS.append({
+            "path": self.path,
+            "body": body,
+            "content_type": self.headers.get("Content-Type"),
+            "user_agent": self.headers.get("User-Agent"),
+        })
+        status = _RETURN_STATUS[0]
+        self.send_response(status)
+        self.send_header("Content-Length", "0")
+        self.end_headers()
+
+    def log_message(self, *args, **kwargs):
+        # Silence the per-request stderr noise. Tests check
+        # _CAPTURED_REQUESTS, not the server log.
+        pass
+
+
+@contextlib.contextmanager
+def _mock_discord_server():
+    """Spin up a localhost http.server on a free port, yield (host, port).
+    Cleans up the thread on exit."""
+
+    class _Server(socketserver.ThreadingTCPServer):
+        allow_reuse_address = True
+
+    httpd = _Server(("127.0.0.1", 0), _MockDiscordHandler)
+    port = httpd.server_address[1]
+    thread = threading.Thread(target=httpd.serve_forever, daemon=True)
+    thread.start()
+    try:
+        yield ("127.0.0.1", port)
+    finally:
+        httpd.shutdown()
+        thread.join(timeout=5)
+
+
+class TestEndToEndAgainstMockDiscord:
+    """No urlopen mocks — real socket I/O against an in-process HTTP
+    server. Catches wire-level regressions the unit tests can't see."""
+
+    def _write_state(self, tmp_path, **overrides):
+        state = {
+            "snapshot_generated_at": "ts",
+            "open_incidents": [], "mttr_summary": [],
+        }
+        state.update(overrides)
+        import time
+        if "open_incidents" not in overrides:
+            state["open_incidents"] = [{
+                "handle": "@y",
+                "warn_ts": int(time.time()) - 2 * 3600,
+                "current_bucket": 0.6,
+            }]
+        path = tmp_path / "state.json"
+        path.write_text(json.dumps(state), encoding="utf-8")
+        return path
+
+    def setup_method(self):
+        _CAPTURED_REQUESTS.clear()
+        _RETURN_STATUS[0] = 204  # Discord's documented success
+
+    def test_real_post_succeeds_and_carries_full_payload(self, tmp_path, monkeypatch):
+        # 🔒 Headline e2e: socket-level chain produces a valid
+        # Discord-shaped POST and exit 0. The unit tests pin the
+        # behaviour against a mock; this pins it against bytes
+        # actually traveling over a TCP connection.
+        state_path = self._write_state(tmp_path)
+        with _mock_discord_server() as (host, port):
+            url = f"http://{host}:{port}/api/webhooks/1234567890/abctok"
+            monkeypatch.setenv(ENV_WEBHOOK_URL, url)
+            rc = _cli_main([str(state_path)])
+        assert rc == 0
+        assert len(_CAPTURED_REQUESTS) == 1
+        req = _CAPTURED_REQUESTS[0]
+        # The URL path the server saw must be Discord's webhook
+        # shape, not anything mangled by url-building.
+        assert req["path"] == "/api/webhooks/1234567890/abctok"
+        # Content-Type pinned by build_request — header parsing on
+        # Discord's side is strict; a missing charset hint or a
+        # `application/x-www-form-urlencoded` slip would 4xx.
+        assert req["content_type"] == "application/json"
+        # User-Agent identifies the tool to Discord-side log triage.
+        assert "threads-watcher" in (req["user_agent"] or "")
+        # Body must parse as JSON + carry the expected embed shape.
+        body = json.loads(req["body"])
+        assert body["username"] == "threads-watcher"
+        assert len(body["embeds"]) == 1
+        embed = body["embeds"][0]
+        assert embed["title"] == "threads-watcher status"
+        # Severity-driven color (yellow for 2h-old incident).
+        assert embed["color"] in (0xB86B00, 0xCC3333)
+        # description was added in commit 831705e — must reach wire.
+        assert "🟡" in embed["description"] or "🔴" in embed["description"]
+
+    def test_4xx_response_exits_one_with_body_in_stderr(
+        self, tmp_path, monkeypatch, capsys,
+    ):
+        # 🔒 Pins the error-surfacing contract: 4xx response is
+        # treated as failure, body is shown to the operator so
+        # they can read Discord's actual reason without strace.
+        state_path = self._write_state(tmp_path)
+        _RETURN_STATUS[0] = 401
+        with _mock_discord_server() as (host, port):
+            url = f"http://{host}:{port}/api/webhooks/1/abctoken"
+            monkeypatch.setenv(ENV_WEBHOOK_URL, url)
+            rc = _cli_main([str(state_path)])
+        assert rc == 1
+        err = capsys.readouterr().err
+        # The status code lands in stderr — operator's primary
+        # signal that the webhook was rejected.
+        assert "401" in err
+
+    def test_dry_run_does_not_actually_post(
+        self, tmp_path, monkeypatch, capsys,
+    ):
+        # Defensive belt-and-braces: --dry-run + URL set must NOT
+        # touch the wire. The unit tests assert via mock; this
+        # pins via "the mock server never saw a request".
+        state_path = self._write_state(tmp_path)
+        with _mock_discord_server() as (host, port):
+            url = f"http://{host}:{port}/api/webhooks/1/tok"
+            monkeypatch.setenv(ENV_WEBHOOK_URL, url)
+            rc = _cli_main([str(state_path), "--dry-run"])
+        assert rc == 0
+        assert len(_CAPTURED_REQUESTS) == 0, (
+            f"--dry-run must NOT hit the wire, but mock server "
+            f"captured {len(_CAPTURED_REQUESTS)} request(s)"
+        )
+        assert "DRY RUN" in capsys.readouterr().out
+
+    def test_severity_filter_skips_before_hitting_wire(
+        self, tmp_path, monkeypatch,
+    ):
+        # 🔒 Same property as the mock-based test, now proven at
+        # the socket level: --min-severity warn with a GREEN state
+        # must not POST. If the filter ran AFTER urlopen by accident
+        # (refactor regression), the mock server would catch it.
+        green_state = tmp_path / "g.json"
+        green_state.write_text(json.dumps({
+            "snapshot_generated_at": "ts",
+            "open_incidents": [], "mttr_summary": [],
+        }), encoding="utf-8")
+        with _mock_discord_server() as (host, port):
+            url = f"http://{host}:{port}/api/webhooks/1/tok"
+            monkeypatch.setenv(ENV_WEBHOOK_URL, url)
+            rc = _cli_main([str(green_state), "--min-severity", "warn"])
+        assert rc == 0
+        assert len(_CAPTURED_REQUESTS) == 0
