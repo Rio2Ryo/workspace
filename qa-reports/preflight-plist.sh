@@ -348,12 +348,64 @@ fi
 
 # 6. If a target already exists in ~/Library/LaunchAgents, warn but
 #    don't fail (operator might be reinstalling).
+# $LAUNCHAGENTS_DIR override (default: $HOME/Library/LaunchAgents) for
+# tests; operator always wants the system path.
+LAUNCHAGENTS_DIR="${LAUNCHAGENTS_DIR:-$HOME/Library/LaunchAgents}"
 if [ -n "$LABEL" ]; then
-  TARGET="$HOME/Library/LaunchAgents/${LABEL}.plist"
+  TARGET="$LAUNCHAGENTS_DIR/${LABEL}.plist"
   if [ -f "$TARGET" ]; then
-    printf 'NOTE: ~/Library/LaunchAgents/%s.plist already exists.\n' "$LABEL"
+    printf 'NOTE: %s/%s.plist already exists.\n' "$LAUNCHAGENTS_DIR" "$LABEL"
     printf '      If installing a new version, unload first:\n'
     printf '        launchctl unload -w %s\n' "$TARGET"
+  fi
+fi
+
+# 7. Mutex-group install-time conflict detection.
+#
+# Some plists are documented as mutually exclusive (e.g.,
+# sticky-regime-alert vs sticky-alert-discord both run the same
+# diagnose-on-cron; enabling both double-fires every transition,
+# bidirectional docstring lint enforces that the warning exists in
+# both — commit 5c921fa). The docstring is operator-FACING; this
+# check is operator-PROACTIVE: warn at install time if a conflicting
+# plist is already in $LAUNCHAGENTS_DIR.
+#
+# Pinned mutex groups (each group = labels that can't coexist):
+#   sticky-regime-alert ⇄ sticky-alert-discord
+#
+# Hardcoded list is fine — adding a new mutex group requires
+# deliberate code change. Auto-detection from docstrings would over-
+# trigger; explicit list keeps the operator-facing warning
+# trustworthy.
+declare_mutex_group() {
+  # Echo the OTHER mutex member(s) for a given Label, one per line.
+  case "$1" in
+    com.shiro.threads-watcher-sticky-regime-alert)
+      echo com.shiro.threads-watcher-sticky-alert-discord
+      ;;
+    com.shiro.threads-watcher-sticky-alert-discord)
+      echo com.shiro.threads-watcher-sticky-regime-alert
+      ;;
+  esac
+}
+if [ -n "$LABEL" ]; then
+  CONFLICTS=$(declare_mutex_group "$LABEL")
+  if [ -n "$CONFLICTS" ]; then
+    while IFS= read -r OTHER; do
+      [ -z "$OTHER" ] && continue
+      OTHER_TARGET="$LAUNCHAGENTS_DIR/${OTHER}.plist"
+      if [ -f "$OTHER_TARGET" ]; then
+        # WARN (not fail) — operator may have deliberate reason to
+        # have both during a brief migration window.
+        printf 'WARN: mutex conflict with already-installed %s.plist\n' "$OTHER" >&2
+        printf '       Both run sticky_regime_diagnosis hourly; enabling\n' >&2
+        printf '       both will double-fire on every transition.\n' >&2
+        printf '       Either unload the other plist before loading this one:\n' >&2
+        printf '         launchctl unload -w %s\n' "$OTHER_TARGET" >&2
+        printf '         rm %s\n' "$OTHER_TARGET" >&2
+        printf '       OR override deliberately if you know what you are doing.\n' >&2
+      fi
+    done <<<"$CONFLICTS"
   fi
 fi
 

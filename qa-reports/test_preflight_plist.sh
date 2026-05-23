@@ -332,6 +332,52 @@ assert_exit "--cooldown=0 (disabled, valid) passes" 0 $?
 "$PREFLIGHT" --check-only "$REPO_ROOT/projects/threads-watcher/com.shiro.threads-watcher-sync.plist" >/dev/null 2>&1
 assert_exit "non-discord_post plist unaffected by cooldown check" 0 $?
 
+# ── case 11: mutex-group install-time conflict detection ──────────────
+
+printf '\n=== mutex-group install-time conflict ===\n'
+
+# Set up a fake LAUNCHAGENTS_DIR + pre-install the mutex partner.
+FAKE_LAD="$TMP/fake-launchagents"
+mkdir -p "$FAKE_LAD"
+
+# Pre-install sticky-regime-alert.plist in fake LAUNCHAGENTS dir.
+cp "$REPO_ROOT/projects/threads-watcher/com.shiro.threads-watcher-sticky-regime-alert.plist.example" \
+   "$FAKE_LAD/com.shiro.threads-watcher-sticky-regime-alert.plist"
+
+# 🔒 Running preflight on sticky-alert-discord NOW should WARN about
+# the mutex conflict (sticky-regime-alert is "installed").
+OUTPUT=$(LAUNCHAGENTS_DIR="$FAKE_LAD" "$PREFLIGHT" --check-only \
+  "$REPO_ROOT/projects/threads-watcher/com.shiro.threads-watcher-sticky-alert-discord.plist.example" 2>&1)
+RC=$?
+# WARN doesn't fail — operator may have deliberate override reason.
+# Exit 0 + WARN line.
+assert_exit "mutex conflict WARN but still exits 0" 0 $RC
+assert_contains "WARN names the conflicting plist" "sticky-regime-alert" "$OUTPUT"
+assert_contains "WARN explains double-fire hazard" "double-fire" "$OUTPUT"
+assert_contains "WARN suggests unload command" "launchctl unload" "$OUTPUT"
+
+# 🔒 Inverse: pre-install the OTHER member, preflight the first.
+rm "$FAKE_LAD/com.shiro.threads-watcher-sticky-regime-alert.plist"
+cp "$REPO_ROOT/projects/threads-watcher/com.shiro.threads-watcher-sticky-alert-discord.plist.example" \
+   "$FAKE_LAD/com.shiro.threads-watcher-sticky-alert-discord.plist"
+
+OUTPUT=$(LAUNCHAGENTS_DIR="$FAKE_LAD" "$PREFLIGHT" --check-only \
+  "$REPO_ROOT/projects/threads-watcher/com.shiro.threads-watcher-sticky-regime-alert.plist.example" 2>&1)
+assert_contains "WARN inverse direction names conflicting plist" "sticky-alert-discord" "$OUTPUT"
+
+# 🔒 No false positive: preflighting a non-mutex plist with the same
+# LAUNCHAGENTS_DIR setup should NOT emit a mutex WARN.
+OUTPUT=$(LAUNCHAGENTS_DIR="$FAKE_LAD" "$PREFLIGHT" --check-only \
+  "$REPO_ROOT/projects/threads-watcher/com.shiro.threads-watcher-backup.plist.example" 2>&1)
+assert_not_contains "no false-positive WARN for non-mutex plist" "mutex conflict" "$OUTPUT"
+
+# 🔒 Empty LAUNCHAGENTS_DIR (clean install) — no WARN.
+rm -rf "$FAKE_LAD"
+mkdir -p "$FAKE_LAD"
+OUTPUT=$(LAUNCHAGENTS_DIR="$FAKE_LAD" "$PREFLIGHT" --check-only \
+  "$REPO_ROOT/projects/threads-watcher/com.shiro.threads-watcher-sticky-regime-alert.plist.example" 2>&1)
+assert_not_contains "no WARN when no partner installed" "mutex conflict" "$OUTPUT"
+
 # ── summary ────────────────────────────────────────────────────────────
 
 printf '\n=== summary ===\n'
