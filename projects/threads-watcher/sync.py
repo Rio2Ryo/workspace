@@ -498,6 +498,20 @@ def parse_args(argv: list[str] | None) -> argparse.Namespace:
             "path.N). Only effective when --max-log-bytes > 0."
         ),
     )
+    p.add_argument(
+        "--check-warnings-only",
+        action="store_true",
+        help=(
+            "Run ONLY the partial_error_rate health-check (emits "
+            "sync_event: warn / recovered lines to --log and exits). "
+            "Skips evaluate_all, the commit/push path, AND the lock "
+            "acquisition — safe to call alongside a real sync.py "
+            "invocation. Wired into publish-if-delta.sh's no-delta "
+            "exit path so the warn signal fires EVERY tick, not just "
+            "ticks with new posts (which is when the regular sync.py "
+            "runs)."
+        ),
+    )
     return p.parse_args(argv)
 
 
@@ -678,9 +692,64 @@ def main(argv: list[str] | None = None) -> int:
     if not args.db.exists():
         log.log(f"ERROR: db not found: {args.db}")
         return 1
-    if not args.snapshot.exists():
+    # snapshot-existence check is for the COMMIT path only; the
+    # check-warnings-only mode runs purely against the DB.
+    if not args.check_warnings_only and not args.snapshot.exists():
         log.log(f"ERROR: snapshot not found: {args.snapshot}")
         return 1
+
+    # ── Check-warnings-only fast path ───────────────────────────────────
+    # Skips lock + evaluate_all + commit. Just runs the per-handle
+    # partial_error_rate health check, emits warn/recovered lines
+    # through the same dedup state file as the full sync, and exits.
+    # Lock-free is deliberate: this is read-only against the DB and
+    # the dedup state file write is idempotent (last writer wins,
+    # and the state itself is recoverable from log replay via mttr.py).
+    if args.check_warnings_only:
+        conn = sqlite3.connect(args.db)
+        conn.row_factory = sqlite3.Row
+        try:
+            all_warnings = compute_partial_error_rate_warnings(
+                conn,
+                threshold=DEFAULT_PARTIAL_ERROR_RATE_THRESHOLD,
+                window_hours=DEFAULT_WARN_WINDOW_HOURS,
+            )
+            warn_state_path = args.log.parent / '.sync-warn-last-state'
+            emittable, recovered, new_state = filter_warnings_for_emit(
+                all_warnings,
+                warn_state_path,
+                now_ts=int(time.time()),
+                heartbeat_sec=DEFAULT_WARN_HEARTBEAT_SEC,
+            )
+            for w in emittable:
+                log.log(format_outcome_event(
+                    'warn', delta=0,
+                    extra={
+                        'type': 'partial_error_rate',
+                        'handle': w['handle'],
+                        'rate': w['rate'],
+                        'threshold': w['threshold'],
+                        'window_hours': w['window_hours'],
+                        'total': w['total'],
+                    },
+                ))
+            for rec in recovered:
+                log.log(format_outcome_event(
+                    'recovered', delta=0,
+                    extra={
+                        'type': 'partial_error_rate',
+                        'handle': rec['handle'],
+                        'prev_bucket': rec['prev_bucket'],
+                    },
+                ))
+            try:
+                warn_state_path.parent.mkdir(parents=True, exist_ok=True)
+                warn_state_path.write_text(json.dumps(new_state), encoding='utf-8')
+            except OSError:
+                pass
+        finally:
+            conn.close()
+        return 0
 
     # Lock BEFORE opening the DB / reading the cursor. The launchd cycle
     # is purely periodic — if another sync is in progress, skipping this

@@ -71,6 +71,14 @@ def _make_sandbox(tmp_path: Path) -> Path:
     _write_exec(sb / "venv" / "bin" / "python", (
         "#!/bin/sh\n"
         'if [ "$1" = "sync.py" ]; then\n'
+        # --check-warnings-only is a separate, lock-free, read-only mode
+        # that the publish-if-delta.sh no-delta path invokes for the
+        # partial_error_rate health check. It does NOT count as a "sync"
+        # for these tests — the existing assertions track whether the
+        # FULL commit/push path ran, which warn-only never does.
+        '  case " $* " in\n'
+        '    *" --check-warnings-only "*) touch .warn-check-called; exit 0;;\n'
+        '  esac\n'
         "  touch .sync-called\n"
         '  [ -f .sync-should-fail ] && exit 1\n'
         '  if [ -f .sync-skip-cursor ]; then\n'
@@ -497,3 +505,69 @@ def test_log_rotation_backup_count_env_override(sandbox: Path) -> None:
     assert (sandbox / "logs" / "publish.log.1").read_text() == big
     assert (sandbox / "logs" / "publish.log.2").read_text() == "OLD1"
     assert not (sandbox / "logs" / "publish.log.3").exists()
+
+
+# ── per-tick warn-check (no-delta path also fires partial_error health check) ──
+#
+# Pre-fix gap (caught 2026-05-23): the partial_error_rate warn signal
+# only fired when sync.py ran a full commit/push cycle — which itself
+# only happens when there's a delta. On the dominant case (no delta,
+# regime stable but unhealthy) the warn instrumentation was completely
+# silent in logs/sync.log. publish-if-delta.sh now invokes
+# `sync.py --check-warnings-only` on the no-delta exit path so the
+# signal lands on EVERY tick.
+
+
+def test_no_delta_path_invokes_warn_only_check(sandbox: Path) -> None:
+    # cursor == db_max → no delta → full sync NOT invoked. But the
+    # warn-only check MUST still run so partial_error_rate signals
+    # land in logs/sync.log regardless of delta status.
+    code, _out, synced, deployed = _run(sandbox, db_max=10, cursor=10)
+    assert code == 0
+    assert synced is False      # full commit/push path skipped
+    assert deployed is False
+    assert (sandbox / ".warn-check-called").exists(), (
+        "publish-if-delta.sh must invoke `sync.py --check-warnings-only` "
+        "on the no-delta exit path so the partial_error_rate signal "
+        "fires every tick, not only ticks with new posts"
+    )
+
+
+def test_delta_path_does_NOT_double_invoke_warn_check(sandbox: Path) -> None:
+    # On the delta path, the FULL sync.py invocation already does its
+    # own warn check before the commit. Running --check-warnings-only
+    # in addition would double-emit lines + double-touch state file.
+    # The early-exit gate prevents the warn-only call on the delta
+    # branch.
+    code, _out, synced, _deployed = _run(sandbox, db_max=20, cursor=10)
+    assert code == 0
+    assert synced is True       # full sync ran
+    assert not (sandbox / ".warn-check-called").exists(), (
+        "delta path runs the full sync.py which has its own warn check; "
+        "the --check-warnings-only invocation MUST be skipped to avoid "
+        "double-emit + state-file race"
+    )
+
+
+def test_warn_check_failure_does_not_block_the_no_delta_exit(sandbox: Path) -> None:
+    # The `|| true` after the warn-only invocation must keep the no-delta
+    # path exiting 0 even if check-warnings-only itself fails. The stub
+    # python exits 0 normally; force-fail via a sentinel.
+    (sandbox / ".warn-check-should-fail").write_text("", encoding="utf-8")
+    # Update the python stub to honor this sentinel within the
+    # --check-warnings-only branch:
+    py = sandbox / "venv" / "bin" / "python"
+    src = py.read_text(encoding="utf-8").replace(
+        "*\" --check-warnings-only \"*) touch .warn-check-called; exit 0;;",
+        "*\" --check-warnings-only \"*) touch .warn-check-called; "
+        "[ -f .warn-check-should-fail ] && exit 1; exit 0;;",
+    )
+    py.write_text(src, encoding="utf-8")
+
+    code, _out, synced, _deployed = _run(sandbox, db_max=10, cursor=10)
+    assert code == 0, (
+        "warn-check failure must NOT block the no-delta exit; the "
+        "publish-if-delta.sh shell's `|| true` swallows it so a "
+        "broken health check never blocks operator-visible cron output"
+    )
+    assert (sandbox / ".warn-check-called").exists()

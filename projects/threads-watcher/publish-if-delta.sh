@@ -85,6 +85,19 @@ if [ "${delta_before:-0}" -le 0 ]; then
     ts_log "skip: no unpublished delta (db_max=$db_max_before cursor=$cursor_before)"
     printf '%s|%s\n' "$cur_state" "$now_ts" > "$LAST_STATE_FILE"
   fi
+  # Run the warn-only check EVERY tick (even when there's no delta).
+  # Without this the partial_error_rate signal only fires on ticks
+  # that have new posts → 99% of ticks silently skip the health
+  # check, so a sustained sticky-regime never lands in logs/sync.log
+  # for operators to grep. The --check-warnings-only mode is
+  # lock-free + read-only on the DB + uses the same dedup state
+  # file as the full sync, so this is safe to run alongside any
+  # other sync.py invocation.
+  venv/bin/python sync.py \
+    --check-warnings-only \
+    --max-log-bytes 1048576 \
+    --log-backup-count 5 \
+    2>/dev/null || true
   exit 0
 fi
 
