@@ -31,10 +31,19 @@ class GuardDecision:
 
     `proceed` is True only if every guard allows the sync to continue.
     `reason` is the human-readable explanation logged either way.
+    `kind` is the canonical guard identifier ('detect_delta',
+    'recent_failures', 'commit_gap', 'snapshot_sanity') used by
+    structured event logs so operators can grep
+        `grep "sync_event: skipped" logs/sync.log \\
+            | grep -o "blocker=[a-z_]*" | sort | uniq -c`
+    to histogram which guard dominates. Defaults to empty string for
+    backward-compat with any caller that constructs GuardDecision
+    directly without the new field.
     """
 
     proceed: bool
     reason: str
+    kind: str = ''
 
 
 # ── 1. DB delta detection ───────────────────────────────────────────────
@@ -48,8 +57,8 @@ def detect_delta(current_max: int, last_cursor: int) -> GuardDecision:
     """
     cursor = max(0, last_cursor)
     if current_max <= cursor:
-        return GuardDecision(False, f"no delta (max={current_max} cursor={cursor})")
-    return GuardDecision(True, f"delta={current_max - cursor}")
+        return GuardDecision(False, f"no delta (max={current_max} cursor={cursor})", kind='detect_delta')
+    return GuardDecision(True, f"delta={current_max - cursor}", kind='detect_delta')
 
 
 # ── 2. Recent-failures guard ────────────────────────────────────────────
@@ -101,7 +110,8 @@ def recent_failures_guard(
     bad = [s for s in statuses if "error" in s.lower()]
     if not bad:
         return GuardDecision(
-            True, f"recent statuses ok (statuses={','.join(statuses) or '<none>'})"
+            True, f"recent statuses ok (statuses={','.join(statuses) or '<none>'})",
+            kind='recent_failures',
         )
 
     if (
@@ -117,11 +127,13 @@ def recent_failures_guard(
         return GuardDecision(
             True,
             f"sticky partial_error regime (window={window}, reason={errors[0]!r})",
+            kind='recent_failures',
         )
 
     return GuardDecision(
         False,
         f"recent failures detected (statuses={','.join(statuses) or '<none>'})",
+        kind='recent_failures',
     )
 
 
@@ -140,11 +152,11 @@ def commit_gap_guard(
     returned nothing) — allow the first commit through, as the shell does.
     """
     if last_commit_ts <= 0:
-        return GuardDecision(True, "no prior commit recorded; allowing first sync")
+        return GuardDecision(True, "no prior commit recorded; allowing first sync", kind='commit_gap')
     gap = now_ts - last_commit_ts
     if gap < min_gap_sec:
-        return GuardDecision(False, f"commit gap {gap}s < {min_gap_sec}s")
-    return GuardDecision(True, f"gap={gap}s")
+        return GuardDecision(False, f"commit gap {gap}s < {min_gap_sec}s", kind='commit_gap')
+    return GuardDecision(True, f"gap={gap}s", kind='commit_gap')
 
 
 # ── 4. Snapshot sanity (no BLOB / no local_path leaked) ─────────────────
@@ -198,23 +210,24 @@ def snapshot_sanity_check(snapshot_path: Path) -> GuardDecision:
     try:
         data = json.loads(snapshot_path.read_text(encoding="utf-8"))
     except FileNotFoundError:
-        return GuardDecision(False, f"snapshot not found: {snapshot_path}")
+        return GuardDecision(False, f"snapshot not found: {snapshot_path}", kind='snapshot_sanity')
     except json.JSONDecodeError as exc:
-        return GuardDecision(False, f"snapshot is not valid JSON: {exc}")
+        return GuardDecision(False, f"snapshot is not valid JSON: {exc}", kind='snapshot_sanity')
 
     # Valid JSON whose top level is not an object (a list / string /
     # number / null) — `.get` below would raise AttributeError. A guard
     # must reject it cleanly, not crash evaluate_all with a traceback.
     if not isinstance(data, dict):
         return GuardDecision(
-            False, f"snapshot is not a JSON object (got {type(data).__name__})"
+            False, f"snapshot is not a JSON object (got {type(data).__name__})",
+            kind='snapshot_sanity',
         )
 
     # Posts list must contain dicts only (per-element type pin).
     posts = data.get("posts") or []
     for idx, post in enumerate(posts):
         if not isinstance(post, dict):
-            return GuardDecision(False, f"post[{idx}] is not an object")
+            return GuardDecision(False, f"post[{idx}] is not an object", kind='snapshot_sanity')
 
     # Deep walk over the whole payload (root included).
     found = _find_forbidden_key(data, trail="")
@@ -229,13 +242,93 @@ def snapshot_sanity_check(snapshot_path: Path) -> GuardDecision:
             idx_part = where.split(".", 1)[0]  # 'posts[1]'
             idx = idx_part[len("posts["):-1]
             return GuardDecision(
-                False, f"post[{idx}] leaked forbidden keys: ['{key}']"
+                False, f"post[{idx}] leaked forbidden keys: ['{key}']",
+                kind='snapshot_sanity',
             )
         return GuardDecision(
-            False, f"leaked forbidden key at {where}: '{key}'"
+            False, f"leaked forbidden key at {where}: '{key}'",
+            kind='snapshot_sanity',
         )
 
-    return GuardDecision(True, f"snapshot ok ({len(posts)} posts checked)")
+    return GuardDecision(True, f"snapshot ok ({len(posts)} posts checked)", kind='snapshot_sanity')
+
+
+# ── Structured event-log line for grep-able outcomes ───────────────────
+
+
+# Every kind a guard can set, plus the non-guard outcomes that sync.py
+# emits. Pinned here so a future GuardDecision with a typo'd kind shows
+# up as 'unknown' in the event line rather than silently passing through.
+KNOWN_BLOCKER_KINDS = frozenset({
+    'detect_delta',
+    'recent_failures',
+    'commit_gap',
+    'snapshot_sanity',
+})
+
+OUTCOME_EVENTS = frozenset({
+    # guard short-circuited
+    'skipped',
+    # would have committed but --confirm not passed
+    'dry_run',
+    # actually committed (commit done, push status separate)
+    'committed',
+    # commit + push both succeeded
+    'pushed',
+    # something bailed (lock contention, git failure, etc.)
+    'error',
+})
+
+
+def format_outcome_event(
+    outcome: str,
+    *,
+    delta: int,
+    blocker_kind: str | None = None,
+    extra: dict[str, object] | None = None,
+) -> str:
+    """Build a stable, grep-friendly single-line event for the sync log.
+
+    Shape:
+        sync_event: <outcome> delta=<n> [blocker=<kind>] [k=v ...]
+
+    Why this exists
+    ---------------
+    Prior to this helper, the only signal in logs/sync.log about WHICH
+    guard blocked a tick was the multi-line _log_decision prose:
+
+        db_max=75 cursor=0 delta=75 proceed=False
+          guard: OK  | delta=75
+          guard: SKIP | recent failures detected (statuses=...)
+
+    Operators couldn't run `grep "sync_event" logs/sync.log | sort | uniq -c`
+    to see the histogram of blockers. This helper emits one stable line
+    per invocation so:
+
+        grep "sync_event: skipped" logs/sync.log \\
+            | grep -o "blocker=[a-z_]*" | sort | uniq -c
+
+    works out of the box. Mirrors the discipline Second Brain
+    `index.ts:scheduled()` enforces with its `cron_*` / `cron_*_skipped`
+    log events.
+    """
+    if outcome not in OUTCOME_EVENTS:
+        raise ValueError(
+            f"unknown outcome {outcome!r}; must be one of {sorted(OUTCOME_EVENTS)}",
+        )
+    parts = [f"sync_event: {outcome}", f"delta={delta}"]
+    if outcome == 'skipped':
+        # Required for skipped — without the kind, the entire reason
+        # for this helper's existence is lost. Default to 'unknown'
+        # so the line still emits but the operator sees the gap.
+        kind = blocker_kind if blocker_kind in KNOWN_BLOCKER_KINDS else 'unknown'
+        parts.append(f"blocker={kind}")
+    if extra:
+        for k, v in sorted(extra.items()):
+            # Keep values shell-safe: no quotes, no spaces.
+            sv = str(v).replace(' ', '_').replace('"', '').replace("'", '')
+            parts.append(f"{k}={sv}")
+    return ' '.join(parts)
 
 
 # ── 5. Composite: run all guards in shell order ─────────────────────────

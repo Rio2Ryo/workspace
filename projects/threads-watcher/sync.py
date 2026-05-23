@@ -41,6 +41,7 @@ from sync_guards import (
     DEFAULT_RECENT_CHECKS_WINDOW,
     SyncDecision,
     evaluate_all,
+    format_outcome_event,
 )
 
 PROJECT_ROOT = Path(__file__).resolve().parent
@@ -713,6 +714,17 @@ def main(argv: list[str] | None = None) -> int:
         _log_decision(log, decision, current_max, last_cursor)
 
         if not decision.proceed:
+            # Structured outcome event — see sync_guards.format_outcome_event.
+            # Lets operators run
+            #   grep "sync_event: skipped" logs/sync.log \\
+            #     | grep -o "blocker=[a-z_]*" | sort | uniq -c
+            # to see at a glance which guard dominates blocks.
+            blocker = decision.first_blocker()
+            log.log(format_outcome_event(
+                'skipped',
+                delta=decision.delta,
+                blocker_kind=blocker.kind if blocker else None,
+            ))
             # A zero delta means nothing is pending — resolve any
             # dry-run streak so the status page stops showing a stale
             # "dry-run stuck" alert. A guard skip with delta > 0 leaves
@@ -745,6 +757,8 @@ def main(argv: list[str] | None = None) -> int:
                 + (f" then push origin {args.branch}" if args.enable_push else "")
             )
             log.log(f"DRY: would update cursor: {last_cursor} -> {current_max}")
+            # Structured event for grep parity with skipped/committed.
+            log.log(format_outcome_event('dry_run', delta=decision.delta))
             return 0
 
         return _do_commit_and_maybe_push(args, log, current_max, decision)

@@ -21,11 +21,14 @@ from sync_guards import (  # noqa: E402
     BAD_CHECK_STATUSES,
     DEFAULT_COMMIT_MIN_GAP_SEC,
     DEFAULT_RECENT_CHECKS_WINDOW,
+    KNOWN_BLOCKER_KINDS,
+    OUTCOME_EVENTS,
     GuardDecision,
     SyncDecision,
     commit_gap_guard,
     detect_delta,
     evaluate_all,
+    format_outcome_event,
     recent_failures_guard,
     snapshot_sanity_check,
 )
@@ -601,3 +604,193 @@ def test_default_thresholds_match_shell_script():
     assert DEFAULT_COMMIT_MIN_GAP_SEC == 3600
     assert DEFAULT_RECENT_CHECKS_WINDOW == 3
     assert "error" in BAD_CHECK_STATUSES
+
+
+# ── kind field on GuardDecision + format_outcome_event ──────────────────
+#
+# Pinning the structured-event surface that sync.py logs at every exit
+# path. Without these, an operator running
+#   grep "sync_event: skipped" logs/sync.log \
+#     | grep -o "blocker=[a-z_]*" | sort | uniq -c
+# would silently miss any guard that forgot to set its `kind`, getting
+# blocker=unknown rows instead of a real histogram.
+
+
+class TestGuardDecisionKind:
+    def test_detect_delta_sets_kind(self):
+        for d in (detect_delta(10, 0), detect_delta(0, 10)):
+            assert d.kind == 'detect_delta', f"detect_delta returned kind={d.kind!r}"
+
+    def test_recent_failures_sets_kind_on_all_paths(self, conn):
+        # Empty history → proceed=True
+        assert recent_failures_guard(conn).kind == 'recent_failures'
+        # All ok → proceed=True
+        for _ in range(3):
+            _add_check(conn, 'ok')
+        assert recent_failures_guard(conn).kind == 'recent_failures'
+        # Failure → proceed=False
+        _add_check(conn, 'error', 'x')
+        assert recent_failures_guard(conn).kind == 'recent_failures'
+
+    def test_recent_failures_sticky_regime_path_also_sets_kind(self, conn):
+        # The opt-in escape valve has its own return statement — pin
+        # that it also stamps kind (the surface this entire feature
+        # exists to make grep-able).
+        for _ in range(3):
+            _add_check(conn, 'partial_error', 'found=4 previous_max=15')
+        d = recent_failures_guard(conn, allow_sticky_partial_error_regime=True)
+        assert d.proceed is True
+        assert d.kind == 'recent_failures'
+        assert 'sticky' in d.reason
+
+    def test_commit_gap_sets_kind(self):
+        assert commit_gap_guard(0, 1_000_000).kind == 'commit_gap'
+        assert commit_gap_guard(1_000_000, 1_000_500).kind == 'commit_gap'
+        assert commit_gap_guard(1_000_000, 1_000_000 + DEFAULT_COMMIT_MIN_GAP_SEC + 1).kind == 'commit_gap'
+
+    def test_snapshot_sanity_sets_kind_on_all_paths(self, tmp_path):
+        # Missing file path
+        d = snapshot_sanity_check(tmp_path / 'never.json')
+        assert d.proceed is False and d.kind == 'snapshot_sanity'
+
+        # Invalid JSON
+        bad = tmp_path / 'bad.json'
+        bad.write_text('not json at all', encoding='utf-8')
+        d = snapshot_sanity_check(bad)
+        assert d.proceed is False and d.kind == 'snapshot_sanity'
+
+        # Top-level non-object
+        wrong = tmp_path / 'arr.json'
+        wrong.write_text('[]', encoding='utf-8')
+        d = snapshot_sanity_check(wrong)
+        assert d.proceed is False and d.kind == 'snapshot_sanity'
+
+        # Forbidden key leak
+        leaked = tmp_path / 'leak.json'
+        _write_snapshot(leaked, [{'id': 1, 'screenshot_png': 'AAA'}])
+        d = snapshot_sanity_check(leaked)
+        assert d.proceed is False and d.kind == 'snapshot_sanity'
+
+        # Happy path
+        clean = tmp_path / 'clean.json'
+        _write_snapshot(clean, [{'id': 1}])
+        d = snapshot_sanity_check(clean)
+        assert d.proceed is True and d.kind == 'snapshot_sanity'
+
+
+class TestFormatOutcomeEvent:
+    def test_skipped_event_includes_blocker_kind(self):
+        line = format_outcome_event('skipped', delta=75, blocker_kind='recent_failures')
+        assert line.startswith('sync_event: skipped ')
+        assert 'delta=75' in line
+        assert 'blocker=recent_failures' in line
+
+    def test_skipped_event_with_unknown_kind_falls_back_to_unknown(self):
+        # A typo on a guard's kind ('recent_failure' missing the 's')
+        # would silently set blocker=recent_failure in the event log.
+        # The KNOWN_BLOCKER_KINDS set rejects that and falls back to
+        # 'unknown' so operators see the gap.
+        line = format_outcome_event('skipped', delta=10, blocker_kind='recent_failure')
+        assert 'blocker=unknown' in line
+
+    def test_skipped_event_with_none_kind_falls_back_to_unknown(self):
+        # decision.first_blocker() could return None in a vacuous case.
+        # Don't crash on None — emit blocker=unknown.
+        line = format_outcome_event('skipped', delta=0, blocker_kind=None)
+        assert 'blocker=unknown' in line
+
+    def test_dry_run_event_has_no_blocker_field(self):
+        line = format_outcome_event('dry_run', delta=42)
+        assert line.startswith('sync_event: dry_run ')
+        assert 'delta=42' in line
+        assert 'blocker=' not in line
+
+    def test_committed_event_carries_extra_fields(self):
+        line = format_outcome_event('committed', delta=5, extra={'sha': 'abc1234'})
+        assert line == 'sync_event: committed delta=5 sha=abc1234'
+
+    def test_pushed_event_with_branch_extra(self):
+        line = format_outcome_event('pushed', delta=5, extra={'branch': 'main'})
+        assert 'sync_event: pushed' in line
+        assert 'branch=main' in line
+
+    def test_extra_values_with_spaces_or_quotes_are_sanitised(self):
+        # Shell-safety: a reason string with spaces would break the
+        # `grep | cut` parsing pattern. Sanitise to underscores so the
+        # line stays one shell-token per field.
+        line = format_outcome_event(
+            'error', delta=0, extra={'detail': 'lock held', 'msg': 'a "b" c'},
+        )
+        # spaces → underscores, quotes stripped
+        assert 'detail=lock_held' in line
+        assert 'msg=a_b_c' in line
+
+    def test_extras_are_sorted_for_stable_output(self):
+        # Deterministic ordering so grep + sort + uniq on the full line
+        # gives stable histograms across runs.
+        line = format_outcome_event(
+            'committed', delta=1,
+            extra={'zeta': 'z', 'alpha': 'a', 'middle': 'm'},
+        )
+        # Find the positions of each key in the output
+        pos_a = line.index('alpha=')
+        pos_m = line.index('middle=')
+        pos_z = line.index('zeta=')
+        assert pos_a < pos_m < pos_z
+
+    def test_unknown_outcome_raises_value_error(self):
+        # The outcome vocabulary is a closed set. A typo on the caller
+        # side ('skiped' missing the second 'p') would silently emit
+        # `sync_event: skiped delta=0` which the grep pattern doesn't
+        # match — operators would never see the line. Raise loudly.
+        with pytest.raises(ValueError, match='unknown outcome'):
+            format_outcome_event('skiped', delta=0)
+
+    def test_outcome_events_set_covers_every_path(self):
+        # Pin the set so a future caller adding a new outcome must
+        # also update this constant — drift-proof.
+        assert OUTCOME_EVENTS == {
+            'skipped', 'dry_run', 'committed', 'pushed', 'error',
+        }
+
+    def test_known_blocker_kinds_set_matches_all_guard_functions(self):
+        # If a future guard adds itself to evaluate_all but forgets
+        # KNOWN_BLOCKER_KINDS, every block from that guard logs as
+        # 'unknown' — the entire histogram quietly degrades. Pin the
+        # canonical set.
+        assert KNOWN_BLOCKER_KINDS == {
+            'detect_delta', 'recent_failures', 'commit_gap', 'snapshot_sanity',
+        }
+
+
+class TestSkippedEventEndToEnd:
+    """The outcome line is the operator-visible surface — confirm it
+    actually appears in sync.py's log for the production-typical skip
+    case (recent_failures dominating the window)."""
+
+    def test_evaluate_all_then_format_outcome_emits_recent_failures(self, conn, tmp_path):
+        # Simulate the production sticky-regime scenario at the
+        # SyncDecision layer (no subprocess). With a delta + a window
+        # full of partial_error, evaluate_all returns proceed=False
+        # with recent_failures as the first blocker — and the helper
+        # emits the canonical 'blocker=recent_failures' line.
+        for _ in range(3):
+            _add_check(conn, 'partial_error', 'found=4 previous_max=15')
+        snapshot = tmp_path / 'state.json'
+        _write_snapshot(snapshot, [])
+
+        decision = evaluate_all(
+            current_max=75,
+            last_cursor=0,
+            conn=conn,
+            last_commit_ts=0,
+            now_ts=1_700_000_000,
+            snapshot_path=snapshot,
+        )
+        assert not decision.proceed
+        blocker = decision.first_blocker()
+        assert blocker is not None
+        line = format_outcome_event(
+            'skipped', delta=decision.delta, blocker_kind=blocker.kind,
+        )
+        assert line == 'sync_event: skipped delta=75 blocker=recent_failures'
