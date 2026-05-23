@@ -13,6 +13,7 @@ mirror it in sync.sh.example (or, better, replace the shell with this).
 from __future__ import annotations
 
 import json
+import os
 import sqlite3
 from dataclasses import dataclass
 from pathlib import Path
@@ -398,7 +399,37 @@ _RATE_BUCKET_GRANULARITY = 0.1
 # designed ~1 emit/hour (heartbeat). 0.2 = "rate must move at least
 # 2 buckets" to count as significant — absorbs ±0.05 wobble around
 # any boundary, still surfaces real regime shifts (0.5 → 0.7+, etc.).
-_SIGNIFICANT_BUCKET_DELTA = 0.2
+#
+# Operator-tunable via env var THREADS_WATCHER_SIGNIFICANT_BUCKET_DELTA
+# (read each call so a launchd plist change takes effect at the next
+# watcher restart, no rebuild). Range is clamped to [0.0, 1.0]: buckets
+# are 0.0..1.0 (0%..100% rate), so a delta > 1.0 can never trigger and
+# a negative delta is meaningless. Invalid values raise loud — silent
+# fallback would mask a typo in the plist.
+ENV_SIGNIFICANT_BUCKET_DELTA = "THREADS_WATCHER_SIGNIFICANT_BUCKET_DELTA"
+_DEFAULT_SIGNIFICANT_BUCKET_DELTA = 0.2
+
+
+def _get_significant_bucket_delta() -> float:
+    raw = os.environ.get(ENV_SIGNIFICANT_BUCKET_DELTA, "").strip()
+    if not raw:
+        return _DEFAULT_SIGNIFICANT_BUCKET_DELTA
+    try:
+        value = float(raw)
+    except ValueError as e:
+        raise ValueError(
+            f"{ENV_SIGNIFICANT_BUCKET_DELTA}={raw!r} is not a valid float. "
+            f"Default is {_DEFAULT_SIGNIFICANT_BUCKET_DELTA}; unset the env "
+            f"var to restore default."
+        ) from e
+    if not 0.0 <= value <= 1.0:
+        raise ValueError(
+            f"{ENV_SIGNIFICANT_BUCKET_DELTA}={value} is out of valid range "
+            f"[0.0, 1.0]. Bucket values are 0.0..1.0 (0%..100% rate); a "
+            f"delta > 1.0 could never trigger and a negative delta is "
+            f"meaningless. Default is {_DEFAULT_SIGNIFICANT_BUCKET_DELTA}."
+        )
+    return value
 
 
 def _rate_bucket(rate: float) -> float:
@@ -414,7 +445,8 @@ def _bucket_change_is_significant(
 
     Returns True when:
       - prev_bucket is None (first-ever emit for this handle), OR
-      - abs(cur_bucket - prev_bucket) >= _SIGNIFICANT_BUCKET_DELTA
+      - abs(cur_bucket - prev_bucket) >= the configured threshold
+        (default 0.2; env-tunable via THREADS_WATCHER_SIGNIFICANT_BUCKET_DELTA).
 
     Adjacent-bucket oscillation (0.5 ↔ 0.6, delta = 0.1) is treated
     as the same regime — the heartbeat is what surfaces the
@@ -427,7 +459,7 @@ def _bucket_change_is_significant(
     # comparison but obviously >= 0.2 by intent. The buckets are
     # 0.1-granular so 2dp suffices to canonicalise the delta.
     delta = round(abs(cur_bucket - prev_bucket), 2)
-    return delta >= _SIGNIFICANT_BUCKET_DELTA
+    return delta >= _get_significant_bucket_delta()
 
 
 def filter_warnings_for_emit(
@@ -498,10 +530,12 @@ def filter_warnings_for_emit(
         prev_bucket = prev.get('bucket') if isinstance(prev, dict) else None
         prev_ts = int(prev.get('ts', 0)) if isinstance(prev, dict) else 0
         elapsed = now_ts - prev_ts
-        # HYSTERESIS: require abs(prev_bucket - cur_bucket) >=
-        # _SIGNIFICANT_BUCKET_DELTA. Without it, a rate oscillating
-        # across a bucket boundary (e.g., 0.595 ↔ 0.619) re-emits
-        # every tick. The heartbeat handles "still warning" signal.
+        # HYSTERESIS: require abs(prev_bucket - cur_bucket) >= the
+        # configured threshold (default 0.2; env-tunable via
+        # THREADS_WATCHER_SIGNIFICANT_BUCKET_DELTA). Without it, a
+        # rate oscillating across a bucket boundary (e.g., 0.595 ↔
+        # 0.619) re-emits every tick. The heartbeat handles "still
+        # warning" signal.
         should_emit = (
             _bucket_change_is_significant(prev_bucket, bucket)
             or elapsed >= heartbeat_sec

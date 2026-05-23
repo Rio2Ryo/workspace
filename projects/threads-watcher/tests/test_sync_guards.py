@@ -1690,3 +1690,156 @@ class TestExtractOpenIncidents:
         records = compute_mttr_from_log(lines)
         assert '@hot' in records
         assert records['@hot'][0]['duration_s'] == 3600
+
+
+# ── THREADS_WATCHER_SIGNIFICANT_BUCKET_DELTA env-tuning ──────────────────
+#
+# The hysteresis threshold was hardcoded at 0.2. Operators tuning the
+# sensitivity (e.g., bumping to 0.3 to suppress more, or dropping to
+# 0.15 to surface more) now go through the env var rather than
+# editing source + redeploying. These tests pin:
+#   - default applies when env unset
+#   - integer + float string values both work
+#   - invalid values raise loud (vs. silently falling back, which
+#     would mask a typo in a launchd plist string)
+#   - end-to-end: an env-tuned threshold actually changes the
+#     dedup decision for the same input data
+
+
+class TestSignificantBucketDeltaEnv:
+    def _w(self, handle: str, rate: float) -> dict:
+        return {
+            'handle': handle, 'rate': rate, 'threshold': 0.5,
+            'window_hours': 1, 'total': 30, 'top_reason': 'x',
+        }
+
+    def test_default_applies_when_env_unset(self, monkeypatch):
+        from sync_guards import (
+            ENV_SIGNIFICANT_BUCKET_DELTA, _get_significant_bucket_delta,
+        )
+        monkeypatch.delenv(ENV_SIGNIFICANT_BUCKET_DELTA, raising=False)
+        assert _get_significant_bucket_delta() == 0.2
+
+    def test_empty_string_treated_as_unset(self, monkeypatch):
+        # Operator-realistic: a launchd plist with an empty StringValue
+        # exports the var as "". Must fall back to default, not crash.
+        from sync_guards import (
+            ENV_SIGNIFICANT_BUCKET_DELTA, _get_significant_bucket_delta,
+        )
+        monkeypatch.setenv(ENV_SIGNIFICANT_BUCKET_DELTA, "")
+        assert _get_significant_bucket_delta() == 0.2
+
+    def test_whitespace_only_treated_as_unset(self, monkeypatch):
+        from sync_guards import (
+            ENV_SIGNIFICANT_BUCKET_DELTA, _get_significant_bucket_delta,
+        )
+        monkeypatch.setenv(ENV_SIGNIFICANT_BUCKET_DELTA, "   ")
+        assert _get_significant_bucket_delta() == 0.2
+
+    def test_float_override(self, monkeypatch):
+        from sync_guards import (
+            ENV_SIGNIFICANT_BUCKET_DELTA, _get_significant_bucket_delta,
+        )
+        monkeypatch.setenv(ENV_SIGNIFICANT_BUCKET_DELTA, "0.3")
+        assert _get_significant_bucket_delta() == 0.3
+
+    def test_integer_override_accepted(self, monkeypatch):
+        # "1" should work — boundary value, valid threshold meaning
+        # "only a 100% rate swing counts as significant".
+        from sync_guards import (
+            ENV_SIGNIFICANT_BUCKET_DELTA, _get_significant_bucket_delta,
+        )
+        monkeypatch.setenv(ENV_SIGNIFICANT_BUCKET_DELTA, "1")
+        assert _get_significant_bucket_delta() == 1.0
+
+    def test_zero_override_accepted(self, monkeypatch):
+        # Boundary: 0.0 means "every bucket change emits" — operator
+        # might want this temporarily during incident debugging.
+        from sync_guards import (
+            ENV_SIGNIFICANT_BUCKET_DELTA, _get_significant_bucket_delta,
+        )
+        monkeypatch.setenv(ENV_SIGNIFICANT_BUCKET_DELTA, "0.0")
+        assert _get_significant_bucket_delta() == 0.0
+
+    def test_non_numeric_raises_with_actionable_message(self, monkeypatch):
+        # 🔒 Silent fallback would mask a typo in the launchd plist.
+        # Operator gets a loud error with the bad value + the default
+        # they can restore to.
+        from sync_guards import (
+            ENV_SIGNIFICANT_BUCKET_DELTA, _get_significant_bucket_delta,
+        )
+        monkeypatch.setenv(ENV_SIGNIFICANT_BUCKET_DELTA, "not-a-number")
+        with pytest.raises(ValueError, match="not a valid float"):
+            _get_significant_bucket_delta()
+
+    def test_negative_raises(self, monkeypatch):
+        # Negative threshold is meaningless — abs() makes the delta
+        # always >= 0, so a negative threshold would always emit (every
+        # change). Worse: an operator typo of "-0.2" would silently
+        # invert hysteresis. Loud > silent.
+        from sync_guards import (
+            ENV_SIGNIFICANT_BUCKET_DELTA, _get_significant_bucket_delta,
+        )
+        monkeypatch.setenv(ENV_SIGNIFICANT_BUCKET_DELTA, "-0.2")
+        with pytest.raises(ValueError, match="out of valid range"):
+            _get_significant_bucket_delta()
+
+    def test_over_one_raises(self, monkeypatch):
+        # > 1.0 can never trigger (max bucket delta is 1.0 - 0.0 = 1.0).
+        # An operator setting 1.5 would silently make hysteresis
+        # infinite — everything suppressed except heartbeat. Loud.
+        from sync_guards import (
+            ENV_SIGNIFICANT_BUCKET_DELTA, _get_significant_bucket_delta,
+        )
+        monkeypatch.setenv(ENV_SIGNIFICANT_BUCKET_DELTA, "1.5")
+        with pytest.raises(ValueError, match="out of valid range"):
+            _get_significant_bucket_delta()
+
+    def test_env_tuning_changes_dedup_decision_end_to_end(self, tmp_path, monkeypatch):
+        # End-to-end: same rates, two different thresholds.
+        # Use rates 0.55 / 0.75 → _rate_bucket → 0.5 / 0.7 (clean
+        # buckets without the IEEE-754 float-truncation surprise that
+        # bites at 0.7 → 0.6 due to `int(0.7/0.1)` returning 6).
+        # Bucket delta = 0.2 — sits exactly on the default threshold
+        # boundary (>= 0.2 → significant), and below the tuned-up 0.3.
+        from sync_guards import (
+            ENV_SIGNIFICANT_BUCKET_DELTA, filter_warnings_for_emit,
+        )
+
+        def _run_six(threshold_env: str | None) -> int:
+            if threshold_env is None:
+                monkeypatch.delenv(ENV_SIGNIFICANT_BUCKET_DELTA, raising=False)
+            else:
+                monkeypatch.setenv(ENV_SIGNIFICANT_BUCKET_DELTA, threshold_env)
+            state_path = tmp_path / f"state-{threshold_env}.json"
+            rates = [0.55, 0.75, 0.55, 0.75, 0.55, 0.75]
+            emit_count = 0
+            for i, r in enumerate(rates):
+                emit, _rec, new = filter_warnings_for_emit(
+                    [self._w('@x', r)], state_path,
+                    now_ts=1000 + i * 60, heartbeat_sec=3600,
+                )
+                emit_count += len(emit)
+                state_path.write_text(json.dumps(new), encoding='utf-8')
+            return emit_count
+
+        # default 0.2: delta of 0.2 IS significant (>= boundary
+        # inclusive). All 6 transitions emit.
+        default_emits = _run_six(None)
+        # tuned 0.3: delta of 0.2 is now NOT significant.
+        # Only the first-ever emit (prev_bucket is None) gets through.
+        tuned_emits = _run_six("0.3")
+        assert default_emits > tuned_emits, (
+            f"Env tuning must change dedup behaviour. Default emits="
+            f"{default_emits}, tuned (0.3) emits={tuned_emits}. "
+            f"If equal, the env var isn't being honoured."
+        )
+        assert tuned_emits == 1, (
+            f"At threshold 0.3, only first-ever emit should fire "
+            f"(prev_bucket None). Got {tuned_emits}."
+        )
+        assert default_emits == 6, (
+            f"At default 0.2, every of 6 ticks should emit "
+            f"(delta 0.2 == threshold). Got {default_emits}. If "
+            f"this drops, the boundary became exclusive — investigate."
+        )
