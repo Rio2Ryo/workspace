@@ -115,6 +115,11 @@
        yellow = recent regime, red = stuck regime requiring intervention. */
     tr.oi-warn td { color: #b86b00; }
     tr.oi-err td { color: #c33; font-weight: 600; }
+    /* MTTR row severity by mean recovery time. Yellow flags handles
+       that historically take 1h+ to recover (operator should check
+       their automation); red flags 24h+ (chronic problem). */
+    tr.mttr-warn td { color: #b86b00; }
+    tr.mttr-err td { color: #c33; font-weight: 600; }
     .pill {
       display: inline-block; padding: 2px 8px; border-radius: 999px;
       background: var(--border); font-size: 11px; color: var(--muted);
@@ -407,8 +412,25 @@
             const m = Math.round((n - h * 3600) / 60);
             return m === 0 ? h + 'h' : h + 'h ' + m + 'm';
           };
+          // Severity thresholds for MTTR rows. Mirror the
+          // open-incidents triage logic but keyed on mean_s
+          // (representative single number across this handle's
+          // closed incidents):
+          //   >= 24h → .mttr-err (red bold) — chronic problem
+          //   >=  1h → .mttr-warn (yellow) — slow recovery
+          //   else  → no styling — recovery is fast enough
+          // Branch order MUST check err first so a 25h+ mean doesn't
+          // mis-style as warn — same hazard pinned in oi-* logic.
+          const MTTR_WARN_S = 3600;       // 1 hour
+          const MTTR_ERR_S = 24 * 3600;   // 24 hours
           for (const row of mttr) {
             const tr = document.createElement('tr');
+            const meanS = Number(row.mean_s) || 0;
+            if (meanS >= MTTR_ERR_S) {
+              tr.className = 'mttr-err';
+            } else if (meanS >= MTTR_WARN_S) {
+              tr.className = 'mttr-warn';
+            }
             const tds = [
               row.handle || '?',
               row.incidents || 0,

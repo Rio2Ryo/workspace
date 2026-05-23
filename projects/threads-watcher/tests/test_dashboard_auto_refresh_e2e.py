@@ -255,3 +255,62 @@ def test_refresh_zero_disables_auto_refresh(tmp_path):
                 )
             finally:
                 browser.close()
+
+
+def test_mttr_summary_severity_err_applied_at_24h_mean(tmp_path):
+    # End-to-end: a handle with mean_s >= 24h MTTR gets the
+    # red-bold .mttr-err class. Mirrors the open-incidents severity
+    # E2E above, applied to the closed-incidents widget.
+    state = _baseline_state(open_warn_ts=int(time.time()) - 60)
+    state["mttr_summary"] = [
+        {
+            "handle": "@chronic", "incidents": 5,
+            "total_s": 5 * 25 * 3600, "mean_s": 25 * 3600,
+            "median_s": 24 * 3600, "max_s": 30 * 3600,
+        },
+    ]
+    _setup_tmp_dashboard(tmp_path, state)
+
+    with _serve_dir(tmp_path) as port:
+        with sync_playwright() as p:
+            browser = p.chromium.launch(headless=True)
+            try:
+                page = browser.new_page()
+                page.goto(f"http://127.0.0.1:{port}/index.html?refresh=0")
+                page.wait_for_selector("#mttr-summary", state="visible", timeout=5000)
+                row = page.locator("#mttr-tbody tr").first
+                cls = row.get_attribute("class") or ""
+                assert "mttr-err" in cls, f"class={cls!r}"
+                assert "mttr-warn" not in cls, (
+                    f"24h+ mean must be err, not warn (branch-order bug). class={cls!r}"
+                )
+            finally:
+                browser.close()
+
+
+def test_mttr_summary_severity_warn_applied_at_1h_mean(tmp_path):
+    state = _baseline_state(open_warn_ts=int(time.time()) - 60)
+    state["mttr_summary"] = [
+        {
+            "handle": "@slow", "incidents": 3,
+            "total_s": 3 * 7200, "mean_s": 7200,    # 2h mean
+            "median_s": 7200, "max_s": 9000,
+        },
+    ]
+    _setup_tmp_dashboard(tmp_path, state)
+
+    with _serve_dir(tmp_path) as port:
+        with sync_playwright() as p:
+            browser = p.chromium.launch(headless=True)
+            try:
+                page = browser.new_page()
+                page.goto(f"http://127.0.0.1:{port}/index.html?refresh=0")
+                page.wait_for_selector("#mttr-summary tr.mttr-warn", timeout=5000)
+                row = page.locator("#mttr-tbody tr").first
+                cls = row.get_attribute("class") or ""
+                assert "mttr-warn" in cls
+                assert "mttr-err" not in cls, (
+                    f"2h mean should be warn, not err. class={cls!r}"
+                )
+            finally:
+                browser.close()

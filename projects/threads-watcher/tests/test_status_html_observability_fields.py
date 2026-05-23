@@ -334,3 +334,39 @@ def test_oi_err_takes_priority_over_oi_warn_in_js(html: str):
         "elapsed-threshold branch must check OI_ERR_S first, then "
         "OI_WARN_S — otherwise a 24h+ incident incorrectly styles as warn"
     )
+
+
+# ── mttr_summary row severity (mean-MTTR triage colors) ────────────────
+
+
+def test_mttr_warn_and_mttr_err_css_classes_defined(html: str):
+    assert "tr.mttr-warn" in html, "mttr-warn CSS rule missing"
+    assert "tr.mttr-err" in html, "mttr-err CSS rule missing"
+
+
+def test_mttr_thresholds_present_in_js(html: str):
+    import re
+    assert re.search(r"MTTR_WARN_S\s*=\s*3600\b", html), (
+        "MTTR_WARN_S must be 3600 (1 hour) — pin operator triage threshold"
+    )
+    assert re.search(r"MTTR_ERR_S\s*=\s*24\s*\*\s*3600\b", html), (
+        "MTTR_ERR_S must be 24 * 3600 (24 hours) — chronic-problem threshold"
+    )
+
+
+def test_mttr_severity_applied_via_classname(html: str):
+    assert "tr.className = 'mttr-err'" in html
+    assert "tr.className = 'mttr-warn'" in html
+
+
+def test_mttr_err_takes_priority_over_mttr_warn_in_js(html: str):
+    # 🔒 Same hazard as open-incidents: a 25h+ mean must style as err
+    # not warn. Pin the branch order.
+    import re
+    pattern = re.compile(
+        r"if\s*\(\s*meanS\s*>=\s*MTTR_ERR_S\s*\)[\s\S]{0,200}else if\s*\(\s*meanS\s*>=\s*MTTR_WARN_S",
+    )
+    assert pattern.search(html), (
+        "branch must check MTTR_ERR_S first, then MTTR_WARN_S — "
+        "otherwise a 24h+ mean incorrectly styles as warn"
+    )
