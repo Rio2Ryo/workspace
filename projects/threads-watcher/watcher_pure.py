@@ -383,6 +383,24 @@ def _sanitize_post(post: Any) -> Any:
     return {k: v for k, v in post.items() if k not in FORBIDDEN_POST_KEYS}
 
 
+class MissingSnapshotInputError(KeyError):
+    """Raised when build_web_snapshot_payload's input dict is missing
+    one of the REQUIRED_INPUT_FIELDS. Subclasses KeyError so existing
+    callers' `except KeyError` paths still work; the named class lets
+    operator logs distinguish "snapshot input was malformed" from "a
+    different KeyError further down the stack".
+    """
+
+
+# Source of truth on the Python side. Pinned against deploy.sh's
+# REQUIRED_FIELDS_CSV by test_snapshot_contract_drift.py — when one
+# changes, the test names the other. NOTE: a superset is allowed
+# (e.g. `posts` is required for the builder but NOT required by
+# deploy.sh, because deploy.sh's preflight runs on the OUTPUT shape
+# which always includes posts via the builder's dict literal).
+REQUIRED_INPUT_FIELDS = frozenset({"handle", "last_check", "saved_count", "posts"})
+
+
 def build_web_snapshot_payload(
     snapshot: dict[str, Any],
     dry_run_alert: dict | None,
@@ -407,7 +425,19 @@ def build_web_snapshot_payload(
     banner) or {pending_ticks, since, delta}. Surfaces sync.py's
     "promote to --confirm" signal, previously only visible via
     `grep ALERT logs/sync.log`.
+
+    Raises MissingSnapshotInputError (a KeyError subclass) when the
+    input dict is missing any REQUIRED_INPUT_FIELDS. Replaces the
+    bare `KeyError('handle')` traceback that pre-fix gave operators
+    no clue about WHICH field was missing or that it was a snapshot
+    shape problem at all.
     """
+    missing = sorted(REQUIRED_INPUT_FIELDS - snapshot.keys())
+    if missing:
+        raise MissingSnapshotInputError(
+            f"snapshot input missing required field(s): {missing}. "
+            f"REQUIRED_INPUT_FIELDS={sorted(REQUIRED_INPUT_FIELDS)}"
+        )
     return {
         "handle": snapshot["handle"],
         "handles": snapshot.get("handles"),
