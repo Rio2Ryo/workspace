@@ -33,6 +33,20 @@
     main { max-width: 720px; margin: 0 auto; }
     h1 { font-size: 18px; margin: 0 0 4px; }
     .muted { color: var(--muted); font-size: 12px; }
+    /* status-summary mirrors the Discord embed `description` line —
+       at-a-glance severity + count above the cards. Bigger than the
+       muted description text below it so the operator's first eye-fix
+       lands on the signal. Color comes from the inline style set by JS
+       to match the embed COLOR_* the discord_payload helper produces. */
+    .status-summary {
+      font-size: 16px;
+      font-weight: 600;
+      margin: 8px 0 4px;
+      padding: 8px 12px;
+      border-radius: 6px;
+      background: var(--card);
+      border: 1px solid var(--border);
+    }
     .card {
       background: var(--card);
       border: 1px solid var(--border);
@@ -145,6 +159,12 @@
 <body>
   <main>
     <h1>threads-watcher <span class="pill">status</span></h1>
+    <!-- status-summary: 1-line at-a-glance signal mirroring the Discord
+         embed `description` from discord_payload.py:_build_description.
+         Same emoji + count format so the dashboard and the Discord post
+         tell the SAME story for the same state.json — operators can
+         triage from either surface without re-mapping. -->
+    <div class="status-summary" id="status-summary">—</div>
     <div class="muted">公開 Threads アカウントの新規投稿観測ステータス。スクリーンショット本体はDB保存し、このページでは表示用コピーをサムネイル配信します。</div>
 
     <!-- dry_run_alert banner: hidden by default; shown when
@@ -264,6 +284,62 @@
         document.getElementById('count').textContent = data.saved_count ?? (data.post_ids || []).length;
         document.getElementById('status').textContent = data.last_check ? `${data.last_check.status} / found ${data.last_check.found_count} / new ${data.last_check.new_count}` : '—';
         document.getElementById('generated').textContent = data.snapshot_generated_at || '—';
+
+        // ── status-summary: at-a-glance signal mirroring the Discord
+        // embed `description` from discord_payload.py. Same emoji +
+        // count format so an operator triaging from either surface
+        // sees the SAME 1-line state. Cross-tool semantic pin lives
+        // in tests/test_dashboard_status_summary_pin.py.
+        (() => {
+          const summaryEl = document.getElementById('status-summary');
+          if (!summaryEl) return;
+          const openIncs = Array.isArray(data.open_incidents) ? data.open_incidents : [];
+          const mttr = Array.isArray(data.mttr_summary) ? data.mttr_summary : [];
+          // Mirror discord_payload._classify_severity: max of (open
+          // elapsed, mttr mean) → red >= 24h, yellow >= 1h, else green.
+          // Thresholds pinned to OI_*_S above; constants intentionally
+          // re-declared here for closure scoping (single source of
+          // truth is test_severity_thresholds_pin.py).
+          const SUM_WARN_S = 3600;
+          const SUM_ERR_S = 24 * 3600;
+          const nowSec = Math.floor(Date.now() / 1000);
+          let maxOpenElapsed = 0;
+          for (const inc of openIncs) {
+            const elapsed = Math.max(0, nowSec - (Number(inc.warn_ts) || 0));
+            if (elapsed > maxOpenElapsed) maxOpenElapsed = elapsed;
+          }
+          let maxMeanS = 0;
+          for (const row of mttr) {
+            const mean = Number(row.mean_s) || 0;
+            if (mean > maxMeanS) maxMeanS = mean;
+          }
+          let emoji, borderColor;
+          if (maxOpenElapsed >= SUM_ERR_S || maxMeanS >= SUM_ERR_S) {
+            emoji = '🔴'; borderColor = '#cc3333';
+          } else if (maxOpenElapsed >= SUM_WARN_S || maxMeanS >= SUM_WARN_S) {
+            emoji = '🟡'; borderColor = '#b86b00';
+          } else {
+            emoji = '🟢'; borderColor = '#33aa33';
+          }
+          // Mirror _build_description format:
+          //   GREEN: "🟢 All healthy — watcher alive"
+          //   YELLOW/RED: "{emoji} N warning[s][ · M recovered]"
+          let text;
+          if (emoji === '🟢') {
+            text = `${emoji} All healthy — watcher alive`;
+          } else {
+            const parts = [];
+            if (openIncs.length > 0) {
+              parts.push(`${openIncs.length} warning${openIncs.length !== 1 ? 's' : ''}`);
+            }
+            if (mttr.length > 0) {
+              parts.push(`${mttr.length} recovered`);
+            }
+            text = `${emoji} ${parts.length > 0 ? parts.join(' · ') : 'see cards'}`;
+          }
+          summaryEl.textContent = text;
+          summaryEl.style.borderColor = borderColor;
+        })();
 
         // dry_run_alert: when present (sync.py threshold reached) render
         // the banner above #summary. When null/absent the banner stays
