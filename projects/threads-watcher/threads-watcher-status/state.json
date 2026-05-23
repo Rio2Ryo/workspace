@@ -5,14 +5,27 @@
     "@bmw_intokyo"
   ],
   "last_check": {
-    "checked_at": "2026-05-23T01:06:43Z",
-    "found_count": 4,
+    "checked_at": "2026-05-23T01:16:50Z",
+    "found_count": 13,
     "new_count": 0,
     "status": "partial_error",
-    "error": "profile extraction returned partial result: found=4 previous_max=15"
+    "error": "profile extraction returned partial result: found=13 previous_max=15"
   },
-  "saved_count": 51,
+  "saved_count": 52,
   "posts": [
+    {
+      "handle": "@hal.lifedesign",
+      "post_id": "DYqZJYKkl2U",
+      "post_url": "https://www.threads.com/@hal.lifedesign/post/DYqZJYKkl2U",
+      "first_seen_at": "2026-05-23T01:16:23Z",
+      "captured_at": "2026-05-23T01:16:27Z",
+      "screenshot_size_bytes": 571541,
+      "screenshot_width": 1280,
+      "screenshot_height": 1800,
+      "post_text": "4月からバタバタ過ぎて全く手をつけられなかったテクスチャーアート。 やっと久々に。 今日は作品作りではなくてナイフの感覚を捉えるために黙々と感覚を感じる時間。 思考のディープダイブとは違う、感覚のディープダイブ。 クラフトフルネスだね。",
+      "posted_at": "2026-05-23T01:15:59.000Z",
+      "screenshot_path": "screenshots/hal.lifedesign/DYqZJYKkl2U.png"
+    },
     {
       "handle": "@hal.lifedesign",
       "post_id": "DYqYAZIEkVK",
@@ -689,12 +702,12 @@
   "recent_stats_by_window": {
     "1": {
       "window_hours": 1,
-      "total": 35,
-      "ok": 11,
-      "partial_error": 18,
-      "error": 6,
+      "total": 38,
+      "ok": 12,
+      "partial_error": 22,
+      "error": 4,
       "other": 0,
-      "success_rate": 0.3142857142857143
+      "success_rate": 0.3157894736842105
     },
     "24": {
       "window_hours": 24,
@@ -707,20 +720,20 @@
     },
     "168": {
       "window_hours": 168,
-      "total": 5062,
-      "ok": 2454,
-      "partial_error": 2591,
+      "total": 5069,
+      "ok": 2456,
+      "partial_error": 2596,
       "error": 17,
       "other": 0,
-      "success_rate": 0.4847886210983801
+      "success_rate": 0.4845137107910831
     }
   },
   "sync_state": {
-    "cursor": 73,
-    "db_max": 74,
+    "cursor": 74,
+    "db_max": 75,
     "delta": 1,
     "cursor_file_exists": true
   },
   "dry_run_alert": null,
-  "snapshot_generated_at": "2026-05-23T01:06:43Z"
+  "snapshot_generated_at": "2026-05-23T01:16:50Z"
 }
