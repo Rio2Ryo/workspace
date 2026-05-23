@@ -33,6 +33,15 @@
     # 2. Discord URL provision 済なら shell pipe で notifier 連携可能
     #    (cron→pipe→discord_post.py の launchd chain は別 plist で構成)
 
+  本 plist は sticky-alert-discord plist (commit ff8b2f2) と択一:
+    両方 enable すると同じ transition で 2 重 fire する。本 plist は
+    log-only (no Discord)、sticky-alert-discord は chain to Discord
+    notification まで含む。Discord URL provision 済なら sticky-alert-
+    discord を採用、URL 未 provision または log-only 運用したいなら
+    本 plist のみ。bidirectional reference は
+    tests/test_plist_log_routing.py の TestStickyRegimePlistsMutualExclusion
+    が pin。
+
   事前要件:
     - threads_watcher.db に最低 3 件の checks 履歴
       (`sticky_regime_diagnosis.py - -recommendation` で INSUFFICIENT_DATA

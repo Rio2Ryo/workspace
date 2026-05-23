@@ -424,3 +424,94 @@ def test_sticky_regime_plist_working_directory_is_project_root():
     plist = _load(STICKY_REGIME_PLIST)
     wd = Path(plist.get("WorkingDirectory", ""))
     assert wd == PROJECT_ROOT
+
+
+# ── Sticky-regime plist mutual exclusion (bidirectional lint) ─────────
+
+
+STICKY_ALERT_DISCORD_PLIST = PROJECT_ROOT / "com.shiro.threads-watcher-sticky-alert-discord.plist.example"
+
+
+class TestStickyRegimePlistsMutualExclusion:
+    """Bidirectional pin: each sticky-regime plist's docstring must
+    reference the OTHER by name, warning operator that enabling both
+    causes double-fire on every transition.
+
+    Why this exists
+    ---------------
+    sticky-regime-alert.plist (commit 5f0a412 — log-only) and
+    sticky-alert-discord.plist (commit ff8b2f2 — chain to Discord)
+    both run sticky_regime_diagnosis.py --alert-on-transition
+    hourly. If operator enables BOTH:
+      - sticky-regime-alert writes "TRANSITION:" to its log
+      - sticky-alert-discord also writes TRANSITION + POSTs to Discord
+      → operator sees 2 entries per transition in logs + 1 Discord
+        post per transition (no DUPLICATE Discord post, but the log
+        side is double-recorded, AND the state file is updated twice
+        per tick which can mask whether a recently-cleared transition
+        was alerted on by both)
+
+    Operator needs an explicit "pick one" note in EACH plist's
+    docstring so the warning is visible regardless of which plist
+    the operator reads first.
+
+    Drift caught at this commit (in the audit that produced this
+    test): only sticky-alert-discord mentioned the mutual exclusion.
+    sticky-regime-alert (older, pre-chain-wrapper) was silent —
+    operator reading it first would not be warned.
+    """
+
+    def _read_header(self, path: Path) -> str:
+        """Get the first 50 lines of the plist (covers the docstring
+        comment block before the <plist> element)."""
+        return "\n".join(
+            path.read_text(encoding="utf-8").split("\n")[:50]
+        )
+
+    def test_sticky_regime_alert_plist_references_chain_plist(self):
+        # 🔒 Operator reading sticky-regime-alert.plist.example MUST
+        # see a warning naming the conflicting plist by name. Without
+        # this, they install both not knowing the conflict exists.
+        header = self._read_header(STICKY_REGIME_PLIST)
+        assert "sticky-alert-discord" in header, (
+            "sticky-regime-alert plist docstring must reference "
+            "sticky-alert-discord plist by name to warn operator "
+            "about mutual exclusion (double-fire on transition). "
+            "Add a paragraph naming the conflicting plist."
+        )
+
+    def test_chain_plist_references_sticky_regime_alert_plist(self):
+        # 🔒 Inverse direction: sticky-alert-discord.plist.example
+        # MUST reference sticky-regime-alert plist by name.
+        header = self._read_header(STICKY_ALERT_DISCORD_PLIST)
+        assert "sticky-regime-alert" in header, (
+            "sticky-alert-discord plist docstring must reference "
+            "sticky-regime-alert plist by name to warn operator "
+            "about mutual exclusion."
+        )
+
+    def test_both_plists_use_consistent_mutex_keyword(self):
+        # Operator searching for "exclude" / "mutual" / "択一" / etc.
+        # across plist docstrings should find consistent terminology.
+        # Pin the Japanese keyword "択一" since both docstrings already
+        # use it — switching would silently fragment the operator
+        # search experience.
+        for path in (STICKY_REGIME_PLIST, STICKY_ALERT_DISCORD_PLIST):
+            header = self._read_header(path)
+            assert "択一" in header, (
+                f"{path.name}: mutual-exclusion docstring should "
+                f"include 「択一」 keyword for consistent operator-"
+                f"search across both plists. Pin so future rewording "
+                f"of one side doesn't fragment the language."
+            )
+
+    def test_both_plists_warn_about_double_fire(self):
+        # Specifically the "double-fire" / "2 重" warning — operator
+        # needs to know WHY mutex matters, not just THAT it matters.
+        for path in (STICKY_REGIME_PLIST, STICKY_ALERT_DISCORD_PLIST):
+            header = self._read_header(path)
+            assert "2 重" in header or "2-fire" in header or "double-fire" in header.lower(), (
+                f"{path.name}: docstring must explain the double-fire "
+                f"hazard (2 重 fire on transition), not just declare "
+                f"mutex. Operator needs to see the rationale."
+            )
