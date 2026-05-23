@@ -72,6 +72,11 @@ TOOLS: list[Tool] = [
         runner=[sys.executable, 'discord_payload.py'],
         cwd=WORKSPACE / 'projects' / 'threads-watcher',
     ),
+    Tool(
+        label='discord_post.py',
+        runner=[sys.executable, 'discord_post.py'],
+        cwd=WORKSPACE / 'projects' / 'threads-watcher',
+    ),
 ]
 
 
@@ -168,7 +173,7 @@ def test_tools_inventory_is_pinned():
     # Pin the list so a refactor that adds another helper has to
     # deliberately extend this test rather than slip past.
     labels = sorted(t.label for t in TOOLS)
-    assert labels == ['cron-latency.mjs', 'discord_payload.py', 'mttr.py'], (
+    assert labels == ['cron-latency.mjs', 'discord_payload.py', 'discord_post.py', 'mttr.py'], (
         f"TOOLS inventory drifted. Got {labels}. "
         f"If you ADDED a CLI helper, register it in TOOLS so the "
         f"shared conventions get tested. If you REMOVED one, update "
