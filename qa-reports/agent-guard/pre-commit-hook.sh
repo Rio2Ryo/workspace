@@ -267,4 +267,69 @@ run_pytest_for() {
 run_pytest_for '^projects/threads-watcher/(tests/|[^/]+\.py$|publish-if-delta\.sh$|run-watcher\.sh$|auto-restart-if-stale\.sh$)' \
   'projects/threads-watcher' 'threads-watcher'
 
+
+# ── Single-file pytest gates (not pkg-dir-bound) ──────────────────────
+#
+# Some tests cross project boundaries (e.g., qa-reports/migrations-down
+# reads SQL from the second-brain submodule). They aren't a "project"
+# in their own right, so the pkg-based run_pytest_for doesn't fit —
+# there's no .venv to find, and we don't want to over-collect by
+# running pytest at qa-reports root.
+#
+# This helper runs ONE test file via the threads-watcher .venv (the
+# only Python venv in this repo with pytest installed) when the
+# trigger pattern matches.
+
+run_pytest_file() {
+  local pattern="$1"
+  local test_file="$2"
+  local label="$3"
+  local staged
+  staged=$(git diff --cached --name-only --diff-filter=ACMR | grep -E "$pattern" || true)
+  [ -z "$staged" ] && return 0
+
+  local py="$REPO_ROOT/projects/threads-watcher/.venv/bin/python"
+  if [ ! -x "$py" ]; then
+    py="python3"
+  fi
+  local abs_test="$REPO_ROOT/$test_file"
+  if [ ! -f "$abs_test" ]; then
+    {
+      echo
+      echo "WARN: $label gate fired but test file missing: $abs_test"
+      echo "      skipping — gate may need updating"
+    } >&2
+    return 0
+  fi
+
+  echo "pytest pre-flight: $label via $py..."
+  local out rc
+  out=$(cd "$REPO_ROOT" && "$py" -m pytest "$test_file" 2>&1)
+  rc=$?
+  if [ "$rc" -ne 0 ]; then
+    {
+      echo
+      echo "ABORT: pre-commit pytest pre-flight failed for $label."
+      echo
+      echo "$out" | tail -25
+      echo
+      echo "Choices:"
+      echo "  - Fix the failing test(s) and re-commit"
+      echo "  - Bypass (NOT recommended): git commit --no-verify"
+      echo "  - Full output: cd $REPO_ROOT && $(basename "$py") -m pytest $test_file"
+    } >&2
+    exit 1
+  fi
+  echo "$out" | grep -E "^=*( passed| failed| skipped)" | tail -1
+}
+
+# Migrations-down runtime idempotency proof — fires on test file edit
+# OR any submodule bump (cheap ~30ms, so over-trigger on submodule
+# bumps is acceptable; under-trigger would miss a down-script
+# regression that the runtime test exists to catch). qa-reports/
+# migrations-down/*.sql + apply.sh edits also trip the gate.
+run_pytest_file '^(qa-reports/migrations-down/.*|second-brain)$' \
+  'qa-reports/migrations-down/test_down_idempotency_runtime.py' \
+  'migrations-down-runtime'
+
 exit 0

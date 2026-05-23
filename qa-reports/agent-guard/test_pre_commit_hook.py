@@ -59,6 +59,24 @@ def extract_gate_patterns() -> list[tuple[str, str, str]]:
             for m in pattern.finditer(collapsed)]
 
 
+def extract_file_gate_patterns() -> list[tuple[str, str, str]]:
+    """Parse `run_pytest_file '<regex>' '<test_path>' '<label>'` lines.
+
+    Distinct from extract_gate_patterns because run_pytest_file targets
+    a SINGLE test file via the workspace's threads-watcher .venv, not
+    a project root. Used for cross-project tests (e.g., migrations-down
+    runtime test that reads SQL from the second-brain submodule).
+    """
+    src = SCRIPT.read_text(encoding="utf-8")
+    collapsed = re.sub(r"\\\s*\n\s*", " ", src)
+    pattern = re.compile(
+        r"^\s*run_pytest_file\s+'([^']+)'\s+'([^']+)'\s+'([^']+)'\s*$",
+        re.MULTILINE,
+    )
+    return [(m.group(1), m.group(2), m.group(3))
+            for m in pattern.finditer(collapsed)]
+
+
 # ── pattern discovery sanity ───────────────────────────────────────────
 
 
@@ -233,3 +251,86 @@ def test_hook_passes_bash_syntax_check():
         f"pre-commit-hook.sh failed bash syntax check:\n"
         f"stderr: {result.stderr}"
     )
+
+
+# ── migrations-down-runtime gate (single-file gate via run_pytest_file) ─
+
+
+def _find_file_pattern_for_label(label: str) -> tuple[str, str]:
+    """Return (pattern, test_path) for the run_pytest_file gate with
+    the given label. Fails the test cleanly if not present."""
+    for pat, test_path, lbl in extract_file_gate_patterns():
+        if lbl == label:
+            return pat, test_path
+    raise AssertionError(
+        f"No run_pytest_file gate with label={label!r}. "
+        f"Found: {[lbl for _, _, lbl in extract_file_gate_patterns()]}"
+    )
+
+
+def test_migrations_down_runtime_gate_is_wired():
+    # The gate exists at all — a future hook edit can't drop it silently.
+    pat, test_path = _find_file_pattern_for_label('migrations-down-runtime')
+    assert pat
+    assert test_path
+
+
+def test_migrations_down_runtime_test_file_exists():
+    # 🔒 Catches a path typo that would make the gate WARN-skip every
+    # time instead of actually running the test. The hook's missing-
+    # file branch logs but doesn't fail, so a typo would silently
+    # disable the protection.
+    _pat, test_path = _find_file_pattern_for_label('migrations-down-runtime')
+    REPO_ROOT = SCRIPT.resolve().parent.parent.parent
+    abs_path = REPO_ROOT / test_path
+    assert abs_path.is_file(), (
+        f"Gate targets {test_path!r} but {abs_path} does not exist. "
+        f"Either fix the path in the hook or recreate the test."
+    )
+
+
+def test_migrations_down_gate_matches_test_file_edit():
+    # Editing the test file itself triggers the gate — most common
+    # scenario (test author re-runs to verify their change).
+    pat, _ = _find_file_pattern_for_label('migrations-down-runtime')
+    assert re.search(pat, 'qa-reports/migrations-down/test_down_idempotency_runtime.py')
+
+
+def test_migrations_down_gate_matches_submodule_pointer_bump():
+    # 🔒 The headline value: any second-brain submodule bump fires the
+    # gate. If the bump includes a down-script regression, the runtime
+    # test catches it BEFORE the bump commits to the workspace.
+    pat, _ = _find_file_pattern_for_label('migrations-down-runtime')
+    assert re.search(pat, 'second-brain'), (
+        f"submodule bump path 'second-brain' should match gate pattern "
+        f"{pat!r}; the gate would otherwise be silent on submodule "
+        f"bumps that touch down scripts"
+    )
+
+
+def test_migrations_down_gate_matches_apply_sh_edits():
+    # apply.sh / test_apply.sh edits in qa-reports/migrations-down/
+    # also trigger — they shape how operators invoke the down scripts,
+    # so a runtime check is appropriate.
+    pat, _ = _find_file_pattern_for_label('migrations-down-runtime')
+    assert re.search(pat, 'qa-reports/migrations-down/apply.sh')
+    assert re.search(pat, 'qa-reports/migrations-down/test_apply.sh')
+
+
+def test_migrations_down_gate_skips_unrelated_paths():
+    # 🔒 Zero-cost guarantee for operators editing other trees.
+    pat, _ = _find_file_pattern_for_label('migrations-down-runtime')
+    for path in [
+        'projects/threads-watcher/sync.py',
+        'projects/top3-favorites/src/App.tsx',
+        'qa-reports/agent-guard/test_cli_conventions.py',
+        # Critically: file paths INSIDE second-brain/ shouldn't match
+        # since the workspace-side gate sees them only as a single
+        # `second-brain` pointer change.
+        'second-brain/apps/api/src/index.ts',
+    ]:
+        assert not re.search(pat, path), (
+            f"path {path!r} should NOT match migrations-down gate "
+            f"(would cause false-positive 30ms cost AND confuse "
+            f"operators triaging unrelated commits)"
+        )
