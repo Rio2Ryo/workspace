@@ -409,6 +409,20 @@ def parse_args(argv: list[str] | None) -> argparse.Namespace:
     p.add_argument("--branch", default=DEFAULT_BRANCH)
     p.add_argument("--min-gap-sec", type=int, default=DEFAULT_COMMIT_MIN_GAP_SEC)
     p.add_argument("--window", type=int, default=DEFAULT_RECENT_CHECKS_WINDOW)
+    p.add_argument(
+        "--allow-sticky-partial-error-regime",
+        action="store_true",
+        help=(
+            "Permit publish when every recent check in --window is the "
+            "IDENTICAL partial_error reason (stable post-count drop). "
+            "Default off keeps the strict behaviour. Use this when "
+            "the dashboard has gone stale because a handle's true "
+            "baseline permanently dropped (Threads UI change or "
+            "actual post deletion) and the strict guard treats the "
+            "new normal as a failure forever. See sync_guards.py "
+            "recent_failures_guard docstring."
+        ),
+    )
     p.add_argument("--confirm", action="store_true",
                    help="Actually commit. Without it, dry-run only — no git writes.")
     p.add_argument(
@@ -693,6 +707,7 @@ def main(argv: list[str] | None = None) -> int:
             snapshot_path=args.snapshot,
             min_gap_sec=args.min_gap_sec,
             window=args.window,
+            allow_sticky_partial_error_regime=args.allow_sticky_partial_error_regime,
         )
 
         _log_decision(log, decision, current_max, last_cursor)

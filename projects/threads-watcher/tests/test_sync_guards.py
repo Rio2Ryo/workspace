@@ -134,6 +134,168 @@ def test_recent_failures_only_inspects_window(conn):
     assert d.proceed
 
 
+# ── recent_failures_guard: sticky-partial-error-regime opt-in ────────────
+#
+# Why this exists
+# ---------------
+# Observed 2026-05-23: 28 of 30 recent checks were `partial_error` with
+# the IDENTICAL reason "profile extraction returned partial result:
+# found=4 previous_max=15". The strict guard treats that as a failure
+# every tick → sync was blocked for days while the dashboard went
+# stale. The sticky-regime escape valve recognises that signature
+# (all-same partial_error in the window) as a stable state and lets
+# the snapshot publish through, so operators see the current reality
+# instead of an indefinite stale snapshot.
+#
+# Default off — every existing caller without the kwarg sees the
+# original strict behaviour (already pinned by the tests above).
+
+
+# A common partial_error reason used across the sticky-regime tests.
+_HAL_PARTIAL = "profile extraction returned partial result: found=4 previous_max=15"
+
+
+def test_sticky_regime_default_off_still_blocks(conn):
+    # Belt-and-braces: even with all-same partial_error, the DEFAULT
+    # behaviour (no kwarg passed) must remain "block". Catches an
+    # accidental flip of the default to True.
+    for _ in range(3):
+        _add_check(conn, "partial_error", _HAL_PARTIAL)
+    d = recent_failures_guard(conn)  # no kwarg
+    assert not d.proceed, (
+        "Default behaviour MUST remain strict — sticky-regime is opt-in"
+    )
+
+
+def test_sticky_regime_opt_in_allows_uniform_partial_error(conn):
+    # The exact production scenario: window=3, every row is the same
+    # partial_error shape → with opt-in, guard allows the publish.
+    for _ in range(3):
+        _add_check(conn, "partial_error", _HAL_PARTIAL)
+    d = recent_failures_guard(conn, allow_sticky_partial_error_regime=True)
+    assert d.proceed, (
+        f"Sticky partial_error regime should permit publish under opt-in. "
+        f"Got reason={d.reason!r}"
+    )
+    assert "sticky partial_error regime" in d.reason
+    # The reason string surfaces the regime for the operator log so
+    # they can see WHY the guard passed despite no 'ok' check.
+    assert "found=4 previous_max=15" in d.reason
+
+
+def test_sticky_regime_blocks_when_reasons_differ(conn):
+    # Opt-in ON but error strings differ → NOT a stable regime, block.
+    # Pin: a mix of "found=4" and "found=2" partial_errors means the
+    # scraping result is itself unstable — publishing now would freeze
+    # a noisy state.
+    _add_check(conn, "partial_error", "found=4 previous_max=15")
+    _add_check(conn, "partial_error", "found=2 previous_max=15")
+    _add_check(conn, "partial_error", "found=4 previous_max=15")
+    d = recent_failures_guard(conn, allow_sticky_partial_error_regime=True)
+    assert not d.proceed, "Mixed partial_error reasons must NOT be treated as sticky"
+
+
+def test_sticky_regime_blocks_when_mixed_with_ok(conn):
+    # Opt-in ON but not ALL recent are partial_error (one 'ok' in the
+    # mix) → fall through to strict, block. The sticky-regime
+    # recognition requires uniformity.
+    _add_check(conn, "ok")
+    _add_check(conn, "partial_error", _HAL_PARTIAL)
+    _add_check(conn, "partial_error", _HAL_PARTIAL)
+    d = recent_failures_guard(conn, allow_sticky_partial_error_regime=True)
+    assert not d.proceed, "Partial_error + ok mix must NOT be sticky regime"
+
+
+def test_sticky_regime_blocks_when_any_full_error_present(conn):
+    # 🔒 Critical safety: even under opt-in, a full status='error' (not
+    # partial_error) must ALWAYS block. Sticky-regime is only for the
+    # "scraping works at a lower count" shape, not for "scraping
+    # broke entirely". Without this guard a real outage would publish.
+    _add_check(conn, "partial_error", _HAL_PARTIAL)
+    _add_check(conn, "error", "playwright timeout")
+    _add_check(conn, "partial_error", _HAL_PARTIAL)
+    d = recent_failures_guard(conn, allow_sticky_partial_error_regime=True)
+    assert not d.proceed, (
+        "Full 'error' status must ALWAYS block — sticky-regime is "
+        "partial_error-only"
+    )
+
+
+def test_sticky_regime_requires_full_window(conn):
+    # Opt-in ON but window=3 and only 2 partial_error rows exist
+    # (DB hasn't accumulated 3 checks yet) → not enough evidence
+    # to declare a stable regime. Block.
+    for _ in range(2):
+        _add_check(conn, "partial_error", _HAL_PARTIAL)
+    d = recent_failures_guard(conn, window=3, allow_sticky_partial_error_regime=True)
+    assert not d.proceed, (
+        "Sticky regime requires the FULL window of rows; fewer = "
+        "insufficient evidence"
+    )
+
+
+def test_sticky_regime_rejects_empty_error_string(conn):
+    # Defensive: if `error` is the empty string (NOT NULL but empty),
+    # all-same uniformity is trivially true but the operator has no
+    # diagnostic. Treat empty as "no regime signature available" and
+    # fall through to the strict path so the operator sees the block
+    # and investigates.
+    for _ in range(3):
+        _add_check(conn, "partial_error", "")
+    d = recent_failures_guard(conn, allow_sticky_partial_error_regime=True)
+    assert not d.proceed, "Empty error string must not satisfy sticky regime"
+
+
+def test_sticky_regime_with_larger_window(conn):
+    # Pin behaviour across non-default windows: window=5 with 5 uniform
+    # partial_error rows still passes. Makes future tunability of the
+    # default safe.
+    for _ in range(5):
+        _add_check(conn, "partial_error", _HAL_PARTIAL)
+    d = recent_failures_guard(conn, window=5, allow_sticky_partial_error_regime=True)
+    assert d.proceed
+
+
+def test_evaluate_all_threads_sticky_regime_flag_through(conn, tmp_path):
+    # The opt-in kwarg must reach recent_failures_guard via evaluate_all
+    # (not just be silently dropped). End-to-end: with the flag ON and
+    # all-same partial_error rows + a clean snapshot, the composite
+    # decision proceeds.
+    for _ in range(3):
+        _add_check(conn, "partial_error", _HAL_PARTIAL)
+    snapshot = tmp_path / "state.json"
+    _write_snapshot(snapshot, [])  # clean snapshot
+
+    # Without the flag: composite blocks at recent_failures_guard.
+    blocked = evaluate_all(
+        current_max=50,
+        last_cursor=0,
+        conn=conn,
+        last_commit_ts=0,
+        now_ts=1_700_000_000,
+        snapshot_path=snapshot,
+    )
+    assert not blocked.proceed
+    blocker = blocked.first_blocker()
+    assert blocker is not None
+    assert "recent failures" in blocker.reason
+
+    # With the flag: composite passes.
+    allowed = evaluate_all(
+        current_max=50,
+        last_cursor=0,
+        conn=conn,
+        last_commit_ts=0,
+        now_ts=1_700_000_000,
+        snapshot_path=snapshot,
+        allow_sticky_partial_error_regime=True,
+    )
+    assert allowed.proceed, (
+        f"evaluate_all should thread the kwarg through. "
+        f"Decisions: {[(d.proceed, d.reason) for d in allowed.decisions]}"
+    )
+
+
 # ── commit_gap_guard ─────────────────────────────────────────────────────
 
 

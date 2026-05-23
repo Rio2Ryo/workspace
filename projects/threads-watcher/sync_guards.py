@@ -59,6 +59,7 @@ def recent_failures_guard(
     conn: sqlite3.Connection,
     *,
     window: int = DEFAULT_RECENT_CHECKS_WINDOW,
+    allow_sticky_partial_error_regime: bool = False,
 ) -> GuardDecision:
     """Skip when any of the last `window` checks reported an error.
 
@@ -66,19 +67,62 @@ def recent_failures_guard(
     'partial_error' contains the substring 'error' and so also triggers
     the skip — match the shell exactly even though we'd arguably prefer
     a stricter set test. If/when the shell tightens this, update both.
+
+    Sticky-partial-error-regime escape valve (opt-in)
+    -------------------------------------------------
+    Default off: behaviour identical to the long-standing shell port,
+    callers without the new kwarg see no change.
+
+    When True, the guard distinguishes two failure shapes:
+      (a) "Sticky regime" — every check in the window is `partial_error`
+          AND all share the IDENTICAL `error` reason string. This is
+          the signature of a stable post-count drop (Threads UI change
+          or true post deletions): scraping IS still working, just
+          consistently below previous_max. Allow publish so the
+          snapshot reflects current reality — the alternative is
+          permanent silent staleness (observed 2026-05-23: 93% of
+          recent 30 checks were the same `found=4 previous_max=15`
+          partial_error, sync blocked since the regime started).
+      (b) "Transient" — mixed statuses, mixed error strings, or any
+          full `status='error'`. Still block (current behaviour) —
+          this is real instability and publishing now would freeze
+          a half-broken state.
+
+    The regime check requires `window >= 2` so a single partial_error
+    can't by itself satisfy the "all checks share" predicate
+    vacuously. Below that we fall through to the strict path.
     """
     rows = conn.execute(
-        "SELECT status FROM checks ORDER BY id DESC LIMIT ?",
+        "SELECT status, error FROM checks ORDER BY id DESC LIMIT ?",
         (window,),
     ).fetchall()
     statuses = [str(row[0]) for row in rows]
+    errors = [row[1] if row[1] is not None else "" for row in rows]
     bad = [s for s in statuses if "error" in s.lower()]
-    if bad:
+    if not bad:
         return GuardDecision(
-            False,
-            f"recent failures detected (statuses={','.join(statuses) or '<none>'})",
+            True, f"recent statuses ok (statuses={','.join(statuses) or '<none>'})"
         )
-    return GuardDecision(True, f"recent statuses ok (statuses={','.join(statuses) or '<none>'})")
+
+    if (
+        allow_sticky_partial_error_regime
+        and len(rows) >= max(2, window)
+        and all(s == "partial_error" for s in statuses)
+        and len(set(errors)) == 1
+        and errors[0] != ""
+    ):
+        # All `window` checks are the same partial_error shape — stable
+        # regime. Permit the publish so the dashboard reflects the
+        # current state instead of an indefinite stale snapshot.
+        return GuardDecision(
+            True,
+            f"sticky partial_error regime (window={window}, reason={errors[0]!r})",
+        )
+
+    return GuardDecision(
+        False,
+        f"recent failures detected (statuses={','.join(statuses) or '<none>'})",
+    )
 
 
 # ── 3. Commit-frequency guard ───────────────────────────────────────────
@@ -220,6 +264,7 @@ def evaluate_all(
     snapshot_path: Path,
     min_gap_sec: int = DEFAULT_COMMIT_MIN_GAP_SEC,
     window: int = DEFAULT_RECENT_CHECKS_WINDOW,
+    allow_sticky_partial_error_regime: bool = False,
 ) -> SyncDecision:
     """Run guards in the same order as the shell, short-circuit on first skip."""
     decisions: list[GuardDecision] = []
@@ -228,7 +273,11 @@ def evaluate_all(
     if not delta_decision.proceed:
         return SyncDecision(False, 0, decisions)
 
-    fail_decision = recent_failures_guard(conn, window=window)
+    fail_decision = recent_failures_guard(
+        conn,
+        window=window,
+        allow_sticky_partial_error_regime=allow_sticky_partial_error_regime,
+    )
     decisions.append(fail_decision)
     if not fail_decision.proceed:
         return SyncDecision(False, current_max - max(0, last_cursor), decisions)
