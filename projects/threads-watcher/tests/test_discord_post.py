@@ -330,3 +330,173 @@ def test_discord_ok_status_includes_204():
 def test_discord_ok_status_includes_200_for_backcompat():
     # Defensive against Discord changing the response.
     assert 200 in DISCORD_OK_STATUS
+
+
+# ── severity-filter (--min-severity) ──────────────────────────────────
+
+
+from discord_post import (  # noqa: E402
+    SEVERITY_ERR, SEVERITY_NONE, SEVERITY_ORDER, SEVERITY_WARN,
+    severity_at_or_above, severity_of_payload,
+)
+from discord_payload import COLOR_GREEN, COLOR_RED, COLOR_YELLOW  # noqa: E402
+
+
+class TestSeverityLadder:
+    """Pure helpers — pin the ordering + ladder semantics so future
+    palette additions don't accidentally invert the comparison."""
+
+    def test_severity_order_is_ascending(self):
+        # Documented contract: SEVERITY_ORDER goes LEAST-severe → MOST.
+        # The CLI filter uses "at or above" which assumes this ordering.
+        assert SEVERITY_ORDER == (SEVERITY_NONE, SEVERITY_WARN, SEVERITY_ERR)
+
+    def test_at_or_above_includes_equal(self):
+        # warn at threshold warn → posts. The boundary is INCLUSIVE
+        # (operator intuition: "min warn" means "warn AND above").
+        assert severity_at_or_above(SEVERITY_WARN, SEVERITY_WARN)
+        assert severity_at_or_above(SEVERITY_ERR, SEVERITY_ERR)
+        assert severity_at_or_above(SEVERITY_NONE, SEVERITY_NONE)
+
+    def test_at_or_above_filters_lower(self):
+        # green vs warn-threshold → suppress.
+        assert not severity_at_or_above(SEVERITY_NONE, SEVERITY_WARN)
+        # warn vs err-threshold → suppress.
+        assert not severity_at_or_above(SEVERITY_WARN, SEVERITY_ERR)
+
+    def test_at_or_above_passes_higher(self):
+        # err vs warn-threshold → post (always alert on more-severe).
+        assert severity_at_or_above(SEVERITY_ERR, SEVERITY_WARN)
+        assert severity_at_or_above(SEVERITY_WARN, SEVERITY_NONE)
+
+
+class TestSeverityOfPayload:
+    def _embed(self, color):
+        return {"embeds": [{"color": color}]}
+
+    def test_red_is_err(self):
+        assert severity_of_payload(self._embed(COLOR_RED)) == SEVERITY_ERR
+
+    def test_yellow_is_warn(self):
+        assert severity_of_payload(self._embed(COLOR_YELLOW)) == SEVERITY_WARN
+
+    def test_green_is_none(self):
+        assert severity_of_payload(self._embed(COLOR_GREEN)) == SEVERITY_NONE
+
+    def test_unknown_color_degrades_safely_to_none(self):
+        # 🔒 Defensive: future palette drift (e.g., a new ORANGE) must
+        # NOT silently suppress alerts. Map unknowns to least-severe
+        # so the worst case is one extra POST, not a missed alert.
+        assert severity_of_payload(self._embed(0x000000)) == SEVERITY_NONE
+
+    def test_missing_color_field_degrades_safely(self):
+        # State.json without an embed (e.g., upstream builder bug)
+        # falls back to least-severe → still posts → operator sees
+        # the malformed payload + can debug.
+        assert severity_of_payload({"embeds": [{}]}) == SEVERITY_NONE
+        assert severity_of_payload({}) == SEVERITY_NONE
+
+
+class TestCliMinSeverityFilter:
+    def _write_state_with_incidents(self, tmp_path, *, count_open=0, mttr_mean_s=0, now_warn_age_s=0):
+        """Generate a state.json that maps to a specific severity:
+        - 0 open + 0 mttr → GREEN (none)
+        - open age 2h → YELLOW (warn)
+        - mttr mean 25h → RED (err)
+        Lets each test pick the exact severity it wants to exercise."""
+        state = {
+            "snapshot_generated_at": "2026-05-23T08:00:00Z",
+            "open_incidents": [
+                {"handle": f"@h{i}", "warn_ts": 1_700_000_000 - now_warn_age_s, "current_bucket": 0.6}
+                for i in range(count_open)
+            ],
+            "mttr_summary": (
+                [{"handle": "@chronic", "incidents": 3, "mean_s": mttr_mean_s, "max_s": mttr_mean_s}]
+                if mttr_mean_s > 0 else []
+            ),
+        }
+        path = tmp_path / "state.json"
+        path.write_text(json.dumps(state), encoding="utf-8")
+        return path
+
+    @patch("discord_post.urllib.request.urlopen")
+    def test_green_state_skipped_when_min_warn(self, mock_urlopen, tmp_path, capsys, monkeypatch):
+        # The headline operator win: GREEN noise is suppressed at warn.
+        monkeypatch.setenv(ENV_WEBHOOK_URL, "https://discord.com/api/webhooks/1/2tok")
+        state_path = self._write_state_with_incidents(tmp_path)  # all-healthy
+        rc = _cli_main([str(state_path), "--min-severity", "warn"])
+        assert rc == 0
+        assert "SKIPPED" in capsys.readouterr().out
+        # 🔒 The crucial pin: HTTP was NEVER called. If urlopen was
+        # invoked, the filter ran AFTER the network attempt — wrong order.
+        mock_urlopen.assert_not_called()
+
+    @patch("discord_post.urllib.request.urlopen")
+    def test_yellow_state_posted_when_min_warn(self, mock_urlopen, tmp_path, capsys, monkeypatch):
+        # current_bucket value isn't what triggers severity — only the
+        # warn_ts elapsed (>= 3600) does. Use a 2h-old incident.
+        mock_urlopen.return_value = _FakeResponse(204, "")
+        monkeypatch.setenv(ENV_WEBHOOK_URL, "https://discord.com/api/webhooks/1/2tok")
+        # Use real time math so the helper hits the WARN threshold.
+        import time
+        warn_age = 2 * 3600  # 2h ago
+        state = {
+            "snapshot_generated_at": "ts",
+            "open_incidents": [{"handle": "@y", "warn_ts": int(time.time()) - warn_age, "current_bucket": 0.6}],
+            "mttr_summary": [],
+        }
+        path = tmp_path / "state.json"
+        path.write_text(json.dumps(state), encoding="utf-8")
+        rc = _cli_main([str(path), "--min-severity", "warn"])
+        assert rc == 0
+        # Real POST happened — filter let it through.
+        mock_urlopen.assert_called_once()
+
+    @patch("discord_post.urllib.request.urlopen")
+    def test_yellow_state_skipped_when_min_err(self, mock_urlopen, tmp_path, capsys, monkeypatch):
+        # Operator who only wants 24h+ chronic alerts.
+        mock_urlopen.return_value = _FakeResponse(204, "")
+        monkeypatch.setenv(ENV_WEBHOOK_URL, "https://discord.com/api/webhooks/1/2tok")
+        import time
+        state = {
+            "snapshot_generated_at": "ts",
+            "open_incidents": [{"handle": "@y", "warn_ts": int(time.time()) - 2 * 3600, "current_bucket": 0.6}],
+            "mttr_summary": [],
+        }
+        path = tmp_path / "state.json"
+        path.write_text(json.dumps(state), encoding="utf-8")
+        rc = _cli_main([str(path), "--min-severity", "err"])
+        assert rc == 0
+        mock_urlopen.assert_not_called()
+
+    @patch("discord_post.urllib.request.urlopen")
+    def test_default_min_severity_none_posts_everything(self, mock_urlopen, tmp_path, monkeypatch):
+        # Backward compat: omitting --min-severity must post even GREEN
+        # (current behaviour). Operators not opting in see no change.
+        mock_urlopen.return_value = _FakeResponse(204, "")
+        monkeypatch.setenv(ENV_WEBHOOK_URL, "https://discord.com/api/webhooks/1/2tok")
+        state_path = self._write_state_with_incidents(tmp_path)  # GREEN
+        rc = _cli_main([str(state_path)])  # no --min-severity
+        assert rc == 0
+        mock_urlopen.assert_called_once()
+
+    def test_skipped_json_output_is_parseable(self, tmp_path, capsys, monkeypatch):
+        # --json + skipped = structured signal so a cron-watcher can
+        # `jq .skipped` to distinguish "no post needed" vs "network fail".
+        monkeypatch.setenv(ENV_WEBHOOK_URL, "https://discord.com/api/webhooks/1/2tok")
+        state_path = self._write_state_with_incidents(tmp_path)  # GREEN
+        rc = _cli_main([str(state_path), "--min-severity", "warn", "--json"])
+        assert rc == 0
+        parsed = json.loads(capsys.readouterr().out)
+        assert parsed["skipped"] is True
+        assert parsed["reason"] == "min_severity_filter"
+        assert parsed["observed_severity"] == "none"
+        assert parsed["min_severity"] == "warn"
+
+    def test_bad_severity_arg_exits_two(self, tmp_path, capsys, monkeypatch):
+        # argparse choices → bad value = exit 2 (CLI convention).
+        monkeypatch.delenv(ENV_WEBHOOK_URL, raising=False)
+        state_path = self._write_state_with_incidents(tmp_path)
+        with pytest.raises(SystemExit) as exc:
+            _cli_main([str(state_path), "--min-severity", "critical"])
+        assert exc.value.code == 2

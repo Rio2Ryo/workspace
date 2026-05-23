@@ -43,7 +43,44 @@ from typing import Any
 # Re-use the pure builder so the embed format is single-sourced.
 PROJECT_ROOT = Path(__file__).resolve().parent
 sys.path.insert(0, str(PROJECT_ROOT))
-from discord_payload import build_payload_from_state  # noqa: E402
+from discord_payload import (  # noqa: E402
+    COLOR_GREEN, COLOR_RED, COLOR_YELLOW,
+    build_payload_from_state,
+)
+
+
+# Severity ladder for --min-severity filtering. Maps embed color
+# (decimal) → severity label, with an ordering for "at-or-above"
+# comparisons. Operators set `--min-severity warn` to suppress GREEN
+# notifications (the bulk of hourly cron noise) while still receiving
+# any YELLOW or RED. The bidirectional map lets us name severities
+# in CLI flags (operator-readable) while the underlying payload
+# carries colors (machine-format).
+SEVERITY_NONE = "none"      # green / all-healthy — always lowest
+SEVERITY_WARN = "warn"      # yellow / 1h+ regime
+SEVERITY_ERR = "err"        # red / 24h+ chronic
+SEVERITY_ORDER = (SEVERITY_NONE, SEVERITY_WARN, SEVERITY_ERR)
+_COLOR_TO_SEVERITY = {
+    COLOR_GREEN: SEVERITY_NONE,
+    COLOR_YELLOW: SEVERITY_WARN,
+    COLOR_RED: SEVERITY_ERR,
+}
+
+
+def severity_of_payload(payload: dict) -> str:
+    """Return the severity label matching the embed's color. Unknown
+    colors degrade to SEVERITY_NONE — defensive: a future palette
+    drift shouldn't accidentally suppress (operator missing alerts is
+    worse than operator getting one extra)."""
+    color = payload.get("embeds", [{}])[0].get("color")
+    return _COLOR_TO_SEVERITY.get(color, SEVERITY_NONE)
+
+
+def severity_at_or_above(observed: str, threshold: str) -> bool:
+    """True iff `observed` is at least as severe as `threshold` on the
+    SEVERITY_ORDER ladder. Both args must be in SEVERITY_ORDER —
+    callers should validate via argparse choices."""
+    return SEVERITY_ORDER.index(observed) >= SEVERITY_ORDER.index(threshold)
 
 
 ENV_WEBHOOK_URL = "THREADS_WATCHER_DISCORD_WEBHOOK_URL"
@@ -172,12 +209,45 @@ def _cli_main(argv: list[str] | None = None) -> int:
             "status + response body. Always valid JSON for jq piping."
         ),
     )
+    p.add_argument(
+        "--min-severity",
+        choices=list(SEVERITY_ORDER),
+        default=SEVERITY_NONE,
+        help=(
+            "Skip the POST when the embed's color/severity is BELOW "
+            "this threshold. `none` (default) posts everything; `warn` "
+            "skips green (all-healthy) noise but still surfaces any "
+            "1h+ regime; `err` only fires on 24h+ chronic state. "
+            "Dry-run + skipped both exit 0 — filter is for production "
+            "spam reduction once $THREADS_WATCHER_DISCORD_WEBHOOK_URL "
+            "is provisioned."
+        ),
+    )
     args = p.parse_args(argv)
 
     if not args.state_path.is_file():
         sys.stderr.write(f"ERROR: state file not found: {args.state_path}\n")
         return 1
     payload = build_payload_from_state(args.state_path)
+
+    # Severity filter — check BEFORE the URL gating so dry-run also
+    # reports what the filter would do (operator can verify their
+    # threshold choice without provisioning the URL).
+    observed_severity = severity_of_payload(payload)
+    if not severity_at_or_above(observed_severity, args.min_severity):
+        if args.json:
+            print(json.dumps({
+                "skipped": True,
+                "reason": "min_severity_filter",
+                "observed_severity": observed_severity,
+                "min_severity": args.min_severity,
+            }))
+        else:
+            print(
+                f"SKIPPED: severity={observed_severity} is below "
+                f"--min-severity={args.min_severity}; not posting."
+            )
+        return 0
 
     # `not url` (not `url is None`) so an env var EXPORTED-BUT-EMPTY
     # ("THREADS_WATCHER_DISCORD_WEBHOOK_URL=") falls through to
