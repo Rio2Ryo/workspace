@@ -792,6 +792,7 @@ def _do_commit_and_maybe_push(
     other = run_cmd(build_git_staged_other_paths_args(args.workspace, args.snapshot_rel, asset_relpaths))
     if other.returncode != 0:
         log.log(f"ERROR: git diff --cached probe failed: {other.stderr}")
+        log.log(format_outcome_event('error', delta=decision.delta, extra={'stage': 'git_diff_probe'}))
         return 1
     if other.stdout:
         log.log(
@@ -799,16 +800,19 @@ def _do_commit_and_maybe_push(
             "refusing to commit to avoid bundling WIP into the snapshot commit. "
             f"staged-others: {other.stdout.replace(chr(10), ', ')}"
         )
+        log.log(format_outcome_event('error', delta=decision.delta, extra={'stage': 'unrelated_staged'}))
         return 1
 
     add_res = run_cmd(build_git_add_args(args.workspace, args.snapshot_rel))
     if add_res.returncode != 0:
         log.log(f"ERROR: git add failed: {add_res.stderr}")
+        log.log(format_outcome_event('error', delta=decision.delta, extra={'stage': 'git_add'}))
         return 1
     for asset_rel in asset_relpaths:
         asset_add_res = run_cmd(build_git_add_args(args.workspace, asset_rel))
         if asset_add_res.returncode != 0:
             log.log(f"ERROR: git add screenshots failed: {asset_add_res.stderr}")
+            log.log(format_outcome_event('error', delta=decision.delta, extra={'stage': 'git_add_screenshots'}))
             return 1
 
     # If the staged diff is empty for the snapshot, the in-DB snapshot
@@ -822,13 +826,18 @@ def _do_commit_and_maybe_push(
 
     if snapshot_already_committed:
         log.log("snapshot and screenshot assets already match git index; no commit needed")
+        # Note: no `committed` event in this branch — nothing fresh was
+        # committed; the previous tick already did it. This path only
+        # gates the push retry below.
     else:
         message = build_commit_message(now_iso(), decision.delta)
         commit_res = run_cmd(build_git_commit_args(args.workspace, message, args.snapshot_rel, asset_relpaths))
         if commit_res.returncode != 0:
             log.log(f"ERROR: git commit failed: {commit_res.stderr}")
+            log.log(format_outcome_event('error', delta=decision.delta, extra={'stage': 'git_commit'}))
             return 1
         log.log(f"committed: {message}")
+        log.log(format_outcome_event('committed', delta=decision.delta))
 
     # Push BEFORE advancing the cursor. The cursor records "everything
     # up to here is synced"; with --enable-push that is only true once
@@ -840,11 +849,13 @@ def _do_commit_and_maybe_push(
         push_res = run_cmd(build_git_push_args(args.workspace, args.branch))
         if push_res.returncode != 0:
             log.log(f"ERROR: git push failed: {push_res.stderr}")
+            log.log(format_outcome_event('error', delta=decision.delta, extra={'stage': 'git_push'}))
             # Cursor deliberately NOT advanced — the next tick re-enters
             # with the same delta, finds the snapshot already committed
             # (the branch above), and retries the push until it lands.
             return 1
         log.log(f"pushed to origin {args.branch}")
+        log.log(format_outcome_event('pushed', delta=decision.delta, extra={'branch': args.branch}))
     else:
         log.log("ENABLE_PUSH not set, skipping push (commit local only)")
 

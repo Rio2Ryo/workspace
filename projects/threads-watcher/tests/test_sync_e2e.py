@@ -546,3 +546,120 @@ def test_gap_skip_with_pending_delta_keeps_dry_run_state(tmp_path):
     assert rc == 0
     assert dry_state.exists()
     assert json.loads(dry_state.read_text(encoding="utf-8")) == json.loads(original)
+
+
+# ── sync_event log-line surface (skipped / dry_run / committed / pushed / error)
+#
+# Per-outcome assertions complementing the unit tests in
+# test_sync_guards.TestFormatOutcomeEvent. These prove the canonical
+# event line actually lands in the live sync.log for each exit path
+# `_do_commit_and_maybe_push` can take, not just that the helper
+# produces the right string in isolation.
+#
+# Operators run:
+#   grep "sync_event: skipped" logs/sync.log \
+#     | grep -o "blocker=[a-z_]*" | sort | uniq -c
+#
+# These tests prove the log file actually contains the lines that grep
+# pattern depends on.
+
+
+def test_committed_event_appears_on_successful_commit(tmp_path):
+    paths = _seed_repo(tmp_path)
+    _mutate_snapshot(paths["snapshot"], n=2)
+
+    rc = sync_mod.main(_argv(paths, "--confirm"))
+    assert rc == 0
+
+    log_text = paths["log"].read_text(encoding="utf-8")
+    # delta is computed at evaluate_all from the DB max minus the
+    # cursor (which starts at 0 for a fresh tempdir). _seed_repo
+    # creates 3 posts by default; the helper line should reflect
+    # that exact value.
+    assert "sync_event: committed delta=3" in log_text, (
+        f"committed event missing from log; got:\n{log_text}"
+    )
+
+
+def test_pushed_event_appears_with_branch_when_enable_push(tmp_path):
+    paths = _seed_repo(tmp_path)
+    _make_bare_origin(tmp_path, paths["workspace"])
+    _mutate_snapshot(paths["snapshot"], n=2)
+
+    rc = sync_mod.main(_argv(paths, "--branch", "main", "--confirm", "--enable-push"))
+    assert rc == 0
+
+    log_text = paths["log"].read_text(encoding="utf-8")
+    assert "sync_event: pushed delta=3 branch=main" in log_text, (
+        f"pushed event missing from log; got:\n{log_text}"
+    )
+    # And the committed event still lands first — both should appear.
+    assert "sync_event: committed delta=3" in log_text
+
+
+def test_pushed_event_does_NOT_appear_when_push_disabled(tmp_path):
+    """The opt-in --enable-push gate must mean 'pushed' literally did
+    not happen. Pin so future code can't quietly emit pushed= when
+    only the local commit ran."""
+    paths = _seed_repo(tmp_path)
+    _mutate_snapshot(paths["snapshot"], n=2)
+
+    # No --enable-push.
+    rc = sync_mod.main(_argv(paths, "--confirm"))
+    assert rc == 0
+
+    log_text = paths["log"].read_text(encoding="utf-8")
+    assert "sync_event: committed" in log_text   # local commit happened
+    assert "sync_event: pushed" not in log_text  # push deliberately skipped
+
+
+def test_error_event_emitted_when_unrelated_file_staged(tmp_path):
+    paths = _seed_repo(tmp_path)
+    _mutate_snapshot(paths["snapshot"], n=2)
+    foreign = paths["workspace"] / "foreign.txt"
+    foreign.write_text("oops", encoding="utf-8")
+    _run("git", "add", "foreign.txt", cwd=paths["workspace"])
+
+    rc = sync_mod.main(_argv(paths, "--confirm"))
+    assert rc == 1  # hard abort (not a soft guard skip)
+
+    log_text = paths["log"].read_text(encoding="utf-8")
+    # stage names which substep failed — operator can grep
+    #   grep "sync_event: error" logs/sync.log | grep -o "stage=[a-z_]*"
+    # to see the histogram of error causes.
+    assert "sync_event: error" in log_text
+    assert "stage=unrelated_staged" in log_text
+
+
+def test_committed_event_does_NOT_appear_on_push_retry_when_snapshot_already_committed(tmp_path):
+    """The push-retry path (snapshot already in git from a prior tick
+    that failed to push) re-enters _do_commit_and_maybe_push but
+    skips the commit step. The `committed` event represents 'we
+    just committed something new'; it must NOT fire here. Otherwise
+    operator-side histograms over-count commits."""
+    paths = _seed_repo(tmp_path)
+    _make_bare_origin(tmp_path, paths["workspace"])
+    _mutate_snapshot(paths["snapshot"], n=2)
+
+    # First run with push enabled — commits + pushes.
+    rc = sync_mod.main(_argv(paths, "--branch", "main", "--confirm", "--enable-push"))
+    assert rc == 0
+    # Roll the cursor BACK so the next tick re-enters with the same
+    # delta. This simulates "previous push silently failed and the
+    # cursor wasn't advanced".
+    paths["cursor"].write_text("0", encoding="utf-8")
+
+    # Truncate the log so we observe only the second run's emits.
+    paths["log"].write_text("", encoding="utf-8")
+    rc = sync_mod.main(_argv(paths, "--branch", "main", "--confirm", "--enable-push"))
+    assert rc == 0
+
+    log_text = paths["log"].read_text(encoding="utf-8")
+    # Snapshot already matched git index — no new commit was made.
+    assert "snapshot and screenshot assets already match git index" in log_text
+    assert "sync_event: committed" not in log_text, (
+        "committed event must NOT fire on the push-retry path "
+        f"(nothing was committed). Log:\n{log_text}"
+    )
+    # But pushed CAN still fire — the retry IS pushing.
+    assert "sync_event: pushed delta=3 branch=main" in log_text
