@@ -48,6 +48,7 @@ python watcher.py --once --handle @other.user
 python watcher.py --watch --interval 600
 
 # 運用用: 60秒間隔で常駐実行(現状の最短ポーリング)
+# 新規投稿通知: デフォルトで @bmw_intokyo / @hal.lifedesign を専用Discordスレッドへ通知
 THREADS_WATCHER_INTERVAL=60 ./run-watcher.sh
 ```
 
@@ -75,6 +76,34 @@ THREADS_WATCHER_INTERVAL=60 ./run-watcher.sh
 ```bash
 cd threads-watcher-status
 vercel deploy --prod --yes   # 初回はプロジェクト作成プロンプトに沿う
+```
+
+## 環境変数 (operator runbook)
+
+operator が launchd plist / シェル経由で tune できる環境変数の完全一覧。
+**この表は `tests/test_env_vars_documented.py` によって sourceとの整合性が CI でテストされる** (code に新規 env を追加したらここにも書く、消した envはここからも消す)。
+
+| 変数 | 既定値 | range | 用途 | 読み元 |
+|---|---|---|---|---|
+| `THREADS_WATCHER_INTERVAL` | `60` | sec (>0) | watcher の polling 間隔。`run-watcher.sh` 経由でのみ有効 | `run-watcher.sh` |
+| `THREADS_WATCHER_BASELINE_LOOKBACK_DAYS` | (未設定 = 全期間) | integer (≥1) | `watcher.py --baseline-lookback-days` への注入。設定すると初回スキャンが過去 N 日に限定される | `run-watcher.sh` |
+| `THREADS_WATCHER_NOTIFY_TARGET` | `channel:1505544095274238192` (run-watcher.sh 既定) / 空 (Python 側) | Discord target id | 新規投稿の通知先。空文字で通知無効 | `watcher.py`, `run-watcher.sh` |
+| `THREADS_WATCHER_NOTIFY_HANDLES` | `@bmw_intokyo,@hal.lifedesign` (run-watcher.sh 既定) / 空 (Python 側) | カンマ区切り handle 列 | 通知対象 handle ホワイトリスト | `watcher.py`, `run-watcher.sh` |
+| `THREADS_WATCHER_NOTIFY_CHANNEL` | `discord` | `discord` 等 | `tools/post_via_kin.py` への `--channel` 引数 | `watcher.py`, `run-watcher.sh` |
+| `THREADS_WATCHER_HEARTBEAT_SEC` | `3600` (1h) | int, `(0, 86400]` | sticky regime の "still active" 再 emit 間隔。0 や > 24h は invalid (loud raise) | `sync_guards.py` |
+| `THREADS_WATCHER_SIGNIFICANT_BUCKET_DELTA` | `0.2` | float, `[0.0, 1.0]` | warn-emit dedup 閾値 (バケット 0.1 単位の最小差)。range外は invalid | `sync_guards.py` |
+| `THREADS_WATCHER_DISCORD_WEBHOOK_URL` | (未設定 = dry-run mode) | URL string | `discord_post.py` の Discord webhook 送信先。未設定 / 空で安全 dry-run | `discord_post.py` |
+
+### よくある operator usage
+
+```bash
+# 静かなops: 1h heartbeat + 6h cooldown + warn 以上のみ通知
+export THREADS_WATCHER_HEARTBEAT_SEC=21600    # 6h
+export THREADS_WATCHER_SIGNIFICANT_BUCKET_DELTA=0.3   # boundary wobble 抑制強化
+
+# Discord 通知有効化 (URL provisioned 後)
+export THREADS_WATCHER_DISCORD_WEBHOOK_URL='https://discord.com/api/webhooks/.../...'
+.venv/bin/python discord_post.py --min-severity warn --cooldown 21600
 ```
 
 ## 既知の制約 / TODO
