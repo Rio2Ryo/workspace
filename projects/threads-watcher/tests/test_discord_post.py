@@ -500,3 +500,245 @@ class TestCliMinSeverityFilter:
         with pytest.raises(SystemExit) as exc:
             _cli_main([str(state_path), "--min-severity", "critical"])
         assert exc.value.code == 2
+
+
+# ── cooldown (--cooldown SECONDS) ──────────────────────────────────────
+
+
+from discord_post import (  # noqa: E402
+    _load_cooldown_state, _save_cooldown_state, should_skip_for_cooldown,
+)
+
+
+class TestShouldSkipForCooldown:
+    """Pure helper — pin the decision matrix:
+       cooldown=0  → never skip (feature disabled)
+       no state    → never skip (first post)
+       transition  → never skip (severity change worth surfacing)
+       in-window   → skip
+       past-window → don't skip"""
+
+    def test_zero_cooldown_never_skips(self):
+        # Backward-compat sentinel.
+        state = {"last_severity": "warn", "last_posted_at": 1000}
+        assert not should_skip_for_cooldown(
+            "warn", state, cooldown_sec=0, now_ts=1100,
+        )
+
+    def test_no_prior_state_never_skips(self):
+        assert not should_skip_for_cooldown(
+            "warn", None, cooldown_sec=3600, now_ts=1000,
+        )
+
+    def test_severity_transition_never_skips(self):
+        # 🔒 The critical safety pin: warn→err escalation must NEVER
+        # be muted by cooldown, no matter how recent the last post.
+        state = {"last_severity": "warn", "last_posted_at": 1000}
+        assert not should_skip_for_cooldown(
+            "err", state, cooldown_sec=3600, now_ts=1001,  # 1s ago
+        )
+        # And recovery direction (err → warn → none) also surfaces.
+        state2 = {"last_severity": "err", "last_posted_at": 1000}
+        assert not should_skip_for_cooldown(
+            "warn", state2, cooldown_sec=3600, now_ts=1001,
+        )
+        assert not should_skip_for_cooldown(
+            "none", state2, cooldown_sec=3600, now_ts=1001,
+        )
+
+    def test_same_severity_in_window_skips(self):
+        state = {"last_severity": "warn", "last_posted_at": 1000}
+        # 500s elapsed, cooldown 3600 → still in window
+        assert should_skip_for_cooldown(
+            "warn", state, cooldown_sec=3600, now_ts=1500,
+        )
+
+    def test_same_severity_past_window_does_not_skip(self):
+        state = {"last_severity": "warn", "last_posted_at": 1000}
+        # 3601s elapsed, cooldown 3600 → just past window
+        assert not should_skip_for_cooldown(
+            "warn", state, cooldown_sec=3600, now_ts=4601,
+        )
+
+    def test_boundary_at_exactly_cooldown_does_not_skip(self):
+        # Inclusive at the boundary: elapsed == cooldown → DON'T skip.
+        # Operator setting cooldown=3600 with hourly cron expects the
+        # 1h tick to fire, not be off-by-one.
+        state = {"last_severity": "warn", "last_posted_at": 1000}
+        assert not should_skip_for_cooldown(
+            "warn", state, cooldown_sec=3600, now_ts=4600,
+        )
+
+    def test_malformed_state_treats_as_no_state(self):
+        # Future state-file corruption (partial write etc.) shouldn't
+        # cause infinite skip — treat as fresh, post + recreate.
+        assert not should_skip_for_cooldown(
+            "warn", {"last_severity": "warn", "last_posted_at": "garbage"},
+            cooldown_sec=3600, now_ts=1500,
+        )
+        assert not should_skip_for_cooldown(
+            "warn", {"last_severity": "warn"},  # missing posted_at
+            cooldown_sec=3600, now_ts=1500,
+        )
+
+
+class TestCooldownStateIO:
+    def test_load_returns_none_for_missing_file(self, tmp_path):
+        assert _load_cooldown_state(tmp_path / "nope.json") is None
+
+    def test_load_returns_none_for_malformed_json(self, tmp_path):
+        path = tmp_path / "broken.json"
+        path.write_text("not json {{{", encoding="utf-8")
+        assert _load_cooldown_state(path) is None
+
+    def test_load_returns_none_for_non_dict_top(self, tmp_path):
+        # Defensive: a future migration that wrote a list at the top
+        # shouldn't crash the loader.
+        path = tmp_path / "list.json"
+        path.write_text("[]", encoding="utf-8")
+        assert _load_cooldown_state(path) is None
+
+    def test_save_then_load_roundtrip(self, tmp_path):
+        path = tmp_path / "state.json"
+        _save_cooldown_state(path, "warn", 12345)
+        state = _load_cooldown_state(path)
+        assert state == {"last_severity": "warn", "last_posted_at": 12345}
+
+    def test_save_creates_parent_dir(self, tmp_path):
+        # State file lives under threads-watcher-status/ by default;
+        # the dir might not exist in fresh checkout / test sandbox.
+        path = tmp_path / "nested" / "deeper" / "state.json"
+        _save_cooldown_state(path, "warn", 1)
+        assert path.exists()
+
+
+class TestCliCooldownEndToEnd:
+    def _write_yellow_state(self, tmp_path, name="state.json"):
+        import time
+        state = {
+            "snapshot_generated_at": "ts",
+            "open_incidents": [{
+                "handle": "@y", "warn_ts": int(time.time()) - 2 * 3600,
+                "current_bucket": 0.6,
+            }],
+            "mttr_summary": [],
+        }
+        path = tmp_path / name
+        path.write_text(json.dumps(state), encoding="utf-8")
+        return path
+
+    @patch("discord_post.urllib.request.urlopen")
+    def test_default_cooldown_zero_preserves_existing_behaviour(
+        self, mock_urlopen, tmp_path, monkeypatch,
+    ):
+        # Backward-compat: no --cooldown arg → always post.
+        mock_urlopen.return_value = _FakeResponse(204, "")
+        monkeypatch.setenv(ENV_WEBHOOK_URL, "https://discord.com/api/webhooks/1/2")
+        state_path = self._write_yellow_state(tmp_path)
+        cd_state = tmp_path / "cd.json"
+        for _ in range(3):
+            rc = _cli_main([str(state_path), "--cooldown-state", str(cd_state)])
+            assert rc == 0
+        assert mock_urlopen.call_count == 3
+        # 🔒 State file MUST NOT have been created when cooldown=0;
+        # we don't want to scatter state files for opted-out operators.
+        assert not cd_state.exists()
+
+    @patch("discord_post.urllib.request.urlopen")
+    def test_cooldown_suppresses_repeat_same_severity(
+        self, mock_urlopen, tmp_path, monkeypatch,
+    ):
+        mock_urlopen.return_value = _FakeResponse(204, "")
+        monkeypatch.setenv(ENV_WEBHOOK_URL, "https://discord.com/api/webhooks/1/2")
+        state_path = self._write_yellow_state(tmp_path)
+        cd_state = tmp_path / "cd.json"
+        # First call: posts + saves state.
+        rc1 = _cli_main([
+            str(state_path), "--cooldown", "3600",
+            "--cooldown-state", str(cd_state),
+        ])
+        assert rc1 == 0
+        # Second call (same severity, within window): skipped, no
+        # additional POST.
+        rc2 = _cli_main([
+            str(state_path), "--cooldown", "3600",
+            "--cooldown-state", str(cd_state),
+        ])
+        assert rc2 == 0
+        assert mock_urlopen.call_count == 1, (
+            f"Cooldown should have skipped the second post; got "
+            f"{mock_urlopen.call_count} POSTs"
+        )
+
+    @patch("discord_post.urllib.request.urlopen")
+    def test_severity_transition_overrides_cooldown(
+        self, mock_urlopen, tmp_path, monkeypatch,
+    ):
+        # 🔒 The headline safety: a warn→err escalation 1s after a
+        # warn post MUST fire. Operators can't afford to miss this.
+        mock_urlopen.return_value = _FakeResponse(204, "")
+        monkeypatch.setenv(ENV_WEBHOOK_URL, "https://discord.com/api/webhooks/1/2")
+        cd_state = tmp_path / "cd.json"
+        # Seed prior state: warn posted 1 second ago.
+        import time
+        _save_cooldown_state(cd_state, "warn", int(time.time()) - 1)
+        # Build a RED state.json (mttr_summary mean >= 24h → red).
+        red_state = tmp_path / "red.json"
+        red_state.write_text(json.dumps({
+            "snapshot_generated_at": "ts",
+            "open_incidents": [],
+            "mttr_summary": [{"handle": "@x", "incidents": 1,
+                              "mean_s": 25 * 3600, "max_s": 25 * 3600}],
+        }), encoding="utf-8")
+        rc = _cli_main([
+            str(red_state), "--cooldown", "3600",
+            "--cooldown-state", str(cd_state),
+        ])
+        assert rc == 0
+        mock_urlopen.assert_called_once()  # escalation posted
+
+    def test_cooldown_skip_json_output(self, tmp_path, capsys, monkeypatch):
+        # Test the structured-output contract without needing a mock.
+        monkeypatch.setenv(ENV_WEBHOOK_URL, "https://discord.com/api/webhooks/1/2")
+        state_path = self._write_yellow_state(tmp_path)
+        cd_state = tmp_path / "cd.json"
+        import time
+        _save_cooldown_state(cd_state, "warn", int(time.time()) - 100)
+        rc = _cli_main([
+            str(state_path), "--cooldown", "3600",
+            "--cooldown-state", str(cd_state), "--json",
+        ])
+        assert rc == 0
+        parsed = json.loads(capsys.readouterr().out)
+        assert parsed["skipped"] is True
+        assert parsed["reason"] == "cooldown_active"
+        assert parsed["observed_severity"] == "warn"
+        assert parsed["cooldown_sec"] == 3600
+        assert 3400 <= parsed["remaining_sec"] <= 3500  # ~3500s remaining
+
+    @patch("discord_post.urllib.request.urlopen")
+    def test_filter_and_cooldown_compose(
+        self, mock_urlopen, tmp_path, monkeypatch,
+    ):
+        # When --min-severity skips, cooldown state must NOT be
+        # written (otherwise a tomorrow's warn would be incorrectly
+        # gated against a "green posted yesterday" entry that never
+        # actually posted).
+        mock_urlopen.return_value = _FakeResponse(204, "")
+        monkeypatch.setenv(ENV_WEBHOOK_URL, "https://discord.com/api/webhooks/1/2")
+        green_state = tmp_path / "g.json"
+        green_state.write_text(json.dumps({
+            "snapshot_generated_at": "ts",
+            "open_incidents": [], "mttr_summary": [],
+        }), encoding="utf-8")
+        cd_state = tmp_path / "cd.json"
+        rc = _cli_main([
+            str(green_state), "--min-severity", "warn",
+            "--cooldown", "3600", "--cooldown-state", str(cd_state),
+        ])
+        assert rc == 0
+        mock_urlopen.assert_not_called()
+        assert not cd_state.exists(), (
+            "min-severity-filter skip should NOT create cooldown state; "
+            "doing so would corrupt the dedup signal for future calls"
+        )

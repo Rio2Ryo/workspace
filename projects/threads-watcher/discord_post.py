@@ -90,6 +90,85 @@ ENV_WEBHOOK_URL = "THREADS_WATCHER_DISCORD_WEBHOOK_URL"
 # for backward compatibility.
 DISCORD_OK_STATUS = (200, 204)
 
+# ── cooldown / sticky-regime dedup ────────────────────────────────────
+#
+# Once $THREADS_WATCHER_DISCORD_WEBHOOK_URL is provisioned and the
+# hourly cron fires, a sticky YELLOW (e.g., handle warning for 24h+)
+# would generate 24 identical embeds — operator channel becomes
+# noise. The --min-severity filter doesn't help when the severity
+# itself is what's stuck.
+#
+# Cooldown: if the SAME severity was posted within --cooldown seconds,
+# skip this post. Severity TRANSITIONS (warn → err escalation, err →
+# warn recovery) ALWAYS post regardless of cooldown — those are the
+# operator-actionable signals the channel exists for.
+#
+# Default 0 = disabled (backward-compat). Operator sets the threshold
+# explicitly via CLI flag or, more commonly, via the launchd plist
+# `<ProgramArguments>` block.
+
+DEFAULT_COOLDOWN_STATE_PATH = "threads-watcher-status/discord-post-state.json"
+
+
+def _load_cooldown_state(path: Path) -> dict | None:
+    """Read persisted last-post state. Returns None if the file is
+    missing OR malformed — both cases treated as "no prior post",
+    so the next call POSTs and recreates the file."""
+    try:
+        data = json.loads(path.read_text(encoding="utf-8"))
+        if not isinstance(data, dict):
+            return None
+        return data
+    except (FileNotFoundError, json.JSONDecodeError):
+        return None
+
+
+def _save_cooldown_state(path: Path, severity: str, posted_at: int) -> None:
+    """Persist the just-posted state. Best-effort: a failed write is
+    logged to stderr but doesn't propagate — the POST itself
+    succeeded, and a missing state file just means the next call
+    might double-post (re-creates the file). Far less bad than a
+    crash that hides the successful POST from the operator."""
+    try:
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_text(
+            json.dumps({"last_severity": severity, "last_posted_at": posted_at}),
+            encoding="utf-8",
+        )
+    except OSError as e:
+        sys.stderr.write(f"WARN: failed to save cooldown state to {path}: {e}\n")
+
+
+def should_skip_for_cooldown(
+    current_severity: str,
+    cooldown_state: dict | None,
+    *,
+    cooldown_sec: int,
+    now_ts: int,
+) -> bool:
+    """Decide whether the cooldown rule says to skip THIS post.
+
+    Returns True only when ALL of:
+      - cooldown_sec > 0 (feature enabled)
+      - prior state exists
+      - prior severity == current severity (no transition to surface)
+      - elapsed since last post < cooldown window
+    """
+    if cooldown_sec <= 0:
+        return False
+    if cooldown_state is None:
+        return False
+    last_severity = cooldown_state.get("last_severity")
+    last_posted_at = cooldown_state.get("last_posted_at")
+    if last_severity != current_severity:
+        # 🔒 Severity TRANSITION (warn↔err, err→warn recovery, etc.)
+        # ALWAYS posts — that's exactly the signal worth not muting.
+        return False
+    if not isinstance(last_posted_at, (int, float)):
+        return False
+    elapsed = now_ts - int(last_posted_at)
+    return elapsed < cooldown_sec
+
 # 10s is generous for a single HTTP POST to Discord; their median
 # latency is sub-300ms. A hung connect that runs past 10s is a real
 # problem we want surfaced as a timeout, not silently swallowed.
@@ -223,6 +302,30 @@ def _cli_main(argv: list[str] | None = None) -> int:
             "is provisioned."
         ),
     )
+    p.add_argument(
+        "--cooldown",
+        type=int,
+        default=0,
+        help=(
+            "Suppress repeat-posts of the same severity within N "
+            "seconds. 0 (default) = disabled, backward-compat. "
+            "Typical operator value with hourly cron: 21600 (6h) — "
+            "sticky YELLOW gets 1 post per 6h instead of 24/day. "
+            "Severity TRANSITIONS (warn↔err) ALWAYS post regardless "
+            "of cooldown — those are the signals worth not muting."
+        ),
+    )
+    p.add_argument(
+        "--cooldown-state",
+        type=Path,
+        default=Path(DEFAULT_COOLDOWN_STATE_PATH),
+        help=(
+            f"Persistent JSON file for cooldown bookkeeping. Default "
+            f"{DEFAULT_COOLDOWN_STATE_PATH}. Override for tests or "
+            f"per-channel partitioning if a future operator runs "
+            f"multiple posters."
+        ),
+    )
     args = p.parse_args(argv)
 
     if not args.state_path.is_file():
@@ -246,6 +349,40 @@ def _cli_main(argv: list[str] | None = None) -> int:
             print(
                 f"SKIPPED: severity={observed_severity} is below "
                 f"--min-severity={args.min_severity}; not posting."
+            )
+        return 0
+
+    # Cooldown check — same severity within window → skip. Runs
+    # AFTER the severity filter so a green snapshot doesn't bump
+    # cooldown state for a green that wouldn't have been posted
+    # anyway. Filter and cooldown compose cleanly.
+    import time
+    now_ts = int(time.time())
+    cooldown_state = _load_cooldown_state(args.cooldown_state)
+    if should_skip_for_cooldown(
+        observed_severity,
+        cooldown_state,
+        cooldown_sec=args.cooldown,
+        now_ts=now_ts,
+    ):
+        last_at = int(cooldown_state["last_posted_at"])  # safe: gated above
+        remaining = args.cooldown - (now_ts - last_at)
+        if args.json:
+            print(json.dumps({
+                "skipped": True,
+                "reason": "cooldown_active",
+                "observed_severity": observed_severity,
+                "cooldown_sec": args.cooldown,
+                "remaining_sec": remaining,
+                "last_posted_at": last_at,
+            }))
+        else:
+            print(
+                f"SKIPPED: cooldown active — same severity "
+                f"({observed_severity}) posted {now_ts - last_at}s ago, "
+                f"cooldown {args.cooldown}s, "
+                f"{remaining}s remaining. Severity transition or "
+                f"cooldown expiry will reopen posting."
             )
         return 0
 
@@ -276,6 +413,12 @@ def _cli_main(argv: list[str] | None = None) -> int:
         return 1
 
     if status in DISCORD_OK_STATUS:
+        # Persist cooldown bookkeeping only when feature enabled —
+        # avoids creating state file unnecessarily for operators who
+        # never opted in to cooldown. Best-effort: failure logs but
+        # doesn't fail the POST (the post itself succeeded).
+        if args.cooldown > 0:
+            _save_cooldown_state(args.cooldown_state, observed_severity, now_ts)
         if args.json:
             print(json.dumps({"posted": True, "status": status, "body": body}))
         else:
