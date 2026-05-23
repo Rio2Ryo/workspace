@@ -166,6 +166,70 @@ if [ -n "$WEBHOOK_VAL" ] && [ "$WEBHOOK_VAL" != "__SET_BY_OPERATOR__" ]; then
   fi
 fi
 
+# 2c. discord_post.py CLI flag value validation. If the plist's
+#     ProgramArguments uses --min-severity or --max-retries, validate
+#     the value matches what discord_post.py argparse accepts. Catches
+#     operator typos in the plist that would fail first cron tick
+#     with exit 2 (argparse "invalid choice") — same install-time-vs-
+#     incident-time feedback gap the URL shape check (case 2b) closes.
+ARG_LINES=$(awk '
+  /<key>ProgramArguments<\/key>/ {capturing=1; next}
+  capturing && /<\/array>/ {capturing=0}
+  capturing && /<string>/ {
+    gsub(/.*<string>/, "")
+    gsub(/<\/string>.*/, "")
+    print
+  }
+' "$PLIST_PATH")
+
+# --min-severity must be one of: none, warn, err (per discord_post.py
+# SEVERITY_ORDER in commit ce5ca04).
+SEVERITY_VAL=""
+prev_was_severity_flag=0
+while IFS= read -r ARG; do
+  [ -z "$ARG" ] && continue
+  if [ "$prev_was_severity_flag" = 1 ]; then
+    SEVERITY_VAL="$ARG"
+    prev_was_severity_flag=0
+  elif [ "$ARG" = "--min-severity" ]; then
+    prev_was_severity_flag=1
+  fi
+done <<<"$ARG_LINES"
+if [ -n "$SEVERITY_VAL" ]; then
+  case "$SEVERITY_VAL" in
+    none|warn|err)
+      pass "--min-severity value valid: $SEVERITY_VAL"
+      ;;
+    *)
+      fail "--min-severity=$SEVERITY_VAL is not a valid choice (must be one of: none, warn, err). discord_post.py would exit 2 every cron tick. Fix BEFORE launchctl load."
+      ;;
+  esac
+fi
+
+# --max-retries must be a non-negative integer (per discord_post.py
+# argparse type=int in commit 334c6cb; range [0, ...]).
+RETRIES_VAL=""
+prev_was_retries_flag=0
+while IFS= read -r ARG; do
+  [ -z "$ARG" ] && continue
+  if [ "$prev_was_retries_flag" = 1 ]; then
+    RETRIES_VAL="$ARG"
+    prev_was_retries_flag=0
+  elif [ "$ARG" = "--max-retries" ]; then
+    prev_was_retries_flag=1
+  fi
+done <<<"$ARG_LINES"
+if [ -n "$RETRIES_VAL" ]; then
+  # awk-based numeric + non-negative check (same pattern as
+  # restart-watcher.sh's THREADS_WATCHER_RESTART_*_WAIT_SEC validation
+  # in commit 9bfcfc7).
+  if awk -v v="$RETRIES_VAL" 'BEGIN{exit !(v ~ /^[0-9]+$/)}'; then
+    pass "--max-retries value valid: $RETRIES_VAL"
+  else
+    fail "--max-retries=$RETRIES_VAL must be a non-negative integer. discord_post.py argparse would exit 2 every cron tick. Fix BEFORE launchctl load."
+  fi
+fi
+
 # 3. ProgramArguments paths must resolve. Extract every <string>
 #    inside <key>ProgramArguments</key>'s <array> via plutil if
 #    available, fall back to grep heuristic.

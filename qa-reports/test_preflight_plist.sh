@@ -232,6 +232,58 @@ assert_not_contains "typo error does NOT leak URL value" "discrd.com" "$OUTPUT"
 "$PREFLIGHT" --check-only "$REPO_ROOT/projects/threads-watcher/com.shiro.threads-watcher-sync.plist" >/dev/null 2>&1
 assert_exit "non-Discord plist still passes (no false positive)" 0 $?
 
+# ── case 9: --min-severity + --max-retries CLI flag validation ────────
+
+printf '\n=== discord_post CLI flag validation ===\n'
+
+_make_plist_with_flag() {
+  # Build a discord-post plist with custom --min-severity + --max-retries
+  # values. Replaces both the URL placeholder and the flag values.
+  local severity="$1" retries="$2" target="$3"
+  sed -e 's|__SET_BY_OPERATOR__|https://discord.com/api/webhooks/1/tok|' \
+      -e "s|<string>warn</string>|<string>${severity}</string>|" \
+      -e "s|<string>21600</string>|<string>21600</string>|" \
+      -e "s|<string>1</string>|<string>${retries}</string>|" \
+    "$REPO_ROOT/projects/threads-watcher/com.shiro.threads-watcher-discord-post.plist.example" \
+    > "$target"
+}
+
+# Valid combo (defaults the .example ships with).
+_make_plist_with_flag warn 1 "$TMP/flags-default.plist"
+"$PREFLIGHT" --check-only "$TMP/flags-default.plist" >/dev/null 2>&1
+assert_exit "default --min-severity=warn --max-retries=1 passes" 0 $?
+
+# 🔒 Typo'd severity (capital W, common slip).
+_make_plist_with_flag Warn 1 "$TMP/flags-bad-severity.plist"
+"$PREFLIGHT" --check-only "$TMP/flags-bad-severity.plist" >/dev/null 2>&1
+assert_exit "--min-severity=Warn (capital) fails" 1 $?
+
+OUTPUT=$("$PREFLIGHT" --check-only "$TMP/flags-bad-severity.plist" 2>&1 || true)
+assert_contains "bad severity names the actual value" "Warn" "$OUTPUT"
+assert_contains "bad severity lists the valid choices" "none, warn, err" "$OUTPUT"
+
+# 🔒 Operator wrote out a word instead of an enum value.
+_make_plist_with_flag warning 1 "$TMP/flags-warning.plist"
+"$PREFLIGHT" --check-only "$TMP/flags-warning.plist" >/dev/null 2>&1
+assert_exit "--min-severity=warning (non-enum) fails" 1 $?
+
+# 🔒 Operator typo on max-retries (negative).
+_make_plist_with_flag warn -1 "$TMP/flags-negative-retries.plist"
+"$PREFLIGHT" --check-only "$TMP/flags-negative-retries.plist" >/dev/null 2>&1
+assert_exit "--max-retries=-1 fails (non-integer)" 1 $?
+
+# 🔒 Operator wrote a word instead of integer.
+_make_plist_with_flag warn "two" "$TMP/flags-word-retries.plist"
+"$PREFLIGHT" --check-only "$TMP/flags-word-retries.plist" >/dev/null 2>&1
+assert_exit "--max-retries=two fails (non-integer)" 1 $?
+
+OUTPUT=$("$PREFLIGHT" --check-only "$TMP/flags-word-retries.plist" 2>&1 || true)
+assert_contains "non-integer retries names the value" "two" "$OUTPUT"
+
+# Plists WITHOUT the flags (sync.plist) unaffected — no false positive.
+"$PREFLIGHT" --check-only "$REPO_ROOT/projects/threads-watcher/com.shiro.threads-watcher-sync.plist" >/dev/null 2>&1
+assert_exit "non-discord_post plist unaffected by flag check" 0 $?
+
 # ── summary ────────────────────────────────────────────────────────────
 
 printf '\n=== summary ===\n'
