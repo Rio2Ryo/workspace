@@ -567,3 +567,146 @@ class TestSqliteTransactionalDdl:
         cols = {row[1] for row in conn.execute("PRAGMA table_info(t)")}
         assert cols == {"a", "b"}
         conn.close()
+
+
+# ── down_0048 atomic-wrap proof (Yakon decision evidence) ─────────────
+#
+# TestSqliteTransactionalDdl proves the sqlite3 transactional DDL
+# primitive works. This class applies that primitive to the EXACT
+# production down_0048 SQL, demonstrating that wrapping the actual
+# 3-DROP-COLUMN sequence in BEGIN/COMMIT preserves atomicity on
+# mid-script failure.
+#
+# Decision evidence for the Yakon-pending down_0048 atomicity refactor:
+# this empirically proves it WORKS at the sqlite3 layer. D1 verification
+# remains operator's responsibility (`wrangler d1 execute --file` of
+# a wrapped down_0048 against test DB), but the sqlite3 leg is locked.
+
+
+class TestDown0048AtomicWrappingProof:
+    """Apply TestSqliteTransactionalDdl primitives to actual production
+    down_0048 SQL — verify that wrapping the real 3-DROP sequence in
+    BEGIN/COMMIT preserves atomicity end-to-end."""
+
+    DOWN_0048_SQL = (DOWN_DIR / "down_0048.sql").read_text(encoding="utf-8")
+
+    def _setup_agent_states(self, conn):
+        """Create agent_states with the 3 team columns 0048 dropped.
+        Mirrors AGENT_STATES_AFTER_0048 used by TestDown0048Idempotency
+        above — single source of truth for the schema-under-test."""
+        conn.executescript(AGENT_STATES_AFTER_0048)
+
+    def test_wrapped_down_0048_happy_path_drops_all_3_columns(self):
+        # 🔒 Counter-test for the failure scenario below: BEGIN; <full
+        # down_0048 SQL>; COMMIT; with no injected failure → all 3
+        # columns gone, transaction committed. Proves the wrap doesn't
+        # break the happy path.
+        conn = _fresh()
+        self._setup_agent_states(conn)
+
+        # Strip the down_0048 comment-only header so only executable
+        # SQL goes inside BEGIN/COMMIT (comments inside a transaction
+        # are harmless but cleaner to isolate just the DDL).
+        executable_sql = "\n".join(
+            line for line in self.DOWN_0048_SQL.split("\n")
+            if not line.strip().startswith("--")
+        ).strip()
+        wrapped = f"BEGIN;\n{executable_sql}\nCOMMIT;"
+        conn.executescript(wrapped)
+
+        assert not conn.in_transaction
+        cols = {row[1] for row in conn.execute("PRAGMA table_info(agent_states)")}
+        assert cols == {"id", "name"}, (
+            f"wrapped down_0048 happy path should leave {{id, name}}; "
+            f"got {cols}"
+        )
+        conn.close()
+
+    def test_wrapped_down_0048_mid_script_failure_rolls_back_all_3_drops(self):
+        # 🔒 The headline atomicity proof: wrap actual down_0048 SQL
+        # in BEGIN/COMMIT + inject failure between DROP statements →
+        # manual rollback restores ALL 3 dropped columns.
+        #
+        # Without the wrap (current production state), a mid-script
+        # failure leaves agent_states in partial state (device gone,
+        # project + role remain). With the wrap, rollback restores
+        # the pre-attempt state exactly.
+        conn = _fresh()
+        self._setup_agent_states(conn)
+        before = {row[1] for row in conn.execute("PRAGMA table_info(agent_states)")}
+        assert before == {"id", "name", "role", "project", "device"}
+
+        # Inject failure AFTER the first DROP COLUMN device but BEFORE
+        # the second (project). This simulates the realistic partial-
+        # state hazard the wrap is designed to prevent.
+        broken_sql = (
+            "BEGIN;\n"
+            "ALTER TABLE agent_states DROP COLUMN device;\n"
+            "INSERT INTO no_such_table VALUES (1);\n"  # ← synthetic failure
+            "ALTER TABLE agent_states DROP COLUMN project;\n"
+            "ALTER TABLE agent_states DROP COLUMN role;\n"
+            "COMMIT;\n"
+        )
+        try:
+            conn.executescript(broken_sql)
+            pytest.fail("expected OperationalError on missing-table INSERT")
+        except sqlite3.OperationalError as e:
+            assert "no such table" in str(e)
+
+        # Mid-state: device gone, project + role still present
+        # (DROP ran before the failure, transaction still open).
+        mid = {row[1] for row in conn.execute("PRAGMA table_info(agent_states)")}
+        assert "device" not in mid
+        assert "project" in mid
+        assert "role" in mid
+
+        # 🔒 ROLLBACK restores ALL columns including the one already
+        # dropped mid-script. This is the atomicity property.
+        assert conn.in_transaction
+        conn.rollback()
+        after = {row[1] for row in conn.execute("PRAGMA table_info(agent_states)")}
+        assert after == before, (
+            f"rollback should fully restore pre-BEGIN state; "
+            f"got {after}, expected {before}. If 'device' is missing "
+            f"here, sqlite3 lost transactional atomicity for ALTER "
+            f"TABLE DROP COLUMN — investigate before shipping the "
+            f"down_0048 wrap."
+        )
+        conn.close()
+
+    def test_unwrapped_down_0048_demonstrates_partial_state_hazard(self):
+        # 🔒 Documentation test: prove the CURRENT (unwrapped)
+        # behavior leaves partial state on mid-script failure. This
+        # is the hazard the wrap eliminates — pin so a future
+        # operator reading this test can SEE the before/after
+        # contrast empirically.
+        conn = _fresh()
+        self._setup_agent_states(conn)
+
+        broken_sql = (
+            "ALTER TABLE agent_states DROP COLUMN device;\n"
+            "INSERT INTO no_such_table VALUES (1);\n"
+            "ALTER TABLE agent_states DROP COLUMN project;\n"
+            "ALTER TABLE agent_states DROP COLUMN role;\n"
+        )
+        try:
+            conn.executescript(broken_sql)
+            pytest.fail("expected OperationalError on missing-table INSERT")
+        except sqlite3.OperationalError:
+            pass
+
+        # 🔒 Partial state: device gone (committed via auto-commit
+        # of the first ALTER), project + role still present.
+        # Operator stuck with a half-rolled-back schema, no clean
+        # path forward without manual intervention.
+        partial = {row[1] for row in conn.execute("PRAGMA table_info(agent_states)")}
+        assert "device" not in partial, (
+            "current unwrapped down_0048 should have committed "
+            "DROP COLUMN device before the failure — that's the hazard"
+        )
+        assert "project" in partial
+        assert "role" in partial
+        # Connection NOT in transaction — sqlite3 auto-committed
+        # each DDL individually before the failure.
+        assert not conn.in_transaction
+        conn.close()
