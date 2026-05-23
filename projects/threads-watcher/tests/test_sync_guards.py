@@ -1273,3 +1273,192 @@ class TestRecoveredEvent:
         )
         # @good recovered, @malformed silently skipped (not a crash).
         assert [r['handle'] for r in recovered] == ['@good']
+
+
+# ── MTTR helper: compute_mttr_from_log / summarise_mttr ────────────────
+
+
+class TestComputeMTTRFromLog:
+    """Pair (warn, recovered) sync_event lines from a log file and
+    return per-handle incident durations. The downstream use case is
+    feeding Discord/Slack notify hooks ("regime for @hot lasted 3.2h")
+    and ops dashboards.
+
+    Heartbeat warn re-emits must NOT open a second incident — the
+    pairing rule is "first warn after the last recovered opens; first
+    recovered closes; everything between is the same incident".
+    """
+
+    def _warn(self, ts: str, handle: str, rate: float) -> str:
+        return (
+            f'{ts} sync_event: warn delta=0 handle={handle} rate={rate} '
+            f'threshold=0.5 total=30 type=partial_error_rate window_hours=1'
+        )
+
+    def _recovered(self, ts: str, handle: str, prev_bucket: float) -> str:
+        return (
+            f'{ts} sync_event: recovered delta=0 handle={handle} '
+            f'prev_bucket={prev_bucket} type=partial_error_rate'
+        )
+
+    def test_single_warn_then_recovered_yields_one_record(self):
+        from sync_guards import compute_mttr_from_log
+        lines = [
+            self._warn('2026-05-23T04:00:00Z', '@hot', 0.9),
+            self._recovered('2026-05-23T05:00:00Z', '@hot', 0.9),
+        ]
+        result = compute_mttr_from_log(lines)
+        assert list(result.keys()) == ['@hot']
+        assert len(result['@hot']) == 1
+        rec = result['@hot'][0]
+        assert rec['duration_s'] == 3600
+        assert rec['prev_bucket'] == 0.9
+
+    def test_heartbeat_warn_re_emits_do_NOT_open_new_incident(self):
+        # 🔒 Core pairing pin: warn → warn (heartbeat) → recovered
+        # produces ONE incident, not two. The middle warn would
+        # otherwise inflate incident counts.
+        from sync_guards import compute_mttr_from_log
+        lines = [
+            self._warn('2026-05-23T04:00:00Z', '@hot', 0.9),
+            self._warn('2026-05-23T04:30:00Z', '@hot', 0.91),  # heartbeat
+            self._warn('2026-05-23T04:45:00Z', '@hot', 0.92),  # heartbeat
+            self._recovered('2026-05-23T05:00:00Z', '@hot', 0.9),
+        ]
+        records = compute_mttr_from_log(lines)
+        assert len(records['@hot']) == 1
+        assert records['@hot'][0]['duration_s'] == 3600  # from FIRST warn
+
+    def test_two_incidents_separated_by_recovered_in_middle(self):
+        from sync_guards import compute_mttr_from_log
+        lines = [
+            self._warn('2026-05-23T04:00:00Z', '@hot', 0.9),
+            self._recovered('2026-05-23T05:00:00Z', '@hot', 0.9),
+            self._warn('2026-05-23T06:00:00Z', '@hot', 0.65),
+            self._recovered('2026-05-23T06:15:00Z', '@hot', 0.6),
+        ]
+        records = compute_mttr_from_log(lines)
+        durations = [r['duration_s'] for r in records['@hot']]
+        assert durations == [3600, 900]
+
+    def test_unmatched_warn_is_dropped(self):
+        # Still-open incident at end of log → not returned (operators
+        # see it as "still warning" from the live log tail).
+        from sync_guards import compute_mttr_from_log
+        lines = [
+            self._warn('2026-05-23T04:00:00Z', '@hot', 0.9),
+            # no recovered
+        ]
+        assert compute_mttr_from_log(lines) == {}
+
+    def test_unmatched_recovered_is_dropped(self):
+        # Recovered without a preceding warn (log truncation, scan
+        # window starts mid-regime) → silently skipped.
+        from sync_guards import compute_mttr_from_log
+        lines = [
+            self._recovered('2026-05-23T05:00:00Z', '@hot', 0.9),
+        ]
+        assert compute_mttr_from_log(lines) == {}
+
+    def test_independent_handles_tracked_separately(self):
+        from sync_guards import compute_mttr_from_log
+        lines = [
+            self._warn('2026-05-23T04:00:00Z', '@a', 0.9),
+            self._warn('2026-05-23T04:10:00Z', '@b', 0.7),
+            self._recovered('2026-05-23T04:30:00Z', '@a', 0.9),
+            self._recovered('2026-05-23T05:00:00Z', '@b', 0.7),
+        ]
+        records = compute_mttr_from_log(lines)
+        assert set(records.keys()) == {'@a', '@b'}
+        assert records['@a'][0]['duration_s'] == 1800   # 30 min
+        assert records['@b'][0]['duration_s'] == 3000   # 50 min
+
+    def test_filters_by_warn_type(self):
+        # A future warn_type ('fast_fail_rate' or similar) should not
+        # contaminate MTTR for the requested type.
+        from sync_guards import compute_mttr_from_log
+        lines = [
+            self._warn('2026-05-23T04:00:00Z', '@hot', 0.9),
+            ('2026-05-23T04:30:00Z sync_event: warn delta=0 handle=@hot '
+             'rate=10 threshold=5 type=other_metric window_hours=1'),
+            self._recovered('2026-05-23T05:00:00Z', '@hot', 0.9),
+        ]
+        result = compute_mttr_from_log(lines, warn_type='partial_error_rate')
+        # The 'other_metric' warn must NOT be confused with the
+        # partial_error_rate warn — different type filter.
+        assert len(result['@hot']) == 1
+
+    def test_ignores_unparseable_lines(self):
+        from sync_guards import compute_mttr_from_log
+        lines = [
+            'random log line without sync_event',
+            '2026-05-23T04:00:00Z sync_event: skipped delta=75 blocker=recent_failures',
+            self._warn('2026-05-23T04:00:00Z', '@hot', 0.9),
+            'malformed sync_event: warn missing handle',
+            self._recovered('2026-05-23T05:00:00Z', '@hot', 0.9),
+        ]
+        records = compute_mttr_from_log(lines)
+        assert len(records['@hot']) == 1
+
+
+class TestSummariseMttr:
+    """summarise_mttr aggregates per-handle records into stats
+    (count, total, mean, median, max) for dashboard / Slack digest."""
+
+    def test_empty_input_yields_empty_summary(self):
+        from sync_guards import summarise_mttr
+        assert summarise_mttr({}) == []
+
+    def test_handle_with_zero_records_skipped(self):
+        from sync_guards import summarise_mttr
+        # Should not crash on empty per-handle list (compute_mttr
+        # wouldn't produce one, but defensive).
+        assert summarise_mttr({'@empty': []}) == []
+
+    def test_single_incident_yields_single_row(self):
+        from sync_guards import summarise_mttr
+        records = {'@hot': [{'warn_ts': 0, 'recovered_ts': 600, 'duration_s': 600, 'prev_bucket': 0.9}]}
+        out = summarise_mttr(records)
+        assert len(out) == 1
+        assert out[0] == {
+            'handle': '@hot', 'incidents': 1, 'total_s': 600,
+            'mean_s': 600, 'median_s': 600, 'max_s': 600,
+        }
+
+    def test_multi_incident_aggregation(self):
+        from sync_guards import summarise_mttr
+        records = {
+            '@hot': [
+                {'warn_ts': 0, 'recovered_ts': 100, 'duration_s': 100, 'prev_bucket': None},
+                {'warn_ts': 200, 'recovered_ts': 500, 'duration_s': 300, 'prev_bucket': None},
+                {'warn_ts': 1000, 'recovered_ts': 1500, 'duration_s': 500, 'prev_bucket': None},
+            ],
+        }
+        out = summarise_mttr(records)
+        assert out[0]['incidents'] == 3
+        assert out[0]['total_s'] == 900
+        assert out[0]['mean_s'] == 300
+        assert out[0]['median_s'] == 300  # middle of [100, 300, 500]
+        assert out[0]['max_s'] == 500
+
+    def test_median_with_even_count_averages_middle_two(self):
+        from sync_guards import summarise_mttr
+        records = {'@x': [
+            {'warn_ts': 0, 'recovered_ts': 100, 'duration_s': 100, 'prev_bucket': None},
+            {'warn_ts': 0, 'recovered_ts': 200, 'duration_s': 200, 'prev_bucket': None},
+            {'warn_ts': 0, 'recovered_ts': 400, 'duration_s': 400, 'prev_bucket': None},
+            {'warn_ts': 0, 'recovered_ts': 800, 'duration_s': 800, 'prev_bucket': None},
+        ]}
+        # Sorted: [100, 200, 400, 800]; median = (200+400)/2 = 300
+        out = summarise_mttr(records)
+        assert out[0]['median_s'] == 300
+
+    def test_alphabetic_handle_ordering(self):
+        from sync_guards import summarise_mttr
+        records = {
+            '@zeta': [{'warn_ts': 0, 'recovered_ts': 10, 'duration_s': 10, 'prev_bucket': None}],
+            '@alpha': [{'warn_ts': 0, 'recovered_ts': 20, 'duration_s': 20, 'prev_bucket': None}],
+            '@middle': [{'warn_ts': 0, 'recovered_ts': 30, 'duration_s': 30, 'prev_bucket': None}],
+        }
+        out = summarise_mttr(records)
+        assert [r['handle'] for r in out] == ['@alpha', '@middle', '@zeta']

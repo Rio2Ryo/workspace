@@ -498,6 +498,167 @@ def filter_warnings_for_emit(
     return emittable, recovered, new_state
 
 
+# ── MTTR helper: pair (warn, recovered) events from a log file ──────────
+
+
+# Log timestamp prefix shape: `2026-05-23T04:49:35Z sync_event: ...`
+# Lines without this exact format are silently skipped; an operator who
+# wants to consume a different log format should pass a pre-filtered
+# Iterable[str] to the helper.
+import re as _re  # late import scoped to MTTR helper
+
+_LOG_LINE_RE = _re.compile(
+    r'^(?P<ts>\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}Z)\s+'
+    r'sync_event:\s+(?P<outcome>warn|recovered)\s+'
+    r'(?P<kvs>.*)$'
+)
+
+
+def _parse_kvs(text: str) -> dict[str, str]:
+    """Parse the trailing `k=v k=v` portion of a sync_event line.
+    Values are shell-safe (no spaces, no quotes), so a plain split-on-
+    space works."""
+    out: dict[str, str] = {}
+    for tok in text.split():
+        if '=' not in tok:
+            continue
+        k, v = tok.split('=', 1)
+        out[k] = v
+    return out
+
+
+def _ts_to_epoch(ts: str) -> int:
+    """ISO-8601 Z-suffixed → epoch seconds. The log emits this format
+    via `date -u +%FT%TZ` in the bash wrapper / Python TeeLogger."""
+    from datetime import datetime, timezone
+    return int(datetime.strptime(ts, '%Y-%m-%dT%H:%M:%SZ').replace(tzinfo=timezone.utc).timestamp())
+
+
+def compute_mttr_from_log(
+    log_lines: 'Iterable[str]',  # type: ignore[name-defined]  # forward ref
+    *,
+    warn_type: str = 'partial_error_rate',
+) -> dict[str, list[dict]]:
+    """Pair (warn, recovered) events per handle and return MTTR records.
+
+    Returns a dict mapping handle → list of incident records, each:
+        { warn_ts: int, recovered_ts: int, duration_s: int, prev_bucket: float | None }
+
+    Pairing rule
+    ------------
+    For each handle, scan lines in order:
+      - A `warn` line OPENS an incident if no incident is currently
+        open for that handle. Subsequent warns (heartbeat re-emits,
+        bucket-crossing re-emits) do NOT open a new incident — they
+        belong to the same regime.
+      - A `recovered` line CLOSES the currently-open incident,
+        producing an MTTR record with duration_s = recovered_ts -
+        warn_ts.
+
+    Incidents without a matching recovered (still active at end of
+    log) are NOT returned — operators reading the dashboard see them
+    as "still warning" via the live warn lines.
+
+    Why this exists
+    ---------------
+    Commit 0f1bc49 made (warn, recovered) pairs grep-able. The next
+    step is computing MTTR from them — without a helper, every
+    operator script reimplements the pairing logic. Pure function so
+    Discord/Slack notify hooks, dashboards, and ad-hoc reports all
+    share one source of truth.
+
+    Filters on `warn_type` — defaults to 'partial_error_rate' (the
+    only type today), but accepts future types as they land.
+    """
+    open_incidents: dict[str, int] = {}  # handle → warn_ts (epoch)
+    open_prev_bucket: dict[str, float | None] = {}
+    closed: dict[str, list[dict]] = {}
+
+    for raw in log_lines:
+        m = _LOG_LINE_RE.match(raw.rstrip('\n'))
+        if not m:
+            continue
+        kvs = _parse_kvs(m.group('kvs'))
+        if kvs.get('type') != warn_type:
+            continue
+        handle = kvs.get('handle')
+        if not handle:
+            continue
+        ts_epoch = _ts_to_epoch(m.group('ts'))
+        outcome = m.group('outcome')
+
+        if outcome == 'warn':
+            if handle not in open_incidents:
+                # Open a new incident.
+                open_incidents[handle] = ts_epoch
+                # Capture prev_bucket from the warn's `rate` (it's the
+                # CURRENT bucket since this is the first warn).
+                try:
+                    rate = float(kvs.get('rate', '0'))
+                    open_prev_bucket[handle] = _rate_bucket(rate)
+                except ValueError:
+                    open_prev_bucket[handle] = None
+            # Heartbeat / bucket-crossing re-emit — incident already open;
+            # skip (don't reopen).
+        elif outcome == 'recovered':
+            if handle not in open_incidents:
+                # Recovery without a preceding warn (log was truncated
+                # or the warn predates the scan window) — skip.
+                continue
+            warn_ts = open_incidents.pop(handle)
+            prev_bucket = open_prev_bucket.pop(handle, None)
+            # The recovered line may also carry prev_bucket; prefer it
+            # since it's stamped at recovery time (= the bucket from
+            # the LAST persisted warn state, which may differ from the
+            # opening warn's bucket if the rate rose mid-regime).
+            try:
+                bucket_from_rec = float(kvs.get('prev_bucket', ''))
+            except ValueError:
+                bucket_from_rec = None
+            if bucket_from_rec is not None:
+                prev_bucket = bucket_from_rec
+            closed.setdefault(handle, []).append({
+                'warn_ts': warn_ts,
+                'recovered_ts': ts_epoch,
+                'duration_s': ts_epoch - warn_ts,
+                'prev_bucket': prev_bucket,
+            })
+
+    return closed
+
+
+def summarise_mttr(
+    records_by_handle: dict[str, list[dict]],
+) -> list[dict]:
+    """Aggregate MTTR records into per-handle stats.
+
+    Returns a list (sorted by handle for stable output) of:
+        { handle, incidents, total_s, mean_s, median_s, max_s }
+
+    Empty record lists produce no row (the helper output of
+    compute_mttr_from_log only contains handles with at least one
+    closed incident).
+    """
+    out: list[dict] = []
+    for handle in sorted(records_by_handle):
+        records = records_by_handle[handle]
+        if not records:
+            continue
+        durations = sorted(r['duration_s'] for r in records)
+        n = len(durations)
+        mid = n // 2
+        median = durations[mid] if n % 2 == 1 else (durations[mid - 1] + durations[mid]) // 2
+        out.append({
+            'handle': handle,
+            'incidents': n,
+            'total_s': sum(durations),
+            'mean_s': sum(durations) // n,
+            'median_s': median,
+            'max_s': max(durations),
+        })
+    return out
+
+
 def compute_partial_error_rate_warnings(
     conn: sqlite3.Connection,
     *,
