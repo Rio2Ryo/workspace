@@ -230,6 +230,29 @@ if [ -n "$RETRIES_VAL" ]; then
   fi
 fi
 
+# --cooldown must be a non-negative integer seconds (per discord_post.py
+# argparse type=int in commit 23ef7fc; range [0, ...] with 0 = disabled).
+# Common operator typo: writing "6h" or "21600s" instead of plain int.
+COOLDOWN_VAL=""
+prev_was_cooldown_flag=0
+while IFS= read -r ARG; do
+  [ -z "$ARG" ] && continue
+  if [ "$prev_was_cooldown_flag" = 1 ]; then
+    COOLDOWN_VAL="$ARG"
+    prev_was_cooldown_flag=0
+  elif [ "$ARG" = "--cooldown" ]; then
+    prev_was_cooldown_flag=1
+  fi
+done <<<"$ARG_LINES"
+if [ -n "$COOLDOWN_VAL" ]; then
+  if awk -v v="$COOLDOWN_VAL" 'BEGIN{exit !(v ~ /^[0-9]+$/)}'; then
+    pass "--cooldown value valid: $COOLDOWN_VAL"
+  else
+    # Likely operator slips: "6h", "21600s", "1hour", spelled words.
+    fail "--cooldown=$COOLDOWN_VAL must be a non-negative integer seconds (e.g., 21600 for 6h, NOT '6h' or '21600s'). discord_post.py argparse would exit 2 every cron tick. Fix BEFORE launchctl load."
+  fi
+fi
+
 # 3. ProgramArguments paths must resolve. Extract every <string>
 #    inside <key>ProgramArguments</key>'s <array> via plutil if
 #    available, fall back to grep heuristic.

@@ -284,6 +284,54 @@ assert_contains "non-integer retries names the value" "two" "$OUTPUT"
 "$PREFLIGHT" --check-only "$REPO_ROOT/projects/threads-watcher/com.shiro.threads-watcher-sync.plist" >/dev/null 2>&1
 assert_exit "non-discord_post plist unaffected by flag check" 0 $?
 
+# ── case 10: --cooldown int validation (3rd discord_post flag) ────────
+
+printf '\n=== --cooldown int validation ===\n'
+
+# The default (.example ships --cooldown 21600 → 6h) → passes.
+"$PREFLIGHT" --check-only "$TMP/flags-default.plist" >/dev/null 2>&1
+assert_exit "default --cooldown=21600 (6h seconds) passes" 0 $?
+
+# 🔒 Operator typo: wrote duration as "6h" instead of integer seconds.
+sed -e 's|__SET_BY_OPERATOR__|https://discord.com/api/webhooks/1/tok|' \
+    -e 's|<string>21600</string>|<string>6h</string>|' \
+  "$REPO_ROOT/projects/threads-watcher/com.shiro.threads-watcher-discord-post.plist.example" \
+  > "$TMP/cooldown-6h.plist"
+"$PREFLIGHT" --check-only "$TMP/cooldown-6h.plist" >/dev/null 2>&1
+assert_exit "--cooldown=6h (with unit suffix) fails" 1 $?
+
+OUTPUT=$("$PREFLIGHT" --check-only "$TMP/cooldown-6h.plist" 2>&1 || true)
+assert_contains "cooldown error names the value" "6h" "$OUTPUT"
+assert_contains "cooldown error explains seconds format" "non-negative integer seconds" "$OUTPUT"
+
+# 🔒 Operator wrote "21600s" (correct value + accidental unit).
+sed -e 's|__SET_BY_OPERATOR__|https://discord.com/api/webhooks/1/tok|' \
+    -e 's|<string>21600</string>|<string>21600s</string>|' \
+  "$REPO_ROOT/projects/threads-watcher/com.shiro.threads-watcher-discord-post.plist.example" \
+  > "$TMP/cooldown-21600s.plist"
+"$PREFLIGHT" --check-only "$TMP/cooldown-21600s.plist" >/dev/null 2>&1
+assert_exit "--cooldown=21600s (with unit suffix) fails" 1 $?
+
+# 🔒 Negative cooldown.
+sed -e 's|__SET_BY_OPERATOR__|https://discord.com/api/webhooks/1/tok|' \
+    -e 's|<string>21600</string>|<string>-100</string>|' \
+  "$REPO_ROOT/projects/threads-watcher/com.shiro.threads-watcher-discord-post.plist.example" \
+  > "$TMP/cooldown-negative.plist"
+"$PREFLIGHT" --check-only "$TMP/cooldown-negative.plist" >/dev/null 2>&1
+assert_exit "--cooldown=-100 fails (negative)" 1 $?
+
+# 🔒 Cooldown=0 is valid (disabled, per discord_post.py default).
+sed -e 's|__SET_BY_OPERATOR__|https://discord.com/api/webhooks/1/tok|' \
+    -e 's|<string>21600</string>|<string>0</string>|' \
+  "$REPO_ROOT/projects/threads-watcher/com.shiro.threads-watcher-discord-post.plist.example" \
+  > "$TMP/cooldown-zero.plist"
+"$PREFLIGHT" --check-only "$TMP/cooldown-zero.plist" >/dev/null 2>&1
+assert_exit "--cooldown=0 (disabled, valid) passes" 0 $?
+
+# Plists WITHOUT --cooldown (sync.plist) unaffected.
+"$PREFLIGHT" --check-only "$REPO_ROOT/projects/threads-watcher/com.shiro.threads-watcher-sync.plist" >/dev/null 2>&1
+assert_exit "non-discord_post plist unaffected by cooldown check" 0 $?
+
 # ── summary ────────────────────────────────────────────────────────────
 
 printf '\n=== summary ===\n'
