@@ -281,6 +281,12 @@ OUTCOME_EVENTS = frozenset({
     # when an observed metric crosses a threshold). Requires `type=<known>`
     # in extra; see WARN_TYPES below.
     'warn',
+    # positive transition: a metric that was previously warning is now
+    # below threshold. The mirror of `warn`; same `type=<known>` required.
+    # Lets operators grep `sync_event: recovered` for regime-cleared
+    # signals without polling the dashboard. (Discord/Slack alerting
+    # can pair the recovered event with the prior warn to compute MTTR.)
+    'recovered',
 })
 
 
@@ -334,17 +340,17 @@ def format_outcome_event(
         raise ValueError(
             f"unknown outcome {outcome!r}; must be one of {sorted(OUTCOME_EVENTS)}",
         )
-    if outcome == 'warn':
-        # warn lines MUST carry a `type=<known>` so operator-side grep
-        # by type ('grep "type=partial_error_rate"') is dependable.
-        # A missing or unknown type means the helper's call site was
-        # wrong; raise loudly instead of silently emitting a line
-        # operators can't filter on.
-        warn_type = (extra or {}).get('type')
-        if warn_type not in WARN_TYPES:
+    if outcome in ('warn', 'recovered'):
+        # Both warn and recovered lines MUST carry a `type=<known>` so
+        # operator-side grep by type ('grep "type=partial_error_rate"')
+        # is dependable. A missing or unknown type means the helper's
+        # call site was wrong; raise loudly instead of silently emitting
+        # a line operators can't filter on.
+        ev_type = (extra or {}).get('type')
+        if ev_type not in WARN_TYPES:
             raise ValueError(
-                f"warn outcome requires extra['type'] in {sorted(WARN_TYPES)}; "
-                f"got {warn_type!r}",
+                f"{outcome} outcome requires extra['type'] in {sorted(WARN_TYPES)}; "
+                f"got {ev_type!r}",
             )
     parts = [f"sync_event: {outcome}", f"delta={delta}"]
     if outcome == 'skipped':
@@ -398,11 +404,17 @@ def filter_warnings_for_emit(
     *,
     now_ts: int,
     heartbeat_sec: int = DEFAULT_WARN_HEARTBEAT_SEC,
-) -> tuple[list[dict], dict]:
-    """Apply heartbeat + rate-bucket dedup to a list of warning dicts.
+) -> tuple[list[dict], list[dict], dict]:
+    """Apply heartbeat + rate-bucket dedup to a list of warning dicts,
+    AND detect handle recoveries (warned previously, not in this tick).
 
-    Returns (emittable, new_state):
-        emittable: warnings the caller SHOULD log this tick
+    Returns (emittable, recovered, new_state):
+        emittable: warnings the caller SHOULD log this tick (warn events)
+        recovered: handles that WERE in persisted state but are not in
+                   `warnings` this tick — caller SHOULD emit one
+                   `sync_event: recovered` per entry. Each dict has
+                   `{handle, prev_bucket}` so the recovered line can
+                   surface how far the rate fell.
         new_state: dict to persist back to `state_path`
 
     For each handle in `warnings`:
@@ -412,9 +424,10 @@ def filter_warnings_for_emit(
         logged tick, emit a heartbeat + restamp.
       - Else suppress.
 
-    Handles dropped from the warnings list (recovered) are also dropped
-    from the persisted state — a future tick where they re-trigger
-    starts fresh and emits.
+    Handles previously in state but NOT in `warnings` are surfaced in
+    `recovered` (positive transition signal) AND dropped from
+    `new_state` — a future tick where they re-trigger starts fresh and
+    emits a fresh warn.
 
     Why this exists
     ---------------
@@ -424,6 +437,14 @@ def filter_warnings_for_emit(
     line in a tight loop; real regime shifts (bucket crossings) would
     be lost in the noise. Same dedup pattern as
     publish-if-delta.sh:621d32b / auto-restart-if-stale.sh:e73e85a.
+
+    The recovered surface (this commit's addition) closes the
+    operational gap of the warn line: a regime that clears used to be
+    silent — the handle just disappeared from state and operators only
+    knew via "I stopped seeing warn lines for @hot" which depends on
+    actively watching. With the explicit recovered event, external
+    alerting can pair (warn, recovered) for incident MTTR + Slack
+    "@channel partial_error regime for @hot cleared".
     """
     state: dict = {}
     try:
@@ -435,9 +456,11 @@ def filter_warnings_for_emit(
 
     emittable: list[dict] = []
     new_state: dict = {}
+    current_handles: set = set()
 
     for w in warnings:
         handle = w['handle']
+        current_handles.add(handle)
         bucket = _rate_bucket(w['rate'])
         prev = state.get(handle)
         prev_bucket = prev.get('bucket') if isinstance(prev, dict) else None
@@ -457,7 +480,22 @@ def filter_warnings_for_emit(
             # heartbeat every tick and emit nothing forever).
             new_state[handle] = prev
 
-    return emittable, new_state
+    # Recovery detection: any handle in the persisted state that's
+    # NOT in this tick's warnings has dropped below threshold.
+    # Surface explicitly + drop from new_state so a future re-trigger
+    # starts fresh.
+    recovered: list[dict] = []
+    for handle, prev in state.items():
+        if handle in current_handles:
+            continue
+        if not isinstance(prev, dict):
+            continue
+        recovered.append({
+            'handle': handle,
+            'prev_bucket': prev.get('bucket'),
+        })
+
+    return emittable, recovered, new_state
 
 
 def compute_partial_error_rate_warnings(

@@ -737,7 +737,7 @@ def main(argv: list[str] | None = None) -> int:
             window_hours=DEFAULT_WARN_WINDOW_HOURS,
         )
         warn_state_path = args.log.parent / '.sync-warn-last-state'
-        emittable, new_state = filter_warnings_for_emit(
+        emittable, recovered, new_state = filter_warnings_for_emit(
             all_warnings,
             warn_state_path,
             now_ts=int(time.time()),
@@ -753,6 +753,20 @@ def main(argv: list[str] | None = None) -> int:
                     'threshold': w['threshold'],
                     'window_hours': w['window_hours'],
                     'total': w['total'],
+                },
+            ))
+        # Recovery events fire once per handle that drops below threshold.
+        # Operators can grep `sync_event: recovered type=partial_error_rate`
+        # for positive transitions — useful as a paired counterpoint to
+        # the warn lines for MTTR calculation + auto-clear of Discord/
+        # Slack incident threads.
+        for rec in recovered:
+            log.log(format_outcome_event(
+                'recovered', delta=0,
+                extra={
+                    'type': 'partial_error_rate',
+                    'handle': rec['handle'],
+                    'prev_bucket': rec['prev_bucket'],
                 },
             ))
         try:

@@ -748,12 +748,12 @@ class TestFormatOutcomeEvent:
 
     def test_outcome_events_set_covers_every_path(self):
         # Pin the set so a future caller adding a new outcome must
-        # also update this constant — drift-proof. `warn` joined the
-        # set when partial_error_rate alerting landed; the corresponding
-        # TestPartialErrorRateWarnings + TestWarnOutcomeEvent classes
-        # below exercise the new path.
+        # also update this constant — drift-proof. `warn` joined when
+        # partial_error_rate alerting landed; `recovered` joined as
+        # the positive-transition counterpoint.
         assert OUTCOME_EVENTS == {
-            'skipped', 'dry_run', 'committed', 'pushed', 'error', 'warn',
+            'skipped', 'dry_run', 'committed', 'pushed', 'error',
+            'warn', 'recovered',
         }
 
     def test_known_blocker_kinds_set_matches_all_guard_functions(self):
@@ -973,7 +973,7 @@ class TestFilterWarningsForEmit:
         from sync_guards import filter_warnings_for_emit
         state_path = tmp_path / "never.json"
         warnings = [self._w('@h', 0.9)]
-        emittable, new_state = filter_warnings_for_emit(
+        emittable, _recovered, new_state = filter_warnings_for_emit(
             warnings, state_path, now_ts=1000,
         )
         assert len(emittable) == 1
@@ -986,7 +986,7 @@ class TestFilterWarningsForEmit:
             json.dumps({'@h': {'bucket': 0.9, 'ts': 1000}}), encoding='utf-8',
         )
         # 100s later, same bucket — should suppress.
-        emittable, new_state = filter_warnings_for_emit(
+        emittable, _recovered, new_state = filter_warnings_for_emit(
             [self._w('@h', 0.91)], state_path, now_ts=1100, heartbeat_sec=3600,
         )
         assert emittable == []
@@ -1001,7 +1001,7 @@ class TestFilterWarningsForEmit:
             json.dumps({'@h': {'bucket': 0.6, 'ts': 1000}}), encoding='utf-8',
         )
         # Rate jumped 0.65 → 0.85 → bucket 0.6 → 0.8 → re-emit.
-        emittable, new_state = filter_warnings_for_emit(
+        emittable, _recovered, new_state = filter_warnings_for_emit(
             [self._w('@h', 0.85)], state_path, now_ts=1100, heartbeat_sec=3600,
         )
         assert len(emittable) == 1
@@ -1015,7 +1015,7 @@ class TestFilterWarningsForEmit:
             json.dumps({'@h': {'bucket': 0.9, 'ts': 1000}}), encoding='utf-8',
         )
         # Same bucket but >= heartbeat_sec elapsed (3600s default).
-        emittable, _ = filter_warnings_for_emit(
+        emittable, _recovered, _ = filter_warnings_for_emit(
             [self._w('@h', 0.91)], state_path, now_ts=1000 + 3601,
             heartbeat_sec=3600,
         )
@@ -1029,7 +1029,7 @@ class TestFilterWarningsForEmit:
         state_path.write_text(
             json.dumps({'@h': {'bucket': 0.9, 'ts': 1000}}), encoding='utf-8',
         )
-        emittable, _ = filter_warnings_for_emit(
+        emittable, _recovered, _ = filter_warnings_for_emit(
             [self._w('@h', 0.91)], state_path, now_ts=1000 + 3600,
             heartbeat_sec=3600,
         )
@@ -1042,7 +1042,7 @@ class TestFilterWarningsForEmit:
         state_path.write_text(
             json.dumps({'@hot': {'bucket': 0.9, 'ts': 1000}}), encoding='utf-8',
         )
-        emittable, new_state = filter_warnings_for_emit(
+        emittable, _recovered, new_state = filter_warnings_for_emit(
             [], state_path, now_ts=1100,
         )
         assert emittable == []
@@ -1059,7 +1059,7 @@ class TestFilterWarningsForEmit:
             '@a': {'bucket': 0.7, 'ts': 1000},
             '@b': {'bucket': 0.5, 'ts': 1000},
         }), encoding='utf-8')
-        emittable, new_state = filter_warnings_for_emit(
+        emittable, _recovered, new_state = filter_warnings_for_emit(
             [self._w('@a', 0.72), self._w('@b', 0.85)],
             state_path, now_ts=1100, heartbeat_sec=3600,
         )
@@ -1074,7 +1074,7 @@ class TestFilterWarningsForEmit:
         from sync_guards import filter_warnings_for_emit
         state_path = tmp_path / "s.json"
         state_path.write_text("not valid json {{", encoding='utf-8')
-        emittable, new_state = filter_warnings_for_emit(
+        emittable, _recovered, new_state = filter_warnings_for_emit(
             [self._w('@h', 0.9)], state_path, now_ts=1000,
         )
         assert len(emittable) == 1
@@ -1086,7 +1086,7 @@ class TestFilterWarningsForEmit:
         from sync_guards import filter_warnings_for_emit
         state_path = tmp_path / "s.json"
         state_path.write_text("[]", encoding='utf-8')
-        emittable, _ = filter_warnings_for_emit(
+        emittable, _recovered, _ = filter_warnings_for_emit(
             [self._w('@h', 0.9)], state_path, now_ts=1000,
         )
         assert len(emittable) == 1
@@ -1110,7 +1110,7 @@ class TestFilterWarningsForEmit:
         total_emitted = 0
         for i in range(3):
             warnings = [self._w('@h', 0.92)]
-            emittable, new_state = filter_warnings_for_emit(
+            emittable, _recovered, new_state = filter_warnings_for_emit(
                 warnings, state_path,
                 now_ts=1000 + i * 60,  # 1 min apart, well under 3600s heartbeat
                 heartbeat_sec=3600,
@@ -1120,3 +1120,156 @@ class TestFilterWarningsForEmit:
         assert total_emitted == 1, (
             f"Expected 1 emit across 3 identical ticks; got {total_emitted}"
         )
+
+
+# ── recovered event (positive transition of warn) ──────────────────────
+
+
+class TestRecoveredEvent:
+    """The recovered surface complements the warn line: when a handle
+    previously above threshold drops below it, filter_warnings_for_emit
+    surfaces it in the `recovered` list so sync.py can emit
+    `sync_event: recovered type=partial_error_rate handle=@x ...`."""
+
+    def _w(self, handle: str, rate: float) -> dict:
+        return {
+            'handle': handle,
+            'rate': rate,
+            'threshold': 0.5,
+            'window_hours': 1,
+            'total': 30,
+            'top_reason': 'x',
+        }
+
+    def test_handle_dropping_below_threshold_appears_in_recovered(self, tmp_path):
+        from sync_guards import filter_warnings_for_emit
+        state_path = tmp_path / "s.json"
+        # @hot was warned previously at bucket 0.9.
+        state_path.write_text(
+            json.dumps({'@hot': {'bucket': 0.9, 'ts': 1000}}), encoding='utf-8',
+        )
+        # This tick: no warnings at all (everything below threshold).
+        emittable, recovered, new_state = filter_warnings_for_emit(
+            [], state_path, now_ts=1100,
+        )
+        assert emittable == []
+        assert len(recovered) == 1
+        assert recovered[0]['handle'] == '@hot'
+        assert recovered[0]['prev_bucket'] == 0.9
+        # State no longer mentions @hot — a future re-trigger starts fresh.
+        assert '@hot' not in new_state
+
+    def test_no_recovered_when_no_prior_state(self, tmp_path):
+        from sync_guards import filter_warnings_for_emit
+        state_path = tmp_path / "never.json"  # missing
+        emittable, recovered, new_state = filter_warnings_for_emit(
+            [], state_path, now_ts=1000,
+        )
+        assert recovered == []
+
+    def test_no_recovered_when_handle_still_warning(self, tmp_path):
+        from sync_guards import filter_warnings_for_emit
+        state_path = tmp_path / "s.json"
+        state_path.write_text(
+            json.dumps({'@hot': {'bucket': 0.9, 'ts': 1000}}), encoding='utf-8',
+        )
+        # Still warning, same bucket, within heartbeat → suppress warn
+        # but DO NOT recover.
+        emittable, recovered, new_state = filter_warnings_for_emit(
+            [self._w('@hot', 0.91)], state_path, now_ts=1100, heartbeat_sec=3600,
+        )
+        assert emittable == []
+        assert recovered == []
+        # State still tracks @hot.
+        assert '@hot' in new_state
+
+    def test_partial_recovery_one_recovered_one_still_warning(self, tmp_path):
+        from sync_guards import filter_warnings_for_emit
+        state_path = tmp_path / "s.json"
+        state_path.write_text(json.dumps({
+            '@a': {'bucket': 0.9, 'ts': 1000},
+            '@b': {'bucket': 0.7, 'ts': 1000},
+        }), encoding='utf-8')
+        # Only @b is still hot. @a dropped below threshold.
+        emittable, recovered, new_state = filter_warnings_for_emit(
+            [self._w('@b', 0.72)], state_path, now_ts=1100, heartbeat_sec=3600,
+        )
+        # @b is suppressed (same bucket + within heartbeat). @a is recovered.
+        assert emittable == []
+        assert [r['handle'] for r in recovered] == ['@a']
+        # State retains @b, drops @a.
+        assert '@b' in new_state
+        assert '@a' not in new_state
+
+    def test_recovered_event_line_shape(self):
+        # sync.py will pass each recovered dict into format_outcome_event.
+        # Pin the line shape.
+        line = format_outcome_event(
+            'recovered', delta=0,
+            extra={
+                'type': 'partial_error_rate',
+                'handle': '@hot',
+                'prev_bucket': 0.9,
+            },
+        )
+        assert line.startswith('sync_event: recovered ')
+        assert 'type=partial_error_rate' in line
+        assert 'handle=@hot' in line
+        assert 'prev_bucket=0.9' in line
+
+    def test_recovered_without_type_raises(self):
+        # Same validation as warn — type field is required so operator
+        # grep `type=partial_error_rate` works on both event classes.
+        with pytest.raises(ValueError, match='extra\\[.type.\\]'):
+            format_outcome_event('recovered', delta=0)
+
+    def test_recovered_with_unknown_type_raises(self):
+        with pytest.raises(ValueError, match='extra\\[.type.\\]'):
+            format_outcome_event(
+                'recovered', delta=0, extra={'type': 'unknown_metric'},
+            )
+
+    def test_recovered_state_drop_does_NOT_emit_when_warn_re_added(self, tmp_path):
+        # 🔒 critical correctness pin (see body).
+        # Critical correctness: a handle that bounces (warn → recover →
+        # warn again) within consecutive ticks should produce a
+        # recovered+warn sequence over 2 ticks, NOT confuse the state.
+        from sync_guards import filter_warnings_for_emit
+        state_path = tmp_path / "s.json"
+        # Tick 1: handle warning
+        _, _, st1 = filter_warnings_for_emit(
+            [self._w('@bounce', 0.9)], state_path, now_ts=1000,
+        )
+        state_path.write_text(json.dumps(st1), encoding='utf-8')
+        # Tick 2: handle recovered (dropped below threshold)
+        _, rec2, st2 = filter_warnings_for_emit(
+            [], state_path, now_ts=1100,
+        )
+        assert len(rec2) == 1 and rec2[0]['handle'] == '@bounce'
+        state_path.write_text(json.dumps(st2), encoding='utf-8')
+        # Tick 3: handle warning AGAIN at a different bucket. Use 0.65
+        # rather than exactly 0.6 — floating-point arithmetic in
+        # _rate_bucket means 0.6/0.1 ≈ 5.9999 so bucket=0.5; pick a
+        # value well inside the bucket to avoid that boundary surprise.
+        emit3, rec3, st3 = filter_warnings_for_emit(
+            [self._w('@bounce', 0.65)], state_path, now_ts=1200,
+        )
+        # Fresh warn (state was empty post-recovery → first-emit branch)
+        assert len(emit3) == 1
+        assert rec3 == []  # no recovery this tick
+        assert st3['@bounce']['bucket'] == 0.6  # 0.65 buckets to 0.6
+
+    def test_recovered_handles_malformed_state_entry(self, tmp_path):
+        # Defensive: if the JSON state has a non-dict value for a handle
+        # (corruption), skip it in the recovered scan rather than crash.
+        from sync_guards import filter_warnings_for_emit
+        state_path = tmp_path / "s.json"
+        state_path.write_text(json.dumps({
+            '@good': {'bucket': 0.9, 'ts': 1000},
+            '@malformed': 'not a dict',
+        }), encoding='utf-8')
+        _, recovered, _ = filter_warnings_for_emit(
+            [], state_path, now_ts=1100,
+        )
+        # @good recovered, @malformed silently skipped (not a crash).
+        assert [r['handle'] for r in recovered] == ['@good']
