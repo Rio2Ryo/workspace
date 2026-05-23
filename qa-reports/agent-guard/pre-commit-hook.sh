@@ -190,4 +190,81 @@ fi
 # Pass: report what was checked so the agent has a record.
 budget_count=$(printf '%s' "$BUDGET_TABLE" | grep -c $'\t' || true)
 echo "stage-budget: ${budget_count} explicit budget(s), default ${DEFAULT_BUDGET}, all staged files within budget."
+
+# ── Per-project pytest/vitest pre-flight gates ────────────────────────
+#
+# Mirrors the Second Brain pattern (second-brain/qa-reports/agent-guard/
+# pre-commit-hook.sh) but for the workspace's own projects:
+#
+#   projects/threads-watcher/  → pytest  (685 tests / ~41s)
+#
+# Each gate fires only when the staged files include source from that
+# project — operators editing unrelated trees (docs / scripts / other
+# projects) pay zero cost. Failed test aborts; `git commit --no-verify`
+# remains the documented bypass for true emergencies.
+#
+# Caught by the 2026-05-23 incident: `pnpm vitest run` failures slipped
+# past `tsc --noEmit`-only commits 14 times before surfacing in a manual
+# sweep. The threads-watcher equivalent would slip past the SAME way —
+# pure Python suite has no compiler, so without this gate a refactor
+# to sync_guards / publish-if-delta / mttr can land broken silently.
+
+run_pytest_for() {
+  local pattern="$1"
+  local pkg_dir="$2"
+  local label="$3"
+  local staged
+  staged=$(git diff --cached --name-only --diff-filter=ACMR | grep -E "$pattern" || true)
+  [ -z "$staged" ] && return 0
+
+  local abs_dir="$REPO_ROOT/$pkg_dir"
+  if [ ! -d "$abs_dir" ]; then
+    return 0
+  fi
+  # Prefer the .venv that conftest.py shims to be usable without
+  # playwright; fall back to system python3 with PYTHONPATH if no
+  # venv exists (CI environment).
+  local py
+  if [ -x "$abs_dir/.venv/bin/python" ]; then
+    py="$abs_dir/.venv/bin/python"
+  elif [ -x "$abs_dir/venv/bin/python" ]; then
+    py="$abs_dir/venv/bin/python"
+  else
+    py="python3"
+  fi
+
+  echo "pytest pre-flight: running $label suite via $py..."
+  local out rc
+  out=$(cd "$abs_dir" && "$py" -m pytest 2>&1)
+  rc=$?
+  if [ "$rc" -ne 0 ]; then
+    {
+      echo
+      echo "ABORT: pre-commit pytest pre-flight failed for $label."
+      echo
+      # Show the failure tail (last 25 lines) — the assertion + exit
+      # summary land here, not the per-test progress dots.
+      echo "$out" | tail -25
+      echo
+      echo "Choices:"
+      echo "  - Fix the failing test(s) and re-commit"
+      echo "  - If the failing test IS the work being fixed (or is"
+      echo "    pre-existing breakage being audited), bypass with:"
+      echo "      git commit --no-verify"
+      echo "  - To see full output: cd $pkg_dir && $(basename "$py") -m pytest"
+    } >&2
+    exit 1
+  fi
+  # Brief success summary so the operator knows the check actually ran.
+  echo "$out" | grep -E "^=*( passed| failed| skipped)" | tail -1
+}
+
+# threads-watcher source-of-truth files. Tests live under tests/, and
+# any change to the top-level *.py / *.sh that the tests cover should
+# trip the gate. We include the tests/ tree itself so a test file edit
+# also fires (a test edit is the most common gate-firing case, and the
+# test suite is what proves it still works).
+run_pytest_for '^projects/threads-watcher/(tests/|[^/]+\.py$|publish-if-delta\.sh$|run-watcher\.sh$|auto-restart-if-stale\.sh$)' \
+  'projects/threads-watcher' 'threads-watcher'
+
 exit 0
