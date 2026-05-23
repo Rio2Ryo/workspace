@@ -12,7 +12,7 @@ import struct
 from datetime import datetime, timezone
 from pathlib import Path
 
-from db import DEFAULT_DB_FILE, connect, init_db, save_post_screenshot
+from db import DEFAULT_DB_FILE, connect, init_db, normalize_handle, save_post_screenshot
 
 PROJECT_ROOT = Path(__file__).resolve().parent
 SCREENSHOTS_DIR = PROJECT_ROOT / "screenshots"
@@ -32,7 +32,11 @@ def _png_dimensions(data: bytes) -> tuple[int | None, int | None]:
 
 
 def import_existing(handle: str) -> tuple[int, int]:
-    handle = handle if handle.startswith("@") else f"@{handle}"
+    # Canonical form so rows written here match what watcher.py later
+    # SELECTs by handle (lowercase, single '@'). Pre-fix this script
+    # used a verbatim copy of the OLD _normalize_handle — case and
+    # double-'@' bugs leaked to disk via save_post_screenshot.
+    handle = normalize_handle(handle)
     handle_no_at = handle.lstrip("@")
     source_dir = SCREENSHOTS_DIR / handle_no_at
     conn = connect(DEFAULT_DB_FILE)

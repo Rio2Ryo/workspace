@@ -19,7 +19,7 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
 
-from db import connect, export_status_screenshots, get_seen_post_ids, init_db, latest_snapshot, record_check, save_post_screenshot, update_post_screenshot
+from db import connect, export_status_screenshots, get_seen_post_ids, init_db, latest_snapshot, normalize_handle, record_check, save_post_screenshot, update_post_screenshot
 from health import (
     HealthReport,
     check_dom_regression,
@@ -115,19 +115,10 @@ def _notify_new_post(handle: str, post_id: str, captured: dict[str, Any]) -> Non
         print(f"[notify-warn] failed to send notification for {handle}/{post_id}: {exc}", file=sys.stderr)
 
 
-def _normalize_handle(handle: str) -> str:
-    """Canonical form for a Threads handle: lowercase, exactly one '@'.
-
-    Threads URLs are case-insensitive (/@Foo and /@foo resolve to the
-    same profile) so set/list membership checks must compare on the
-    lowercased form. Paste-error inputs like "@@foo" or "" are
-    normalised rather than passed through verbatim. Returns "" for
-    empty / all-'@' input so callers' truthiness checks filter cleanly.
-    """
-    stripped = handle.lstrip("@")
-    if not stripped:
-        return ""
-    return f"@{stripped.lower()}"
+# Re-export under the legacy private name so existing intra-module
+# call sites (and the test file that imports from here) keep working.
+# The canonical implementation now lives in db.py — see its docstring.
+_normalize_handle = normalize_handle
 
 
 def _parse_handles(raw: str) -> list[str]:

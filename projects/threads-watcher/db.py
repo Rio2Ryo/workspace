@@ -71,6 +71,26 @@ def connect(db_path: str | Path = DEFAULT_DB_FILE) -> sqlite3.Connection:
     return conn
 
 
+def normalize_handle(handle: str) -> str:
+    """Canonical form for a Threads handle: lowercase, exactly one '@'.
+
+    Lives in db.py (not watcher.py) so every persistence path — whether
+    the watcher write loop, import_existing_screenshots.py, or any
+    future tool that calls save_post_screenshot — uses the same
+    canonical form. Without this, a sibling tool can plant a mixed-case
+    row that future watcher reads (using the lowercased form) won't see.
+
+    Threads URLs are case-insensitive (/@Foo and /@foo resolve to the
+    same profile). Paste errors ('@@foo', '@@@foo') are normalised to
+    a single '@'. Empty / all-'@' input returns "" so caller truthiness
+    checks filter cleanly rather than persisting a malformed bare '@'.
+    """
+    stripped = handle.lstrip("@")
+    if not stripped:
+        return ""
+    return f"@{stripped.lower()}"
+
+
 def _ensure_column(conn: sqlite3.Connection, table: str, column: str, ddl: str) -> None:
     cols = {str(row["name"]) for row in conn.execute(f"PRAGMA table_info({table})").fetchall()}
     if column not in cols:

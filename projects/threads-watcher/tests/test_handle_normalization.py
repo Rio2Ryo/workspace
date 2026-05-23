@@ -31,6 +31,7 @@ import pytest
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
+from db import normalize_handle  # noqa: E402
 from watcher import _normalize_handle, _parse_handles, _parse_notify_handles  # noqa: E402
 
 
@@ -152,3 +153,38 @@ def test_notify_membership_check_is_case_insensitive() -> None:
     # Both must be considered "in" the configured notify set.
     assert _normalize_handle(incoming_from_db) in notify_handles
     assert _normalize_handle(incoming_uppercase) in notify_handles
+
+
+# ── Canonical-helper sharing across modules ───────────────────────────
+
+
+def test_watcher_normalize_alias_points_at_db_implementation() -> None:
+    # Watcher.py's _normalize_handle is now a re-export of db.normalize_handle.
+    # If a future edit shadows it with a local def, this test catches that
+    # before two normalizers can drift apart.
+    assert _normalize_handle is normalize_handle
+
+
+def test_import_existing_screenshots_normalizes_via_canonical_helper() -> None:
+    # The exact bug class fixed in this commit: pre-fix the script had
+    # its own inline `handle if handle.startswith('@') else f'@{handle}'`
+    # which preserved mixed case. Operator running
+    # `import_existing_screenshots.py --handle BMW_intokyo` would
+    # persist rows under `@BMW_intokyo` — invisible to all watcher
+    # SELECTs (which use the lowercased form).
+    import import_existing_screenshots  # noqa: PLC0415
+    # The fix uses `normalize_handle(handle)` from db.py — assert the
+    # import path is exactly that, so a re-introduction of the inline
+    # form would break this test.
+    src = (
+        Path(__file__).resolve().parent.parent / "import_existing_screenshots.py"
+    ).read_text()
+    assert "from db import" in src
+    assert "normalize_handle" in src
+    # The buggy line must not return.
+    assert "handle if handle.startswith" not in src
+
+    # And the canonical helper is the one used: spot-check identity.
+    assert (
+        import_existing_screenshots.normalize_handle is normalize_handle
+    )
