@@ -179,3 +179,72 @@ def test_required_input_fields_are_also_emitted_in_the_output() -> None:
         generated_at="2026-05-23T00:00:00Z",
     ).keys())
     assert REQUIRED_INPUT_FIELDS <= output_keys
+
+
+# ── mttr_summary field (added 2026-05-23 for dashboard MTTR widget) ─────
+
+
+class TestMttrSummaryField:
+    """Pin the optional mttr_summary field that bridges
+    sync_guards.summarise_mttr output into the dashboard JSON.
+    Default None → [] in the payload (dashboard treats empty as
+    "no incidents recorded yet")."""
+
+    def _valid_input(self):
+        return {
+            "handle": "@x", "handles": ["@x"],
+            "last_check": {}, "saved_count": 0, "posts": [],
+        }
+
+    def test_default_none_yields_empty_list_in_payload(self):
+        from watcher_pure import build_web_snapshot_payload
+        out = build_web_snapshot_payload(
+            self._valid_input(), dry_run_alert=None, generated_at="2026-05-23T00:00:00Z",
+        )
+        # Optional kwarg defaulted: dashboard sees a stable empty array,
+        # never undefined.
+        assert "mttr_summary" in out
+        assert out["mttr_summary"] == []
+
+    def test_passing_summary_carries_through_to_payload(self):
+        from watcher_pure import build_web_snapshot_payload
+        summary = [
+            {"handle": "@hot", "incidents": 3, "total_s": 4500,
+             "mean_s": 1500, "median_s": 1500, "max_s": 2500},
+        ]
+        out = build_web_snapshot_payload(
+            self._valid_input(),
+            dry_run_alert=None,
+            generated_at="2026-05-23T00:00:00Z",
+            mttr_summary=summary,
+        )
+        assert out["mttr_summary"] == summary
+
+    def test_explicit_none_yields_empty_list_not_null(self):
+        # Dashboard JS will likely do `payload.mttr_summary.length`;
+        # null would NPE. Pin that None coerces to [].
+        from watcher_pure import build_web_snapshot_payload
+        out = build_web_snapshot_payload(
+            self._valid_input(),
+            dry_run_alert=None,
+            generated_at="2026-05-23T00:00:00Z",
+            mttr_summary=None,
+        )
+        assert out["mttr_summary"] == []
+        assert out["mttr_summary"] is not None
+
+    def test_mttr_summary_appears_in_payload_key_set(self):
+        # Pin the key is present in EVERY payload (no conditional
+        # inclusion that surprises consumers when the summary happens
+        # to be empty).
+        from watcher_pure import build_web_snapshot_payload
+        out_no_summary = build_web_snapshot_payload(
+            self._valid_input(), dry_run_alert=None, generated_at="ts",
+        )
+        out_with_summary = build_web_snapshot_payload(
+            self._valid_input(), dry_run_alert=None, generated_at="ts",
+            mttr_summary=[{"handle": "@x", "incidents": 1, "total_s": 10,
+                           "mean_s": 10, "median_s": 10, "max_s": 10}],
+        )
+        assert "mttr_summary" in out_no_summary
+        assert "mttr_summary" in out_with_summary

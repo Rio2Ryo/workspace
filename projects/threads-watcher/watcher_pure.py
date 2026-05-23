@@ -405,6 +405,7 @@ def build_web_snapshot_payload(
     snapshot: dict[str, Any],
     dry_run_alert: dict | None,
     generated_at: str,
+    mttr_summary: list[dict] | None = None,
 ) -> dict[str, Any]:
     """Pure builder for the threads-watcher-status/state.json payload.
 
@@ -425,6 +426,13 @@ def build_web_snapshot_payload(
     banner) or {pending_ticks, since, delta}. Surfaces sync.py's
     "promote to --confirm" signal, previously only visible via
     `grep ALERT logs/sync.log`.
+
+    `mttr_summary` (added 2026-05-23 after commit a17b7e2 made the
+    helper CLI-only) is the output of sync_guards.summarise_mttr —
+    one entry per handle that has at least one CLOSED incident in
+    the log window. Default None when the caller doesn't compute
+    it (e.g., tests). The dashboard can render this as a per-handle
+    incident history row alongside recent_stats.
 
     Raises MissingSnapshotInputError (a KeyError subclass) when the
     input dict is missing any REQUIRED_INPUT_FIELDS. Replaces the
@@ -448,5 +456,6 @@ def build_web_snapshot_payload(
         "recent_stats_by_window": snapshot.get("recent_stats_by_window"),
         "sync_state": snapshot.get("sync_state"),
         "dry_run_alert": dry_run_alert,
+        "mttr_summary": mttr_summary or [],
         "snapshot_generated_at": generated_at,
     }

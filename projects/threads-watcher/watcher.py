@@ -191,10 +191,31 @@ def _write_web_snapshot_from_db(conn: Any, handle: str | None = None) -> None:
     # all stdlib, no playwright dependency.
     from sync import get_active_dry_run_alert
     from watcher_pure import build_web_snapshot_payload
+    # MTTR rollup: parse logs/sync.log for (warn, recovered) pairs and
+    # summarise per-handle incident stats. Operators previously had to
+    # run `python mttr.py` by hand (commit a17b7e2); now the dashboard
+    # renders it automatically. Reading + parsing the log is cheap
+    # (~30KB file, <1ms parse), so it's safe to compute per snapshot
+    # write (every 60s). Failure (missing log, parse error) silently
+    # yields an empty mttr_summary — dashboard treats [] as "no
+    # incidents recorded yet" rather than crashing.
+    mttr_summary: list[dict] = []
+    try:
+        from sync_guards import compute_mttr_from_log, summarise_mttr
+        sync_log_path = WEB_SNAPSHOT_FILE.parent.parent / "logs" / "sync.log"
+        if sync_log_path.is_file():
+            with sync_log_path.open("r", encoding="utf-8") as fh:
+                records = compute_mttr_from_log(fh)
+            mttr_summary = summarise_mttr(records)
+    except Exception:
+        # MTTR is a nice-to-have; never block the snapshot write.
+        mttr_summary = []
+
     payload = build_web_snapshot_payload(
         snapshot,
         dry_run_alert=get_active_dry_run_alert(),
         generated_at=_now_iso(),
+        mttr_summary=mttr_summary,
     )
     _atomic_write_json(WEB_SNAPSHOT_FILE, payload)
 
