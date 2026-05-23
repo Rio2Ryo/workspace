@@ -85,6 +85,58 @@ def _fmt_elapsed(seconds: int) -> str:
     return f"{h}h" if m == 0 else f"{h}h {m}m"
 
 
+# Operator-facing emoji indicators for the embed `description` 1-line
+# summary. Discord renders these as inline Unicode emoji, which is the
+# at-a-glance signal an operator scanning the channel uses BEFORE
+# expanding to read the fields below. Match the embed `color` so the
+# emoji and the side-bar color tell the same story.
+
+
+def _emoji_for(color: int) -> str:
+    """Map embed color to a 1-glyph status emoji for the description
+    line. Falls back to a neutral ❔ for an unknown color so a
+    future palette addition doesn't break the embed render."""
+    return {
+        COLOR_RED: "🔴",
+        COLOR_YELLOW: "🟡",
+        COLOR_GREEN: "🟢",
+    }.get(color, "❔")
+
+
+def _build_description(
+    open_incidents: list, mttr_summary: list, color: int,
+) -> str:
+    """Dense 1-line summary for the embed description (Discord renders
+    this prominently ABOVE the fields — operators scanning the
+    channel rely on it for at-a-glance triage without expanding).
+
+    Format:
+      🟢 All healthy — watcher alive          (color = GREEN)
+      🟡 2 warning · 1 recovered              (color = YELLOW)
+      🔴 1 warning · 3 recovered              (color = RED, mttr-driven)
+
+    Counts use word forms (singular/plural) rather than just integers
+    so the line reads as English: "2 warnings" not "warning(s): 2".
+    """
+    n_open = len(open_incidents)
+    n_recovered = len(mttr_summary)
+    emoji = _emoji_for(color)
+
+    if color == COLOR_GREEN:
+        # Even at GREEN, the embed proves the watcher is alive —
+        # surface that explicitly so operators know "no fields"
+        # means "all clear" not "watcher dead".
+        return f"{emoji} All healthy — watcher alive"
+
+    parts: list[str] = []
+    if n_open:
+        parts.append(f"{n_open} warning" + ("s" if n_open != 1 else ""))
+    if n_recovered:
+        parts.append(f"{n_recovered} recovered")
+    body = " · ".join(parts) if parts else "see fields"
+    return f"{emoji} {body}"
+
+
 def _classify_severity(open_incidents: list, mttr_summary: list, now_ts: int) -> int:
     """Return the embed color matching the MOST SEVERE row across
     both widgets. Open incidents are scored by elapsed-since-warn_ts
@@ -191,6 +243,7 @@ def build_payload_from_state(
         "username": "threads-watcher",
         "embeds": [{
             "title": "threads-watcher status",
+            "description": _build_description(open_incidents, mttr_summary, color),
             "color": color,
             "fields": fields,
             "timestamp": state.get("snapshot_generated_at"),

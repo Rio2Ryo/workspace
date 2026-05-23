@@ -229,3 +229,122 @@ class TestCli:
         r = self._run("/tmp/no-such-discord-payload-test-XYZ.json", cwd=tmp_path)
         assert r.returncode == 1
         assert "not found" in r.stderr.lower()
+
+
+# ── embed description (1-line at-a-glance summary) ─────────────────────
+
+
+from discord_payload import _build_description, _emoji_for  # noqa: E402
+
+
+class TestEmojiFor:
+    """Pure helper: color → emoji glyph. Match the embed `color` so
+    the emoji + side-bar tell the same story."""
+
+    def test_red_is_red_circle(self):
+        assert _emoji_for(COLOR_RED) == "🔴"
+
+    def test_yellow_is_yellow_circle(self):
+        assert _emoji_for(COLOR_YELLOW) == "🟡"
+
+    def test_green_is_green_circle(self):
+        assert _emoji_for(COLOR_GREEN) == "🟢"
+
+    def test_unknown_color_fallback_emoji(self):
+        # 🔒 Future palette addition shouldn't break the render — a
+        # neutral ❔ is operator-visible "something's off" without
+        # crashing the embed build.
+        assert _emoji_for(0x123456) == "❔"
+
+
+class TestBuildDescription:
+    """Pure helper for the description string. Pin shapes so format
+    drift surfaces here, not in operator scroll-fatigue."""
+
+    def test_green_all_healthy_proves_watcher_alive(self):
+        # 🔒 At-a-glance: GREEN must explicitly say "watcher alive" —
+        # an empty embed at GREEN is ambiguous (no incidents OR
+        # watcher dead?). The description disambiguates.
+        d = _build_description([], [], COLOR_GREEN)
+        assert "🟢" in d
+        assert "All healthy" in d
+        assert "watcher alive" in d
+
+    def test_yellow_one_warning_singular(self):
+        # English number agreement: "1 warning" not "1 warnings".
+        # The dense format reads in-line; bad grammar = poor scan.
+        d = _build_description(
+            [{"handle": "@x", "warn_ts": 0}], [], COLOR_YELLOW,
+        )
+        assert d == "🟡 1 warning"
+
+    def test_yellow_multiple_warnings_plural(self):
+        d = _build_description(
+            [{"handle": "@a"}, {"handle": "@b"}], [], COLOR_YELLOW,
+        )
+        assert d == "🟡 2 warnings"
+
+    def test_separator_when_both_open_and_recovered(self):
+        # Dense format uses · (middle dot) — operator pattern from
+        # the dashboard footer / other status renderers in the repo.
+        d = _build_description(
+            [{"handle": "@a"}], [{"handle": "@r"}], COLOR_YELLOW,
+        )
+        assert d == "🟡 1 warning · 1 recovered"
+
+    def test_red_with_only_mttr_history(self):
+        # RED can be triggered by MTTR mean even with no open
+        # incidents. Description still shows the recovered count
+        # (operator wants to know what HAS happened recently).
+        d = _build_description(
+            [], [{"handle": "@chronic", "mean_s": 25 * 3600}], COLOR_RED,
+        )
+        assert d == "🔴 1 recovered"
+
+    def test_red_with_both_open_and_recovered_lists_both(self):
+        d = _build_description(
+            [{"handle": "@a"}, {"handle": "@b"}],
+            [{"handle": "@r"}],
+            COLOR_RED,
+        )
+        assert d == "🔴 2 warnings · 1 recovered"
+
+    def test_fallback_text_when_neither_present_but_color_not_green(self):
+        # Defensive: classifier flagged yellow/red but neither array
+        # has entries (shouldn't happen if _classify_severity is
+        # consistent, but pin the safe path). "see fields" hints to
+        # operator that the embed has SOMETHING worth reading even
+        # though the description couldn't summarise it.
+        d = _build_description([], [], COLOR_YELLOW)
+        assert d == "🟡 see fields"
+
+
+class TestDescriptionIntegratedIntoPayload:
+    def _write_state(self, tmp_path, **overrides):
+        state = {
+            "snapshot_generated_at": "2026-05-23T08:00:00Z",
+            "open_incidents": [], "mttr_summary": [],
+        }
+        state.update(overrides)
+        path = tmp_path / "state.json"
+        path.write_text(json.dumps(state), encoding="utf-8")
+        return path
+
+    def test_description_present_in_built_payload(self, tmp_path):
+        # 🔒 The plumbing: description MUST reach the embed dict, not
+        # just exist as a helper. Without this, the operator UX
+        # improvement is invisible in production.
+        state_path = self._write_state(tmp_path)
+        payload = build_payload_from_state(state_path, now_ts=1_000_000)
+        embed = payload["embeds"][0]
+        assert "description" in embed
+        assert "🟢" in embed["description"]
+
+    def test_description_for_yellow_state(self, tmp_path):
+        state_path = self._write_state(tmp_path, open_incidents=[
+            {"handle": "@y", "warn_ts": 1_000_000 - 2 * 3600, "current_bucket": 0.6},
+        ])
+        payload = build_payload_from_state(state_path, now_ts=1_000_000)
+        desc = payload["embeds"][0]["description"]
+        assert "🟡" in desc
+        assert "1 warning" in desc
