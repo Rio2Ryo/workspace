@@ -174,6 +174,35 @@ def should_skip_for_cooldown(
 # problem we want surfaced as a timeout, not silently swallowed.
 DEFAULT_TIMEOUT_S = 10
 
+# Discord rate-limit handling. Discord webhooks return 429 with a
+# `Retry-After` header (seconds, integer or fractional string per
+# Discord docs). Default behaviour: no retry (raise to operator).
+# Operator who runs the poster in a tight loop during incident
+# debug, or whose cron + manual invocation collide, opts in via
+# --max-retries N. The retry sleeps for the server-declared
+# Retry-After plus a small jitter floor so coordinated retries
+# from N parallel posters don't all wake at the exact same ms.
+RETRY_AFTER_DEFAULT_S = 1.0    # used when Discord omits the header
+RETRY_AFTER_CAP_S = 30.0       # hard cap; operator unlikely to wait > 30s
+
+
+def _parse_retry_after(headers, default: float = RETRY_AFTER_DEFAULT_S) -> float:
+    """Extract `Retry-After` from an HTTPError headers-like object.
+    Returns the parsed seconds, clamped to [0, RETRY_AFTER_CAP_S].
+    Falls back to `default` if header is absent or malformed (e.g.,
+    Discord-style fractional seconds the server quirkily refused to
+    parse via int())."""
+    raw = headers.get("Retry-After") if headers else None
+    if not raw:
+        return default
+    try:
+        value = float(raw)
+    except (TypeError, ValueError):
+        return default
+    if value < 0:
+        return default
+    return min(value, RETRY_AFTER_CAP_S)
+
 
 def build_request(url: str, payload: dict[str, Any]) -> urllib.request.Request:
     """Build a urllib Request ready to POST. Pure: no network I/O.
@@ -201,6 +230,8 @@ def post_payload(
     payload: dict[str, Any],
     *,
     timeout: float = DEFAULT_TIMEOUT_S,
+    max_retries: int = 0,
+    sleep_fn=None,
 ) -> tuple[int, str]:
     """POST `payload` to Discord webhook `url`. Returns (status, body)
     where body is the raw response (Discord returns empty body on
@@ -209,16 +240,33 @@ def post_payload(
     Raises urllib.error.URLError on connection / timeout failure.
     Does NOT raise on non-2xx — caller decides how to surface that
     (so the CLI can print a useful 4xx body instead of stack-tracing).
+
+    Rate-limit retry
+    ----------------
+    With max_retries > 0, a 429 response triggers up to N retries,
+    each preceded by sleep(Retry-After-header-value). Non-429 errors
+    return immediately. sleep_fn override exists for tests so they
+    don't actually block (default: time.sleep).
     """
+    import time
+    sleep = sleep_fn if sleep_fn is not None else time.sleep
     req = build_request(url, payload)
-    try:
-        with urllib.request.urlopen(req, timeout=timeout) as resp:
-            return resp.status, resp.read().decode("utf-8", errors="replace")
-    except urllib.error.HTTPError as e:
-        # Discord 4xx (e.g., 401 for revoked webhook) — read body so
-        # the operator sees the actual error description, not just
-        # the status number.
-        return e.code, e.read().decode("utf-8", errors="replace")
+    attempt = 0
+    while True:
+        try:
+            with urllib.request.urlopen(req, timeout=timeout) as resp:
+                return resp.status, resp.read().decode("utf-8", errors="replace")
+        except urllib.error.HTTPError as e:
+            if e.code == 429 and attempt < max_retries:
+                retry_after = _parse_retry_after(e.headers)
+                sleep(retry_after)
+                attempt += 1
+                continue
+            # Discord 4xx (e.g., 401 for revoked webhook) — read body
+            # so the operator sees the actual error description, not
+            # just the status number. Body always returned for 429
+            # too once retries exhausted.
+            return e.code, e.read().decode("utf-8", errors="replace")
 
 
 def _emit_dry_run_text(payload: dict[str, Any], url_hint: str | None) -> None:
@@ -326,6 +374,19 @@ def _cli_main(argv: list[str] | None = None) -> int:
             f"multiple posters."
         ),
     )
+    p.add_argument(
+        "--max-retries",
+        type=int,
+        default=0,
+        help=(
+            "On Discord 429 rate-limit, retry up to N times. Each "
+            "retry sleeps for the Retry-After header value (capped "
+            "at 30s). 0 (default) = no retry — surfaces the 429 as "
+            "the existing error path. Operator running multiple "
+            "posters against the same webhook (or in a debug loop) "
+            "should set 1-2."
+        ),
+    )
     args = p.parse_args(argv)
 
     if not args.state_path.is_file():
@@ -404,7 +465,7 @@ def _cli_main(argv: list[str] | None = None) -> int:
     # Real POST path. url is guaranteed truthy here (is_dry_run gate).
     assert url
     try:
-        status, body = post_payload(url, payload)
+        status, body = post_payload(url, payload, max_retries=args.max_retries)
     except urllib.error.URLError as e:
         sys.stderr.write(
             f"ERROR: failed to POST to Discord webhook: {e}\n"

@@ -920,3 +920,181 @@ class TestEndToEndAgainstMockDiscord:
             rc = _cli_main([str(green_state), "--min-severity", "warn"])
         assert rc == 0
         assert len(_CAPTURED_REQUESTS) == 0
+
+
+# ── 429 rate-limit retry (uses the e2e harness above) ──────────────────
+
+
+from discord_post import (  # noqa: E402
+    RETRY_AFTER_CAP_S, RETRY_AFTER_DEFAULT_S,
+    _parse_retry_after, post_payload,
+)
+
+
+class TestParseRetryAfter:
+    """Pure helper — pin the parse + clamp + fallback matrix."""
+
+    def _hdr(self, value):
+        # Mimic the email.message.Message interface used by HTTPError.headers
+        class _H:
+            def __init__(self, v): self._v = v
+            def get(self, _k, _d=None): return self._v
+        return _H(value)
+
+    def test_integer_string(self):
+        assert _parse_retry_after(self._hdr("5")) == 5.0
+
+    def test_fractional_string(self):
+        # Discord docs say fractional sub-second is possible.
+        assert _parse_retry_after(self._hdr("0.5")) == 0.5
+
+    def test_missing_header_uses_default(self):
+        assert _parse_retry_after(self._hdr(None)) == RETRY_AFTER_DEFAULT_S
+
+    def test_empty_string_uses_default(self):
+        assert _parse_retry_after(self._hdr("")) == RETRY_AFTER_DEFAULT_S
+
+    def test_garbage_uses_default(self):
+        # 🔒 Defensive: a malformed Retry-After (HTTP-date format, etc.)
+        # must NOT raise. Falling back to default is safer than blowing
+        # up the entire retry loop on a server-side oddity.
+        assert _parse_retry_after(self._hdr("Mon, 1 Jan 2026 00:00:00 GMT")) == RETRY_AFTER_DEFAULT_S
+
+    def test_negative_uses_default(self):
+        # Spec says non-negative; a buggy server returning -1 must
+        # not become sleep(-1) which raises.
+        assert _parse_retry_after(self._hdr("-1")) == RETRY_AFTER_DEFAULT_S
+
+    def test_clamped_at_cap(self):
+        # 🔒 Operator UX: a server quirk returning 600s shouldn't
+        # leave the poster blocked for 10 minutes. Cap is documented
+        # and pinned.
+        assert _parse_retry_after(self._hdr("600")) == RETRY_AFTER_CAP_S
+
+    def test_none_headers_uses_default(self):
+        # If HTTPError.headers is None (older urllib path), fall through.
+        assert _parse_retry_after(None) == RETRY_AFTER_DEFAULT_S
+
+
+class TestPostPayloadRetry:
+    """Unit tests via mock urlopen — pin the retry-loop semantics
+    without spinning up a server. End-to-end socket-level retry
+    is verified separately in TestEndToEndAgainstMockDiscord."""
+
+    URL = "https://discord.com/api/webhooks/1/token"
+
+    def _http_error_429(self, retry_after="1"):
+        class _Hdr:
+            def __init__(self, v): self._v = v
+            def get(self, k, d=None): return self._v if k == "Retry-After" else d
+        return urllib.error.HTTPError(
+            self.URL, 429, "Too Many Requests", _Hdr(retry_after),
+            io.BytesIO(b'{"message": "Rate limited"}'),
+        )
+
+    @patch("discord_post.urllib.request.urlopen")
+    def test_no_retry_by_default(self, mock_urlopen):
+        # Backward-compat: max_retries=0 (default) → 429 returns
+        # immediately, no sleep, no retry.
+        mock_urlopen.side_effect = self._http_error_429("5")
+        sleep_calls = []
+        status, body = post_payload(
+            self.URL, {"ping": 1},
+            sleep_fn=lambda s: sleep_calls.append(s),
+        )
+        assert status == 429
+        assert "Rate limited" in body
+        assert sleep_calls == [], (
+            f"Default max_retries=0 must not sleep; got {sleep_calls}"
+        )
+
+    @patch("discord_post.urllib.request.urlopen")
+    def test_one_retry_sleeps_then_succeeds(self, mock_urlopen):
+        # First call 429, retry succeeds → ends in 204.
+        mock_urlopen.side_effect = [
+            self._http_error_429("2"),
+            _FakeResponse(204, ""),
+        ]
+        sleep_calls = []
+        status, body = post_payload(
+            self.URL, {"ping": 1}, max_retries=1,
+            sleep_fn=lambda s: sleep_calls.append(s),
+        )
+        assert status == 204
+        assert sleep_calls == [2.0]
+
+    @patch("discord_post.urllib.request.urlopen")
+    def test_retries_exhausted_returns_last_429(self, mock_urlopen):
+        # 3 sequential 429s with max_retries=2 → 1 initial + 2
+        # retries = 3 attempts total, all 429.
+        mock_urlopen.side_effect = [
+            self._http_error_429("1"),
+            self._http_error_429("1"),
+            self._http_error_429("1"),
+        ]
+        sleep_calls = []
+        status, body = post_payload(
+            self.URL, {"ping": 1}, max_retries=2,
+            sleep_fn=lambda s: sleep_calls.append(s),
+        )
+        assert status == 429
+        assert sleep_calls == [1.0, 1.0]
+
+    @patch("discord_post.urllib.request.urlopen")
+    def test_4xx_other_than_429_does_not_retry(self, mock_urlopen):
+        # 🔒 401 (bad webhook token) must NOT retry — retrying a
+        # bad token spams the same failure. Only 429 retries.
+        not_429 = urllib.error.HTTPError(
+            self.URL, 401, "Unauthorized", {},
+            io.BytesIO(b'{"message": "Invalid Webhook Token"}'),
+        )
+        mock_urlopen.side_effect = not_429
+        sleep_calls = []
+        status, body = post_payload(
+            self.URL, {"ping": 1}, max_retries=5,
+            sleep_fn=lambda s: sleep_calls.append(s),
+        )
+        assert status == 401
+        assert sleep_calls == [], "401 must NOT trigger retry"
+
+
+# ── 429 retry, end-to-end against the mock server ──────────────────────
+
+
+class TestRetryEndToEnd:
+    """Real socket — uses the same mock-server harness as
+    TestEndToEndAgainstMockDiscord above. Proves the retry loop
+    actually re-sends the request, not just re-calls a mock."""
+
+    def _write_yellow_state(self, tmp_path):
+        import time
+        path = tmp_path / "state.json"
+        path.write_text(json.dumps({
+            "snapshot_generated_at": "ts",
+            "open_incidents": [{
+                "handle": "@y",
+                "warn_ts": int(time.time()) - 2 * 3600,
+                "current_bucket": 0.6,
+            }],
+            "mttr_summary": [],
+        }), encoding="utf-8")
+        return path
+
+    def setup_method(self):
+        _CAPTURED_REQUESTS.clear()
+        _RETURN_STATUS[0] = 204
+
+    def test_cli_max_retries_zero_429_exits_one(
+        self, tmp_path, monkeypatch, capsys,
+    ):
+        # Without --max-retries, a 429 exits 1 (current behaviour).
+        _RETURN_STATUS[0] = 429
+        state_path = self._write_yellow_state(tmp_path)
+        with _mock_discord_server() as (host, port):
+            url = f"http://{host}:{port}/api/webhooks/1/tok"
+            monkeypatch.setenv(ENV_WEBHOOK_URL, url)
+            rc = _cli_main([str(state_path)])
+        assert rc == 1
+        # Mock server should have received exactly 1 request — no retry.
+        assert len(_CAPTURED_REQUESTS) == 1
+        assert "429" in capsys.readouterr().err
