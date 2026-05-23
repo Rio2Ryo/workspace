@@ -227,3 +227,146 @@ def test_restart_failure_surfaces_exit_2(sandbox: Path) -> None:
     assert restarted is True  # it was invoked
     assert code == 2
     assert "restart-watcher.sh failed" in out
+
+
+# ── healthy-state log dedup ────────────────────────────────────────────
+#
+# Observation 2026-05-23 against the live logs/auto-restart.out.log:
+# 646 identical "watcher is healthy — no action" lines + 646 identical
+# "health-check exit=0" lines over 5 days. The operational signal is
+# in TRANSITIONS (healthy↔unhealthy, restart events) which stay
+# verbose; the pure no-change ticks are silenced per heartbeat
+# interval.
+
+
+def test_first_healthy_tick_emits_full_lines(sandbox: Path) -> None:
+    # Fresh sandbox — no state file → cur_state ('healthy') != last ('').
+    # Both lines emit, state file is created.
+    code, out, _restarted = _run(
+        sandbox, process_alive=True, health_output=HEALTH_HEALTHY, health_exit=0,
+    )
+    assert code == 0
+    assert "health-check exit=0" in out
+    assert "watcher is healthy — no action" in out
+    state_file = sandbox / "logs" / ".auto-restart-last-state"
+    assert state_file.exists()
+    persisted = state_file.read_text(encoding="utf-8").strip()
+    assert persisted.startswith("healthy|")
+
+
+def test_second_healthy_tick_suppresses_both_lines(sandbox: Path) -> None:
+    # First tick logs + persists. Second tick with identical state must
+    # NOT re-log either of the dedup'd lines.
+    _run(sandbox, process_alive=True, health_output=HEALTH_HEALTHY, health_exit=0)
+    code, out, _restarted = _run(
+        sandbox, process_alive=True, health_output=HEALTH_HEALTHY, health_exit=0,
+    )
+    assert code == 0
+    assert "health-check exit=" not in out
+    assert "watcher is healthy" not in out
+
+
+def test_healthy_to_unhealthy_transition_re_emits(sandbox: Path) -> None:
+    # First tick healthy → state file says 'healthy'. Second tick is
+    # DOM-regression unhealthy (non-fixable). The transition is the
+    # operationally interesting event — must log unconditionally, AND
+    # update the state file.
+    _run(sandbox, process_alive=True, health_output=HEALTH_HEALTHY, health_exit=0)
+    code, out, _restarted = _run(
+        sandbox, process_alive=True, health_output=HEALTH_DOM_REGRESSION, health_exit=1,
+    )
+    assert code == 0
+    assert "health-check exit=1" in out  # transition logs the exit code
+    assert "leaving for operator" in out
+    state_file = sandbox / "logs" / ".auto-restart-last-state"
+    persisted = state_file.read_text(encoding="utf-8").strip()
+    assert persisted.startswith("unhealthy_not_fixable|")
+
+
+def test_unhealthy_to_healthy_transition_re_emits(sandbox: Path) -> None:
+    # Inverse: state file says 'unhealthy', current tick is healthy →
+    # log unconditionally so operator sees the recovery.
+    _run(
+        sandbox, process_alive=True, health_output=HEALTH_DOM_REGRESSION, health_exit=1,
+    )
+    code, out, _restarted = _run(
+        sandbox, process_alive=True, health_output=HEALTH_HEALTHY, health_exit=0,
+    )
+    assert code == 0
+    assert "health-check exit=0" in out
+    assert "watcher is healthy — no action" in out
+
+
+def test_heartbeat_re_emits_after_interval_elapsed(sandbox: Path) -> None:
+    # First tick stamps the state with "now". Forge the stored
+    # timestamp to "long ago" so the heartbeat branch fires.
+    _run(sandbox, process_alive=True, health_output=HEALTH_HEALTHY, health_exit=0)
+    state_file = sandbox / "logs" / ".auto-restart-last-state"
+    state_file.write_text("healthy|1700000000\n", encoding="utf-8")
+    # Default AUTO_RESTART_HEARTBEAT_SEC=3600; forged 2023 timestamp is
+    # well past it → both lines re-emit.
+    code, out, _restarted = _run(
+        sandbox, process_alive=True, health_output=HEALTH_HEALTHY, health_exit=0,
+    )
+    assert code == 0
+    assert "health-check exit=0" in out
+    assert "watcher is healthy — no action" in out
+
+
+def test_three_consecutive_healthy_ticks_yield_only_one_log_pair(sandbox: Path) -> None:
+    # 🔒 The core operational win — without this guard, an off-by-one
+    # comparison would silently let dupes through.
+    captured_outs = []
+    for _ in range(3):
+        _code, out, _restarted = _run(
+            sandbox, process_alive=True, health_output=HEALTH_HEALTHY, health_exit=0,
+        )
+        captured_outs.append(out)
+    # Count "watcher is healthy" mentions across all 3 ticks' outputs.
+    healthy_count = sum(o.count("watcher is healthy") for o in captured_outs)
+    assert healthy_count == 1, (
+        f"Expected exactly one 'watcher is healthy' across 3 ticks; "
+        f"got {healthy_count}.\nOutputs:\n" + "\n---\n".join(captured_outs)
+    )
+
+
+def test_short_heartbeat_env_re_emits_more_often(sandbox: Path) -> None:
+    # AUTO_RESTART_HEARTBEAT_SEC=1 → second tick >= 1s later re-emits.
+    # Forge the timestamp to make the test deterministic without
+    # sleeping.
+    _run(sandbox, process_alive=True, health_output=HEALTH_HEALTHY, health_exit=0)
+    state_file = sandbox / "logs" / ".auto-restart-last-state"
+    import time
+    state_file.write_text(f"healthy|{int(time.time()) - 5}\n", encoding="utf-8")
+
+    env = dict(os.environ)
+    env["PATH"] = f"{sandbox / 'stub-bin'}:{env['PATH']}"
+    env["AUTO_RESTART_HEARTBEAT_SEC"] = "1"
+    (sandbox / ".pgrep-found").write_text("", encoding="utf-8")
+    (sandbox / ".health-output").write_text(HEALTH_HEALTHY, encoding="utf-8")
+    (sandbox / ".health-exit").write_text("0", encoding="utf-8")
+    (sandbox / ".last-auto-restart").unlink(missing_ok=True)
+
+    proc = subprocess.run(
+        ["bash", "auto-restart-if-stale.sh"],
+        cwd=str(sandbox), env=env, capture_output=True, text=True, timeout=30,
+    )
+    assert proc.returncode == 0
+    out = proc.stdout + proc.stderr
+    assert "watcher is healthy" in out
+    assert "health-check exit=0" in out
+
+
+def test_restart_event_always_logs_regardless_of_dedup(sandbox: Path) -> None:
+    # 🔒 A restart event must NEVER be suppressed by the dedup gate.
+    # First tick: healthy → state='healthy'. Second tick: hung loop →
+    # restart triggered. The restart logging is unconditional.
+    _run(sandbox, process_alive=True, health_output=HEALTH_HEALTHY, health_exit=0)
+    code, out, restarted = _run(
+        sandbox, process_alive=True, health_output=HEALTH_HUNG_LOOP, health_exit=1,
+    )
+    assert code == 0
+    assert restarted is True
+    assert "health-check exit=1" in out
+    assert "restart-triggering signal detected" in out
+    assert "hung-loop" in out

@@ -138,7 +138,34 @@ source venv/bin/activate
 
 python watcher.py --health-check >"$HEALTH_LOG" 2>&1
 health_exit=$?
-ts_log "health-check exit=$health_exit"
+
+# Dedup the no-change lines (`health-check exit=0` + `watcher is
+# healthy — no action`) — observation 2026-05-23: 646 of each over
+# 5 days, every 5-min tick, identical. The operational signal is
+# in TRANSITIONS (healthy↔unhealthy, restart events) which we keep
+# unconditionally verbose below. Persist the last logged "state"
+# in logs/.auto-restart-last-state; only re-emit on change OR
+# heartbeat. Same shape as publish-if-delta.sh:621d32b.
+AUTO_RESTART_HEARTBEAT_SEC="${AUTO_RESTART_HEARTBEAT_SEC:-3600}"
+_LAST_STATE_FILE="logs/.auto-restart-last-state"
+maybe_log_healthy_state() {
+  local cur_state="$1"
+  local now_ts last_line last_state last_ts elapsed
+  now_ts=$(date +%s)
+  last_line=$(cat "$_LAST_STATE_FILE" 2>/dev/null || true)
+  last_state=$(printf '%s' "$last_line" | cut -d'|' -f1)
+  last_ts=$(printf '%s' "$last_line" | cut -d'|' -f2)
+  elapsed=$((now_ts - ${last_ts:-0}))
+  if [ "$cur_state" != "$last_state" ] || [ "$elapsed" -ge "$AUTO_RESTART_HEARTBEAT_SEC" ]; then
+    ts_log "health-check exit=$health_exit"
+    if [ "$cur_state" = "healthy" ]; then
+      ts_log "watcher is healthy — no action"
+    fi
+    printf '%s|%s\n' "$cur_state" "$now_ts" > "$_LAST_STATE_FILE"
+    return 0
+  fi
+  return 1  # suppressed
+}
 
 # ── decide if a reload-fixable signal is the reason ────────────────────
 # restart_decision.py classifies the --health-check output: it triggers
@@ -151,13 +178,23 @@ ts_log "health-check exit=$health_exit"
 # loop with a live PID was never auto-revived — that gap is why this
 # went through a classifier.
 if restart_reason=$(python restart_decision.py <"$HEALTH_LOG"); then
+  # State transition or first restart — always log verbosely.
+  ts_log "health-check exit=$health_exit"
   ts_log "restart-triggering signal detected (${restart_reason})"
+  printf '%s|%s\n' "restart_${restart_reason}" "$(date +%s)" > "$_LAST_STATE_FILE"
 else
   if [ "$health_exit" != 0 ]; then
+    # Unhealthy-not-reload-fixable: keep full reason context every
+    # time, because the `^reason=` lines from --health-check may
+    # carry transient values an operator wants to correlate (e.g.,
+    # found_count changes). NOT a dedup target.
+    ts_log "health-check exit=$health_exit"
     ts_log "health-check unhealthy but NOT reload-fixable — leaving for operator"
     grep -E "^reason=" "$HEALTH_LOG" | head -5 | sed "s/^/  /" | while read -r l; do ts_log "  $l"; done
+    printf '%s|%s\n' "unhealthy_not_fixable" "$(date +%s)" > "$_LAST_STATE_FILE"
   else
-    ts_log "watcher is healthy — no action"
+    # Pure healthy "no change" tick — apply the dedup gate.
+    maybe_log_healthy_state "healthy" || true
   fi
   exit 0
 fi
