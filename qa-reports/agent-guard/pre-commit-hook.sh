@@ -332,4 +332,13 @@ run_pytest_file '^(qa-reports/migrations-down/.*|second-brain)$' \
   'qa-reports/migrations-down/test_down_idempotency_runtime.py' \
   'migrations-down-runtime'
 
+# Apply.sh ↔ submodule SQL parity (commit d12b237) — same trigger
+# pattern: a submodule bump or apply.sh-side *_DOWN.sql edit could
+# silently diverge the executable SQL between the two operator
+# paths (apply.sh → sqlite/miniflare/remote vs wrangler d1 execute
+# --file). 5ms test, cheap to fire on every matching commit.
+run_pytest_file '^(qa-reports/migrations-down/.*|second-brain)$' \
+  'qa-reports/migrations-down/test_apply_vs_submodule_sql_parity.py' \
+  'migrations-down-parity'
+
 exit 0

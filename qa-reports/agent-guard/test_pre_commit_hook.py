@@ -334,3 +334,72 @@ def test_migrations_down_gate_skips_unrelated_paths():
             f"(would cause false-positive 30ms cost AND confuse "
             f"operators triaging unrelated commits)"
         )
+
+
+# ── migrations-down-parity gate (2nd run_pytest_file invocation) ───────
+
+
+def test_migrations_down_parity_gate_is_wired():
+    # Confirms the parity test (commit d12b237) is now hooked, not
+    # left as manual-pytest-only. A future hook edit that drops the
+    # invocation by accident surfaces here.
+    pat, test_path = _find_file_pattern_for_label('migrations-down-parity')
+    assert pat
+    assert test_path.endswith("test_apply_vs_submodule_sql_parity.py")
+
+
+def test_migrations_down_parity_test_file_exists():
+    # 🔒 Path typo guard. Mirror of the runtime-gate variant.
+    _pat, test_path = _find_file_pattern_for_label('migrations-down-parity')
+    REPO_ROOT = SCRIPT.resolve().parent.parent.parent
+    assert (REPO_ROOT / test_path).is_file(), (
+        f"Gate targets {test_path!r} but file doesn't exist. Either "
+        f"fix the path in the hook or restore the test file."
+    )
+
+
+def test_migrations_down_parity_gate_matches_submodule_pointer_bump():
+    # 🔒 Headline: any second-brain bump must trigger the parity
+    # check. If a submodule commit edits down_NNNN.sql, the apply.sh
+    # side might still be the stale version — this catches it
+    # BEFORE the bump lands in the workspace.
+    pat, _ = _find_file_pattern_for_label('migrations-down-parity')
+    assert re.search(pat, 'second-brain')
+
+
+def test_migrations_down_parity_gate_matches_apply_side_sql_edits():
+    # An operator editing 0054_..._DOWN.sql in apply.sh's dir (e.g.,
+    # adding a missing IF EXISTS guard) must trigger the parity
+    # check — that exact edit is the most common drift trigger.
+    pat, _ = _find_file_pattern_for_label('migrations-down-parity')
+    assert re.search(pat, 'qa-reports/migrations-down/0054_discord_watch_sources_DOWN.sql')
+
+
+def test_migrations_down_parity_gate_skips_unrelated_paths():
+    # 🔒 Zero-cost guarantee for operators editing other trees.
+    pat, _ = _find_file_pattern_for_label('migrations-down-parity')
+    for path in [
+        'projects/threads-watcher/sync.py',
+        'projects/top3-favorites/src/App.tsx',
+        'qa-reports/agent-guard/test_cli_conventions.py',
+        'second-brain/apps/api/src/index.ts',  # inside submodule, but workspace sees as submodule pointer
+    ]:
+        assert not re.search(pat, path), (
+            f"path {path!r} should NOT match parity gate"
+        )
+
+
+def test_both_migrations_down_gates_use_same_trigger_pattern():
+    # 🔒 Invariant: the runtime gate and the parity gate must share
+    # the same trigger pattern. If a future hook edit narrows one
+    # without the other, operators get inconsistent behaviour ("my
+    # commit ran runtime but skipped parity, why?"). Pin equality.
+    runtime_pat, _ = _find_file_pattern_for_label('migrations-down-runtime')
+    parity_pat, _ = _find_file_pattern_for_label('migrations-down-parity')
+    assert runtime_pat == parity_pat, (
+        f"Trigger patterns diverged:\n"
+        f"  runtime: {runtime_pat!r}\n"
+        f"  parity:  {parity_pat!r}\n"
+        f"Both gates address the same operator-rollback concern; "
+        f"narrowing one is almost certainly accidental."
+    )
