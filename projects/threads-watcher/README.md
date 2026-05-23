@@ -192,10 +192,25 @@ tail -f projects/threads-watcher/logs/sticky-regime-alert.out.log
 していなくても Discord channel に transition 通知が落ちる (commit 5122f4a)。
 
 ```bash
-# Discord URL provision 後 (sticky-regime-alert.plist と独立):
-# Single launchd entry でこの wrapper を hourly 起動 (planned plist:
-# com.shiro.threads-watcher-sticky-alert-discord.plist — Yakon 承認待ち)
-bash qa-reports/sticky-alert-to-discord.sh
+# Discord URL provision 後 (sticky-regime-alert.plist と択一推奨):
+# com.shiro.threads-watcher-sticky-alert-discord.plist.example を hourly
+# cron 化すると wrapper が transition 時のみ TRANSITION line + Discord
+# embed post を fire する。両方 enable は同 transition で 2 重発火する
+# ので避ける。
+
+# テンプレートを LaunchAgents へコピー (placeholder なし、no edit 不要)
+cp projects/threads-watcher/com.shiro.threads-watcher-sticky-alert-discord.plist.example \
+   ~/Library/LaunchAgents/com.shiro.threads-watcher-sticky-alert-discord.plist
+
+# preflight
+bash qa-reports/preflight-plist.sh --check-only \
+  ~/Library/LaunchAgents/com.shiro.threads-watcher-sticky-alert-discord.plist
+
+# cron 有効化
+launchctl load -w ~/Library/LaunchAgents/com.shiro.threads-watcher-sticky-alert-discord.plist
+
+# Manual smoke test (--dry-run で discord_post の embed 出力のみ確認)
+bash qa-reports/sticky-alert-to-discord.sh --dry-run
 # → no-transition は silent、transition 時のみ:
 #   1. TRANSITION line を stdout に emit
 #   2. discord_post.py を --min-severity warn --max-retries 1 で invoke

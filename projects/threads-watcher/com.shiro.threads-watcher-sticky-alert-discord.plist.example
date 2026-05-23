@@ -1,0 +1,83 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  launchd template — sticky-regime transition → Discord notification chain
+
+  目的:
+    qa-reports/sticky-alert-to-discord.sh (commit 5122f4a) を hourly
+    cron 化、operator が tail せずとも Discord channel に transition
+    notification が落ちる。chain wrapper の役割:
+      1. sticky_regime_diagnosis.py - -alert-on-transition - -json で
+         transition 検出
+      2. transition 時のみ discord_post.py を - -min-severity warn
+         - -max-retries 1 で invoke
+      3. no-transition は silent (cron-friendly contract)
+
+    本 plist は sticky-regime-alert plist (commit 5f0a412) と択一:
+    両方 enable すると同じ transition で 2 重 fire する。chain wrapper
+    の方が high-level (notification まで含む) なので、Discord URL
+    provision 済なら本 plist を採用、URL 未 provision なら
+    sticky-regime-alert plist のみで log-only 運用が推奨。
+
+  配置先:
+    ~/Library/LaunchAgents/com.shiro.threads-watcher-sticky-alert-discord.plist
+
+  有効化 (前提: Discord URL provision 済 + discord-post.plist 設定済):
+    launchctl load -w ~/Library/LaunchAgents/com.shiro.threads-watcher-sticky-alert-discord.plist
+
+  無効化(ロールバック):
+    launchctl unload -w ~/Library/LaunchAgents/com.shiro.threads-watcher-sticky-alert-discord.plist
+
+  デフォルト挙動:
+    - 3600 秒 (1h) ごとに sticky-alert-to-discord.sh を起動
+    - no-transition  → silent exit 0 (log にも何も出ない)
+    - transition     → TRANSITION line を stdout (logs/sticky-alert-discord.out.log)
+                        + Discord channel に standard threads-watcher
+                        embed を POST
+    - RunAtLoad=false → load 時 fire しない (chain wrapper の最初の
+                         実行で no-prior-state silent record)
+
+  事前要件:
+    - $THREADS_WATCHER_DISCORD_WEBHOOK_URL が plist の
+      EnvironmentVariables または操作員 shell に export 済
+      (本 plist の EnvironmentVariables では declared しない —
+       URL は discord-post.plist 側で operator 設定するため、
+       同 launchd context で参照可能)
+
+  ロールバック手順:
+    本テンプレ unload で chain 停止、state file
+    (threads-watcher-status/sticky-regime-last-recommendation.json)
+    のみ書き込み、DB / dashboard / Discord channel への副作用ゼロ。
+-->
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+  <key>Label</key>
+  <string>com.shiro.threads-watcher-sticky-alert-discord</string>
+
+  <key>ProgramArguments</key>
+  <array>
+    <string>/bin/bash</string>
+    <string>/Users/umi/.openclaw/workspace/qa-reports/sticky-alert-to-discord.sh</string>
+  </array>
+
+  <key>EnvironmentVariables</key>
+  <dict>
+    <key>PATH</key>
+    <string>/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin</string>
+  </dict>
+
+  <key>StartInterval</key>
+  <integer>3600</integer>
+
+  <key>RunAtLoad</key>
+  <false/>
+
+  <key>StandardOutPath</key>
+  <string>/Users/umi/.openclaw/workspace/projects/threads-watcher/logs/sticky-alert-discord.out.log</string>
+  <key>StandardErrorPath</key>
+  <string>/Users/umi/.openclaw/workspace/projects/threads-watcher/logs/sticky-alert-discord.err.log</string>
+
+  <key>WorkingDirectory</key>
+  <string>/Users/umi/.openclaw/workspace</string>
+</dict>
+</plist>

@@ -281,6 +281,7 @@ class TestPlistTemplatesDocumented:
             "com.shiro.threads-watcher-backup.plist.example",
             "com.shiro.threads-watcher-discord-post.plist.example",
             "com.shiro.threads-watcher-sticky-regime-alert.plist.example",
+            "com.shiro.threads-watcher-sticky-alert-discord.plist.example",
             "com.shiro.threads-watcher-sync.plist.example",
         }
         missing_from_scan = known - in_repo
