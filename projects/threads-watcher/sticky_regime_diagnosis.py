@@ -126,6 +126,122 @@ def diagnose(conn: sqlite3.Connection, *, window: int) -> dict:
     }
 
 
+# Window sweep used by --recommendation mode. Range covers operator-
+# realistic choices: window=3 (default guard) up through 30 (close to
+# the production hourly cron's full day of checks). Stops at 30 so a
+# fresh DB with < 30 rows doesn't dominate the recommendation logic
+# with INSUFFICIENT_DATA noise.
+RECOMMENDATION_WINDOWS = (3, 5, 10, 20, 30)
+
+
+def recommend(conn: sqlite3.Connection) -> dict:
+    """Multi-window scan + single ENABLE/WAIT/INVESTIGATE recommendation.
+
+    Reduces operator window-choice burden — instead of "did I pick the
+    right window?", operator gets a unified recommendation backed by
+    per-window evidence.
+
+    Decision matrix:
+      - all windows SAFE_TO_ENABLE                  → STRONG_ENABLE
+      - small windows SAFE, large windows NO_OP    → CONDITIONAL_ENABLE
+      - all NO_OP                                   → WAIT
+      - any INSUFFICIENT_DATA in the smaller windows → INSUFFICIENT_DATA
+    """
+    per_window: dict[int, dict] = {}
+    for w in RECOMMENDATION_WINDOWS:
+        per_window[w] = diagnose(conn, window=w)
+
+    verdicts = {w: r["verdict"] for w, r in per_window.items()}
+    # Smallest window first — operator typically trusts the most-recent
+    # signal more than the historical aggregate.
+    safe_windows = sorted([w for w, v in verdicts.items() if v == "SAFE_TO_ENABLE"])
+    no_op_windows = sorted([w for w, v in verdicts.items() if v == "NO_OP"])
+    insufficient_windows = sorted([w for w, v in verdicts.items() if v == "INSUFFICIENT_DATA"])
+
+    # If the smallest window can't even satisfy the predicate, the DB
+    # is too fresh — recommend waiting for more check history.
+    if RECOMMENDATION_WINDOWS[0] in insufficient_windows:
+        return _build_recommendation(
+            "INSUFFICIENT_DATA",
+            f"DB has fewer than {RECOMMENDATION_WINDOWS[0]} checks recorded; "
+            f"wait for the watcher cron to accumulate more history before "
+            f"deciding.",
+            per_window, safe_windows, no_op_windows, insufficient_windows,
+        )
+
+    if not safe_windows:
+        return _build_recommendation(
+            "WAIT",
+            f"No window in {list(RECOMMENDATION_WINDOWS)} satisfies the "
+            f"sticky-regime predicate (all-partial_error + same reason). "
+            f"Regime not stable enough yet — wait for cleaner check "
+            f"history OR investigate the OK/error mix.",
+            per_window, safe_windows, no_op_windows, insufficient_windows,
+        )
+
+    if set(safe_windows) == set(w for w in RECOMMENDATION_WINDOWS if w not in insufficient_windows):
+        return _build_recommendation(
+            "STRONG_ENABLE",
+            f"Every evaluable window ({safe_windows}) reports "
+            f"SAFE_TO_ENABLE — regime is stably sticky across all "
+            f"horizons. Enabling --allow-sticky-partial-error-regime "
+            f"is the lowest-risk option right now.",
+            per_window, safe_windows, no_op_windows, insufficient_windows,
+        )
+
+    # Mixed: small windows safe, larger NO_OP → conditional. Operator's
+    # call on which horizon they trust.
+    return _build_recommendation(
+        "CONDITIONAL_ENABLE",
+        f"Smaller windows ({safe_windows}) report SAFE_TO_ENABLE but "
+        f"larger windows ({no_op_windows}) still see OK/error outliers. "
+        f"Enable if you trust the recent signal; wait if you want "
+        f"longer-term stability before flipping the flag.",
+        per_window, safe_windows, no_op_windows, insufficient_windows,
+    )
+
+
+def _build_recommendation(
+    recommendation: str, rationale: str,
+    per_window: dict[int, dict],
+    safe_windows: list[int],
+    no_op_windows: list[int],
+    insufficient_windows: list[int],
+) -> dict:
+    return {
+        "recommendation": recommendation,
+        "rationale": rationale,
+        "safe_windows": safe_windows,
+        "no_op_windows": no_op_windows,
+        "insufficient_windows": insufficient_windows,
+        "per_window_verdict": {w: r["verdict"] for w, r in per_window.items()},
+    }
+
+
+def _render_recommendation(result: dict) -> str:
+    emoji = {
+        "STRONG_ENABLE": "🟢",
+        "CONDITIONAL_ENABLE": "🟡",
+        "WAIT": "🔴",
+        "INSUFFICIENT_DATA": "❔",
+    }.get(result["recommendation"], "❓")
+    lines = [
+        f"{emoji} {result['recommendation']}",
+        f"   {result['rationale']}",
+        "",
+        "per-window verdicts:",
+    ]
+    for w in RECOMMENDATION_WINDOWS:
+        verdict = result["per_window_verdict"].get(w, "?")
+        verdict_emoji = {
+            "SAFE_TO_ENABLE": "🟢",
+            "NO_OP": "🟡",
+            "INSUFFICIENT_DATA": "❔",
+        }.get(verdict, "❓")
+        lines.append(f"  window={w:>2}: {verdict_emoji} {verdict}")
+    return "\n".join(lines)
+
+
 def _render_text(result: dict) -> str:
     lines = []
     emoji = {
@@ -184,6 +300,17 @@ def _cli_main(argv: list[str] | None = None) -> int:
         help="Emit machine-readable JSON instead of text.",
     )
     p.add_argument(
+        "--recommendation", action="store_true",
+        help=(
+            "Multi-window sweep + single ENABLE/WAIT recommendation. "
+            "Reduces operator window-choice burden: instead of 'did I "
+            "pick the right --window?', scans windows "
+            "{3,5,10,20,30} and outputs STRONG_ENABLE / "
+            "CONDITIONAL_ENABLE / WAIT / INSUFFICIENT_DATA with "
+            "per-window evidence. Composes with --json."
+        ),
+    )
+    p.add_argument(
         "--watch", action="store_true",
         help=(
             "Re-diagnose every --interval seconds until Ctrl+C. tmux "
@@ -213,12 +340,30 @@ def _cli_main(argv: list[str] | None = None) -> int:
         sys.stderr.write(f"ERROR: DB file not found: {args.db}\n")
         return 1
 
+    if args.recommendation:
+        return _recommend_once(args.db, json_mode=args.json)
+
     if args.watch:
         return _watch_loop(
             args.db, args.window,
             interval=args.interval, json_mode=args.json,
         )
     return _diagnose_once(args.db, args.window, json_mode=args.json)
+
+
+def _recommend_once(db_path: Path, *, json_mode: bool) -> int:
+    """Run multi-window recommendation + render. Mirror of
+    _diagnose_once shape."""
+    conn = sqlite3.connect(str(db_path))
+    try:
+        result = recommend(conn)
+    finally:
+        conn.close()
+    if json_mode:
+        sys.stdout.write(json.dumps(result, indent=2) + "\n")
+    else:
+        sys.stdout.write(_render_recommendation(result) + "\n")
+    return 0
 
 
 def _diagnose_once(db_path: Path, window: int, *, json_mode: bool) -> int:

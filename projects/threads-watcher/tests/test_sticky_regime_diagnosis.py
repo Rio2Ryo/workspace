@@ -365,3 +365,120 @@ class TestCliWatch:
         ])
         assert rc == 0
         assert captured["interval"] == 60
+
+
+# ── --recommendation mode (multi-window decision matrix) ───────────────
+
+
+from sticky_regime_diagnosis import (  # noqa: E402
+    RECOMMENDATION_WINDOWS, recommend,
+)
+
+
+class TestRecommendDecisionMatrix:
+    """Pin the 4 verdict states: STRONG_ENABLE / CONDITIONAL_ENABLE /
+    WAIT / INSUFFICIENT_DATA. Reduces operator burden by replacing
+    "pick the right --window" with single recommendation."""
+
+    def test_strong_enable_when_all_windows_safe(self, tmp_path):
+        # 🔒 Pure sticky regime across enough history that ALL
+        # RECOMMENDATION_WINDOWS (up to 30) see SAFE_TO_ENABLE.
+        conn = _make_db(tmp_path)
+        reason = "found=4 previous_max=15"
+        _seed(conn, [("partial_error", reason)] * 35)
+        result = recommend(conn)
+        assert result["recommendation"] == "STRONG_ENABLE"
+        # Every window evaluable + safe.
+        assert result["safe_windows"] == list(RECOMMENDATION_WINDOWS)
+        assert result["no_op_windows"] == []
+        assert result["insufficient_windows"] == []
+
+    def test_conditional_enable_when_recent_safe_but_history_mixed(self, tmp_path):
+        # 🔒 Operator-realistic: last 3-5 checks are pure sticky,
+        # but 10-30 window still has OK/error outliers from a few
+        # hours ago. Operator's call on which horizon to trust.
+        # Seed: 25 mixed history, then 5 pure sticky most recent.
+        conn = _make_db(tmp_path)
+        reason = "found=4 previous_max=15"
+        # 25 mixed (OK + different partial reason) — these are OLDER
+        _seed(conn, [("ok", None)] * 12 + [("partial_error", "different reason")] * 13)
+        # 5 pure sticky MOST RECENT (higher id, returned first)
+        _seed(conn, [("partial_error", reason)] * 5)
+        result = recommend(conn)
+        assert result["recommendation"] == "CONDITIONAL_ENABLE"
+        # Small windows see only the recent sticky.
+        assert 3 in result["safe_windows"]
+        assert 5 in result["safe_windows"]
+        # Large windows include the mixed history.
+        assert 30 in result["no_op_windows"]
+
+    def test_wait_when_no_window_is_safe(self, tmp_path):
+        # Current production reality at multiple turns: regime is
+        # mixed across all windows → WAIT, not enable.
+        conn = _make_db(tmp_path)
+        _seed(conn, [("ok", None)] * 35)  # all OK = both guards permit
+        # But "all OK" makes both strict + permissive permit — that's
+        # NO_OP, not WAIT. Need a setup where strict blocks but
+        # permissive ALSO blocks (mixed). Use error+ok mix.
+        conn.executescript("DELETE FROM checks;")
+        _seed(conn, [("partial_error", "A"), ("ok", None)] * 18)
+        result = recommend(conn)
+        assert result["recommendation"] == "WAIT"
+        assert result["safe_windows"] == []
+        # Larger windows hit NO_OP (block on both guards).
+        assert len(result["no_op_windows"]) > 0
+
+    def test_insufficient_data_when_db_too_fresh(self, tmp_path):
+        # Smallest RECOMMENDATION_WINDOWS[0]=3 can't be evaluated →
+        # whole recommendation = INSUFFICIENT_DATA.
+        conn = _make_db(tmp_path)
+        _seed(conn, [("ok", None)] * 2)  # only 2 checks
+        result = recommend(conn)
+        assert result["recommendation"] == "INSUFFICIENT_DATA"
+
+    def test_recommendation_includes_per_window_verdicts(self, tmp_path):
+        # 🔒 Operator visibility: the recommendation MUST surface
+        # each window's individual verdict so operator can see the
+        # evidence behind the unified recommendation.
+        conn = _make_db(tmp_path)
+        reason = "found=4 previous_max=15"
+        _seed(conn, [("partial_error", reason)] * 35)
+        result = recommend(conn)
+        assert "per_window_verdict" in result
+        for w in RECOMMENDATION_WINDOWS:
+            assert w in result["per_window_verdict"]
+
+
+class TestCliRecommendation:
+    def _run(self, *args, cwd):
+        return subprocess.run(
+            [sys.executable, str(PROJECT_ROOT / "sticky_regime_diagnosis.py"), *args],
+            cwd=str(cwd), capture_output=True, text=True, timeout=10,
+        )
+
+    def test_cli_emits_recommendation_text(self, tmp_path):
+        conn = _make_db(tmp_path)
+        _seed(conn, [("partial_error", "r")] * 35)
+        conn.close()
+        r = self._run(
+            "--db", str(tmp_path / "t.db"), "--recommendation", cwd=tmp_path,
+        )
+        assert r.returncode == 0
+        assert "STRONG_ENABLE" in r.stdout
+        # Per-window block.
+        assert "window= 3" in r.stdout
+        assert "window=30" in r.stdout
+
+    def test_cli_recommendation_json_shape(self, tmp_path):
+        conn = _make_db(tmp_path)
+        _seed(conn, [("partial_error", "r")] * 35)
+        conn.close()
+        r = self._run(
+            "--db", str(tmp_path / "t.db"),
+            "--recommendation", "--json", cwd=tmp_path,
+        )
+        assert r.returncode == 0
+        parsed = json.loads(r.stdout)
+        assert parsed["recommendation"] == "STRONG_ENABLE"
+        assert "per_window_verdict" in parsed
+        assert "rationale" in parsed
