@@ -160,6 +160,34 @@ class TestDistributionFields:
         assert sorted(result["unique_error_reasons"]) == ["A", "B"]
         assert result["unique_error_reasons_count"] == 2
 
+    def test_error_reason_distribution_counts_per_reason(self, tmp_path):
+        # 🔒 Operator-UX gap closer: when 5/5 are partial_error but
+        # verdict is NO_OP, operator needs per-reason count to
+        # distinguish "dominant + 1 flake" from "true 3:2 bimodal
+        # divergence". The unique_error_reasons list alone hides
+        # this distinction.
+        conn = _make_db(tmp_path)
+        _seed(conn, [
+            ("partial_error", "found=4"),
+            ("partial_error", "found=4"),
+            ("partial_error", "found=4"),
+            ("partial_error", "found=4"),
+            ("partial_error", "found=6"),
+        ])
+        result = diagnose(conn, window=5)
+        assert result["error_reason_distribution"] == {
+            "found=4": 4,
+            "found=6": 1,
+        }
+        # Sanity: classification still NO_OP (per-reason heterogeneity).
+        assert result["verdict"] == "NO_OP"
+
+    def test_error_reason_distribution_empty_when_all_ok(self, tmp_path):
+        conn = _make_db(tmp_path)
+        _seed(conn, [("ok", None), ("ok", None), ("ok", None)])
+        result = diagnose(conn, window=3)
+        assert result["error_reason_distribution"] == {}
+
 
 # ── CLI ────────────────────────────────────────────────────────────────
 

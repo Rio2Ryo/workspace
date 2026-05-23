@@ -102,6 +102,13 @@ def diagnose(conn: sqlite3.Connection, *, window: int) -> dict:
     from collections import Counter
     status_dist = dict(Counter(statuses))
     unique_errors = sorted(set(e for e in errors if e))
+    # 🔒 Per-reason counts — closes the operator-UX gap where
+    # status_distribution shows "all partial_error" but verdict is
+    # NO_OP because the reasons differ. Without per-reason counts
+    # operator has to infer "is the outlier reason 1 flake or 5
+    # real divergences?" from the unique-reason list alone. Counter
+    # output is JSON-serialisable dict.
+    error_reason_dist = dict(Counter(e for e in errors if e))
 
     return {
         "verdict": verdict,
@@ -111,6 +118,7 @@ def diagnose(conn: sqlite3.Connection, *, window: int) -> dict:
         "status_distribution": status_dist,
         "unique_error_reasons_count": len(unique_errors),
         "unique_error_reasons": unique_errors,
+        "error_reason_distribution": error_reason_dist,
         "strict_proceed": strict.proceed,
         "strict_reason": strict.reason,
         "permissive_proceed": permissive.proceed,
@@ -132,9 +140,16 @@ def _render_text(result: dict) -> str:
                  f"(seen {result['checks_seen']})")
     lines.append(f"status distribution: {result['status_distribution']}")
     lines.append(f"unique error reasons: {result['unique_error_reasons_count']}")
-    if result["unique_error_reasons"]:
-        for err in result["unique_error_reasons"][:3]:
-            lines.append(f"  - {err}")
+    # Per-reason counts in descending order — operator immediately
+    # sees "5× found=4, 1× found=6" (dominant + outlier) vs equal
+    # split "3× found=4, 3× found=6" (true bimodal divergence).
+    if result["error_reason_distribution"]:
+        ranked = sorted(
+            result["error_reason_distribution"].items(),
+            key=lambda kv: (-kv[1], kv[0]),
+        )
+        for err, count in ranked[:5]:
+            lines.append(f"  {count}× {err}")
     lines.append("")
     lines.append(f"strict (default)  : "
                  f"{'PROCEED' if result['strict_proceed'] else 'BLOCK'} "
