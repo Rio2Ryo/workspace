@@ -234,6 +234,17 @@
 
   <script>
     (async () => {
+      // Auto-refresh: re-fetch state.json + re-render observability
+      // widgets every REFRESH_SEC. Posts/tabs render ONCE (first tick
+      // only) so expand/collapse click state survives across refreshes.
+      // Operator dial via URL: ?refresh=0 disables, ?refresh=15 = 15s
+      // cadence, default ?refresh=60. Pin at the IIFE top so the
+      // operator sees the config in DevTools at a glance.
+      const REFRESH_SEC = Number(
+        new URLSearchParams(location.search).get('refresh') ?? '60'
+      );
+      let firstTick = true;
+      const tick = async () => {
       try {
         const res = await fetch('state.json', { cache: 'no-store' });
         if (!res.ok) throw new Error('HTTP ' + res.status);
@@ -538,11 +549,29 @@
           ul.appendChild(li);
         }
         };
-        renderTabs();
-        renderPosts();
+        // renderTabs/renderPosts ONCE on first tick — they bind click
+        // handlers for expand/collapse + tab switching. Re-running on
+        // every refresh would wipe the expanded panels operators are
+        // looking at.
+        if (firstTick) {
+          renderTabs();
+          renderPosts();
+        }
       } catch (e) {
-        document.getElementById('posts').innerHTML =
-          '<li class="err">snapshot load failed: ' + (e && e.message || e) + '</li>';
+        if (firstTick) {
+          // First-time failure: show error in posts list (operator
+          // recognises a real outage). Subsequent fetch failures
+          // (transient network blip) stay silent — stale data is
+          // better than a flash of error every minute.
+          document.getElementById('posts').innerHTML =
+            '<li class="err">snapshot load failed: ' + (e && e.message || e) + '</li>';
+        }
+      }
+      firstTick = false;
+      };
+      await tick();
+      if (REFRESH_SEC > 0) {
+        setInterval(tick, REFRESH_SEC * 1000);
       }
     })();
   </script>

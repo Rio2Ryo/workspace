@@ -224,3 +224,63 @@ def test_open_incidents_table_renders_expected_columns(html: str):
     # The 4 column headers — operator + accessibility-script contract.
     for col in ["handle", "open since", "elapsed", "current bucket"]:
         assert col in html, f"open-incidents table missing column {col!r}"
+
+
+# ── auto-refresh (dashboard re-fetches state.json on interval) ─────────
+
+
+def test_setinterval_present_for_auto_refresh(html: str):
+    # Without setInterval the dashboard freezes at load time — elapsed
+    # times stop ticking, mttr_summary stays empty even after a
+    # recovered event lands in sync.log. Pin the interval call.
+    assert "setInterval(tick" in html, (
+        "Dashboard must call setInterval(tick, ...) to re-fetch state.json. "
+        "Without it the open-incidents elapsed column freezes at page-load."
+    )
+
+
+def test_refresh_url_param_honored(html: str):
+    # ?refresh=0 disables, ?refresh=N sets cadence. Pin the URL-param
+    # plumbing so a future "always 60s" hardcode is caught.
+    assert "URLSearchParams" in html and "'refresh'" in html, (
+        "Dashboard must read ?refresh URL param (operator dial for "
+        "tightening / disabling auto-refresh during debug)."
+    )
+
+
+def test_refresh_zero_disables_interval(html: str):
+    # `if (REFRESH_SEC > 0)` guard so operator can ?refresh=0 to
+    # freeze the dashboard for screenshot work without code edit.
+    import re
+    assert re.search(r"REFRESH_SEC\s*>\s*0", html), (
+        "setInterval must be gated by `if (REFRESH_SEC > 0)` so "
+        "?refresh=0 disables auto-refresh."
+    )
+
+
+def test_posts_render_only_on_first_tick(html: str):
+    # 🔒 renderTabs/renderPosts bind click handlers — re-running on
+    # every refresh would wipe the operator's expanded panels. Pin
+    # the `if (firstTick) renderTabs()` guard.
+    import re
+    pattern = re.compile(
+        r"if\s*\(\s*firstTick\s*\)\s*\{\s*\n\s*renderTabs\(\)\s*;\s*\n\s*renderPosts\(\)\s*;"
+    )
+    assert pattern.search(html), (
+        "renderTabs/renderPosts must be guarded by `if (firstTick)` so "
+        "auto-refresh doesn't wipe the expanded screenshot panels"
+    )
+
+
+def test_silent_failure_on_subsequent_ticks(html: str):
+    # First-time fetch failure shows error in posts list (operator
+    # recognises outage). Subsequent network blips stay silent —
+    # operator sees stale data + the snapshot_generated_at timestamp.
+    import re
+    pattern = re.compile(
+        r"if\s*\(\s*firstTick\s*\)\s*\{[\s\S]{0,500}snapshot load failed"
+    )
+    assert pattern.search(html), (
+        "The error renderer must be wrapped in `if (firstTick)` so "
+        "transient blips on auto-refresh don't flash an error every tick"
+    )
