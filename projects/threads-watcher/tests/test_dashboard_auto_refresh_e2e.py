@@ -314,3 +314,119 @@ def test_mttr_summary_severity_warn_applied_at_1h_mean(tmp_path):
                 )
             finally:
                 browser.close()
+
+
+# ── #status-summary banner (mirror of Discord embed description) ───────
+#
+# The status-summary banner (commit c847871) is currently covered by:
+#   - tests/test_dashboard_status_summary_pin.py — structural pin
+#     (JS source contains the right tokens, format strings, thresholds)
+# But the runtime DOM render is NOT verified. A JS exception mid-IIFE
+# would leave the banner stuck at the "—" placeholder; the structural
+# pin can't see that.
+#
+# These e2e tests render the dashboard in a real Chromium and assert
+# the actual #status-summary text content matches Python's
+# _build_description for the same state.json. Closes the runtime
+# leg of the cross-surface consistency net.
+
+
+def test_status_summary_renders_green_when_no_incidents(tmp_path):
+    # 🔒 GREEN path: no open incidents + no mttr → "🟢 All healthy"
+    # + watcher-alive disambiguator. Catches a regression in the
+    # status-summary JS block's GREEN branch.
+    state = _baseline_state(open_warn_ts=int(time.time()) - 60)
+    state["open_incidents"] = []  # override the warming default
+    _setup_tmp_dashboard(tmp_path, state)
+
+    with _serve_dir(tmp_path) as port:
+        with sync_playwright() as p:
+            browser = p.chromium.launch(headless=True)
+            try:
+                page = browser.new_page()
+                page.goto(f"http://127.0.0.1:{port}/index.html?refresh=0")
+                # Wait until the JS has populated the banner (initial
+                # text is "—"). page.wait_for_function lets us assert
+                # without polling.
+                page.wait_for_function(
+                    "document.getElementById('status-summary').textContent.includes('🟢')",
+                    timeout=5000,
+                )
+                text = page.locator("#status-summary").text_content()
+                assert text.startswith("🟢"), f"expected GREEN emoji, got: {text!r}"
+                assert "All healthy" in text
+                assert "watcher alive" in text
+
+
+            finally:
+                browser.close()
+
+
+def test_status_summary_renders_yellow_for_open_incident(tmp_path):
+    # 🔒 YELLOW path: 1 open incident at 2h elapsed → "🟡 1 warning".
+    # Byte-identical to discord_payload._build_description (pinned by
+    # tests/test_status_cli.py). Here we prove the JS mirror lands
+    # the same string in the actual DOM.
+    state = _baseline_state(open_warn_ts=int(time.time()) - 2 * 3600)
+    _setup_tmp_dashboard(tmp_path, state)
+
+    with _serve_dir(tmp_path) as port:
+        with sync_playwright() as p:
+            browser = p.chromium.launch(headless=True)
+            try:
+                page = browser.new_page()
+                page.goto(f"http://127.0.0.1:{port}/index.html?refresh=0")
+                page.wait_for_function(
+                    "document.getElementById('status-summary').textContent.includes('🟡')",
+                    timeout=5000,
+                )
+                text = page.locator("#status-summary").text_content()
+                assert text == "🟡 1 warning", (
+                    f"expected exact '🟡 1 warning', got: {text!r}. "
+                    f"Cross-surface mismatch with discord_payload."
+                    f"_build_description — operator triaging from "
+                    f"both surfaces would see different wording."
+                )
+                # Border color reflects severity (yellow #b86b00).
+                border = page.evaluate(
+                    "getComputedStyle(document.getElementById('status-summary')).borderColor"
+                )
+                # CSS color values normalise to rgb(); 0xB86B00 = (184, 107, 0)
+                assert "184" in border and "107" in border, (
+                    f"expected yellow border (#b86b00 / rgb(184,107,0)); "
+                    f"got: {border!r}"
+                )
+            finally:
+                browser.close()
+
+
+def test_status_summary_renders_red_for_24h_mttr_mean(tmp_path):
+    # 🔒 RED path: mttr mean >= 24h triggers red even with no open
+    # incidents. Mirrors discord_payload._classify_severity's "MAX of
+    # (open elapsed, mttr mean)" rule.
+    state = _baseline_state(open_warn_ts=int(time.time()) - 60)
+    state["open_incidents"] = []  # no open
+    state["mttr_summary"] = [
+        {"handle": "@chronic", "incidents": 5,
+         "total_s": 5 * 25 * 3600, "mean_s": 25 * 3600,
+         "median_s": 24 * 3600, "max_s": 30 * 3600},
+    ]
+    _setup_tmp_dashboard(tmp_path, state)
+
+    with _serve_dir(tmp_path) as port:
+        with sync_playwright() as p:
+            browser = p.chromium.launch(headless=True)
+            try:
+                page = browser.new_page()
+                page.goto(f"http://127.0.0.1:{port}/index.html?refresh=0")
+                page.wait_for_function(
+                    "document.getElementById('status-summary').textContent.includes('🔴')",
+                    timeout=5000,
+                )
+                text = page.locator("#status-summary").text_content()
+                # RED with 0 open + 1 mttr → "🔴 1 recovered"
+                assert text == "🔴 1 recovered", (
+                    f"expected '🔴 1 recovered', got: {text!r}"
+                )
+            finally:
+                browser.close()
