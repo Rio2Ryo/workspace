@@ -288,3 +288,60 @@ class TestPlistTemplatesDocumented:
             f"Scanner missing known plist templates:\n  " +
             "\n  ".join(sorted(missing_from_scan))
         )
+
+
+# ── threads-watcher shell helper documentation parity ─────────────────
+
+
+# Shell helpers in qa-reports/ that are specifically threads-watcher
+# operator workflow. Pinned list (not auto-scan) because qa-reports/
+# also hosts workspace-wide helpers (install-hook.sh, ops-monitor.sh)
+# that aren't this project's responsibility to document.
+THREADS_WATCHER_SHELL_HELPERS = [
+    "qa-reports/preflight-plist.sh",
+    "qa-reports/sticky-alert-to-discord.sh",
+]
+
+
+class TestThreadsWatcherShellHelpersDocumented:
+    """README ↔ source consistency for the qa-reports/ shell helpers
+    that operator runs as part of the threads-watcher install /
+    operation workflow. Closes the third-dimension discoverability
+    gap (env vars + CLI tools + plist templates were covered, shell
+    helpers were not).
+
+    Pinned list (not auto-scan) so workspace-level helpers irrelevant
+    to threads-watcher (install-hook.sh, ops-monitor.sh) don't
+    falsely require documentation here. Adding a new threads-watcher-
+    relevant helper to qa-reports/ requires extending this list +
+    adding a README mention — that's the deliberate gating intent."""
+
+    def test_every_pinned_shell_helper_exists(self):
+        # 🔒 Typo guard for the pinned list. If a helper got renamed
+        # or removed, fix the list deliberately rather than letting
+        # the documentation check silently false-positive.
+        REPO_ROOT = README.resolve().parent.parent.parent
+        for relpath in THREADS_WATCHER_SHELL_HELPERS:
+            path = REPO_ROOT / relpath
+            assert path.is_file(), (
+                f"Pinned shell helper {relpath} doesn't exist at {path}. "
+                f"Either fix the list in this test OR restore the file."
+            )
+
+    def test_every_pinned_shell_helper_mentioned_in_readme(self):
+        # 🔒 Headline: shell helper exists in repo → must appear in
+        # threads-watcher README so operator can discover via Ctrl-F.
+        readme_text = README.read_text(encoding="utf-8")
+        missing = [
+            relpath for relpath in THREADS_WATCHER_SHELL_HELPERS
+            if relpath not in readme_text
+        ]
+        assert not missing, (
+            f"{len(missing)} threads-watcher shell helper(s) ship in "
+            f"qa-reports/ but not mentioned in README.md:\n  " +
+            "\n  ".join(sorted(missing)) + "\n\n"
+            f"Add a usage example to the relevant install runbook "
+            f"section in README.md (matching the discord-post / "
+            f"sticky-regime-alert preflight pattern). Without this, "
+            f"operator can't discover the helper from README alone."
+        )

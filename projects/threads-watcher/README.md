@@ -185,6 +185,23 @@ tail -f projects/threads-watcher/logs/sticky-regime-alert.out.log
 #     rationale: Every evaluable window (...) reports SAFE_TO_ENABLE...
 ```
 
+#### Optional: transition → Discord 自動通知 chain
+
+`qa-reports/sticky-alert-to-discord.sh` で sticky-regime alerter
+の transition と discord_post.py を chain 化、operator が log を tail
+していなくても Discord channel に transition 通知が落ちる (commit 5122f4a)。
+
+```bash
+# Discord URL provision 後 (sticky-regime-alert.plist と独立):
+# Single launchd entry でこの wrapper を hourly 起動 (planned plist:
+# com.shiro.threads-watcher-sticky-alert-discord.plist — Yakon 承認待ち)
+bash qa-reports/sticky-alert-to-discord.sh
+# → no-transition は silent、transition 時のみ:
+#   1. TRANSITION line を stdout に emit
+#   2. discord_post.py を --min-severity warn --max-retries 1 で invoke
+#   3. operator は Discord channel で transition timing を catch
+```
+
 ### DB hot-snapshot backup cron (Yakon 承認待ち)
 
 `com.shiro.threads-watcher-backup.plist.example` で daily 03:00 JST に
