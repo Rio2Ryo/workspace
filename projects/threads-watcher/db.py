@@ -106,6 +106,7 @@ def init_db(conn: sqlite3.Connection) -> None:
 
 
 def get_seen_post_ids(conn: sqlite3.Connection, handle: str) -> list[str]:
+    handle = normalize_handle(handle)
     rows = conn.execute(
         "SELECT post_id FROM posts WHERE handle = ? ORDER BY id ASC",
         (handle,),
@@ -129,6 +130,7 @@ def save_post_screenshot(
     posted_at: str | None = None,
 ) -> bool:
     """Persist a screenshot BLOB. Returns True when inserted, False if duplicate."""
+    handle = normalize_handle(handle)
     cur = conn.execute(
         """
         INSERT OR IGNORE INTO posts (
@@ -185,6 +187,7 @@ def update_post_screenshot(
     Used when capture quality improves (for example hiding Threads login/app
     popups before taking the screenshot). Keeps first_seen_at/post_url stable.
     """
+    handle = normalize_handle(handle)
     cur = conn.execute(
         """
         UPDATE posts
@@ -225,6 +228,7 @@ def record_check(
     status: str,
     error: str | None = None,
 ) -> None:
+    handle = normalize_handle(handle)
     conn.execute(
         """
         INSERT INTO checks (handle, checked_at, found_count, new_count, status, error)
@@ -255,6 +259,7 @@ def recent_stats(
     `other` catches future status strings so the schema is
     forward-compatible. `total == 0` returns `success_rate=None`.
     """
+    handle = normalize_handle(handle)
     rows = conn.execute(
         "SELECT status FROM checks "
         "WHERE handle = ? "
@@ -387,6 +392,7 @@ def sync_state(
 
 
 def latest_snapshot(conn: sqlite3.Connection, handle: str) -> dict[str, Any]:
+    handle = normalize_handle(handle)
     post_rows = conn.execute(
         """
         SELECT handle, post_id, post_url, first_seen_at, captured_at,
