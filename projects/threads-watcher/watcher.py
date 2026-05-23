@@ -94,7 +94,13 @@ def _notify_new_post(handle: str, post_id: str, captured: dict[str, Any]) -> Non
     if posted_at:
         lines.append(f"posted_at: {posted_at}")
     if text:
-        snippet = text.replace("\n", " ")[:280]
+        flat = text.replace("\n", " ")
+        # Truncation marker: pre-fix the snippet was silently sliced to
+        # [:280] with no indication, so operators couldn't tell whether
+        # the Discord notification showed the full post or only the head.
+        # 280 is the Twitter-echo cap; ellipsis adds 1 char (281 total)
+        # which is well within Discord's 2000-char message limit.
+        snippet = flat[:280] + "…" if len(flat) > 280 else flat
         lines.append(f"本文: {snippet}")
 
     try:
