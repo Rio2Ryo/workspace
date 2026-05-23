@@ -29,6 +29,25 @@ fi
   --backup-count "$PUBLISH_LOG_BACKUP_COUNT" \
   2>/dev/null || true
 
+# Also rotate the launchd-managed *.err.log files. publish.err.log is
+# launchd's StandardErrorPath; sync.err.log is the equivalent for the
+# inner sync.py invocation. Both grow unbounded between rotations
+# (90 KB / 5KB respectively as of 2026-05-23) because they're written
+# from OUTSIDE this script's TeeLogger — log_rotation.py is the only
+# entry point for capping them.
+#
+# Safe to rename here even though launchd has the publish.err.log fd
+# already open for THIS tick: launchd's fd points to the renamed
+# inode (now publish.err.log.1) and keeps appending there; the next
+# tick's launchd invocation opens a fresh fd on the now-empty
+# publish.err.log. Net: each rotated file holds one tick's stderr.
+for err_log in logs/publish.err.log logs/sync.err.log; do
+  "$_PY" log_rotation.py "$err_log" \
+    --max-bytes "$PUBLISH_LOG_MAX_BYTES" \
+    --backup-count "$PUBLISH_LOG_BACKUP_COUNT" \
+    2>/dev/null || true
+done
+
 # Routine progress lines go to the log file + stdout. Errors go to
 # ts_err (log file + stderr). Previously every line was teed to stderr,
 # so launchd's StandardErrorPath (logs/publish.err.log) filled with a

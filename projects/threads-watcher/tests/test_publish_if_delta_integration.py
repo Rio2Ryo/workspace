@@ -571,3 +571,66 @@ def test_warn_check_failure_does_not_block_the_no_delta_exit(sandbox: Path) -> N
         "broken health check never blocks operator-visible cron output"
     )
     assert (sandbox / ".warn-check-called").exists()
+
+
+# ── err.log rotation (launchd-managed StandardErrorPath files) ─────────
+#
+# publish.err.log + sync.err.log are written by launchd / the inner
+# sync.py invocation, NOT by publish-if-delta.sh's TeeLogger. They
+# grew to 90 KB / 5 KB unrotated by 2026-05-23 because
+# log_rotation.py was only called for publish.log (the script's own
+# LOG). publish-if-delta.sh now rotates all three on startup.
+
+
+def test_publish_err_log_rotation_fires_when_over_cap(sandbox: Path) -> None:
+    big = "X" * 2048
+    (sandbox / "logs" / "publish.err.log").write_text(big, encoding="utf-8")
+    _make_db(sandbox / "threads_watcher.db", 5)
+    (sandbox / ".sync_cursor").write_text("5", encoding="utf-8")
+
+    env = os.environ.copy()
+    env["PUBLISH_LOG_MAX_BYTES"] = "1024"
+    proc = subprocess.run(
+        ["bash", "publish-if-delta.sh"],
+        cwd=str(sandbox), capture_output=True, text=True, timeout=30, env=env,
+    )
+    assert proc.returncode == 0
+    rotated = sandbox / "logs" / "publish.err.log.1"
+    assert rotated.exists(), "publish.err.log over cap → .1 backup expected"
+    assert rotated.read_text(encoding="utf-8") == big
+
+
+def test_sync_err_log_rotation_fires_when_over_cap(sandbox: Path) -> None:
+    big = "Y" * 2048
+    (sandbox / "logs" / "sync.err.log").write_text(big, encoding="utf-8")
+    _make_db(sandbox / "threads_watcher.db", 5)
+    (sandbox / ".sync_cursor").write_text("5", encoding="utf-8")
+
+    env = os.environ.copy()
+    env["PUBLISH_LOG_MAX_BYTES"] = "1024"
+    proc = subprocess.run(
+        ["bash", "publish-if-delta.sh"],
+        cwd=str(sandbox), capture_output=True, text=True, timeout=30, env=env,
+    )
+    assert proc.returncode == 0
+    rotated = sandbox / "logs" / "sync.err.log.1"
+    assert rotated.exists(), "sync.err.log over cap → .1 backup expected"
+    assert rotated.read_text(encoding="utf-8") == big
+
+
+def test_err_log_rotation_noop_when_missing(sandbox: Path) -> None:
+    # Fresh sandbox has no err logs yet — rotation must be a no-op,
+    # not crash with "file not found". Pin via clean exit.
+    assert not (sandbox / "logs" / "publish.err.log").exists()
+    assert not (sandbox / "logs" / "sync.err.log").exists()
+    _make_db(sandbox / "threads_watcher.db", 5)
+    (sandbox / ".sync_cursor").write_text("5", encoding="utf-8")
+
+    proc = subprocess.run(
+        ["bash", "publish-if-delta.sh"],
+        cwd=str(sandbox), capture_output=True, text=True, timeout=30,
+    )
+    assert proc.returncode == 0
+    # No .1 backup created (rotation correctly no-op'd on missing file)
+    assert not (sandbox / "logs" / "publish.err.log.1").exists()
+    assert not (sandbox / "logs" / "sync.err.log.1").exists()
