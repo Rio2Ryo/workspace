@@ -171,6 +171,67 @@ OUTPUT=$("$PREFLIGHT" "$TMP/operator-edited.plist" 2>&1)
 assert_contains "default mode prints launchctl load command" "launchctl load -w" "$OUTPUT"
 assert_contains "command names the actual Label" "com.shiro.threads-watcher-discord-post" "$OUTPUT"
 
+# ── case 8: Discord webhook URL shape validation (paste-typo catch) ────
+
+printf '\n=== Discord webhook URL shape validation ===\n'
+
+_make_plist_with_webhook() {
+  local url="$1" target="$2"
+  sed "s|__SET_BY_OPERATOR__|$(printf '%s' "$url" | sed 's:[\\&/]:\\&:g')|" \
+    "$REPO_ROOT/projects/threads-watcher/com.shiro.threads-watcher-discord-post.plist.example" \
+    > "$target"
+}
+
+# Valid Discord URL → preflight passes.
+_make_plist_with_webhook 'https://discord.com/api/webhooks/1234567890/abcXYZ_-tok' \
+  "$TMP/valid-url.plist"
+"$PREFLIGHT" --check-only "$TMP/valid-url.plist" >/dev/null 2>&1
+assert_exit "valid Discord webhook URL passes" 0 $?
+
+OUTPUT=$("$PREFLIGHT" --check-only "$TMP/valid-url.plist" 2>&1)
+assert_contains "valid URL emits shape-valid pass line" "shape valid" "$OUTPUT"
+# 🔒 Defense-in-depth: token MUST NOT leak into preflight output
+# (logs end up in pasteable runbooks; redact at the source).
+assert_not_contains "valid URL token NOT logged (secret)" "abcXYZ_-tok" "$OUTPUT"
+
+# 🔒 Domain typo: discrd.com (missing 'o') → fail.
+_make_plist_with_webhook 'https://discrd.com/api/webhooks/123/tok' \
+  "$TMP/typo-domain.plist"
+"$PREFLIGHT" --check-only "$TMP/typo-domain.plist" >/dev/null 2>&1
+assert_exit "domain-typo URL fails" 1 $?
+
+# 🔒 Wrong path: missing /api/ segment → fail.
+_make_plist_with_webhook 'https://discord.com/webhooks/123/tok' \
+  "$TMP/wrong-path.plist"
+"$PREFLIGHT" --check-only "$TMP/wrong-path.plist" >/dev/null 2>&1
+assert_exit "wrong-path URL (missing /api/) fails" 1 $?
+
+# 🔒 Missing token segment.
+_make_plist_with_webhook 'https://discord.com/api/webhooks/123' \
+  "$TMP/no-token.plist"
+"$PREFLIGHT" --check-only "$TMP/no-token.plist" >/dev/null 2>&1
+assert_exit "URL missing token segment fails" 1 $?
+
+# 🔒 Operator forgot to actually paste the URL.
+_make_plist_with_webhook 'my-webhook-url' \
+  "$TMP/forgot-paste.plist"
+"$PREFLIGHT" --check-only "$TMP/forgot-paste.plist" >/dev/null 2>&1
+assert_exit "non-URL value (operator forgot to paste) fails" 1 $?
+
+# 🔒 Error message names the env var so operator knows what to fix.
+OUTPUT=$("$PREFLIGHT" --check-only "$TMP/typo-domain.plist" 2>&1 || true)
+assert_contains "typo error names the env var" "THREADS_WATCHER_DISCORD_WEBHOOK_URL" "$OUTPUT"
+# 🔒 Error message MUST NOT leak the (possibly partial) URL — operator
+# might be triaging via a log pipe to channel / Slack, and even the
+# typo'd URL could be sensitive.
+assert_not_contains "typo error does NOT leak URL value" "discrd.com" "$OUTPUT"
+
+# Plists WITHOUT the webhook URL key are unaffected (sync plist
+# doesn't use Discord). Regression guard: don't accidentally extend
+# the check to non-Discord plists.
+"$PREFLIGHT" --check-only "$REPO_ROOT/projects/threads-watcher/com.shiro.threads-watcher-sync.plist" >/dev/null 2>&1
+assert_exit "non-Discord plist still passes (no false positive)" 0 $?
+
 # ── summary ────────────────────────────────────────────────────────────
 
 printf '\n=== summary ===\n'

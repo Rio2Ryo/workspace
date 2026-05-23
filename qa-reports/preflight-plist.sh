@@ -128,6 +128,44 @@ else
   pass "no __SET_BY_OPERATOR__ placeholder remaining"
 fi
 
+# 2b. Discord webhook URL shape validation. If the plist declares the
+#     env var THREADS_WATCHER_DISCORD_WEBHOOK_URL, the value MUST be
+#     either empty (dry-run mode) or a properly-shaped Discord webhook
+#     URL. Catches operator-paste typos (https://discrd.com/...,
+#     truncation, wrong path) at install time vs first cron tick.
+#
+#     Extract the value: lines like
+#       <key>THREADS_WATCHER_DISCORD_WEBHOOK_URL</key>
+#       <string>https://discord.com/api/webhooks/123/abc</string>
+#     awk: when we see the key line, capture the NEXT <string> body.
+WEBHOOK_VAL=$(awk '
+  /<key>THREADS_WATCHER_DISCORD_WEBHOOK_URL<\/key>/ {found=1; next}
+  found && /<string>/ {
+    gsub(/.*<string>/, "")
+    gsub(/<\/string>.*/, "")
+    print
+    exit
+  }
+' "$PLIST_PATH")
+
+if [ -n "$WEBHOOK_VAL" ] && [ "$WEBHOOK_VAL" != "__SET_BY_OPERATOR__" ]; then
+  # Valid Discord webhook shape: https://discord.com/api/webhooks/<id>/<token>
+  # where id is digits and token is base64-url-safe (alphanumeric, _, -).
+  # Older bash on macOS lacks =~; use grep -E for portability.
+  if printf '%s' "$WEBHOOK_VAL" \
+      | grep -qE '^https://discord\.com/api/webhooks/[0-9]+/[A-Za-z0-9_-]+$'; then
+    # Don't log the actual URL (token is secret); confirm shape only.
+    pass "THREADS_WATCHER_DISCORD_WEBHOOK_URL shape valid (Discord webhook URL)"
+  else
+    # 🔒 Operator-paste typo. Common shapes that fail this check:
+    #   - https://discrd.com/api/...   (domain typo)
+    #   - https://discord.com/webhooks/...   (wrong path: missing /api/)
+    #   - https://discord.com/api/webhooks/123   (missing token segment)
+    #   - my-webhook-url   (forgot to paste actual URL)
+    fail "THREADS_WATCHER_DISCORD_WEBHOOK_URL value doesn't match Discord webhook shape (https://discord.com/api/webhooks/<id>/<token>). Likely a paste typo or truncation — fix BEFORE launchctl load. (Value redacted to avoid exposing the token in logs.)"
+  fi
+fi
+
 # 3. ProgramArguments paths must resolve. Extract every <string>
 #    inside <key>ProgramArguments</key>'s <array> via plutil if
 #    available, fall back to grep heuristic.
