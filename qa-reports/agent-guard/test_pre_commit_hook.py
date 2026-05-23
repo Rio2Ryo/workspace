@@ -403,3 +403,73 @@ def test_both_migrations_down_gates_use_same_trigger_pattern():
         f"Both gates address the same operator-rollback concern; "
         f"narrowing one is almost certainly accidental."
     )
+
+
+# ── plist gates (paired log-routing + xml-strict) ─────────────────────
+
+
+def test_plist_log_routing_gate_is_wired():
+    pat, test_path = _find_file_pattern_for_label('plist-log-routing')
+    assert pat
+    assert test_path.endswith("test_plist_log_routing.py")
+
+
+def test_plist_xml_strict_gate_is_wired():
+    pat, test_path = _find_file_pattern_for_label('plist-xml-strict')
+    assert pat
+    assert test_path.endswith("test_plist_xml_strict.py")
+
+
+def test_plist_gates_both_target_existing_files():
+    # 🔒 Typo guard for both gates' test paths.
+    REPO_ROOT = SCRIPT.resolve().parent.parent.parent
+    for label in ('plist-log-routing', 'plist-xml-strict'):
+        _pat, test_path = _find_file_pattern_for_label(label)
+        assert (REPO_ROOT / test_path).is_file(), (
+            f"Gate {label!r} targets {test_path!r}, which doesn't "
+            f"exist. Fix the path or restore the test file."
+        )
+
+
+def test_plist_gate_matches_live_plist_edit():
+    # 🔒 Headline: editing the live sync plist trips the gate.
+    pat, _ = _find_file_pattern_for_label('plist-log-routing')
+    assert re.search(pat, 'projects/threads-watcher/com.shiro.threads-watcher-sync.plist')
+
+
+def test_plist_gate_matches_example_plist_edit():
+    # 🔒 Also fires on .example templates — accidentally committing
+    # a real Discord URL into a .example would land here.
+    pat, _ = _find_file_pattern_for_label('plist-log-routing')
+    assert re.search(pat, 'projects/threads-watcher/com.shiro.threads-watcher-discord-post.plist.example')
+
+
+def test_plist_gate_skips_unrelated_paths():
+    # 🔒 Zero-cost guarantee.
+    pat, _ = _find_file_pattern_for_label('plist-log-routing')
+    for path in [
+        'projects/threads-watcher/sync.py',
+        'projects/threads-watcher/tests/test_plist_log_routing.py',  # the test itself isn't a plist
+        'projects/top3-favorites/src/App.tsx',
+        'qa-reports/migrations-down/apply.sh',
+        'docs/example.plist.md',  # markdown doc with .plist in name shouldn't match
+    ]:
+        assert not re.search(pat, path), (
+            f"path {path!r} should NOT match plist gate (would cause "
+            f"unrelated pytest invocation)"
+        )
+
+
+def test_both_plist_gates_use_same_trigger_pattern():
+    # 🔒 Invariant: log-routing and xml-strict gates address the
+    # same operator concern (committed plist must be valid). Same
+    # trigger so a future narrowing of one without the other
+    # ("my plist edit triggered xml-strict but not log-routing,
+    # why?") trips here.
+    log_pat, _ = _find_file_pattern_for_label('plist-log-routing')
+    xml_pat, _ = _find_file_pattern_for_label('plist-xml-strict')
+    assert log_pat == xml_pat, (
+        f"Trigger patterns diverged:\n"
+        f"  log-routing: {log_pat!r}\n"
+        f"  xml-strict:  {xml_pat!r}"
+    )

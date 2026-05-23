@@ -341,4 +341,26 @@ run_pytest_file '^(qa-reports/migrations-down/.*|second-brain)$' \
   'qa-reports/migrations-down/test_apply_vs_submodule_sql_parity.py' \
   'migrations-down-parity'
 
+# threads-watcher plist edits — the existing threads-watcher gate
+# pattern matches tests/ + top-level *.py + specific *.sh, but NOT
+# *.plist or *.plist.example. Pre-this-gate, an operator editing a
+# plist (e.g., accidentally committing a real Discord URL, breaking
+# the XML, or moving a script path) slipped past pre-commit even
+# though test_plist_log_routing.py + test_plist_xml_strict.py would
+# catch the issue on a deliberate pytest run.
+#
+# Two paired gates (same trigger, distinct test files) — twin
+# pattern of migrations-down-runtime + migrations-down-parity.
+# Trigger pattern duplicated literally (not via $VAR) so the
+# test_pre_commit_hook.py parser can extract both gates' patterns
+# for the cross-gate-invariant check; the parser regex looks for
+# single-quoted literals.
+run_pytest_file '^projects/threads-watcher/.*\.plist(\.example)?$' \
+  'projects/threads-watcher/tests/test_plist_log_routing.py' \
+  'plist-log-routing'
+
+run_pytest_file '^projects/threads-watcher/.*\.plist(\.example)?$' \
+  'projects/threads-watcher/tests/test_plist_xml_strict.py' \
+  'plist-xml-strict'
+
 exit 0
