@@ -482,3 +482,155 @@ class TestCliRecommendation:
         assert parsed["recommendation"] == "STRONG_ENABLE"
         assert "per_window_verdict" in parsed
         assert "rationale" in parsed
+
+
+# ── --alert-on-transition (cron-friendly delta detection) ──────────────
+
+
+from sticky_regime_diagnosis import (  # noqa: E402
+    _load_last_recommendation, _save_last_recommendation, check_transition,
+)
+
+
+class TestCheckTransition:
+    """Pure helper — pin the decision matrix for what counts as a
+    transition worth alerting on."""
+
+    def test_no_prior_state_does_not_alert(self):
+        # 🔒 First run after operator install should be SILENT.
+        # Alerting on every fresh-state cron tick would spam.
+        alert, msg = check_transition("STRONG_ENABLE", None)
+        assert alert is False
+        assert "no prior state" in msg
+
+    def test_same_recommendation_does_not_alert(self):
+        alert, msg = check_transition("WAIT", "WAIT")
+        assert alert is False
+        assert "unchanged" in msg
+
+    def test_different_recommendation_alerts(self):
+        alert, msg = check_transition("STRONG_ENABLE", "WAIT")
+        assert alert is True
+        # 🔒 Message format pinned so operator pipes can grep TRANSITION.
+        assert "TRANSITION" in msg
+        assert "WAIT" in msg
+        assert "STRONG_ENABLE" in msg
+
+    def test_arrow_direction_matches_last_then_current(self):
+        # 🔒 Direction is "last → current", not "current → last".
+        # Operator reading the line in chronological order needs
+        # this convention pinned.
+        _alert, msg = check_transition("WAIT", "STRONG_ENABLE")
+        assert "STRONG_ENABLE → WAIT" in msg
+
+
+class TestAlertStateIO:
+    def test_load_returns_none_for_missing_file(self, tmp_path):
+        assert _load_last_recommendation(tmp_path / "nope.json") is None
+
+    def test_load_returns_none_for_malformed_json(self, tmp_path):
+        path = tmp_path / "broken.json"
+        path.write_text("not json {{{", encoding="utf-8")
+        assert _load_last_recommendation(path) is None
+
+    def test_load_returns_none_for_non_dict_top(self, tmp_path):
+        path = tmp_path / "list.json"
+        path.write_text("[]", encoding="utf-8")
+        assert _load_last_recommendation(path) is None
+
+    def test_load_returns_none_when_recommendation_field_missing(self, tmp_path):
+        path = tmp_path / "missing.json"
+        path.write_text('{"other_field": 1}', encoding="utf-8")
+        assert _load_last_recommendation(path) is None
+
+    def test_save_then_load_roundtrip(self, tmp_path):
+        path = tmp_path / "state.json"
+        _save_last_recommendation(path, "WAIT")
+        assert _load_last_recommendation(path) == "WAIT"
+
+    def test_save_creates_parent_dir(self, tmp_path):
+        # State path defaults to threads-watcher-status/ subdir that
+        # may not exist in fresh checkout / test sandbox.
+        path = tmp_path / "deep" / "nested" / "state.json"
+        _save_last_recommendation(path, "STRONG_ENABLE")
+        assert path.exists()
+
+
+class TestCliAlertOnTransition:
+    def _run(self, *args, cwd):
+        return subprocess.run(
+            [sys.executable, str(PROJECT_ROOT / "sticky_regime_diagnosis.py"), *args],
+            cwd=str(cwd), capture_output=True, text=True, timeout=10,
+        )
+
+    def test_first_run_no_alert_records_state(self, tmp_path):
+        # 🔒 No prior state → silent + state persisted for next tick.
+        conn = _make_db(tmp_path)
+        _seed(conn, [("ok", None)] * 35)  # well-evaluable
+        conn.close()
+        state_path = tmp_path / "alert-state.json"
+        r = self._run(
+            "--db", str(tmp_path / "t.db"),
+            "--alert-on-transition",
+            "--alert-state-path", str(state_path),
+            cwd=tmp_path,
+        )
+        assert r.returncode == 0
+        # Silent on first run — cron-friendly.
+        assert r.stdout == "" or r.stdout == "\n"
+        # State persisted so next tick has comparison baseline.
+        assert state_path.exists()
+
+    def test_no_transition_emits_no_output(self, tmp_path):
+        # Set prior state to match current → silent.
+        state_path = tmp_path / "alert-state.json"
+        _save_last_recommendation(state_path, "WAIT")
+        conn = _make_db(tmp_path)
+        # Mixed → recommendation = WAIT (matches prior).
+        _seed(conn, [("partial_error", "A"), ("ok", None)] * 18)
+        conn.close()
+        r = self._run(
+            "--db", str(tmp_path / "t.db"),
+            "--alert-on-transition",
+            "--alert-state-path", str(state_path),
+            cwd=tmp_path,
+        )
+        assert r.returncode == 0
+        # 🔒 Silent on no-change — cron contract.
+        assert "TRANSITION" not in r.stdout
+
+    def test_transition_emits_alert_line(self, tmp_path):
+        # Prior state = WAIT, current = STRONG_ENABLE → alert.
+        state_path = tmp_path / "alert-state.json"
+        _save_last_recommendation(state_path, "WAIT")
+        conn = _make_db(tmp_path)
+        _seed(conn, [("partial_error", "r")] * 35)  # all-safe across windows
+        conn.close()
+        r = self._run(
+            "--db", str(tmp_path / "t.db"),
+            "--alert-on-transition",
+            "--alert-state-path", str(state_path),
+            cwd=tmp_path,
+        )
+        assert r.returncode == 0
+        assert "TRANSITION: WAIT → STRONG_ENABLE" in r.stdout
+        # 🔒 State updated for next tick (so re-running doesn't re-alert).
+        assert _load_last_recommendation(state_path) == "STRONG_ENABLE"
+
+    def test_json_mode_includes_transition_flag(self, tmp_path):
+        state_path = tmp_path / "alert-state.json"
+        _save_last_recommendation(state_path, "WAIT")
+        conn = _make_db(tmp_path)
+        _seed(conn, [("partial_error", "r")] * 35)
+        conn.close()
+        r = self._run(
+            "--db", str(tmp_path / "t.db"),
+            "--alert-on-transition", "--json",
+            "--alert-state-path", str(state_path),
+            cwd=tmp_path,
+        )
+        assert r.returncode == 0
+        parsed = json.loads(r.stdout)
+        assert parsed["transitioned"] is True
+        assert parsed["current_recommendation"] == "STRONG_ENABLE"
+        assert parsed["last_recommendation"] == "WAIT"

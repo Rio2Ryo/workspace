@@ -133,6 +133,62 @@ def diagnose(conn: sqlite3.Connection, *, window: int) -> dict:
 # with INSUFFICIENT_DATA noise.
 RECOMMENDATION_WINDOWS = (3, 5, 10, 20, 30)
 
+# Cron-friendly transition alerter default state path. Operator who
+# wires --alert-on-transition into hourly launchd gets a notification
+# only when the recommendation FLIPS (e.g., WAIT → STRONG_ENABLE),
+# not on every tick. Same shape as discord_post.py's cooldown state
+# (commit 23ef7fc).
+DEFAULT_ALERT_STATE_PATH = (
+    PROJECT_ROOT / "threads-watcher-status" / "sticky-regime-last-recommendation.json"
+)
+
+
+def _load_last_recommendation(path: Path) -> str | None:
+    """Read persisted last recommendation. Returns None on missing /
+    malformed file (treat both as no-prior-state, same defensive
+    degradation as discord_post.py:_load_cooldown_state)."""
+    try:
+        data = json.loads(path.read_text(encoding="utf-8"))
+        if not isinstance(data, dict):
+            return None
+        v = data.get("recommendation")
+        return v if isinstance(v, str) else None
+    except (FileNotFoundError, json.JSONDecodeError):
+        return None
+
+
+def _save_last_recommendation(path: Path, recommendation: str) -> None:
+    """Persist just-rendered recommendation. Best-effort: failure
+    WARNs to stderr but doesn't propagate (alert succeeded, missing
+    state file just means next tick may re-alert)."""
+    try:
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_text(
+            json.dumps({"recommendation": recommendation}),
+            encoding="utf-8",
+        )
+    except OSError as e:
+        sys.stderr.write(f"WARN: failed to save alert state to {path}: {e}\n")
+
+
+def check_transition(
+    current: str, last: str | None,
+) -> tuple[bool, str]:
+    """Decide whether the current recommendation represents a
+    transition worth alerting on.
+
+    Returns (alert?, message).
+
+    🔒 First run (no prior state) does NOT alert — alerting on every
+    first-time-setup would spam the channel. Operator opts in via a
+    state-file priming run or seeds the state-file deliberately.
+    """
+    if last is None:
+        return False, "no prior state — recording current, no transition alert"
+    if current == last:
+        return False, f"unchanged: {current}"
+    return True, f"TRANSITION: {last} → {current}"
+
 
 def recommend(conn: sqlite3.Connection) -> dict:
     """Multi-window scan + single ENABLE/WAIT/INVESTIGATE recommendation.
@@ -311,6 +367,23 @@ def _cli_main(argv: list[str] | None = None) -> int:
         ),
     )
     p.add_argument(
+        "--alert-on-transition", action="store_true",
+        help=(
+            "Cron-friendly: run --recommendation, compare against "
+            "the last persisted recommendation, emit a TRANSITION "
+            "line (+ exit 0) ONLY when the verdict flipped. Silent "
+            "on no-change. Operator wires hourly via launchd; pipes "
+            "to discord_post.py for actual notification."
+        ),
+    )
+    p.add_argument(
+        "--alert-state-path", type=Path, default=DEFAULT_ALERT_STATE_PATH,
+        help=(
+            f"State file for --alert-on-transition (last recommendation). "
+            f"Default: {DEFAULT_ALERT_STATE_PATH}"
+        ),
+    )
+    p.add_argument(
         "--watch", action="store_true",
         help=(
             "Re-diagnose every --interval seconds until Ctrl+C. tmux "
@@ -340,6 +413,11 @@ def _cli_main(argv: list[str] | None = None) -> int:
         sys.stderr.write(f"ERROR: DB file not found: {args.db}\n")
         return 1
 
+    if args.alert_on_transition:
+        return _alert_once(
+            args.db, args.alert_state_path, json_mode=args.json,
+        )
+
     if args.recommendation:
         return _recommend_once(args.db, json_mode=args.json)
 
@@ -349,6 +427,42 @@ def _cli_main(argv: list[str] | None = None) -> int:
             interval=args.interval, json_mode=args.json,
         )
     return _diagnose_once(args.db, args.window, json_mode=args.json)
+
+
+def _alert_once(
+    db_path: Path, alert_state_path: Path, *, json_mode: bool,
+) -> int:
+    """Run recommendation + compare against persisted last + emit
+    only on transition. Always exit 0 — operator chains stdout to
+    actual notifier (discord_post.py / mail / etc.)."""
+    conn = sqlite3.connect(str(db_path))
+    try:
+        result = recommend(conn)
+    finally:
+        conn.close()
+    current = result["recommendation"]
+    last = _load_last_recommendation(alert_state_path)
+    transitioned, message = check_transition(current, last)
+
+    # ALWAYS persist current — so the next cron tick has fresh state
+    # even on the no-transition path.
+    _save_last_recommendation(alert_state_path, current)
+
+    if json_mode:
+        sys.stdout.write(json.dumps({
+            "transitioned": transitioned,
+            "current_recommendation": current,
+            "last_recommendation": last,
+            "message": message,
+            "rationale": result["rationale"],
+        }, indent=2) + "\n")
+    elif transitioned:
+        # Print to stdout so cron pipes can grep + relay. Silent on
+        # no-transition (operator-friendly cron behavior).
+        print(message)
+        print(f"  rationale: {result['rationale']}")
+    # No-transition + non-JSON = no output at all (cron-friendly silence).
+    return 0
 
 
 def _recommend_once(db_path: Path, *, json_mode: bool) -> int:
