@@ -60,15 +60,40 @@ def _make_sandbox(tmp_path: Path) -> Path:
     #   once   -> finds PID 999999 on the first call, nothing after
     #             (simulates "SIGTERM worked")
     #   always -> always finds 999999 (simulates a process that won't die)
+    # `once` mode: cat → increment → write → conditional echo. Three
+    # ops, NOT atomic. Two quick stub invocations under CPU contention
+    # (observed in pre-commit pre-flight, commit 3bd910f / earlier
+    # 9bfcfc7 noted similar flake on test_existing_process_is_stopped_
+    # then_relaunched) both read n=0, both write 1, BOTH echo 999999
+    # → SIGTERM-wait loop in restart-watcher.sh sees alive on what
+    # should be the empty-result tick → enters SIGKILL branch
+    # spuriously → exit code 1 instead of 0.
+    #
+    # Fix: mkdir-based atomic lock around the critical section. mkdir
+    # is POSIX-atomic (same pattern restart-watcher.sh uses internally
+    # for DEFAULT_LOCKDIR) — works on macOS without Homebrew flock.
+    # Sleep loop bounded so a stuck lock can't hang the test
+    # indefinitely; max ~1s wait (200 × 5ms).
     _write_exec(sb / "stub-bin" / "pgrep", (
         "#!/bin/sh\n"
         'mode=$(cat .pgrep-mode 2>/dev/null || echo empty)\n'
         'case "$mode" in\n'
         "  always) echo 999999 ;;\n"
         "  once)\n"
+        # Atomic critical section via mkdir. Lock acquire bounded:
+        # 200 retries × 5ms = 1s ceiling. If a previous invocation
+        # crashed with the lock held, the test sandbox is short-lived
+        # so the leak doesn't cross-test-contaminate.
+        '    i=0\n'
+        '    while ! mkdir .pgrep-cs.lock 2>/dev/null; do\n'
+        '      i=$((i + 1))\n'
+        '      [ "$i" -ge 200 ] && break\n'
+        '      sleep 0.005\n'
+        '    done\n'
         '    n=$(cat .pgrep-count 2>/dev/null || echo 0)\n'
         '    echo $((n + 1)) > .pgrep-count\n'
         '    [ "$n" = 0 ] && echo 999999\n'
+        '    rmdir .pgrep-cs.lock 2>/dev/null\n'
         "    ;;\n"
         "esac\n"
         "exit 0\n"
