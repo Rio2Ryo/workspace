@@ -9,6 +9,26 @@ cd "$(dirname "$0")"
 LOG="logs/publish.log"
 mkdir -p logs
 
+# Rotate publish.log at startup to bound its size — mirrors the
+# auto-restart-if-stale.sh:72 pattern. The previous-commit dedup
+# (commit 621d32b) cut the no-delta noise by ~92%, but the file is
+# still append-only and would grow unbounded over years; this caps
+# it at PUBLISH_LOG_MAX_BYTES × PUBLISH_LOG_BACKUP_COUNT (defaults
+# 1 MB × 5 = 5 MB). Rotation failure must NEVER block the tick —
+# the `|| true` keeps publish-if-delta.sh's exit semantics intact
+# (operators care about sync results, not log housekeeping).
+PUBLISH_LOG_MAX_BYTES="${PUBLISH_LOG_MAX_BYTES:-1048576}"
+PUBLISH_LOG_BACKUP_COUNT="${PUBLISH_LOG_BACKUP_COUNT:-5}"
+if [ -x venv/bin/python ]; then
+  _PY=venv/bin/python
+else
+  _PY=python3
+fi
+"$_PY" log_rotation.py "$LOG" \
+  --max-bytes "$PUBLISH_LOG_MAX_BYTES" \
+  --backup-count "$PUBLISH_LOG_BACKUP_COUNT" \
+  2>/dev/null || true
+
 # Routine progress lines go to the log file + stdout. Errors go to
 # ts_err (log file + stderr). Previously every line was teed to stderr,
 # so launchd's StandardErrorPath (logs/publish.err.log) filled with a

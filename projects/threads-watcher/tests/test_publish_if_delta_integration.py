@@ -56,6 +56,11 @@ def _make_sandbox(tmp_path: Path) -> Path:
     shutil.copy(PROJECT_ROOT / "publish-if-delta.sh", sb / "publish-if-delta.sh")
     (sb / "publish-if-delta.sh").chmod(0o755)
 
+    # log_rotation.py runs for real (via the stub python's fall-through
+    # `exec python3 "$@"` for non-sync.py invocations). Copy the module
+    # into the sandbox so the rotation invocation finds it.
+    shutil.copy(PROJECT_ROOT / "log_rotation.py", sb / "log_rotation.py")
+
     # Stub python: the read_state heredoc (`python - `) runs for real;
     # `python sync.py ...` is simulated. A successful sync advances
     # .sync_cursor to MAX(id) — exactly what the real sync.py does.
@@ -397,3 +402,98 @@ def test_delta_path_unchanged_by_dedup_state_file(sandbox: Path) -> None:
     assert code == 0
     assert synced is True
     assert deployed is True
+
+
+# ── publish.log rotation at startup ────────────────────────────────────
+#
+# publish-if-delta.sh now invokes log_rotation.py at startup to cap
+# publish.log size. Mirrors the auto-restart-if-stale.sh:72 pattern.
+# The dedup logic (commit 621d32b) already cut noise by ~92% but the
+# file is still append-only; rotation is the second line of defence
+# against unbounded growth over a multi-year deploy.
+
+
+def test_log_rotation_fires_when_publish_log_over_cap(sandbox: Path) -> None:
+    # Pre-create a publish.log over the cap. The rotation invocation
+    # at startup should rename it to publish.log.1 and start fresh.
+    big = "X" * 2048
+    (sandbox / "logs" / "publish.log").write_text(big, encoding="utf-8")
+    assert not (sandbox / "logs" / "publish.log.1").exists()
+    # Seed the DB so read_state succeeds + script exits 0 on no-delta.
+    _make_db(sandbox / "threads_watcher.db", 5)
+    (sandbox / ".sync_cursor").write_text("5", encoding="utf-8")
+
+    env = os.environ.copy()
+    env["PUBLISH_LOG_MAX_BYTES"] = "1024"  # well under the pre-written 2048
+    proc = subprocess.run(
+        ["bash", "publish-if-delta.sh"],
+        cwd=str(sandbox), capture_output=True, text=True, timeout=30, env=env,
+    )
+    assert proc.returncode == 0
+
+    rotated = sandbox / "logs" / "publish.log.1"
+    assert rotated.exists(), (
+        "publish.log was over the cap; expected publish.log.1 backup"
+    )
+    # The .1 backup holds the prior content.
+    assert rotated.read_text(encoding="utf-8") == big
+
+
+def test_log_rotation_noop_under_cap(sandbox: Path) -> None:
+    # Small publish.log → rotation invocation is a no-op. No .1 backup.
+    (sandbox / "logs" / "publish.log").write_text("tiny", encoding="utf-8")
+    _make_db(sandbox / "threads_watcher.db", 5)
+    (sandbox / ".sync_cursor").write_text("5", encoding="utf-8")
+
+    env = os.environ.copy()
+    env["PUBLISH_LOG_MAX_BYTES"] = "1048576"
+    proc = subprocess.run(
+        ["bash", "publish-if-delta.sh"],
+        cwd=str(sandbox), capture_output=True, text=True, timeout=30, env=env,
+    )
+    assert proc.returncode == 0
+    assert not (sandbox / "logs" / "publish.log.1").exists()
+
+
+def test_log_rotation_failure_does_not_block_the_tick(sandbox: Path) -> None:
+    # If log_rotation.py blows up mid-rotation (out of disk, permissions),
+    # the tick must still complete. Simulate by deleting log_rotation.py
+    # AFTER sandbox setup — the invocation will exit non-zero, but
+    # publish-if-delta.sh's `|| true` swallows it.
+    (sandbox / "log_rotation.py").unlink()
+    _make_db(sandbox / "threads_watcher.db", 10)
+    (sandbox / ".sync_cursor").write_text("10", encoding="utf-8")
+    proc = subprocess.run(
+        ["bash", "publish-if-delta.sh"],
+        cwd=str(sandbox), capture_output=True, text=True, timeout=30,
+    )
+    # No-delta path still runs cleanly.
+    assert proc.returncode == 0
+
+
+def test_log_rotation_backup_count_env_override(sandbox: Path) -> None:
+    # Pre-create publish.log + multiple existing backups. Override
+    # PUBLISH_LOG_BACKUP_COUNT to 2 — the .1 → .2 shift should drop
+    # any older .3/.4/.5 from being kept.
+    big = "X" * 2048
+    (sandbox / "logs" / "publish.log").write_text(big, encoding="utf-8")
+    (sandbox / "logs" / "publish.log.1").write_text("OLD1", encoding="utf-8")
+    (sandbox / "logs" / "publish.log.2").write_text("OLD2", encoding="utf-8")
+    _make_db(sandbox / "threads_watcher.db", 5)
+    (sandbox / ".sync_cursor").write_text("5", encoding="utf-8")
+
+    env = os.environ.copy()
+    env["PUBLISH_LOG_MAX_BYTES"] = "1024"
+    env["PUBLISH_LOG_BACKUP_COUNT"] = "2"
+    proc = subprocess.run(
+        ["bash", "publish-if-delta.sh"],
+        cwd=str(sandbox), capture_output=True, text=True, timeout=30, env=env,
+    )
+    assert proc.returncode == 0
+    # After rotation with backup-count=2:
+    #   - publish.log → publish.log.1 (the just-rotated big content)
+    #   - prior publish.log.1 (OLD1) → publish.log.2 (overwriting prior OLD2)
+    # No publish.log.3 should ever be created.
+    assert (sandbox / "logs" / "publish.log.1").read_text() == big
+    assert (sandbox / "logs" / "publish.log.2").read_text() == "OLD1"
+    assert not (sandbox / "logs" / "publish.log.3").exists()
