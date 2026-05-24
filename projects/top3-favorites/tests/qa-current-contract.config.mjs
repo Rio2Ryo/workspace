@@ -251,8 +251,8 @@ const rawManualAutomatedLinkContracts = {
       message: 'manual checklist should connect normal memo-present structured form input to the automated create persistence/API spec',
     },
     {
-      pattern: /必須入力不足[\s\S]*期待: 追加されず `タグと店舗名は必須です。` が表示される[\s\S]*自動確認: `tests\/error-clears-stale-success-notice\.e2e\.spec\.ts`/,
-      message: 'manual checklist should connect required-field validation to the automated stale-success clearing spec',
+      pattern: /必須入力不足[\s\S]*期待: 追加されず `タグと店舗名は必須です。` が表示され、エラーalertにフォーカスが移動する[\s\S]*自動確認: `tests\/error-clears-stale-success-notice\.e2e\.spec\.ts` が必須入力不足時のエラー表示・alertフォーカス復帰・古い成功通知のクリアを検証する/,
+      message: 'manual checklist should connect required-field validation alert copy/focus to the automated stale-success clearing spec',
     },
     {
       pattern: /サンプルデータ投入（UI）[\s\S]*自動確認: `tests\/sample-data-persists-after-reload-and-api\.e2e\.spec\.ts`/,
