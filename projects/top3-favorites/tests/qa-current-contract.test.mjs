@@ -1419,6 +1419,26 @@ test('[Manual][automation-link] preparation checklist items have direct automate
   }
 })
 
+test('[Manual][automation-link] import validation failure checklist items have direct automated links', async () => {
+  const markdown = await readFile(new URL('docs/MANUAL_TEST_CHECKLIST.md', `${root}/`), 'utf8')
+  const childContracts = [
+    {
+      item: '**JSONインポート失敗（不正要素混在）**',
+      specs: ['tests/import-validation-error-details.e2e.spec.ts'],
+      expectedCopy: 'エラーalertにフォーカスが移動する',
+    },
+  ]
+
+  for (const { item, specs, expectedCopy } of childContracts) {
+    const block = manualChecklistItemBlock(markdown, item)
+    assert.match(block, /自動確認:/, contractMessage({ scope: 'Manual', rule: 'import validation failure checklist item has direct automated link', expected: item, fix: 'add an indented 自動確認 line directly under this import validation failure manual checklist item' }))
+    assert.ok(block.includes(expectedCopy), contractMessage({ scope: 'Manual', rule: 'import validation failure checklist documents alert focus', expected: expectedCopy, fix: 'mention the alert focus recovery contract in the import validation failure checklist item' }))
+    for (const spec of specs) {
+      assert.ok(block.includes(`\`${spec}\``), contractMessage({ scope: 'Manual', rule: 'import validation failure checklist cites authoritative spec', expected: spec, fix: 'add the focused import validation E2E path to the item 自動確認 line' }))
+    }
+  }
+})
+
 test('[Manual][automation-link] import preview direction child items have direct automated links', async () => {
   const markdown = await readFile(new URL('docs/MANUAL_TEST_CHECKLIST.md', `${root}/`), 'utf8')
   const childContracts = [
