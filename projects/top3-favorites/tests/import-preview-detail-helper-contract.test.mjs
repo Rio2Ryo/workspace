@@ -72,11 +72,35 @@ function directForbiddenButtonNames(source) {
   return offenders
 }
 
+function directForbiddenDetailLocators(source) {
+  const offenders = []
+  for (const [testId, label] of forbiddenTestIds) {
+    const directTestIdLocator = new RegExp(`getByTestId\\(['\"]${testId}['\"]\\)`).test(source)
+    const directIdLocator = new RegExp(`locator\\(['\"]#${testId}['\"]\\)`).test(source)
+    const directAttributeLocator = new RegExp(`locator\\(['\"]\\[data-testid=[\\\"']${testId}[\\\"']\\]['\"]\\)`).test(source)
+    if (directTestIdLocator || directIdLocator || directAttributeLocator) {
+      offenders.push(label)
+    }
+  }
+  return offenders
+}
+
 test('[E2E-Helper][import-preview-details] contract catches current impact-tag toggle copy', () => {
   assert.deepEqual(
     directForbiddenButtonNames("await page.getByRole('button', { name: '影響タグを全件表示' }).click()"),
     ['impact tags show button'],
     'contract should catch the current impact-tag expand button copy, not only older wording',
+  )
+})
+
+test('[E2E-Helper][import-preview-details] contract catches CSS id and data-testid selector bypasses', () => {
+  assert.deepEqual(
+    directForbiddenDetailLocators(`
+      await page.locator('#import-preview-terms-helper').click()
+      await page.locator('[data-testid="import-preview-toggle-terms-helper"]').click()
+    `),
+    ['terms helper locator', 'terms helper toggle locator'],
+    'contract should catch direct CSS selector bypasses, not only getByTestId()',
   )
 })
 
@@ -90,10 +114,8 @@ test('[E2E-Helper][import-preview-details] E2E specs use shared direction/tag/te
     const source = await readFile(specUrl, 'utf8')
     const usedHelpers = helperNames.filter((name) => new RegExp(`${name}\\(`).test(source))
 
-    for (const [testId, label] of forbiddenTestIds) {
-      if (new RegExp(`getByTestId\\(['\"]${testId}['\"]\\)`).test(source)) {
-        offenders.push(`${relativePath(specUrl)}: direct import preview ${label}`)
-      }
+    for (const label of directForbiddenDetailLocators(source)) {
+      offenders.push(`${relativePath(specUrl)}: direct import preview ${label}`)
     }
 
     for (const label of directForbiddenButtonNames(source)) {
