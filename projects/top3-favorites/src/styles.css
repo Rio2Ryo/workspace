@@ -112,6 +112,8 @@ details[open] summary::after { content: '閉じる'; color: #6b7280; }
 .import-validation-error-details dt::after { content: ':'; }
 .import-validation-error-details dd { margin: 0; font-weight: 700; }
 .notice { color: #166534; font-size: 13px; font-weight: 800; margin: 0; }
+.clipboard-fallback { margin-top: 8px; }
+.clipboard-fallback textarea { font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', monospace; font-size: 13px; }
 
 .impact-plus { color: #1d4ed8; font-weight: 700; }
 .impact-neutral { color: #374151; font-weight: 700; }

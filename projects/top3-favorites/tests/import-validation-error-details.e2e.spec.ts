@@ -1,7 +1,9 @@
 import { expect, test } from '@playwright/test'
 import {
+  clipboardFallbackText,
   expectOperationAlert,
   expectOperationStatus,
+  installClipboardRejector,
   installClipboardRecorder,
   readClipboardRecorder,
   importPreviewSummary,
@@ -107,6 +109,25 @@ test('import validation retry action reopens file selection and replaces the sta
   await expect(operationAlert(page)).toHaveCount(0)
   await expect(importPreviewSummary(page)).toBeVisible()
   await expect(importPreviewSummary(page)).toContainText('fixed-import-retry.json')
+})
+
+test('import validation copy failure exposes a selectable manual-copy fallback', async ({ page }) => {
+  await page.goto('/')
+  await installClipboardRejector(page)
+
+  const now = '2026-05-18T00:00:00.000Z'
+  await uploadJsonImportFile(page, 'invalid-import-clipboard-blocked.json', [
+    { id: 'invalid-clipboard-1', tag: '   ', location: '柏の葉', name: 'Clipboard Blocked Shop', rank: 1, memo: '', mapsUrl: '', placeId: '', createdAt: now, updatedAt: now },
+    { id: 'invalid-clipboard-2', tag: 'カフェラテ', location: '柏の葉', name: '', rank: 2, memo: '', mapsUrl: '', placeId: '', createdAt: now, updatedAt: now },
+  ])
+
+  await expectOperationAlert(page, 'インポート失敗: ファイル「invalid-import-clipboard-blocked.json」の1件目 / フィールド: tag / 修正: タグを入力してください。既存データは保持しました。')
+  await importValidationCopyJsonPaths(page).click()
+
+  await expectOperationStatus(page, 'JSONパス一覧をコピーできませんでした。下の手動コピー用テキストを選択してコピーしてください。')
+  await expect(clipboardFallbackText(page)).toBeVisible()
+  await expect(clipboardFallbackText(page)).toBeFocused()
+  await expect(clipboardFallbackText(page)).toHaveValue('ファイル: invalid-import-clipboard-blocked.json\n対象: 全2件\n$.items[0].tag\n$.items[1].name')
 })
 
 test('import validation field summary prioritizes repeated fields over first-seen order', async ({ page }) => {

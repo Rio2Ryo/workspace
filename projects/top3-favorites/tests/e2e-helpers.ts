@@ -52,6 +52,19 @@ export async function readClipboardRecorder(page: Page, storageKey = 'last-copie
   return page.evaluate((storageKey) => window.localStorage.getItem(storageKey), storageKey)
 }
 
+export async function installClipboardRejector(page: Page): Promise<void> {
+  await page.evaluate(() => {
+    Object.defineProperty(navigator, 'clipboard', {
+      configurable: true,
+      value: {
+        writeText: async () => {
+          throw new DOMException('Clipboard write blocked in this browser context', 'NotAllowedError')
+        },
+      },
+    })
+  })
+}
+
 export async function postItem(
   request: APIRequestContext,
   data: unknown,
@@ -347,6 +360,10 @@ export function importValidationCopyRepairList(page: Page): Locator {
 
 export function importValidationRetryImportButton(page: Page): Locator {
   return importValidationErrorDetails(page).getByRole('button', { name: '修正したJSONを再選択' })
+}
+
+export function clipboardFallbackText(page: Page): Locator {
+  return page.getByLabel('手動コピー用テキスト')
 }
 
 export function importValidationFieldSummary(page: Page): Locator {

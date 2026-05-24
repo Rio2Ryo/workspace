@@ -332,6 +332,7 @@ export function App() {
   const [loadError, setLoadError] = useState(false)
   const [pendingImport, setPendingImport] = useState<PendingImport | null>(null)
   const [importValidationIssue, setImportValidationIssue] = useState<ImportValidationIssue | null>(null)
+  const [clipboardFallback, setClipboardFallback] = useState<{ label: string; text: string } | null>(null)
   const [selectedImportValidationField, setSelectedImportValidationField] = useState('')
   const [isImportValidationRepairListExpanded, setIsImportValidationRepairListExpanded] = useState(false)
   const [isImpactTagsExpanded, setIsImpactTagsExpanded] = useState(false)
@@ -341,10 +342,12 @@ export function App() {
   const fileRef = useRef<HTMLInputElement | null>(null)
   const tagInputRef = useRef<HTMLInputElement | null>(null)
   const errorAlertRef = useRef<HTMLDivElement | null>(null)
+  const clipboardFallbackRef = useRef<HTMLTextAreaElement | null>(null)
 
   const clearFeedback = (options?: { pendingImport?: boolean }) => {
     setError('')
     setNotice('')
+    setClipboardFallback(null)
     setImportValidationIssue(null)
     setSelectedImportValidationField('')
     setIsImportValidationRepairListExpanded(false)
@@ -401,6 +404,12 @@ export function App() {
     if (!error) return
     errorAlertRef.current?.focus()
   }, [error])
+
+  useEffect(() => {
+    if (!clipboardFallback) return
+    clipboardFallbackRef.current?.focus()
+    clipboardFallbackRef.current?.select()
+  }, [clipboardFallback])
 
   const isImportPreviewActive = !!pendingImport
 
@@ -655,6 +664,11 @@ export function App() {
       : `全${importValidationIssue.totalIssues}件`
     : ''
 
+  const showClipboardFallback = (label: string, text: string) => {
+    setClipboardFallback({ label, text })
+    setNotice(`${label}をコピーできませんでした。下の手動コピー用テキストを選択してコピーしてください。`)
+  }
+
   const copyImportValidationPaths = async () => {
     if (!importValidationIssue) return
     const paths = [
@@ -664,9 +678,10 @@ export function App() {
     ].join('\n')
     try {
       await navigator.clipboard.writeText(paths)
+      setClipboardFallback(null)
       setNotice('JSONパス一覧をコピーしました。')
     } catch {
-      setNotice('JSONパス一覧をコピーできませんでした。画面上のパスを手動でコピーしてください。')
+      showClipboardFallback('JSONパス一覧', paths)
     }
   }
 
@@ -679,9 +694,10 @@ export function App() {
     ].join('\n')
     try {
       await navigator.clipboard.writeText(repairs)
+      setClipboardFallback(null)
       setNotice('修正対象一覧をコピーしました。')
     } catch {
-      setNotice('修正対象一覧をコピーできませんでした。画面上の修正対象を手動でコピーしてください。')
+      showClipboardFallback('修正対象一覧', repairs)
     }
   }
 
@@ -1107,6 +1123,21 @@ export function App() {
             </div>
           )}
           {notice && <p className="notice" role="status" aria-live="polite">{notice}</p>}
+          {clipboardFallback && (
+            <label className="clipboard-fallback">
+              手動コピー用テキスト
+              <textarea
+                ref={clipboardFallbackRef}
+                readOnly
+                rows={Math.min(8, Math.max(3, clipboardFallback.text.split('\n').length))}
+                value={clipboardFallback.text}
+                aria-describedby="clipboard-fallback-hint"
+              />
+              <span id="clipboard-fallback-hint" className="hint compact">
+                {clipboardFallback.label}を選択済みです。ブラウザのコピー制限が出る場合は、この欄を手動でコピーしてください。
+              </span>
+            </label>
+          )}
         </div>
       </section>
 

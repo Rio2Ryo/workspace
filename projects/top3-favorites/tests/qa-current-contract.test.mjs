@@ -1425,14 +1425,16 @@ test('[Manual][automation-link] import validation failure checklist items have d
     {
       item: '**JSONインポート失敗（不正要素混在）**',
       specs: ['tests/import-validation-error-details.e2e.spec.ts'],
-      expectedCopy: 'エラーalertにフォーカスが移動する',
+      expectedCopies: ['エラーalertにフォーカスが移動する', 'コピー制限時は手動コピー用テキストを選択してコピーできる'],
     },
   ]
 
-  for (const { item, specs, expectedCopy } of childContracts) {
+  for (const { item, specs, expectedCopies } of childContracts) {
     const block = manualChecklistItemBlock(markdown, item)
     assert.match(block, /自動確認:/, contractMessage({ scope: 'Manual', rule: 'import validation failure checklist item has direct automated link', expected: item, fix: 'add an indented 自動確認 line directly under this import validation failure manual checklist item' }))
-    assert.ok(block.includes(expectedCopy), contractMessage({ scope: 'Manual', rule: 'import validation failure checklist documents alert focus', expected: expectedCopy, fix: 'mention the alert focus recovery contract in the import validation failure checklist item' }))
+    for (const expectedCopy of expectedCopies) {
+      assert.ok(block.includes(expectedCopy), contractMessage({ scope: 'Manual', rule: 'import validation failure checklist documents recovery UX', expected: expectedCopy, fix: 'mention the alert focus and clipboard fallback recovery contracts in the import validation failure checklist item' }))
+    }
     for (const spec of specs) {
       assert.ok(block.includes(`\`${spec}\``), contractMessage({ scope: 'Manual', rule: 'import validation failure checklist cites authoritative spec', expected: spec, fix: 'add the focused import validation E2E path to the item 自動確認 line' }))
     }
