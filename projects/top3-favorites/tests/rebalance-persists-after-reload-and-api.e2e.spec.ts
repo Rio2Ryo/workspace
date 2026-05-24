@@ -1,5 +1,6 @@
 import { expect, test } from '@playwright/test'
 import {
+  canonicalizeItemsById,
   expectOperationStatus,
   fetchItems,
   postItem,
@@ -57,14 +58,13 @@ test('adding new 1st place rebalances to Top3 and persists ranks after reload + 
   const apiData = await fetchItems<{
     items: { tag: string; name: string; rank: number }[]
   }>(request)
-  const cafe = apiData.items
-    .filter((item) => item.tag === 'カフェラテ')
-    .sort((a, b) => a.rank - b.rank)
+  const cafe = apiData.items.filter((item) => item.tag === 'カフェラテ')
 
-  expect(cafe).toHaveLength(3)
-  expect(cafe.map((item) => ({ rank: item.rank, name: item.name }))).toEqual([
-    { rank: 1, name: 'New 1st' },
-    { rank: 2, name: 'A店' },
-    { rank: 3, name: 'B店' },
-  ])
+  expect(canonicalizeItemsById(cafe.map((item) => ({ name: item.name, rank: item.rank })))).toBe(
+    canonicalizeItemsById([
+      { name: 'New 1st', rank: 1 },
+      { name: 'A店', rank: 2 },
+      { name: 'B店', rank: 3 },
+    ]),
+  )
 })

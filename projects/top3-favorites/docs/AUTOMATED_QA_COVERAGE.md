@@ -14,6 +14,7 @@
 
 - `tests/startup-console-health.e2e.spec.ts`
 - `tests/create-persists-after-reload-and-api.e2e.spec.ts`
+- `tests/crud-persists-after-reload-and-api.e2e.spec.ts`
 - `tests/sample-data-persists-after-reload-and-api.e2e.spec.ts`
 - `tests/rank-selection-preserved.e2e.spec.ts`
 - `tests/rebalance-persists-after-reload-and-api.e2e.spec.ts`
@@ -37,6 +38,8 @@
 - `tests/edit-tag-move-syncs-registration-tag.e2e.spec.ts`
 - `tests/memo-empty-fallback.e2e.spec.ts`
 - `tests/mutation-error-clears-stale-success-notice.e2e.spec.ts`
+- `tests/mutation-error-chain-persists-after-reload-and-api.e2e.spec.ts`
+- `tests/mutation-error-persists-after-reload-and-api.e2e.spec.ts`
 
 ### JSON import/export/validation/Top3正規化
 
@@ -47,11 +50,16 @@
 - `tests/export-download-roundtrip.e2e.spec.ts`
 - `tests/import-broken-json.e2e.spec.ts`
 - `tests/import-confirmation-preview.e2e.spec.ts`
+- `tests/import-preview-cancel-keyboard-focus-return.e2e.spec.ts`
+- `tests/import-preview-cancel-localstorage-api-drift-diagnostic.e2e.spec.ts`
+- `tests/import-preview-confirm-localstorage-api-export-drift-diagnostic.e2e.spec.ts`
 - `tests/import-excluded-details-expand-toggle.e2e.spec.ts`
 - `tests/import-excluded-details-readable-format.e2e.spec.ts`
 - `tests/import-excluded-names-deterministic-order.e2e.spec.ts`
 - `tests/import-excluded-reasons-preview.e2e.spec.ts`
+- `tests/import-export-failure-localstorage-api-drift-diagnostic.e2e.spec.ts`
 - `tests/import-export-rank-validation.e2e.spec.ts`
+- `tests/import-export-localstorage-api-drift-diagnostic.e2e.spec.ts`
 - `tests/import-export.e2e.spec.ts`
 - `tests/import-fail-closed-matrix.e2e.spec.ts`
 - `tests/import-invalid-after-valid-clears-preview.e2e.spec.ts`
@@ -67,6 +75,19 @@
 - `tests/import-top3-ui-normalization.e2e.spec.ts`
 - `tests/import-terminology-normalization-exclusion-consistency.e2e.spec.ts`
 - `tests/import-validation-error-details.e2e.spec.ts`
+- `tests/import-validation-field-filter-resets-on-next-import.e2e.spec.ts`
+- `tests/import-validation-copy-respects-active-filter.e2e.spec.ts`
+- `tests/import-validation-filter-hides-expand-controls.e2e.spec.ts`
+- `tests/import-validation-field-filter-a11y-pressed-state.e2e.spec.ts`
+- `tests/import-validation-field-filter-keyboard-a11y.e2e.spec.ts`
+- `tests/import-validation-field-filter-toggle-off.e2e.spec.ts`
+- `tests/import-validation-field-filter-keyboard-toggle-off.e2e.spec.ts`
+- `tests/import-validation-filter-toggle-off-copy-sync.e2e.spec.ts`
+- `tests/import-validation-keyboard-filter-copy-sync.e2e.spec.ts`
+- `tests/import-validation-filter-state-resets-after-valid-recovery.e2e.spec.ts`
+- `tests/import-validation-recovery-clears-copy-focus.e2e.spec.ts`
+- `tests/import-validation-recovery-tab-focus-resumes-preview-actions.e2e.spec.ts`
+- `tests/import-validation-recovery-clears-stale-ui.e2e.spec.ts`
 - `tests/import-validation-trimmed-fields.e2e.spec.ts`
 
 #### import preview / direction
@@ -139,8 +160,11 @@
 - `tests/rank-picker-accessibility.e2e.spec.ts`
 - `tests/sample-error-clears-stale-success-notice.e2e.spec.ts`
 - `tests/save-error-clears-stale-success-notice.e2e.spec.ts`
+- `tests/save-error-persists-after-reload-and-api.e2e.spec.ts`
 - `tests/search-accessibility.e2e.spec.ts`
 - `tests/search-memo-contains.e2e.spec.ts`
+- `tests/search-tag-location-contains.e2e.spec.ts`
+- `tests/search-tag-chip-with-text-query.e2e.spec.ts`
 
 ## 静的QA
 

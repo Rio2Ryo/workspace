@@ -63,8 +63,8 @@ test('import validation error identifies the first invalid row and field for qui
   await expect(fieldSummary).toBeVisible()
   await expect(importValidationFieldSummaryItems(page)).toHaveText(['tag: 1件', 'name: 1件'])
   await expect(importValidationRepairItems(page)).toHaveText([
-    '2件目 / $.items[1].tag / tag / タグを入力してください。',
-    '3件目 / $.items[2].name / name / 店舗名を入力してください。',
+    '2件目 / $.items[1].tag / tag / 入力値: "   " / タグを入力してください。',
+    '3件目 / $.items[2].name / name / 入力値: "" / 店舗名を入力してください。',
   ])
   await importValidationCopyJsonPaths(page).click()
   await expectOperationStatus(page, 'JSONパス一覧をコピーしました。')
@@ -74,7 +74,7 @@ test('import validation error identifies the first invalid row and field for qui
   await importValidationCopyRepairList(page).click()
   await expectOperationStatus(page, '修正対象一覧をコピーしました。')
   await expect.poll(() => readClipboardRecorder(page, 'last-copied-import-validation')).toBe(
-    'ファイル: invalid-import-field-details.json\n対象: 全2件\n2件目 / $.items[1].tag / tag / タグを入力してください。\n3件目 / $.items[2].name / name / 店舗名を入力してください。',
+    'ファイル: invalid-import-field-details.json\n対象: 全2件\n2件目 / $.items[1].tag / tag / 入力値: "   " / タグを入力してください。\n3件目 / $.items[2].name / name / 入力値: "" / 店舗名を入力してください。',
   )
   await expect(importPreviewSummary(page)).toHaveCount(0)
 })
@@ -120,13 +120,13 @@ test('import validation repair list collapses long all-issue lists and can expan
   await expect(importValidationCollapsedRepairStatus(page, 5, 3)).toBeVisible()
   await expect(importValidationRepairItems(page)).toHaveCount(5)
   await expect(importValidationRepairItems(page).last()).toHaveText(
-    '5件目 / $.items[4].name / name / 店舗名を入力してください。',
+    '5件目 / $.items[4].name / name / 入力値: "" / 店舗名を入力してください。',
   )
   await importValidationShowAllRepairs(page).click()
   await expect(importValidationExpandedRepairStatus(page, 8)).toBeVisible()
   await expect(importValidationRepairItems(page)).toHaveCount(8)
   await expect(importValidationRepairItems(page).last()).toHaveText(
-    '8件目 / $.items[7].name / name / 店舗名を入力してください。',
+    '8件目 / $.items[7].name / name / 入力値: "" / 店舗名を入力してください。',
   )
   await importValidationCollapseRepairs(page).click()
   await expect(importValidationCollapsedRepairStatus(page, 5, 3)).toBeVisible()
@@ -147,15 +147,15 @@ test('import validation field summary filters the repair list to the selected re
   await uploadJsonImportFile(page, 'invalid-import-field-filter.json', invalidItems)
 
   await expect(importValidationRepairItems(page)).toHaveText([
-    '1件目 / $.items[0].name / name / 店舗名を入力してください。',
-    '2件目 / $.items[1].tag / tag / タグを入力してください。',
-    '3件目 / $.items[2].tag / tag / タグを入力してください。',
+    '1件目 / $.items[0].name / name / 入力値: "" / 店舗名を入力してください。',
+    '2件目 / $.items[1].tag / tag / 入力値: "   " / タグを入力してください。',
+    '3件目 / $.items[2].tag / tag / 入力値: "" / タグを入力してください。',
   ])
   await importValidationFieldFilter(page, 'tag').click()
   await expect(importValidationFilteredRepairStatus(page, 'tag', 2)).toBeVisible()
   await expect(importValidationRepairItems(page)).toHaveText([
-    '2件目 / $.items[1].tag / tag / タグを入力してください。',
-    '3件目 / $.items[2].tag / tag / タグを入力してください。',
+    '2件目 / $.items[1].tag / tag / 入力値: "   " / タグを入力してください。',
+    '3件目 / $.items[2].tag / tag / 入力値: "" / タグを入力してください。',
   ])
   await importValidationCopyJsonPaths(page).click()
   await expectOperationStatus(page, 'JSONパス一覧をコピーしました。')
@@ -165,18 +165,18 @@ test('import validation field summary filters the repair list to the selected re
   await importValidationCopyRepairList(page).click()
   await expectOperationStatus(page, '修正対象一覧をコピーしました。')
   await expect.poll(() => readClipboardRecorder(page, 'last-copied-import-validation')).toBe(
-    'ファイル: invalid-import-field-filter.json\n対象: tag 2件 / 全3件\n2件目 / $.items[1].tag / tag / タグを入力してください。\n3件目 / $.items[2].tag / tag / タグを入力してください。',
+    'ファイル: invalid-import-field-filter.json\n対象: tag 2件 / 全3件\n2件目 / $.items[1].tag / tag / 入力値: "   " / タグを入力してください。\n3件目 / $.items[2].tag / tag / 入力値: "" / タグを入力してください。',
   )
   await importValidationFieldFilter(page, 'name').click()
   await expect(importValidationFilteredRepairStatus(page, 'name', 1)).toBeVisible()
   await expect(importValidationRepairItems(page)).toHaveText([
-    '1件目 / $.items[0].name / name / 店舗名を入力してください。',
+    '1件目 / $.items[0].name / name / 入力値: "" / 店舗名を入力してください。',
   ])
   await importValidationFieldClear(page).click()
   await expect(importValidationAnyRepairStatus(page)).toHaveCount(0)
   await expect(importValidationRepairItems(page)).toHaveText([
-    '1件目 / $.items[0].name / name / 店舗名を入力してください。',
-    '2件目 / $.items[1].tag / tag / タグを入力してください。',
-    '3件目 / $.items[2].tag / tag / タグを入力してください。',
+    '1件目 / $.items[0].name / name / 入力値: "" / 店舗名を入力してください。',
+    '2件目 / $.items[1].tag / tag / 入力値: "   " / タグを入力してください。',
+    '3件目 / $.items[2].tag / tag / 入力値: "" / タグを入力してください。',
   ])
 })

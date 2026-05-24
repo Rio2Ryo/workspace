@@ -1,5 +1,6 @@
 import { expect, test } from '@playwright/test'
 import {
+  canonicalizeItemsById,
   confirmImportAndWaitForStatus,
   expectOperationAlert,
   expectOperationStatus,
@@ -61,8 +62,9 @@ test('import fail-closed matrix: all invalid inputs keep existing data and clear
     await expect(importPreviewPanel(page)).toHaveCount(0)
 
     const apiData = await fetchItems<{ items: { name: string }[] }>(request)
-    expect(apiData.items).toHaveLength(1)
-    expect(apiData.items[0]?.name).toBe('Baseline Keep')
+    expect(canonicalizeItemsById(apiData.items.map((v) => ({ name: v.name })))).toBe(
+      canonicalizeItemsById([{ name: 'Baseline Keep' }]),
+    )
   }
 
   // recovery scenario: valid -> invalid -> valid should still recover correctly
@@ -83,6 +85,7 @@ test('import fail-closed matrix: all invalid inputs keep existing data and clear
   await confirmImportAndWaitForStatus(page, 'インポート成功: 2件を反映しました。')
 
   const finalApiData = await fetchItems<{ items: { name: string }[] }>(request)
-  expect(finalApiData.items).toHaveLength(2)
-  expect(finalApiData.items.map((v) => v.name).sort()).toEqual(['Valid A', 'Valid B'])
+  expect(canonicalizeItemsById(finalApiData.items.map((v) => ({ name: v.name })))).toBe(
+    canonicalizeItemsById([{ name: 'Valid A' }, { name: 'Valid B' }]),
+  )
 })

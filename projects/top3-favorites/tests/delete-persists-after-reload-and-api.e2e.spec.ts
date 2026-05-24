@@ -1,5 +1,6 @@
 import { expect, test } from '@playwright/test'
 import {
+  canonicalizeItemsById,
   deleteItemAndWaitForStatus,
   fetchItems,
   postItem,
@@ -54,6 +55,7 @@ test('deleted item stays removed after reload and is absent from API data', asyn
   const apiData = await fetchItems<{
     items: { name: string; tag: string }[]
   }>(request)
-  expect(apiData.items.some((item) => item.name === 'Delete Persist Target')).toBe(false)
-  expect(apiData.items.some((item) => item.name === 'Persist Survivor')).toBe(true)
+  expect(canonicalizeItemsById(apiData.items.map(({ name }) => ({ name })))).toBe(
+    canonicalizeItemsById([{ name: 'Persist Survivor' }]),
+  )
 })

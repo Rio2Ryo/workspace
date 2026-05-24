@@ -2,6 +2,21 @@ import { readFile } from 'node:fs/promises'
 import { expect, type APIRequestContext, type APIResponse, type Dialog, type Download, type Locator, type Page } from '@playwright/test'
 import { validateImportPreviewSummary } from '../src/shared/import-preview-summary-contract.mjs'
 
+type RankValue = 1 | 2 | 3
+
+type ImportTestItem = {
+  id: string
+  tag: string
+  location: string
+  name: string
+  rank: number
+  memo: string
+  mapsUrl: string
+  placeId: string
+  createdAt: string
+  updatedAt: string
+}
+
 type ApiItemsMutationOptions = {
   expectedStatus?: number
 }
@@ -537,6 +552,42 @@ export async function uploadJsonImportFile(page: Page, name: string, body: strin
   })
 }
 
+export function createImportTestItem(
+  id: string,
+  tag: string,
+  name: string,
+  rank: number,
+  options: { location?: string; memo?: string; mapsUrl?: string; placeId?: string; now?: string } = {},
+): ImportTestItem {
+  const now = options.now ?? new Date().toISOString()
+  return {
+    id,
+    tag,
+    location: options.location ?? '柏',
+    name,
+    rank,
+    memo: options.memo ?? '',
+    mapsUrl: options.mapsUrl ?? '',
+    placeId: options.placeId ?? '',
+    createdAt: now,
+    updatedAt: now,
+  }
+}
+
+export function createTagRankSeriesPayload(
+  tags: string[],
+  ranks: RankValue[] = [1, 2, 3, 1],
+  options: { location?: string; now?: string } = {},
+): ImportTestItem[] {
+  return tags.flatMap((tag) => ranks.map((rank, index) => createImportTestItem(
+    `${tag.toLowerCase()}${index + 1}`,
+    tag,
+    `${tag}${index + 1}`,
+    rank,
+    { location: options.location, now: options.now },
+  )))
+}
+
 export async function parseImportPreviewSummary<T = Record<string, unknown>>(summaryLocator: Locator): Promise<T> {
   const summaryJson = await summaryLocator.getAttribute('data-summary-json')
   expect(summaryJson, 'import preview summary should expose data-summary-json').toBeTruthy()
@@ -561,4 +612,26 @@ export async function parseDownloadedJsonFile<T = unknown>(download: Download): 
   const raw = await readFile(artifactPath as string, 'utf-8')
   const parsed = JSON.parse(raw) as T
   return { filename, raw, parsed }
+}
+
+export function canonicalizeItemsById<T extends Record<string, unknown>>(items: T[]): string {
+  return JSON.stringify(
+    [...items].sort((a, b) => {
+      const aid = typeof a.id === 'string' ? a.id : JSON.stringify(a)
+      const bid = typeof b.id === 'string' ? b.id : JSON.stringify(b)
+      return aid.localeCompare(bid)
+    }),
+  )
+}
+
+export async function readLocalStorageSnapshot(page: Page): Promise<Record<string, string>> {
+  return page.evaluate(() => {
+    const out: Record<string, string> = {}
+    for (let i = 0; i < window.localStorage.length; i += 1) {
+      const key = window.localStorage.key(i)
+      if (!key) continue
+      out[key] = window.localStorage.getItem(key) ?? ''
+    }
+    return out
+  })
 }

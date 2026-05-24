@@ -1,5 +1,6 @@
 import { expect, test } from '@playwright/test'
 import {
+  canonicalizeItemsById,
   expectOperationAlert,
   expectOperationStatus,
   fetchItems,
@@ -43,6 +44,7 @@ test('invalid JSON after a valid import preview clears pending preview and keeps
 
   // DB should remain unchanged (still seeded 1 item)
   const apiData = await fetchItems<{ items: { name: string }[] }>(request)
-  expect(apiData.items).toHaveLength(1)
-  expect(apiData.items[0]?.name).toBe('Base Item')
+  expect(canonicalizeItemsById(apiData.items.map((v) => ({ name: v.name })))).toBe(
+    canonicalizeItemsById([{ name: 'Base Item' }]),
+  )
 })

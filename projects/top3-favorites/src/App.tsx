@@ -49,9 +49,10 @@ type ImportValidationIssue = {
   path: string
   field: string
   fix: string
+  invalidValue: string
   message: string
   totalIssues: number
-  relatedIssues: Array<Pick<ImportValidationIssue, 'row' | 'path' | 'field' | 'fix'>>
+  relatedIssues: Array<Pick<ImportValidationIssue, 'row' | 'path' | 'field' | 'invalidValue' | 'fix'>>
 }
 
 const initialDraft: Draft = {
@@ -117,20 +118,32 @@ function rankItems(items: FavoriteItem[], target?: FavoriteItem): FavoriteItem[]
     .slice(0, 3)
 }
 
+function formatImportValidationValue(value: unknown): string {
+  if (typeof value === 'string') return JSON.stringify(value)
+  if (value === undefined) return '未設定'
+  try {
+    return JSON.stringify(value) ?? String(value)
+  } catch {
+    return String(value)
+  }
+}
+
 function importItemValidationIssue(value: unknown, index: number, filename: string): ImportValidationIssue | null {
   const row = `${index + 1}件目`
   const prefix = `ファイル「${filename}」の${row}`
   const detail = (field: string, fix: string): ImportValidationIssue => {
     const path = field === 'item' ? `$.items[${index}]` : `$.items[${index}].${field}`
+    const invalidValue = formatImportValidationValue(field === 'item' ? value : (value as Record<string, unknown>)?.[field])
     return {
       filename,
       row,
       path,
       field,
       fix,
+      invalidValue,
       message: `${prefix} / フィールド: ${field} / 修正: ${fix}`,
       totalIssues: 1,
-      relatedIssues: [{ row, path, field, fix }],
+      relatedIssues: [{ row, path, field, invalidValue, fix }],
     }
   }
   if (!value || typeof value !== 'object') return detail('item', '各行をオブジェクト形式にしてください。')
@@ -326,6 +339,7 @@ export function App() {
   const [isExcludedDetailsExpanded, setIsExcludedDetailsExpanded] = useState(false)
   const [isImpactTermsHelperExpanded, setIsImpactTermsHelperExpanded] = useState(false)
   const fileRef = useRef<HTMLInputElement | null>(null)
+  const tagInputRef = useRef<HTMLInputElement | null>(null)
 
   const clearFeedback = (options?: { pendingImport?: boolean }) => {
     setError('')
@@ -655,7 +669,7 @@ export function App() {
     const repairs = [
       `ファイル: ${importValidationIssue.filename}`,
       `対象: ${importValidationCopyTargetSummary}`,
-      ...visibleImportValidationIssues.map((issue) => `${issue.row} / ${issue.path} / ${issue.field} / ${issue.fix}`),
+      ...visibleImportValidationIssues.map((issue) => `${issue.row} / ${issue.path} / ${issue.field} / 入力値: ${issue.invalidValue} / ${issue.fix}`),
     ].join('\n')
     try {
       await navigator.clipboard.writeText(repairs)
@@ -743,7 +757,7 @@ export function App() {
         const issueWithCount = {
           ...importValidationIssue,
           totalIssues: importValidationIssues.length,
-          relatedIssues: importValidationIssues.map(({ row, path, field, fix }) => ({ row, path, field, fix })),
+          relatedIssues: importValidationIssues.map(({ row, path, field, invalidValue, fix }) => ({ row, path, field, invalidValue, fix })),
         }
         setError(`インポート失敗: ${issueWithCount.message}既存データは保持しました。`)
         setImportValidationIssue(issueWithCount)
@@ -832,6 +846,7 @@ export function App() {
     setPendingImport(null)
     setError('')
     setNotice('インポートをキャンセルしました。')
+    window.requestAnimationFrame(() => tagInputRef.current?.focus())
   }
 
   const startEdit = (item: FavoriteItem) => {
@@ -938,7 +953,7 @@ export function App() {
         <div className="form-grid">
           <label>
             <span>タグ</span>
-            <input value={draft.tag} onChange={(e) => updateDraftTag(e.target.value)} placeholder="例: カフェラテ" list="tag-options" disabled={isImportPreviewActive} aria-describedby={importLockDescriptionId} />
+            <input ref={tagInputRef} value={draft.tag} onChange={(e) => updateDraftTag(e.target.value)} placeholder="例: カフェラテ" list="tag-options" disabled={isImportPreviewActive} aria-describedby={importLockDescriptionId} />
             <datalist id="tag-options">{tags.map((tag) => <option key={tag} value={tag} />)}</datalist>
           </label>
           <label>
@@ -1033,7 +1048,7 @@ export function App() {
                               className="ghost compact"
                               type="button"
                               aria-pressed={selectedImportValidationField === field}
-                              onClick={() => setSelectedImportValidationField(field)}
+                              onClick={() => setSelectedImportValidationField((prev) => (prev === field ? '' : field))}
                             >
                               {field}の修正対象だけ表示
                             </button>
@@ -1063,7 +1078,7 @@ export function App() {
                       <button className="ghost" type="button" onClick={copyImportValidationRepairs}>修正対象一覧をコピー</button>
                       <ol>
                         {displayedImportValidationIssues.map((issue) => (
-                          <li key={`${issue.row}-${issue.path}-${issue.field}`}>{issue.row} / {issue.path} / {issue.field} / {issue.fix}</li>
+                          <li key={`${issue.row}-${issue.path}-${issue.field}`}>{issue.row} / {issue.path} / {issue.field} / 入力値: {issue.invalidValue} / {issue.fix}</li>
                         ))}
                       </ol>
                       {!selectedImportValidationField && shouldToggleImportValidationRepairList && (

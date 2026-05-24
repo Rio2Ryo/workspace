@@ -263,8 +263,8 @@ const rawManualAutomatedLinkContracts = {
       message: 'manual checklist should connect API failure resilience to the automated retry spec',
     },
     {
-      pattern: /検索欄で `店名\/タグ\/場所\/メモ` それぞれ部分一致検索が効く[\s\S]*自動確認: `tests\/top3\.e2e\.spec\.ts` と `tests\/search-memo-contains\.e2e\.spec\.ts`/,
-      message: 'manual checklist should connect multi-field partial search to automated search specs',
+      pattern: /検索欄で `店名\/タグ\/場所\/メモ` それぞれ部分一致検索が効く[\s\S]*自動確認: `tests\/top3\.e2e\.spec\.ts`、`tests\/search-memo-contains\.e2e\.spec\.ts`、`tests\/search-tag-location-contains\.e2e\.spec\.ts`[\s\S]*店名・タグ・場所・メモ検索/,
+      message: 'manual checklist should connect multi-field partial search to automated search specs (name/tag/location/memo)',
     },
     {
       pattern: /タグチップ押下で該当データのみ表示される[\s\S]*自動確認: `tests\/tag-chip-region-a11y-and-uniqueness\.e2e\.spec\.ts`/,

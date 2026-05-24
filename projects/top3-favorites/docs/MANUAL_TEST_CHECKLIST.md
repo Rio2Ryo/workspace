@@ -43,7 +43,7 @@
 ## 2. タグ絞り込み
 
 - [ ] 検索欄で `店名/タグ/場所/メモ` それぞれ部分一致検索が効く
-  - 自動確認: `tests/top3.e2e.spec.ts` と `tests/search-memo-contains.e2e.spec.ts` が店名・メモ検索を含む検索導線を検証する
+  - 自動確認: `tests/top3.e2e.spec.ts`、`tests/search-memo-contains.e2e.spec.ts`、`tests/search-tag-location-contains.e2e.spec.ts` が店名・タグ・場所・メモ検索を含む検索導線を検証する
 - [ ] タグチップ押下で該当データのみ表示される
   - 自動確認: `tests/tag-chip-region-a11y-and-uniqueness.e2e.spec.ts` が検索タグ領域のタグチップ押下で該当タグのみ表示し、他タグを隠すことを検証する
 - [ ] `クリア` で全件表示に戻る

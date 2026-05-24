@@ -155,7 +155,7 @@ test('[E2E-Helper][import-file] import validation errors expose structured repai
   const appSource = await readFile(appPath, 'utf8')
   const validationSpec = await readFile(new URL('tests/import-validation-error-details.e2e.spec.ts', `${root}/`), 'utf8')
 
-  assert.match(appSource, /type ImportValidationIssue = \{[\s\S]*filename: string[\s\S]*row: string[\s\S]*path: string[\s\S]*field: string[\s\S]*fix: string[\s\S]*message: string[\s\S]*totalIssues: number[\s\S]*relatedIssues: Array<Pick<ImportValidationIssue, 'row' \| 'path' \| 'field' \| 'fix'>>[\s\S]*\}/, 'App should keep structured import validation issue data instead of only a joined error sentence')
+  assert.match(appSource, /type ImportValidationIssue = \{[\s\S]*filename: string[\s\S]*row: string[\s\S]*path: string[\s\S]*field: string[\s\S]*fix: string[\s\S]*invalidValue: string[\s\S]*message: string[\s\S]*totalIssues: number[\s\S]*relatedIssues: Array<Pick<ImportValidationIssue, 'row' \| 'path' \| 'field' \| 'invalidValue' \| 'fix'>>[\s\S]*\}/, 'App should keep structured import validation issue data including the rejected input value instead of only a joined error sentence')
   assert.match(appSource, /data-testid="import-validation-error-details"/, 'App should render a dedicated validation repair details block')
   assert.match(appSource, /<dl>[\s\S]*<dt>ファイル<\/dt>[\s\S]*<dt>行<\/dt>[\s\S]*<dt>JSONパス<\/dt>[\s\S]*<dt>フィールド<\/dt>[\s\S]*<dt>修正<\/dt>[\s\S]*<dt>検出件数<\/dt>/, 'App should keep file, row, JSON path, field, fix, and total issue count as separate term labels')
   assert.match(appSource, /\$\.items\[\$\{index\}\]\.\$\{field\}/, 'App should expose JSON paths for field-level import validation issues')

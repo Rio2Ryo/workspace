@@ -1,5 +1,6 @@
 import { expect, test } from '@playwright/test'
 import {
+  canonicalizeItemsById,
   expectOperationStatus,
   fetchItems,
   rankedItemSummary,
@@ -45,10 +46,7 @@ test('newly created item remains after reload and exists in API data', async ({ 
     items: { name: string; tag: string; location: string; memo: string; rank: number }[]
   }>(request)
 
-  const saved = apiData.items.find((item) => item.name === 'Persist New Item')
-  expect(saved).toBeTruthy()
-  expect(saved?.tag).toBe('永続化タグ')
-  expect(saved?.location).toBe('柏')
-  expect(saved?.memo).toBe('reload persistence contract')
-  expect(saved?.rank).toBe(2)
+  expect(canonicalizeItemsById(apiData.items.map(({ name, tag, location, memo, rank }) => ({ name, tag, location, memo, rank })))).toBe(
+    canonicalizeItemsById([{ name: 'Persist New Item', tag: '永続化タグ', location: '柏', memo: 'reload persistence contract', rank: 2 }]),
+  )
 })

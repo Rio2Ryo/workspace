@@ -1,5 +1,6 @@
 import { expect, test } from '@playwright/test'
 import {
+  canonicalizeItemsById,
   fetchItems,
   rankedItemSummary,
   reloadPageAndWaitForSearchReady,
@@ -32,9 +33,8 @@ test('sample data seed remains after reload and is reflected in API data', async
     items: { tag: string; location: string; name: string; rank: number; memo: string }[]
   }>(request)
 
-  expect(apiData.items).toHaveLength(3)
-  expect(apiData.items.map(({ tag, location, name, rank, memo }) => ({ tag, location, name, rank, memo }))).toEqual(
-    expect.arrayContaining([
+  expect(canonicalizeItemsById(apiData.items.map(({ tag, location, name, rank, memo }) => ({ tag, location, name, rank, memo })))).toBe(
+    canonicalizeItemsById([
       { tag: 'カフェラテ', location: '柏の葉', name: 'Solito MAGO', rank: 1, memo: 'ラテアートがきれい。ミルク感も好き' },
       { tag: 'カフェラテ', location: '柏の葉', name: 'T-SITEのカフェ', rank: 2, memo: '作業ついでに寄りやすい' },
       { tag: 'つけ麺', location: '松戸', name: 'とみ田', rank: 1, memo: '濃厚つけ麺が強い' },

@@ -1,6 +1,7 @@
 import { expect, test } from '@playwright/test'
 import {
   cancelImportAndWaitForStatus,
+  canonicalizeItemsById,
   confirmImportAndWaitForStatus,
   expectImportPreviewCounts,
   expectOperationStatus,
@@ -44,7 +45,9 @@ test('import shows a confirmation preview before replacing existing data', async
   await expect(page.getByText('Preview Pudding')).not.toBeVisible()
 
   const beforeConfirm = await fetchItems<{ items: { name: string }[] }>(request)
-  expect(beforeConfirm.items.map((saved) => saved.name).sort()).toEqual(['Solito MAGO', 'T-SITEのカフェ', 'とみ田'].sort())
+  expect(canonicalizeItemsById(beforeConfirm.items.map((saved) => ({ name: saved.name })))).toBe(
+    canonicalizeItemsById([{ name: 'Solito MAGO' }, { name: 'T-SITEのカフェ' }, { name: 'とみ田' }]),
+  )
 
   await cancelImportAndWaitForStatus(page, 'インポートをキャンセルしました。')
   await expect(rankedItemSummary(page, 1, 'Solito MAGO')).toBeVisible()
