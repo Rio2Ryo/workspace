@@ -559,6 +559,18 @@ export function importPreviewTermsHelper(page: Page): Locator {
   return page.getByTestId('import-preview-terms-helper')
 }
 
+export function importPreviewTerms(page: Page): Locator {
+  return importPreviewTermsHelper(page).locator('div')
+}
+
+export function importPreviewTermNames(page: Page): Locator {
+  return importPreviewTermsHelper(page).locator('dt')
+}
+
+export function importPreviewTermDescriptions(page: Page): Locator {
+  return importPreviewTermsHelper(page).locator('dd')
+}
+
 export function importPreviewToggleTermsHelper(page: Page): Locator {
   return page.getByTestId('import-preview-toggle-terms-helper')
 }

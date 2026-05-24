@@ -1,6 +1,8 @@
 import { expect, test } from '@playwright/test'
 import {
-  importPreviewTermsHelper,
+  importPreviewTermDescriptions,
+  importPreviewTermNames,
+  importPreviewTerms,
   importPreviewToggleTermsHelper,
   resetItemsByDelete,
   saveSampleItems,
@@ -28,11 +30,10 @@ test('import preview explains difference between 削除予定 and 正規化除�
   await uploadJsonImportFile(page, 'terms-helper.json', payload)
 
   await importPreviewToggleTermsHelper(page).click()
-  const helper = importPreviewTermsHelper(page)
-  const terms = helper.locator('div')
+  const terms = importPreviewTerms(page)
   await expect(terms).toHaveCount(2)
-  await expect(helper.locator('dt')).toHaveText(['削除予定', '正規化除外'])
-  await expect(helper.locator('dd')).toHaveText([
+  await expect(importPreviewTermNames(page)).toHaveText(['削除予定', '正規化除外'])
+  await expect(importPreviewTermDescriptions(page)).toHaveText([
     '現在DBにあるが、インポート後データに含まれない項目',
     'インポートJSON内で同一タグTop3に収まらず取り込まれない項目',
   ])

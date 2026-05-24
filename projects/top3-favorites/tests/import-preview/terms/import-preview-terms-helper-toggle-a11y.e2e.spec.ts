@@ -1,5 +1,6 @@
 import { expect, test } from '@playwright/test'
 import {
+  importPreviewTermNames,
   importPreviewTermsHelper,
   importPreviewToggleTermsHelper,
   resetItemsByDelete,
@@ -33,7 +34,7 @@ test('terms helper toggle exposes aria-expanded and aria-controls correctly', as
   await expect(toggle).toHaveAttribute('aria-expanded', 'true')
   await expect(importPreviewTermsHelper(page)).toBeVisible()
   await expect(importPreviewTermsHelper(page)).toHaveAttribute('aria-label', '差分用語の説明')
-  await expect(importPreviewTermsHelper(page).locator('dt')).toHaveText(['削除予定', '正規化除外'])
+  await expect(importPreviewTermNames(page)).toHaveText(['削除予定', '正規化除外'])
 
   await toggle.click()
   await expect(toggle).toHaveAttribute('aria-expanded', 'false')

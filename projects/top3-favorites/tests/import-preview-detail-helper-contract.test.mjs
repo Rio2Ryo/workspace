@@ -16,6 +16,9 @@ const helperNames = [
   'importPreviewImpactTags',
   'importPreviewToggleImpactTags',
   'importPreviewTermsHelper',
+  'importPreviewTerms',
+  'importPreviewTermNames',
+  'importPreviewTermDescriptions',
   'importPreviewToggleTermsHelper',
 ]
 
@@ -85,6 +88,14 @@ function directForbiddenDetailLocators(source) {
   return offenders
 }
 
+function directForbiddenTermsSemantics(source) {
+  const offenders = []
+  const termsHelperChainedLocator = /importPreviewTermsHelper\([^)]*\)\.locator\(['\"](?:div|dt|dd)['\"]\)/.test(source)
+  const termsHelperStoredLocator = /\b(?:helper|termsHelper)\.locator\(['\"](?:div|dt|dd)['\"]\)/.test(source)
+  if (termsHelperChainedLocator || termsHelperStoredLocator) offenders.push('terms helper semantic child locator')
+  return offenders
+}
+
 test('[E2E-Helper][import-preview-details] contract catches current impact-tag toggle copy', () => {
   assert.deepEqual(
     directForbiddenButtonNames("await page.getByRole('button', { name: '影響タグを全件表示' }).click()"),
@@ -104,6 +115,18 @@ test('[E2E-Helper][import-preview-details] contract catches CSS id and data-test
   )
 })
 
+test('[E2E-Helper][import-preview-details] contract catches terms semantic child locator bypasses', () => {
+  assert.deepEqual(
+    directForbiddenTermsSemantics(`
+      await expect(importPreviewTermsHelper(page).locator('dt')).toHaveText(['削除予定'])
+      const helper = importPreviewTermsHelper(page)
+      await expect(helper.locator('dd')).toHaveText(['説明'])
+    `),
+    ['terms helper semantic child locator'],
+    'contract should catch direct dl child locators so semantic terms stay centralized in helpers',
+  )
+})
+
 test('[E2E-Helper][import-preview-details] E2E specs use shared direction/tag/terms helpers', async () => {
   const offenders = []
   const specs = await listE2eSpecs(testsRoot)
@@ -115,6 +138,10 @@ test('[E2E-Helper][import-preview-details] E2E specs use shared direction/tag/te
     const usedHelpers = helperNames.filter((name) => new RegExp(`${name}\\(`).test(source))
 
     for (const label of directForbiddenDetailLocators(source)) {
+      offenders.push(`${relativePath(specUrl)}: direct import preview ${label}`)
+    }
+
+    for (const label of directForbiddenTermsSemantics(source)) {
       offenders.push(`${relativePath(specUrl)}: direct import preview ${label}`)
     }
 
@@ -149,6 +176,7 @@ test('[E2E-Helper][import-preview-details] helpers own direction/tag/terms test 
     ['importPreviewImpactTags', 'import-preview-impact-tags'],
     ['importPreviewToggleImpactTags', 'import-preview-toggle-impact-tags'],
     ['importPreviewTermsHelper', 'import-preview-terms-helper'],
+    ['importPreviewTerms', 'import-preview-terms-helper'],
     ['importPreviewToggleTermsHelper', 'import-preview-toggle-terms-helper'],
   ]
 

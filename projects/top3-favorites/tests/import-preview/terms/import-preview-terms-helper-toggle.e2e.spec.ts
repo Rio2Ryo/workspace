@@ -1,5 +1,7 @@
 import { expect, test } from '@playwright/test'
 import {
+  importPreviewTermDescriptions,
+  importPreviewTermNames,
   importPreviewTermsHelper,
   importPreviewToggleTermsHelper,
   resetItemsByDelete,
@@ -29,9 +31,8 @@ test('impact terms helper is collapsed by default and can be expanded/collapsed'
   await expect(importPreviewTermsHelper(page)).toHaveCount(0)
 
   await importPreviewToggleTermsHelper(page).click()
-  const helper = importPreviewTermsHelper(page)
-  await expect(helper.locator('dt')).toHaveText(['削除予定', '正規化除外'])
-  await expect(helper.locator('dd')).toHaveText([
+  await expect(importPreviewTermNames(page)).toHaveText(['削除予定', '正規化除外'])
+  await expect(importPreviewTermDescriptions(page)).toHaveText([
     '現在DBにあるが、インポート後データに含まれない項目',
     'インポートJSON内で同一タグTop3に収まらず取り込まれない項目',
   ])
