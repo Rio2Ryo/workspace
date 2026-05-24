@@ -257,10 +257,11 @@ img { display: block; max-width: 100%; }
   border: 1px solid #f0ece5;
 }
 .bcard .bhead { display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; }
-.bcard .bco { font-size: 12px; font-weight: 600; margin-bottom: 6px; }
+.bcard .bhead > div { min-width: 0; }
+.bcard .bco { font-size: 12px; font-weight: 600; margin-bottom: 6px; white-space: nowrap; word-break: keep-all; }
 .bcard .bdept { font-size: 9.5px; color: var(--ink-mute); letter-spacing: 0.08em; }
-.bcard .bname { font-size: 22px; font-weight: 700; line-height: 1.1; margin-top: 8px; letter-spacing: 0.02em; }
-.bcard .bname-en { font-size: 9.5px; color: var(--ink-mute); margin-top: 4px; letter-spacing: 0.08em; }
+.bcard .bname { font-size: 22px; font-weight: 700; line-height: 1.1; margin-top: 8px; letter-spacing: 0.02em; white-space: nowrap; word-break: keep-all; }
+.bcard .bname-en { font-size: 9.5px; color: var(--ink-mute); margin-top: 4px; letter-spacing: 0.08em; white-space: nowrap; }
 .bcard .bmeta { font-size: 9px; color: var(--ink-soft); line-height: 1.7; font-family: 'Inter', sans-serif; }
 .bcard .logo-mini { height: 22px; width: auto; }
 
@@ -302,7 +303,14 @@ img { display: block; max-width: 100%; }
 .app-ic.a3 { background: linear-gradient(135deg,#d8c0a3,#a07a4a); }
 .app-ic.a4 { background: var(--orange); color: white; }
 .app-meta { flex: 1; min-width: 0; }
-.app-meta strong { display: block; font-size: 10px; font-weight: 700; }
+.app-meta strong,
+.app-meta span {
+  display: block;
+  white-space: nowrap;
+  word-break: keep-all;
+  overflow-wrap: normal;
+}
+.app-meta strong { font-size: 10px; font-weight: 700; }
 .app-meta span { font-size: 8.5px; color: var(--ink-mute); }
 .app-row .chev { color: var(--ink-mute); font-size: 11px; }
 
@@ -1178,17 +1186,22 @@ html, body { overflow-x: hidden; }
   .hero-stage { aspect-ratio: auto; min-height: 360px; border-radius: 18px; }
   .hero-stage .bcard.b1 { width: 210px; top: 8%; left: 5%; }
   .hero-stage .bcard.b2 { width: 205px; bottom: 11%; left: 8%; }
-  .hero-stage .phone { width: 118px; height: 246px; right: 4%; bottom: 7%; }
-  .bcard { padding: 16px 18px; }
+  .hero-stage .phone { width: 148px; height: 300px; right: 2%; bottom: 6%; }
+  .bcard { padding: 15px 16px; }
+  .bcard .bhead { gap: 8px; }
   .bcard .bco { font-size: 10.5px; }
   .bcard .bname { font-size: 18px; }
-  .bcard .logo-mini { height: 18px !important; }
+  .bcard .logo-mini { height: 15px !important; }
   .phone { border-radius: 26px; }
   .phone .scr { border-radius: 21px; }
   .phone::before { width: 44px; height: 11px; }
-  .app-ic { width: 31px; height: 31px; border-radius: 8px; }
-  .phone-content { padding: 6px 9px 9px; }
-  .app-row { gap: 8px; padding: 7px 3px; }
+  .phone .topbar { height: 25px; padding: 0 14px; font-size: 9px; }
+  .phone-title { font-size: 10px; margin-bottom: 6px; }
+  .app-ic { width: 25px; height: 25px; border-radius: 7px; }
+  .phone-content { padding: 6px 7px 8px; }
+  .app-row { gap: 5px; padding: 6px 2px; }
+  .app-meta strong { font-size: 9px; }
+  .app-meta span { font-size: 7.5px; }
 
   .industry-strip { margin: 18px 0; padding: 16px; border-radius: 18px; }
 
