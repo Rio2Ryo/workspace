@@ -22,6 +22,7 @@ import {
   importValidationCollapsedRepairStatus,
   importValidationExpandedRepairStatus,
   importValidationAnyRepairStatus,
+  operationAlert,
   resetItemsByReplace,
   uploadJsonImportFile,
 } from './e2e-helpers'
@@ -46,6 +47,7 @@ test('import validation error identifies the first invalid row and field for qui
   await expectOperationAlert(page, 
     'インポート失敗: ファイル「invalid-import-field-details.json」の2件目 / フィールド: tag / 修正: タグを入力してください。既存データは保持しました。',
   )
+  await expect(operationAlert(page)).toBeFocused()
   const details = importValidationErrorDetails(page)
   await expect(details).toBeVisible()
   await expect(details).toHaveAttribute('aria-label', 'インポートエラーの修正情報')

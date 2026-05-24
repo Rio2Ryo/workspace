@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from 'react'
+import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
 import { IMPORT_PREVIEW_SUMMARY_SCHEMA, IMPORT_PREVIEW_SUMMARY_VERSION } from './shared/import-preview-summary-contract.mjs'
 import { normalizeTagKey, normalizeTagText } from './shared/tag-normalization.mjs'
 
@@ -340,6 +340,7 @@ export function App() {
   const [isImpactTermsHelperExpanded, setIsImpactTermsHelperExpanded] = useState(false)
   const fileRef = useRef<HTMLInputElement | null>(null)
   const tagInputRef = useRef<HTMLInputElement | null>(null)
+  const errorAlertRef = useRef<HTMLDivElement | null>(null)
 
   const clearFeedback = (options?: { pendingImport?: boolean }) => {
     setError('')
@@ -395,6 +396,11 @@ export function App() {
     }, 3000)
     return () => window.clearTimeout(id)
   }, [notice])
+
+  useLayoutEffect(() => {
+    if (!error) return
+    errorAlertRef.current?.focus()
+  }, [error])
 
   const isImportPreviewActive = !!pendingImport
 
@@ -1001,7 +1007,7 @@ export function App() {
           <button className="ghost" onClick={addSamples} disabled={isSaving || !!pendingImport} aria-describedby={importLockDescriptionId}>サンプルをDB保存</button>
           {loadError && <button className="ghost" onClick={retryLoadItems} disabled={isLoading}>データを再読み込み</button>}
           {error && (
-            <div className="error" role="alert">
+            <div className="error" role="alert" ref={errorAlertRef} tabIndex={-1}>
               <p>{error}</p>
               {importValidationIssue && error.includes(importValidationIssue.message) && (
                 <div
