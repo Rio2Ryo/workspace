@@ -999,7 +999,7 @@ export function App() {
             <h2>登録する</h2>
             <p className="hint">登録済みタグはポチッと選択。なければ入力すると新規タグになります。</p>
           </div>
-          <span className={isLoading ? 'status loading' : 'status'}>{isLoading ? 'DB読込中' : 'DB保存'}</span>
+          <span data-testid="db-persistence-status" className={isLoading ? 'status loading' : 'status'}>{isLoading ? 'DB読込中' : 'DB保存'}</span>
         </div>
 
         <TagPicker label="登録タグ選択" tags={tags} activeTag={draft.tag} selectedTag={selectedTag} onSelect={selectTag} onClear={clearSelectedTag} />

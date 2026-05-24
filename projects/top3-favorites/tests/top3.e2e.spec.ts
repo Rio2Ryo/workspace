@@ -1,5 +1,6 @@
 import { expect, test } from '@playwright/test'
 import {
+  dbPersistenceStatus,
   expectOperationStatus,
   rankedItemSummaryByName,
   registrationLocationField,
@@ -27,7 +28,7 @@ test('sample data can be saved, searched, and ranked through the real UI/API', a
   page.on('pageerror', (error) => errors.push(error.message))
 
   await page.goto('/')
-  await expect(page.locator('.status', { hasText: 'DB保存' })).toBeVisible()
+  await expect(dbPersistenceStatus(page)).toContainText('DB保存')
 
   await saveSampleItems(page)
   await expect(tagHeading(page, 'カフェラテ')).toBeVisible()

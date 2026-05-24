@@ -111,6 +111,10 @@ export async function clickSampleSaveButton(page: Page): Promise<void> {
   await sampleSaveButton(page).click()
 }
 
+export function dbPersistenceStatus(page: Page): Locator {
+  return page.getByTestId('db-persistence-status')
+}
+
 export function operationStatus(page: Page): Locator {
   return page.getByRole('status')
 }

@@ -1,4 +1,5 @@
 import { expect, test, type Page } from '@playwright/test'
+import { dbPersistenceStatus } from './e2e-helpers'
 
 function installFatalBrowserErrorCapture(page: Page) {
   const fatalErrors: string[] = []
@@ -28,7 +29,7 @@ test('startup renders without fatal console or page errors', async ({ page }) =>
 
   await page.goto('/')
 
-  await expect(page.locator('.status', { hasText: 'DB保存' })).toBeVisible()
+  await expect(dbPersistenceStatus(page)).toContainText('DB保存')
   await expect(page.getByRole('heading', { name: '好きな店を、タグ別Top3で残す' })).toBeVisible()
   expect(fatalErrors).toEqual([])
 })
