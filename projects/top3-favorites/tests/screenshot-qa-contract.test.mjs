@@ -9,7 +9,7 @@ const readme = await readFile(new URL('../README.md', import.meta.url), 'utf8')
 test('[QA][screenshots] package exposes automated screenshot smoke capture and includes it in full verification', () => {
   assert.equal(
     packageJson.scripts['test:screenshots'],
-    'playwright test tests/screenshot-smoke.e2e.spec.ts',
+    'node scripts/run-playwright-clean.mjs tests/screenshot-smoke.e2e.spec.ts',
     'package.json should expose a focused screenshot smoke command',
   )
   assert.match(

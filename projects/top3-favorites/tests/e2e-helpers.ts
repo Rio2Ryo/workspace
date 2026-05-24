@@ -1,4 +1,5 @@
 import { readFile } from 'node:fs/promises'
+import { setTimeout as delay } from 'node:timers/promises'
 import { expect, type APIRequestContext, type APIResponse, type Dialog, type Download, type Locator, type Page } from '@playwright/test'
 import { validateImportPreviewSummary } from '../src/shared/import-preview-summary-contract.mjs'
 
@@ -21,6 +22,21 @@ type ApiItemsMutationOptions = {
   expectedStatus?: number
 }
 
+export async function retryLoopbackRequest<T>(operation: () => Promise<T>, attempts = 20): Promise<T> {
+  let lastError: unknown
+  for (let attempt = 0; attempt < attempts; attempt += 1) {
+    try {
+      return await operation()
+    } catch (error) {
+      lastError = error
+      const message = error instanceof Error ? error.message : String(error)
+      if (!message.includes('EADDRNOTAVAIL') || attempt === attempts - 1) break
+      await delay(250 * (attempt + 1))
+    }
+  }
+  throw lastError
+}
+
 export async function resetItemsByReplace(request: APIRequestContext, items: unknown[] = []) {
   await replaceItems(request, { items })
 }
@@ -30,7 +46,7 @@ export async function resetItemsByDelete(request: APIRequestContext) {
 }
 
 export async function fetchItems<T = { items: unknown[] }>(request: APIRequestContext): Promise<T> {
-  const response = await request.get('/api/items')
+  const response = await retryLoopbackRequest(() => request.get('/api/items'))
   expect(response.ok(), 'fetchItems should read the current /api/items state before assertions').toBe(true)
   return (await response.json()) as T
 }
@@ -78,7 +94,7 @@ export async function postItem(
   data: unknown,
   { expectedStatus = 200 }: ApiItemsMutationOptions = {},
 ): Promise<APIResponse> {
-  const response = await request.post('/api/items', { data })
+  const response = await retryLoopbackRequest(() => request.post('/api/items', { data }))
   expect(response.status(), 'postItem should receive the expected /api/items create status before the test continues').toBe(expectedStatus)
   return response
 }
@@ -88,7 +104,7 @@ export async function putItem(
   data: unknown,
   { expectedStatus = 200 }: ApiItemsMutationOptions = {},
 ): Promise<APIResponse> {
-  const response = await request.put('/api/items', { data })
+  const response = await retryLoopbackRequest(() => request.put('/api/items', { data }))
   expect(response.status(), 'putItem should receive the expected /api/items edit status before the test continues').toBe(expectedStatus)
   return response
 }
@@ -98,7 +114,7 @@ export async function replaceItems(
   data: unknown,
   { expectedStatus = 200 }: ApiItemsMutationOptions = {},
 ): Promise<APIResponse> {
-  const response = await request.post('/api/items?mode=replace', { data })
+  const response = await retryLoopbackRequest(() => request.post('/api/items?mode=replace', { data }))
   expect(response.status(), 'replaceItems should receive the expected /api/items replace status before the test continues').toBe(expectedStatus)
   return response
 }
@@ -129,6 +145,10 @@ export function operationAlert(page: Page): Locator {
 
 export async function expectOperationAlert(page: Page, text: string | RegExp): Promise<void> {
   await expect(operationAlert(page)).toContainText(text)
+}
+
+export async function expectOperationAlertText(page: Page, text: string | RegExp): Promise<void> {
+  await expect(operationAlert(page)).toHaveText(text)
 }
 
 export async function saveSampleItems(page: Page): Promise<void> {

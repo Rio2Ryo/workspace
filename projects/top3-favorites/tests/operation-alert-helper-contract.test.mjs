@@ -28,7 +28,7 @@ function relativePath(url) {
 }
 
 function importsOperationAlertHelper(source) {
-  return /import \{[^}]*(?:operationAlert|expectOperationAlert)[^}]*\} from '(?:\.\/|\.\.\/)*e2e-helpers'/.test(source)
+  return /import \{[^}]*(?:operationAlert|expectOperationAlert|expectOperationAlertText)[^}]*\} from '(?:\.\/|\.\.\/)*e2e-helpers'/.test(source)
 }
 
 test('[E2E-Helper][operation-alert] E2E specs use shared operation alert helpers', async () => {
@@ -65,4 +65,6 @@ test('[E2E-Helper][operation-alert] helper owns alert live-region locator and te
   assert.match(source, /getByRole\(['"]alert['"]\)/, 'operationAlert should own the role=alert locator')
   assert.match(source, /export async function expectOperationAlert/, 'tests/e2e-helpers.ts should export expectOperationAlert(page, text)')
   assert.match(source, /expectOperationAlert[\s\S]*operationAlert\(page\)[\s\S]*toContainText\(text\)/, 'expectOperationAlert should assert text through operationAlert(page)')
+  assert.match(source, /export async function expectOperationAlertText/, 'tests/e2e-helpers.ts should export expectOperationAlertText(page, text)')
+  assert.match(source, /expectOperationAlertText[\s\S]*operationAlert\(page\)[\s\S]*toHaveText\(text\)/, 'expectOperationAlertText should assert exact alert text through operationAlert(page)')
 })

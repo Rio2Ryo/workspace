@@ -3,6 +3,16 @@ import { setTimeout as delay } from 'node:timers/promises'
 import { fileURLToPath } from 'node:url'
 
 const DEFAULT_PORT = 4180
+const DYNAMIC_PORT_BASE = 4200
+const DYNAMIC_PORT_SPAN = 1000
+
+export function dynamicPreviewPort({ pid = process.pid } = {}) {
+  return DYNAMIC_PORT_BASE + (Number(pid) % DYNAMIC_PORT_SPAN)
+}
+
+export function resolvePreviewPort(env = process.env, { pid = process.pid } = {}) {
+  return Number.parseInt(env.E2E_PREVIEW_PORT || env.PORT || `${dynamicPreviewPort({ pid })}`, 10)
+}
 
 export function staleProcessCleanupPatterns() {
   return [
@@ -31,6 +41,47 @@ function execFileText(command, args, options = {}) {
         return
       }
       resolve(String(stdout || ''))
+    })
+  })
+}
+
+function startPreviewServer(port, { log = console.error } = {}) {
+  return new Promise((resolve, reject) => {
+    const child = spawn('sh', ['-c', `rm -f data.local.json && pnpm build && HOST=::1 PORT=${port} node scripts/preview-local.mjs`], {
+      stdio: ['ignore', 'pipe', 'pipe'],
+      shell: false,
+    })
+    let settled = false
+    const failTimer = setTimeout(() => {
+      if (settled) return
+      settled = true
+      child.kill()
+      reject(new Error(`preview server did not announce readiness on ${port}`))
+    }, 120_000)
+
+    const handleOutput = (chunk) => {
+      const text = String(chunk)
+      log(text.trimEnd())
+      if (!settled && text.includes('[top3-local]')) {
+        settled = true
+        clearTimeout(failTimer)
+        resolve(child)
+      }
+    }
+
+    child.stdout.on('data', handleOutput)
+    child.stderr.on('data', handleOutput)
+    child.on('error', (error) => {
+      if (settled) return
+      settled = true
+      clearTimeout(failTimer)
+      reject(error)
+    })
+    child.on('close', (code) => {
+      if (settled) return
+      settled = true
+      clearTimeout(failTimer)
+      reject(new Error(`preview server exited before readiness with code ${code ?? 1}`))
     })
   })
 }
@@ -98,20 +149,26 @@ export async function cleanupPreviewPort({ port = DEFAULT_PORT, log = console.er
 }
 
 export async function runPlaywrightClean(args = process.argv.slice(2), options = {}) {
-  const port = Number.parseInt(process.env.E2E_PREVIEW_PORT || process.env.PORT || `${DEFAULT_PORT}`, 10)
+  const port = resolvePreviewPort(process.env)
   const log = options.log || console.error
 
   await cleanupStaleProcessFamilies({ log })
   await cleanupPreviewPort({ port, log })
+  const server = await startPreviewServer(port, { log })
   const pnpmArgs = buildPlaywrightArgs(args)
   const result = await new Promise((resolve) => {
-    const child = spawn('pnpm', pnpmArgs, { stdio: 'inherit', shell: false })
+    const child = spawn('pnpm', pnpmArgs, {
+      stdio: 'inherit',
+      shell: false,
+      env: { ...process.env, HOST: '::1', PORT: String(port), PLAYWRIGHT_EXTERNAL_SERVER: '1' },
+    })
     child.on('close', (code, signal) => resolve({ code: code ?? 1, signal }))
     child.on('error', (error) => {
       log(`[top3-e2e-clean] failed to start playwright: ${error.message}`)
       resolve({ code: 1, signal: null })
     })
   })
+  server.kill()
   await cleanupPreviewPort({ port, log })
   await cleanupStaleProcessFamilies({ log })
   return result.code

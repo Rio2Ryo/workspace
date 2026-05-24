@@ -68,16 +68,19 @@ test('[E2E-Helper][api-items-mutation] E2E specs use shared mutation helpers for
 test('[E2E-Helper][api-items-mutation] helpers own /api/items writes and expected status assertions', async () => {
   const source = await readFile(helperPath, 'utf8')
 
+  assert.match(source, /export async function retryLoopbackRequest/, 'tests/e2e-helpers.ts should centralize transient loopback request retries')
+  assert.match(source, /retryLoopbackRequest[\s\S]*EADDRNOTAVAIL/, 'retry helper should specifically cover loopback ephemeral-port exhaustion')
+
   assert.match(source, /export async function postItem/, 'tests/e2e-helpers.ts should export postItem(request, data, options)')
-  assert.match(source, /postItem[\s\S]*await request\.post\(\s*['"]\/api\/items['"]/, 'postItem should own the raw create endpoint')
+  assert.match(source, /postItem[\s\S]*retryLoopbackRequest\([\s\S]*request\.post\(\s*['"]\/api\/items['"]/, 'postItem should own the raw create endpoint through the retry helper')
   assert.match(source, /postItem[\s\S]*expect\(response\.status\(\)[\s\S]*\)\.toBe\(expectedStatus\)/, 'postItem should assert the expected status')
 
   assert.match(source, /export async function putItem/, 'tests/e2e-helpers.ts should export putItem(request, data, options)')
-  assert.match(source, /putItem[\s\S]*await request\.put\(\s*['"]\/api\/items['"]/, 'putItem should own the raw edit endpoint')
+  assert.match(source, /putItem[\s\S]*retryLoopbackRequest\([\s\S]*request\.put\(\s*['"]\/api\/items['"]/, 'putItem should own the raw edit endpoint through the retry helper')
   assert.match(source, /putItem[\s\S]*expect\(response\.status\(\)[\s\S]*\)\.toBe\(expectedStatus\)/, 'putItem should assert the expected status')
 
   assert.match(source, /export async function replaceItems/, 'tests/e2e-helpers.ts should export replaceItems(request, data, options)')
-  assert.match(source, /replaceItems[\s\S]*await request\.post\(\s*['"]\/api\/items\?mode=replace['"]/, 'replaceItems should own the raw replace endpoint')
+  assert.match(source, /replaceItems[\s\S]*retryLoopbackRequest\([\s\S]*request\.post\(\s*['"]\/api\/items\?mode=replace['"]/, 'replaceItems should own the raw replace endpoint through the retry helper')
   assert.match(source, /replaceItems[\s\S]*expect\(response\.status\(\)[\s\S]*\)\.toBe\(expectedStatus\)/, 'replaceItems should assert the expected status')
 })
 

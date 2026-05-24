@@ -66,8 +66,18 @@ test('[E2E-Helper][api-items] helper owns /api/items GET and ok assertion', asyn
   assert.match(source, /export async function fetchItems/, 'tests/e2e-helpers.ts should export fetchItems(request)')
   assert.match(
     source,
-    /fetchItems[\s\S]*await request\.get\(\s*['"]\/api\/items['"]\s*\)/,
-    'fetchItems should own the raw /api/items GET endpoint',
+    /export async function retryLoopbackRequest/,
+    'tests/e2e-helpers.ts should centralize transient loopback request retries',
+  )
+  assert.match(
+    source,
+    /retryLoopbackRequest[\s\S]*EADDRNOTAVAIL/,
+    'retry helper should specifically cover loopback ephemeral-port exhaustion',
+  )
+  assert.match(
+    source,
+    /fetchItems[\s\S]*retryLoopbackRequest\([\s\S]*request\.get\(\s*['"]\/api\/items['"]\s*\)/,
+    'fetchItems should own the raw /api/items GET endpoint through the retry helper',
   )
   assert.match(
     source,
