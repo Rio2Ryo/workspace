@@ -1448,6 +1448,8 @@ test('[Manual][automation-link] export blocked-download checklist item has direc
 
   assert.match(block, /自動確認:/, contractMessage({ scope: 'Manual', rule: 'export blocked-download checklist item has direct automated link', expected: item, fix: 'add an indented 自動確認 line directly under this JSON export manual checklist item' }))
   assert.ok(block.includes('手動保存用JSON'), contractMessage({ scope: 'Manual', rule: 'export blocked-download checklist documents manual save fallback', expected: '手動保存用JSON', fix: 'mention the manual JSON save fallback in docs/MANUAL_TEST_CHECKLIST.md' }))
+  assert.ok(block.includes('手動保存JSONをコピー'), contractMessage({ scope: 'Manual', rule: 'export blocked-download checklist documents manual export copy action', expected: '手動保存JSONをコピー', fix: 'mention the manual export JSON copy action in docs/MANUAL_TEST_CHECKLIST.md' }))
+  assert.ok(block.includes('再インポート'), contractMessage({ scope: 'Manual', rule: 'export blocked-download checklist documents recovery roundtrip', expected: '再インポート', fix: 'mention that the manual export JSON can be imported again' }))
   assert.ok(block.includes('`tests/import-export-failure-browser-storage-api-drift-diagnostic.e2e.spec.ts`'), contractMessage({ scope: 'Manual', rule: 'export blocked-download checklist cites authoritative spec', expected: 'tests/import-export-failure-browser-storage-api-drift-diagnostic.e2e.spec.ts', fix: 'link the blocked-download diagnostic E2E under the export fallback checklist item' }))
 })
 

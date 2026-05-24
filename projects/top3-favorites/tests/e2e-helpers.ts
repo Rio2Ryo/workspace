@@ -378,6 +378,10 @@ export function manualExportJsonText(page: Page): Locator {
   return page.getByLabel('手動保存用JSON')
 }
 
+export function manualExportCopyButton(page: Page): Locator {
+  return page.getByRole('button', { name: '手動保存JSONをコピー' })
+}
+
 export function importValidationFieldSummary(page: Page): Locator {
   return page.getByTestId('import-validation-field-summary')
 }

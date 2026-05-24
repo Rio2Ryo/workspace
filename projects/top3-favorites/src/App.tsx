@@ -773,6 +773,22 @@ export function App() {
     }
   }
 
+  const copyManualExportJson = async () => {
+    if (!manualExport) return
+    try {
+      await navigator.clipboard.writeText(manualExport.text)
+      setError('')
+      setNotice('手動保存JSONをコピーしました。')
+    } catch {
+      setError('')
+      setNotice('手動保存JSONをコピーできませんでした。選択済みのJSONを手動でコピーしてください。')
+      requestAnimationFrame(() => {
+        manualExportRef.current?.focus()
+        manualExportRef.current?.select()
+      })
+    }
+  }
+
   const triggerImport = () => {
     clearFeedback()
     setEditingId(null)
@@ -1161,9 +1177,10 @@ export function App() {
             </label>
           )}
           {manualExport && (
-            <label className="manual-export-json">
-              手動保存用JSON
+            <div className="manual-export-json">
+              <label htmlFor="manual-export-json-text">手動保存用JSON</label>
               <textarea
+                id="manual-export-json-text"
                 ref={manualExportRef}
                 readOnly
                 rows={Math.min(10, Math.max(4, manualExport.text.split('\n').length))}
@@ -1173,7 +1190,8 @@ export function App() {
               <span id="manual-export-json-hint" className="hint compact">
                 推奨ファイル名: {manualExport.filename}。このJSONをコピーして、同名の .json ファイルとして保存してください。
               </span>
-            </label>
+              <button type="button" className="ghost" onClick={copyManualExportJson}>手動保存JSONをコピー</button>
+            </div>
           )}
         </div>
       </section>
