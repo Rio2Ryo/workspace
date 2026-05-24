@@ -84,6 +84,27 @@ test('import validation error identifies the first invalid row and field for qui
   await expect(importPreviewSummary(page)).toHaveCount(0)
 })
 
+test('reselecting the same invalid import returns focus to the unchanged alert', async ({ page }) => {
+  await page.goto('/')
+
+  const now = '2026-05-18T00:00:00.000Z'
+  const invalidItems = [
+    { id: 'invalid-refocus-1', tag: '   ', location: '柏の葉', name: 'Invalid Refocus Shop', rank: 1, memo: '', mapsUrl: '', placeId: '', createdAt: now, updatedAt: now },
+  ]
+
+  await uploadJsonImportFile(page, 'invalid-import-refocus.json', invalidItems)
+
+  await expectOperationAlert(page, 'インポート失敗: ファイル「invalid-import-refocus.json」の1件目 / フィールド: tag / 修正: タグを入力してください。既存データは保持しました。')
+  await expect(operationAlert(page)).toBeFocused()
+  await importValidationRetryImportButton(page).focus()
+  await expect(importValidationRetryImportButton(page)).toBeFocused()
+
+  await uploadJsonImportFile(page, 'invalid-import-refocus.json', invalidItems)
+
+  await expectOperationAlert(page, 'インポート失敗: ファイル「invalid-import-refocus.json」の1件目 / フィールド: tag / 修正: タグを入力してください。既存データは保持しました。')
+  await expect(operationAlert(page)).toBeFocused()
+})
+
 test('import validation retry action reopens file selection and replaces the stale error with a valid preview', async ({ page }) => {
   await page.goto('/')
 

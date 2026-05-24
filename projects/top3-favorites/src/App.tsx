@@ -406,7 +406,7 @@ export function App() {
   useLayoutEffect(() => {
     if (!error) return
     errorAlertRef.current?.focus()
-  }, [error])
+  }, [error, importValidationIssue])
 
   useEffect(() => {
     if (!clipboardFallback) return
