@@ -39,7 +39,11 @@ test('[E2E-Helper][import-preview-panel] E2E specs use shared import preview pan
 
   for (const specUrl of specs) {
     const source = await readFile(specUrl, 'utf8')
-    const usesDirectPanel = /getByLabel\(['"]インポート確認['"]\)/.test(source)
+    const directPanelPatterns = [
+      /getByLabel\(['"]インポート確認['"]\)/,
+      /locator\(['"]\[aria-label=(?:\\['"]|['"])インポート確認(?:\\['"]|['"])\]['"]\)/,
+    ]
+    const usesDirectPanel = directPanelPatterns.some((pattern) => pattern.test(source))
     const usesPanelHelper = /importPreviewPanel\(/.test(source)
 
     if (usesDirectPanel) {

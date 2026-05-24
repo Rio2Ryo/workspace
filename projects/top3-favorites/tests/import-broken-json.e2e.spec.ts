@@ -1,6 +1,7 @@
 import { expect, test } from '@playwright/test'
 import {
   expectOperationAlert,
+  importPreviewPanel,
   rankedItemSummary,
   resetItemsByReplace,
   saveSampleItems,
@@ -23,5 +24,5 @@ test('importing broken JSON shows parse error and keeps existing data (fail-clos
   const searchSection = searchSectionLocator(page)
   await expect(rankedItemSummary(searchSection, 1, 'Solito MAGO')).toBeVisible()
   await expect(rankedItemSummary(searchSection, 2, 'T-SITEのカフェ')).toBeVisible()
-  await expect(page.locator('[aria-label="インポート確認"]')).not.toBeVisible()
+  await expect(importPreviewPanel(page)).not.toBeVisible()
 })

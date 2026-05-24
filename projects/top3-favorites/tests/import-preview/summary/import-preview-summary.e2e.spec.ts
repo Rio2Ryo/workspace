@@ -2,6 +2,7 @@ import { expect, test } from '@playwright/test'
 import {
   fetchItems,
   importPreviewImpactTags,
+  importPreviewPanel,
   resetItemsByReplace,
   saveSampleItems,
   uploadJsonImportFile,
@@ -43,7 +44,7 @@ test('import confirmation summarizes added removed kept items and tag impact', a
 
   await uploadJsonImportFile(page, 'impact-import.json', replacement)
 
-  const preview = page.locator('[aria-label="インポート確認"]')
+  const preview = importPreviewPanel(page)
   await expect(preview).toContainText('現在3件 → インポート後2件')
   await expect(preview).toContainText('追加1件 / 更新・保持1件 / 削除予定2件')
   const tags = importPreviewImpactTags(page)
