@@ -65,6 +65,14 @@ export async function installClipboardRejector(page: Page): Promise<void> {
   })
 }
 
+export async function installExportDownloadBlocker(page: Page): Promise<void> {
+  await page.evaluate(() => {
+    URL.createObjectURL = () => {
+      throw new DOMException('Object URL creation blocked in this browser context', 'NotAllowedError')
+    }
+  })
+}
+
 export async function postItem(
   request: APIRequestContext,
   data: unknown,
@@ -364,6 +372,10 @@ export function importValidationRetryImportButton(page: Page): Locator {
 
 export function clipboardFallbackText(page: Page): Locator {
   return page.getByLabel('手動コピー用テキスト')
+}
+
+export function manualExportJsonText(page: Page): Locator {
+  return page.getByLabel('手動保存用JSON')
 }
 
 export function importValidationFieldSummary(page: Page): Locator {

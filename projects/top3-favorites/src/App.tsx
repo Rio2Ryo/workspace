@@ -333,6 +333,7 @@ export function App() {
   const [pendingImport, setPendingImport] = useState<PendingImport | null>(null)
   const [importValidationIssue, setImportValidationIssue] = useState<ImportValidationIssue | null>(null)
   const [clipboardFallback, setClipboardFallback] = useState<{ label: string; text: string } | null>(null)
+  const [manualExport, setManualExport] = useState<{ filename: string; text: string } | null>(null)
   const [selectedImportValidationField, setSelectedImportValidationField] = useState('')
   const [isImportValidationRepairListExpanded, setIsImportValidationRepairListExpanded] = useState(false)
   const [isImpactTagsExpanded, setIsImpactTagsExpanded] = useState(false)
@@ -343,11 +344,13 @@ export function App() {
   const tagInputRef = useRef<HTMLInputElement | null>(null)
   const errorAlertRef = useRef<HTMLDivElement | null>(null)
   const clipboardFallbackRef = useRef<HTMLTextAreaElement | null>(null)
+  const manualExportRef = useRef<HTMLTextAreaElement | null>(null)
 
   const clearFeedback = (options?: { pendingImport?: boolean }) => {
     setError('')
     setNotice('')
     setClipboardFallback(null)
+    setManualExport(null)
     setImportValidationIssue(null)
     setSelectedImportValidationField('')
     setIsImportValidationRepairListExpanded(false)
@@ -410,6 +413,12 @@ export function App() {
     clipboardFallbackRef.current?.focus()
     clipboardFallbackRef.current?.select()
   }, [clipboardFallback])
+
+  useEffect(() => {
+    if (!manualExport) return
+    manualExportRef.current?.focus()
+    manualExportRef.current?.select()
+  }, [manualExport])
 
   const isImportPreviewActive = !!pendingImport
 
@@ -737,18 +746,31 @@ export function App() {
   }
 
   const exportJson = () => {
-    const blob = new Blob([JSON.stringify(items, null, 2)], { type: 'application/json' })
-    const url = URL.createObjectURL(blob)
-    const a = document.createElement('a')
+    const text = JSON.stringify(items, null, 2)
     const stamp = new Date().toISOString().slice(0, 19).replace(/[:T]/g, '-')
-    a.href = url
-    a.download = `top3-favorites-${stamp}.json`
-    document.body.appendChild(a)
-    a.click()
-    document.body.removeChild(a)
-    URL.revokeObjectURL(url)
-    setError('')
-    setNotice('JSONをエクスポートしました。')
+    const filename = `top3-favorites-${stamp}.json`
+    let url: string | null = null
+    let a: HTMLAnchorElement | null = null
+
+    try {
+      const blob = new Blob([text], { type: 'application/json' })
+      url = URL.createObjectURL(blob)
+      a = document.createElement('a')
+      a.href = url
+      a.download = filename
+      document.body.appendChild(a)
+      a.click()
+      setError('')
+      setManualExport(null)
+      setNotice('JSONをエクスポートしました。')
+    } catch {
+      setError('')
+      setManualExport({ filename, text })
+      setNotice('JSONファイルを自動保存できませんでした。下のJSONをコピーして手動で保存してください。')
+    } finally {
+      if (a?.parentNode) a.parentNode.removeChild(a)
+      if (url) URL.revokeObjectURL(url)
+    }
   }
 
   const triggerImport = () => {
@@ -1135,6 +1157,21 @@ export function App() {
               />
               <span id="clipboard-fallback-hint" className="hint compact">
                 {clipboardFallback.label}を選択済みです。ブラウザのコピー制限が出る場合は、この欄を手動でコピーしてください。
+              </span>
+            </label>
+          )}
+          {manualExport && (
+            <label className="manual-export-json">
+              手動保存用JSON
+              <textarea
+                ref={manualExportRef}
+                readOnly
+                rows={Math.min(10, Math.max(4, manualExport.text.split('\n').length))}
+                value={manualExport.text}
+                aria-describedby="manual-export-json-hint"
+              />
+              <span id="manual-export-json-hint" className="hint compact">
+                推奨ファイル名: {manualExport.filename}。このJSONをコピーして、同名の .json ファイルとして保存してください。
               </span>
             </label>
           )}

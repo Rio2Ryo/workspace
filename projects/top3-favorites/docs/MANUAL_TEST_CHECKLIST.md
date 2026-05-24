@@ -86,6 +86,11 @@
   - 期待: `top3-favorites-*.json` がダウンロードされる
   - 自動確認: `tests/import-export.e2e.spec.ts` と `tests/export-download-roundtrip.e2e.spec.ts` が実ダウンロードファイル名・JSON内容・roundtrip素材としての再利用を検証する
 
+- [ ] **JSONエクスポート自動保存ブロック**
+  - 手順: データが1件以上ある状態で、ブラウザ/端末の制限によりファイル自動保存がブロックされる環境で `JSONエクスポート` を押す
+  - 期待: アプリはクラッシュせず、`手動保存用JSON` のテキスト欄に現在DBと同じJSONが選択状態で表示される。推奨ファイル名を参考に `.json` として手動保存でき、APIとブラウザ側スナップショットは変化しない
+  - 自動確認: `tests/import-export-failure-browser-storage-api-drift-diagnostic.e2e.spec.ts` が自動保存ブロック時の手動保存用JSON fallback・フォーカス・API/ブラウザ側スナップショット不変を検証する
+
 - [ ] **JSONエクスポート対象0件**
   - 手順: データが0件の状態でトップ画面を開く
   - 期待: `JSONエクスポート` は無効化され、無効理由がボタンの説明として読める

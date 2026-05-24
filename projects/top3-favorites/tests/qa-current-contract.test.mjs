@@ -1441,6 +1441,16 @@ test('[Manual][automation-link] import validation failure checklist items have d
   }
 })
 
+test('[Manual][automation-link] export blocked-download checklist item has direct automated link', async () => {
+  const markdown = await readFile(new URL('docs/MANUAL_TEST_CHECKLIST.md', `${root}/`), 'utf8')
+  const item = '**JSONエクスポート自動保存ブロック**'
+  const block = manualChecklistItemBlock(markdown, item)
+
+  assert.match(block, /自動確認:/, contractMessage({ scope: 'Manual', rule: 'export blocked-download checklist item has direct automated link', expected: item, fix: 'add an indented 自動確認 line directly under this JSON export manual checklist item' }))
+  assert.ok(block.includes('手動保存用JSON'), contractMessage({ scope: 'Manual', rule: 'export blocked-download checklist documents manual save fallback', expected: '手動保存用JSON', fix: 'mention the manual JSON save fallback in docs/MANUAL_TEST_CHECKLIST.md' }))
+  assert.ok(block.includes('`tests/import-export-failure-browser-storage-api-drift-diagnostic.e2e.spec.ts`'), contractMessage({ scope: 'Manual', rule: 'export blocked-download checklist cites authoritative spec', expected: 'tests/import-export-failure-browser-storage-api-drift-diagnostic.e2e.spec.ts', fix: 'link the blocked-download diagnostic E2E under the export fallback checklist item' }))
+})
+
 test('[Manual][automation-link] import preview direction child items have direct automated links', async () => {
   const markdown = await readFile(new URL('docs/MANUAL_TEST_CHECKLIST.md', `${root}/`), 'utf8')
   const childContracts = [

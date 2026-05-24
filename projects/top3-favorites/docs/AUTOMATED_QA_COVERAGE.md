@@ -57,7 +57,7 @@
 - `tests/import-excluded-details-readable-format.e2e.spec.ts`
 - `tests/import-excluded-names-deterministic-order.e2e.spec.ts`
 - `tests/import-excluded-reasons-preview.e2e.spec.ts`
-- `tests/import-export-failure-localstorage-api-drift-diagnostic.e2e.spec.ts`
+- `tests/import-export-failure-browser-storage-api-drift-diagnostic.e2e.spec.ts`
 - `tests/import-export-rank-validation.e2e.spec.ts`
 - `tests/import-export-localstorage-api-drift-diagnostic.e2e.spec.ts`
 - `tests/import-export.e2e.spec.ts`
