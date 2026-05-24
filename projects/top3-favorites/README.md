@@ -72,6 +72,14 @@ pnpm test:import-preview-naming
 pnpm test:import-preview-summary
 ```
 
+### スクリーンショット smoke（レビュー用PNG取得）
+
+```bash
+pnpm test:screenshots
+```
+
+`test-results` に seeded list / import preview / import validation failure のPNGが残ります。実機確認前に、主要状態の画面崩れをローカルで素早く確認できます。
+
 ### フル検証（推奨）
 
 ```bash

@@ -151,6 +151,8 @@
 
 ### アクセシビリティ・フィードバック・Maps安全性
 
+- `tests/screenshot-smoke.e2e.spec.ts`
+  - seeded list / import preview / import validation failure の現行UIを `test-results` にPNG保存し、レビュー用スクリーンショット取得を自動化する。
 - `tests/error-clears-stale-success-notice.e2e.spec.ts`
 - `tests/feedback-accessibility.e2e.spec.ts`
 - `tests/item-action-accessibility.e2e.spec.ts`
@@ -180,7 +182,7 @@
 
 ## 手動に残す項目
 
-- 実機ブラウザでの見た目崩れ、タップしやすさ、スクリーンショット取得
+- 実機ブラウザでの見た目崩れ、タップしやすさ（スクリーンショットの初期確認は `pnpm test:screenshots` で自動取得）
 - DevTools固有表示・ブラウザ拡張起因の警告など、Playwright の `console.error` / `pageerror` 監視では拾えない実機差分
 - LP/紹介資料の文体・名称採用判断
 
@@ -190,6 +192,7 @@
 pnpm test:qa-current
 pnpm test:qa-docs
 pnpm test:copy-docs
+pnpm test:screenshots
 pnpm test:e2e
 pnpm build
 ```
