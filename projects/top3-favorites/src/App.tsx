@@ -1044,6 +1044,9 @@ export function App() {
                       </dd>
                     </div>
                   </dl>
+                  <div className="row no-margin">
+                    <button className="ghost" type="button" onClick={triggerImport}>修正したJSONを再選択</button>
+                  </div>
                   {importValidationFieldCounts.length > 1 && (
                     <div className="import-validation-field-summary" data-testid="import-validation-field-summary">
                       <p className="hint compact">フィールド別内訳</p>

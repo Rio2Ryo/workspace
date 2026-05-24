@@ -17,6 +17,7 @@ import {
   importValidationDetailValues,
   importValidationRepairHeading,
   importValidationRepairItems,
+  importValidationRetryImportButton,
   importValidationShowAllRepairs,
   importValidationCollapseRepairs,
   importValidationCollapsedRepairStatus,
@@ -79,6 +80,33 @@ test('import validation error identifies the first invalid row and field for qui
     'ファイル: invalid-import-field-details.json\n対象: 全2件\n2件目 / $.items[1].tag / tag / 入力値: "   " / タグを入力してください。\n3件目 / $.items[2].name / name / 入力値: "" / 店舗名を入力してください。',
   )
   await expect(importPreviewSummary(page)).toHaveCount(0)
+})
+
+test('import validation retry action reopens file selection and replaces the stale error with a valid preview', async ({ page }) => {
+  await page.goto('/')
+
+  const now = '2026-05-18T00:00:00.000Z'
+  await uploadJsonImportFile(page, 'invalid-import-retry.json', [
+    { id: 'invalid-retry-1', tag: '   ', location: '柏の葉', name: 'Invalid Retry Shop', rank: 1, memo: '', mapsUrl: '', placeId: '', createdAt: now, updatedAt: now },
+  ])
+
+  await expectOperationAlert(page, 'インポート失敗: ファイル「invalid-import-retry.json」の1件目 / フィールド: tag / 修正: タグを入力してください。既存データは保持しました。')
+  await expect(importValidationRetryImportButton(page)).toBeVisible()
+
+  const chooserPromise = page.waitForEvent('filechooser')
+  await importValidationRetryImportButton(page).click()
+  const chooser = await chooserPromise
+  await chooser.setFiles({
+    name: 'fixed-import-retry.json',
+    mimeType: 'application/json',
+    buffer: Buffer.from(JSON.stringify([
+      { id: 'fixed-retry-1', tag: 'カフェラテ', location: '柏の葉', name: 'Fixed Retry Shop', rank: 1, memo: '', mapsUrl: '', placeId: '', createdAt: now, updatedAt: now },
+    ]), 'utf-8'),
+  })
+
+  await expect(operationAlert(page)).toHaveCount(0)
+  await expect(importPreviewSummary(page)).toBeVisible()
+  await expect(importPreviewSummary(page)).toContainText('fixed-import-retry.json')
 })
 
 test('import validation field summary prioritizes repeated fields over first-seen order', async ({ page }) => {

@@ -345,6 +345,10 @@ export function importValidationCopyRepairList(page: Page): Locator {
   return importValidationErrorDetails(page).getByRole('button', { name: '修正対象一覧をコピー' })
 }
 
+export function importValidationRetryImportButton(page: Page): Locator {
+  return importValidationErrorDetails(page).getByRole('button', { name: '修正したJSONを再選択' })
+}
+
 export function importValidationFieldSummary(page: Page): Locator {
   return page.getByTestId('import-validation-field-summary')
 }

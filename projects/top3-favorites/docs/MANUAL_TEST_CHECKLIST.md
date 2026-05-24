@@ -103,8 +103,8 @@
 
 - [ ] **JSONインポート失敗（不正要素混在）**
   - 手順: 配列内に `id` 欠損・`rank: 4`・空タグなど不正要素を1件混ぜる
-  - 期待: 全体を反映しない（fail-closed）、既存データは保持され、エラーalertにフォーカスが移動する
-  - 自動確認: `tests/import-fail-closed-matrix.e2e.spec.ts`、`tests/import-export-rank-validation.e2e.spec.ts`、`tests/import-validation-error-details.e2e.spec.ts` が不正要素・rank範囲外・重複ID/行番号付きエラー・エラーalertへのフォーカス復帰を検証する
+  - 期待: 全体を反映しない（fail-closed）、既存データは保持され、エラーalertにフォーカスが移動する。さらにalert内の「修正したJSONを再選択」からそのまま修正版を選び直せる
+  - 自動確認: `tests/import-fail-closed-matrix.e2e.spec.ts`、`tests/import-export-rank-validation.e2e.spec.ts`、`tests/import-validation-error-details.e2e.spec.ts` が不正要素・rank範囲外・重複ID/行番号付きエラー・エラーalertへのフォーカス復帰・修正版JSONの再選択導線を検証する
 
 - [ ] **JSONインポート失敗（壊れたJSON）**
   - 手順: パース不能な文字列を `.json` として読み込む
