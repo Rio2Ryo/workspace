@@ -6,7 +6,7 @@ import {
   editNameField,
   editSaveButton,
   editTagField,
-  expectOperationAlert,
+  expectOperationAlertText,
   fetchItems,
   itemEditButton,
   operationAlert,
@@ -53,7 +53,7 @@ test('edit form validates required fields before saving', async ({ page }) => {
   await editNameField(page).fill('   ')
   await editSaveButton(page).click()
 
-  await expectOperationAlert(page, 'タグと店舗名は必須です。')
+  await expectOperationAlertText(page, 'タグと店舗名は必須です。')
   await expect(operationAlert(page)).toBeFocused()
   await expect(editNameField(page)).toBeVisible()
 

@@ -1,6 +1,6 @@
 import { expect, test } from '@playwright/test'
 import {
-  expectOperationAlert,
+  expectOperationAlertText,
   expectOperationStatus,
   operationAlert,
   operationStatus,
@@ -28,7 +28,7 @@ test('validation error clears stale success notice to avoid mixed feedback', asy
   await registrationNameField(page).fill('')
   await registrationSaveButton(page).click()
 
-  await expectOperationAlert(page, 'タグと店舗名は必須です。')
+  await expectOperationAlertText(page, 'タグと店舗名は必須です。')
   await expect(operationAlert(page)).toBeFocused()
   await expect(operationStatus(page)).toHaveCount(0)
 })
