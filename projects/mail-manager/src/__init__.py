@@ -1,0 +1,1 @@
+# mail-manager src package
