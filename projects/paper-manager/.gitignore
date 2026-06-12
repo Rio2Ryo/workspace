@@ -5,3 +5,7 @@ __pycache__/
 inbox/*.pdf
 processed/
 *.egg-info/
+.vercel
+.env*.local
+data/
+*.db

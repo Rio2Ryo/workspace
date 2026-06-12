@@ -152,7 +152,7 @@ test('shipping docs verifier can save a checklist JSON artifact', () => {
   assert.equal(checklist.checklist[1].ok, true);
   assert.equal(checklist.checklist[0].summary, 'verified 1 example(s)');
   assert.match(checklist.checklist[1].summary, /^\d+ file\(s\), 0 legacy hit\(s\)$/);
-  assert.equal(checklist.checklist[0].entries.length, 5);
+  assert.equal(checklist.checklist[0].entries.length, 6);
   assert.equal(checklist.checklist[1].matches.length, 0);
   assert.equal(checklist.checklist[0].entries.some((entry) => entry.name === 'discord-report-flat-api'), true);
   assert.equal(checklist.checklist[0].entries.some((entry) => entry.status === 'verified'), true);

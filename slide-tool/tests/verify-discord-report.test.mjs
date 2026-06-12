@@ -55,7 +55,9 @@ function generateVerifiedStudioReport(prefix, options = {}) {
     '--name',
     name,
     '--verify',
-  ]);
+  ], {
+    env: { ...process.env, SLIDE_TOOL_DISABLE_CHROME_SCREENSHOT: '1' },
+  });
   assert.equal(generated.status, 0, generated.stderr);
   const generatedJson = parseStudioOutput(generated);
   return {

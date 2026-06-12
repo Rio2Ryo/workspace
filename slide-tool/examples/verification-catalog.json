@@ -1,5 +1,11 @@
 [
   {
+    "file": "agent-team-os.md",
+    "name": "agent-team-os",
+    "status": "verified",
+    "expectedSlides": 8
+  },
+  {
     "file": "ai-slide-workflow.md",
     "name": "ai-slide-workflow",
     "status": "verified",

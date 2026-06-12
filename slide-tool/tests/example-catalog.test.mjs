@@ -103,10 +103,10 @@ test('verify-example-catalog cli verifies all shipped example inputs', () => {
   assert.equal(cli.status, 0, cli.stderr);
   const payload = parseCommandJson(cli, 'stdout', 'verify-example-catalog');
   assert.equal(payload.ok, true);
-  assert.equal(payload.verified, 5);
+  assert.equal(payload.verified, 6);
   assert.equal(payload.manual, 0);
   assert.equal(payload.skipped, 0);
-  assert.equal(payload.entries.length, 5);
+  assert.equal(payload.entries.length, 6);
   assert.equal(payload.entries.every((entry) => entry.ok === true), true);
   assert.deepEqual(
     payload.entries.map((entry) => entry.file).sort(),
@@ -124,10 +124,10 @@ test('verify-example-catalog cli can focus on a single example by name', () => {
   assert.equal(payload.ok, true);
   assert.equal(payload.verified, 1);
   assert.equal(payload.manual, 0);
-  assert.equal(payload.skipped, 4);
-  assert.equal(payload.entries.length, 5);
+  assert.equal(payload.skipped, 5);
+  assert.equal(payload.entries.length, 6);
   assert.equal(payload.entries.filter((entry) => entry.ok === true).length, 1);
-  assert.equal(payload.entries.filter((entry) => entry.skipped === true).length, 4);
+  assert.equal(payload.entries.filter((entry) => entry.skipped === true).length, 5);
   assert.equal(payload.entries.filter((entry) => entry.skipped === true).every((entry) => entry.status === 'skipped'), true);
   assert.equal(
     payload.entries.find((entry) => entry.name === 'discord-report-flat-api')?.ok,

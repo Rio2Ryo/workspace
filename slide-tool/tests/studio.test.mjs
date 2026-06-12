@@ -95,7 +95,9 @@ test('studio generates verifiable artifacts from a valid JSON outline', () => {
   const out = path.join(dir, 'out');
   makeValidJsonOutline(input);
 
-  const result = runStudio(input, out, 'good');
+  const result = runStudio(input, out, 'good', [], {
+    env: { ...process.env, SLIDE_TOOL_DISABLE_CHROME_SCREENSHOT: '1' },
+  });
   assert.equal(result.status, 0, result.stderr);
   const generated = parseStudioOutput(result);
   assert.equal(generated.slides, 2);
@@ -111,7 +113,9 @@ test('studio reports blocked delivery readiness when verification is skipped', (
   const out = path.join(dir, 'out');
   makeValidJsonOutline(input);
 
-  const result = runStudio(input, out, 'good');
+  const result = runStudio(input, out, 'good', [], {
+    env: { ...process.env, SLIDE_TOOL_DISABLE_CHROME_SCREENSHOT: '1' },
+  });
   assert.equal(result.status, 0, result.stderr);
   const generated = parseStudioOutput(result);
   assert.equal(generated.verification, null);
