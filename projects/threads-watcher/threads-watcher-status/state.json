@@ -5,14 +5,27 @@
     "@bmw_intokyo"
   ],
   "last_check": {
-    "checked_at": "2026-06-12T20:31:31Z",
+    "checked_at": "2026-06-12T23:36:19Z",
     "found_count": 4,
     "new_count": 0,
     "status": "partial_error",
-    "error": "profile extraction returned partial result: found=4 previous_max=16"
+    "error": "profile extraction returned partial result: found=4 previous_max=15"
   },
-  "saved_count": 92,
+  "saved_count": 93,
   "posts": [
+    {
+      "handle": "@hal.lifedesign",
+      "post_id": "DZgSSSJkrA2",
+      "post_url": "https://www.threads.com/@hal.lifedesign/post/DZgSSSJkrA2",
+      "first_seen_at": "2026-06-12T23:36:01Z",
+      "captured_at": "2026-06-12T23:36:07Z",
+      "screenshot_size_bytes": 606655,
+      "screenshot_width": 1280,
+      "screenshot_height": 1800,
+      "post_text": "今日は脚トレ。 数日まともに歩けなくなるなぁ…",
+      "posted_at": "2026-06-12T23:35:02.000Z",
+      "screenshot_path": "screenshots/hal.lifedesign/DZgSSSJkrA2.png"
+    },
     {
       "handle": "@hal.lifedesign",
       "post_id": "DZdpmjDEmYS",
@@ -1227,16 +1240,16 @@
   "recent_stats_by_window": {
     "1": {
       "window_hours": 1,
-      "total": 42,
+      "total": 43,
       "ok": 0,
-      "partial_error": 42,
+      "partial_error": 43,
       "error": 0,
       "other": 0,
       "success_rate": 0.0,
       "partial_error_rate": 1.0,
       "top_partial_error_reason": {
         "reason": "profile extraction returned partial result: found=4 previous_max=16",
-        "count": 41
+        "count": 43
       }
     },
     "24": {
@@ -1264,14 +1277,14 @@
       "partial_error_rate": 0.9995292640828495,
       "top_partial_error_reason": {
         "reason": "profile extraction returned partial result: found=4 previous_max=16",
-        "count": 4380
+        "count": 4430
       }
     }
   },
   "sync_state": {
-    "cursor": 78,
-    "db_max": 115,
-    "delta": 37,
+    "cursor": 115,
+    "db_max": 116,
+    "delta": 1,
     "cursor_file_exists": true
   },
   "dry_run_alert": null,
@@ -1288,5 +1301,5 @@
       "current_bucket": 1.0
     }
   ],
-  "snapshot_generated_at": "2026-06-12T20:31:31Z"
+  "snapshot_generated_at": "2026-06-12T23:36:19Z"
 }
