@@ -24,6 +24,7 @@ Things like:
 ### SSH
 
 - home-server → 192.168.1.100, user: admin
+- ao → 163.44.122.214, user: root. Password was provided by Yakon in Discord #白 reply context on 2026-06-01 23:38 JST; do not repost it in chat.
 
 ### TTS
 
