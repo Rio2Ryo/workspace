@@ -317,6 +317,23 @@ async function api<T>(path: string, options?: RequestInit): Promise<T> {
   return data as T
 }
 
+function readImportFileText(file: File): Promise<string> {
+  if (typeof file.text === 'function') return file.text()
+
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader()
+    reader.onload = () => {
+      if (typeof reader.result === 'string') {
+        resolve(reader.result)
+        return
+      }
+      reject(new Error('FileReader returned non-text import data'))
+    }
+    reader.onerror = () => reject(reader.error ?? new Error('FileReader failed to read import data'))
+    reader.readAsText(file)
+  })
+}
+
 export function App() {
   const [items, setItems] = useState<FavoriteItem[]>([])
   const [tags, setTags] = useState<string[]>([])
@@ -801,7 +818,7 @@ export function App() {
     if (!file) return
 
     try {
-      const text = await file.text()
+      const text = await readImportFileText(file)
       const parsed = JSON.parse(text) as unknown
       if (!Array.isArray(parsed)) {
         setError('インポート失敗: JSON配列形式ではありません。既存データは保持しました。')

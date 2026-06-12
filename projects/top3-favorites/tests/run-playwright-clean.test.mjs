@@ -45,11 +45,11 @@ test('clean Playwright runner starts preview itself and disables Playwright webS
   assert.match(source, /PLAYWRIGHT_EXTERNAL_SERVER:\s*'1'/, 'clean runner should skip Playwright webServer HTTP probing after starting preview')
 })
 
-test('clean Playwright runner does not kill its own npm script during post-run cleanup', async () => {
+test('clean Playwright runner runs stale-process cleanup before and after Playwright', async () => {
   const source = await readFile(new URL('../scripts/run-playwright-clean.mjs', import.meta.url), 'utf8')
   const runBody = source.match(/export async function runPlaywrightClean[\s\S]*?\n}/)?.[0] || ''
   const cleanupCalls = [...runBody.matchAll(/cleanupStaleProcessFamilies\(/g)]
-  assert.equal(cleanupCalls.length, 1, 'post-run stale-process cleanup can match the current npm script command and terminate the verified run')
+  assert.equal(cleanupCalls.length, 2, 'runPlaywrightClean should call cleanupStaleProcessFamilies once before and once after running Playwright')
 })
 
 test('package exposes clean E2E command for flaky-stale-server recovery', async () => {

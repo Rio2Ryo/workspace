@@ -62,6 +62,7 @@
 - `tests/import-export-localstorage-api-drift-diagnostic.e2e.spec.ts`
 - `tests/import-export.e2e.spec.ts`
 - `tests/import-fail-closed-matrix.e2e.spec.ts`
+- `tests/import-file-reader-fallback.e2e.spec.ts`
 - `tests/import-invalid-after-valid-clears-preview.e2e.spec.ts`
 - `tests/import-minimal-shape-defaults.e2e.spec.ts`
 - `tests/import-no-change-badge.e2e.spec.ts`
