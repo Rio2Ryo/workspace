@@ -32,6 +32,16 @@ High Risk:
 - 削除系操作
 - 秘密情報の共有
 
+## 2026-06-13 heartbeat (12回目)
+
+**アクション**: mother-vegetable の未コミット差分（画像8ファイル + `.claude/settings.local.json`）を確認。PNG valid・build clean を検証後、`chore/noindex` に commit `91ab83e` + `21fa4d8` として整理。
+
+**検証**: `bannerImg.png` 1.2MB→294KB / `sef.png` 6.1MB→2.0MB / `mother-vegetable-microscopic.png` 1.2MB→191KB。PNG header valid（sig `89 50 4E 47`、IHDR正常）。`npm run build` exit 0 / エラーなし。`git status --short | grep -v '^??' | grep "^[MA D]"` = 空（clean）。commit `21fa4d8` HEAD。
+
+**状態**: mother-vegetable `chore/noindex` clean。画像最適化は `chore/noindex` に入っているが、デプロイブランチ `chore/enable-index` にはまだない。Yakon deploy時に cherry-pick or merge を判断。Readyの2件（mother-vegetable / KATAOMOI-EC）はHigh Riskで未実行。
+
+**通知判断**: notify=false（新規ブロッカーなし）。
+
 ## 2026-06-13 heartbeat (11回目)
 
 **アクション**: workspace・second-brain・food-dx-shiro の3 repo working tree を確認。QUEUE.md の Ready / In Progress を確認し、ローカルで出来る安全な作業の有無を判定。
