@@ -18,12 +18,12 @@ way to set it — operators had to edit the script, restart watcher,
 risk syntax errors. This test pins the missing-but-now-added dial.
 
 Two contracts:
-  1. THREADS_WATCHER_BASELINE_LOOKBACK_DAYS unset → no
-     `--baseline-lookback-days` arg passed (default behaviour
-     preserved, no surprise regressions for current operators).
-  2. THREADS_WATCHER_BASELINE_LOOKBACK_DAYS=7 → exec line includes
-     `--baseline-lookback-days 7` so the watcher uses the rolling
-     baseline.
+  1. THREADS_WATCHER_BASELINE_LOOKBACK_DAYS unset → `--baseline-lookback-days 7`
+     IS passed (7-day rolling window is now the default to prevent sticky
+     all-time peaks from causing persistent partial_error false positives).
+  2. THREADS_WATCHER_BASELINE_LOOKBACK_DAYS=<N> → exec line includes
+     `--baseline-lookback-days <N>` so the watcher uses the specified window.
+     Set to 0 to restore the all-time-max behaviour.
 
 Implementation:
   Use a stub `python` shim on PATH that captures argv and exits.
@@ -119,14 +119,22 @@ def _run(env_extra: dict[str, str]) -> list[str]:
         return argv_file.read_text().splitlines()
 
 
-def test_default_does_not_pass_baseline_lookback_arg():
-    # No env var → no --baseline-lookback-days flag. Preserves
-    # current operator behaviour; nothing about partial-error
-    # judgement changes unless THIS operator opts in.
+def test_default_passes_7_day_baseline_lookback_arg():
+    # No env var → --baseline-lookback-days 7 IS injected. The 7-day
+    # rolling window is now the default to prevent all-time-peak
+    # stickiness (e.g. @hal.lifedesign peaked at 16 on 2026-05-29,
+    # then settled at 15, causing persistent partial_error until the
+    # lookback window drops that peak out of scope). Override with
+    # THREADS_WATCHER_BASELINE_LOOKBACK_DAYS=0 to restore all-time behaviour.
     argv = _run({})
-    assert "--baseline-lookback-days" not in argv, (
-        "Unsetting the env var must NOT inject the flag — preserves "
-        f"long-standing default. Got: {argv!r}"
+    assert "--baseline-lookback-days" in argv, (
+        "Unset env var must inject --baseline-lookback-days 7 (new default). "
+        f"Got: {argv!r}"
+    )
+    idx = argv.index("--baseline-lookback-days")
+    assert idx + 1 < len(argv), f"flag must have a value after it. Got: {argv!r}"
+    assert argv[idx + 1] == "7", (
+        f"default value must be '7'. Got: {argv[idx + 1]!r}"
     )
     # Sanity: the watcher still gets --watch + --interval.
     assert "--watch" in argv
@@ -154,11 +162,18 @@ def test_env_var_propagates_as_cli_flag():
 
 
 def test_empty_env_var_treated_as_unset():
-    # Defensive: empty string env var must behave as unset, NOT as
-    # `--baseline-lookback-days ""` (which would explode argparse).
+    # Defensive: empty string env var must behave as unset — both get the
+    # 7-day default. `${THREADS_WATCHER_BASELINE_LOOKBACK_DAYS:-7}` treats
+    # empty string the same as unset (bash `:-` fires on empty too), so the
+    # flag IS passed with "7", not "" (which would explode argparse).
     argv = _run({"THREADS_WATCHER_BASELINE_LOOKBACK_DAYS": ""})
-    assert "--baseline-lookback-days" not in argv, (
-        f"Empty env var must NOT inject the flag (no argparse explosion). "
+    assert "--baseline-lookback-days" in argv, (
+        f"Empty env var must fall back to default '7' (same as unset). "
+        f"Got: {argv!r}"
+    )
+    idx = argv.index("--baseline-lookback-days")
+    assert idx + 1 < len(argv) and argv[idx + 1] == "7", (
+        f"Empty env var must produce --baseline-lookback-days 7 (not empty string). "
         f"Got: {argv!r}"
     )
 

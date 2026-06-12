@@ -4,7 +4,7 @@ cd "$(dirname "$0")"
 source venv/bin/activate
 export THREADS_WATCHER_NOTIFY_CHANNEL="${THREADS_WATCHER_NOTIFY_CHANNEL:-discord}"
 export THREADS_WATCHER_NOTIFY_TARGET="${THREADS_WATCHER_NOTIFY_TARGET:-channel:1505544095274238192}"
-export THREADS_WATCHER_NOTIFY_HANDLES="${THREADS_WATCHER_NOTIFY_HANDLES:-@bmw_intokyo,@hal.lifedesign}"
+export THREADS_WATCHER_NOTIFY_HANDLES="${THREADS_WATCHER_NOTIFY_HANDLES:-@bmw_intokyo}"
 # PYTHONUNBUFFERED: launchd/nohup redirect stdout to logs/watcher.log,
 # a non-TTY, so Python block-buffers stdout. When the watcher is killed
 # hard (SIGKILL — OOM, or restart-watcher.sh's escalation), the buffer
@@ -13,17 +13,16 @@ export THREADS_WATCHER_NOTIFY_HANDLES="${THREADS_WATCHER_NOTIFY_HANDLES:-@bmw_in
 # output is flushed line-by-line, so the next crash leaves a trail.
 export PYTHONUNBUFFERED=1
 
-# Optional baseline-lookback dial. The watcher's `partial_error`
-# heuristic compares this run's found_count against
-# MAX(found_count) WHERE status='ok' for the handle — by default
-# all-time, which is "sticky" once a true baseline drops (Threads
-# UI changes the post-count semantics, user deletes posts, etc.).
-# health.py:110-141 documents the rationale. Setting this env var
-# (e.g. THREADS_WATCHER_BASELINE_LOOKBACK_DAYS=7) restricts the
-# baseline to a rolling window so the new regime can become the
-# baseline after N days of consistent observations, unblocking the
-# sync guard that treats every `partial_error` row as a failure.
-# Unset (default) preserves long-standing all-time behaviour.
+# Baseline-lookback dial. The watcher's `partial_error` heuristic
+# compares this run's found_count against MAX(found_count) WHERE
+# status='ok' for the handle. The all-time MAX is sticky: a one-off
+# historical peak (e.g. @hal.lifedesign returned 16 on 2026-05-29,
+# then permanently settled at 15) causes every subsequent check to
+# trip partial_error. Default 7 days so the rolling baseline
+# reflects the current steady state; override with
+# THREADS_WATCHER_BASELINE_LOOKBACK_DAYS=0 to restore all-time
+# behaviour. health.py:110-141 documents the rationale.
+export THREADS_WATCHER_BASELINE_LOOKBACK_DAYS="${THREADS_WATCHER_BASELINE_LOOKBACK_DAYS:-7}"
 BASELINE_LOOKBACK_ARGS=()
 if [ -n "${THREADS_WATCHER_BASELINE_LOOKBACK_DAYS:-}" ]; then
   BASELINE_LOOKBACK_ARGS=(--baseline-lookback-days "${THREADS_WATCHER_BASELINE_LOOKBACK_DAYS}")
