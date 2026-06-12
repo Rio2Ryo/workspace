@@ -32,6 +32,16 @@ High Risk:
 - 削除系操作
 - 秘密情報の共有
 
+## 2026-06-13 heartbeat (13回目)
+
+**アクション**: 全プロジェクトの未コミット差分をスキャン。`recruit-ai-crm` / `gmail-knowledge` / `ai-profile-link-mvp` に未コミット変更を発見。秘密値スキャン pass。`recruit-ai-crm` の LINE webhook userId null-guard + `crypto.randomUUID()` バグ修正を commit `73a2eaa` として整理。
+
+**検証**: `recruit-ai-crm` `git status --short` = clean。`gmail-knowledge` (app.py + db.py healthcheck) と `ai-profile-link-mvp` (src/main.js リファクタ) は未コミット残存 — 次tick以降で整理。`cycle-tracker-app` 34/34 pass。second-brain @ `6e75630` clean。workspace submodule pointer 一致。
+
+**状態**: recruit-ai-crm コミット完了。gmail-knowledge と ai-profile-link-mvp に未コミット変更残存（秘密値なし・ローカル安全）。
+
+**通知判断**: notify=false。
+
 ## 2026-06-13 heartbeat (12回目)
 
 **アクション**: mother-vegetable の未コミット差分（画像8ファイル + `.claude/settings.local.json`）を確認。PNG valid・build clean を検証後、`chore/noindex` に commit `91ab83e` + `21fa4d8` として整理。
