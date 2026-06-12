@@ -5,7 +5,7 @@ const landingHtml = '<!-- ===== NAV ===== -->\n<nav class="nav">\n  <div class="
 export function LandingPage() {
   return (
     <>
-      <div dangerouslySetInnerHTML={{ __html: landingHtml }} />
+      <div suppressHydrationWarning dangerouslySetInnerHTML={{ __html: landingHtml }} />
       <LandingPageEffects />
     </>
   );
