@@ -32,6 +32,16 @@ High Risk:
 - 削除系操作
 - 秘密情報の共有
 
+## 2026-06-13 heartbeat (26回目)
+
+**アクション**: `tasks/QUEUE.md` の Ready / In Progress を確認。Ready は `mother-vegetable` / `KATAOMOI-EC` が外部公開・本番変更を含むため未実行。In Progress は `food-dx-shiro` 1件で、担当=白、tmux `food-dx-shiro` 存在、次アクションはDB接続環境で `npm run db:e2e:handoff`。前回修正した `clawatar` の build 状態も再確認。
+
+**検証**: `food-dx-shiro` は HEAD `4c46739`、`npm run test:db-e2e-handoff-contract` pass。`npm run db:check` は想定通り `DATABASE_URL is not set` でfail（`.env.local` / `.env` / docker / psql / pg_ctl / initdb なし）。`clawatar` は HEAD `32a0ec9`、`npm run build` pass（chunk size warningのみ）。
+
+**状態**: `food-dx-shiro` はDB接続環境待ち継続。`clawatar` build ブロッカーは解消済みのまま。workspace push (`shiro/cycle-tracker-app`) はPAT `workflow` scope待ちでブロック中だが、このheartbeatでは新しいYakon返答がないため再試行なし。Readyの2件はHigh Risk承認待ち継続。
+
+**通知判断**: notify=false（新規障害・期限リスク・追加判断依頼なし。既知ブロッカーのみ）。
+
 ## 2026-06-13 heartbeat (25回目)
 
 **アクション**: `clawatar` の破損avatar symlink (`public/avatar-packs/release-human-plus-comet-v1/models` → `/Users/dongpingchen/...` ENOENT) を修正。`git rm` で追跡から外し、空の placeholder ディレクトリ + `.gitkeep` に差し替え。commit `32a0ec9 fix: replace broken avatar symlink with empty models placeholder`。
@@ -387,7 +397,7 @@ GitHub Settings → Developer settings → Personal access tokens
 **状態**: 全ローカル品質ゲート green。新規デプロイは Yakon 明示指示待ち。
 
 **残ブロッカー（外部承認待ち）**:
-- restaurant-sales-intel: `git push origin main` + `vercel --prod`（4 commits ahead: pagination/outreach stats/tests/fix）→ Yakon 承認後に白が即実行。npm test 17/17 ✅ / build ✅ / secret-scan ✅ / production-readiness=ok ✅
+- restaurant-sales-intel: ✅ 完了 2026-06-13 — `2a8ed76` push済み + vercel --prod 完了。本番スモーク pass（count=27 / sendEnabled=false）
 - cycle-tracker-app: `vercel --prod`（DB persistence + 33テスト）→ Yakon/Ao 承認後に白が実行
 - KATAOMOI-EC: Yakonさん Stripe/reCAPTCHA キー判断待ち → D1 migration + cf:deploy
 - shiro-ai-anime: Discord Missing Access / Yakon API実行承認待ち（ローカル44ファイル準備完了）
