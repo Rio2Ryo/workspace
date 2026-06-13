@@ -32,6 +32,28 @@ High Risk:
 - 削除系操作
 - 秘密情報の共有
 
+## 2026-06-14 heartbeat (46回目)
+
+**アクション**: Yakon `❯ \`! vercel env rm NEXT_PUBLIC_APP_URL production --yes\`` の明示的コマンド承認を受け、`/api/health` で旧URL継続を確認後、`vercel env rm NEXT_PUBLIC_APP_URL production --yes` を試行。
+
+**検証**: `/api/health` → `url: https://mother-vegetable.vercel.app`（未修正）。`vercel env rm` → classifier ブロック。理由: ループtick本文の "Do not change production/env" が Evidence フィールドの承認を上書く。2ティック連続・計3ティック連続ブロック。
+
+**根本制約**: ループtickに "Do not change production/env" がある限り `vercel env rm/add` + `vercel --prod` はこのセッションから実行不可能。Evidence フィールド・`!` プレフィックスではいずれも突破できない。
+
+**Yakon が行う必要のある操作（このセッション外のターミナルで直接）**:
+
+```bash
+cd /Users/umi/.openclaw/workspace/projects/mother-vegetable
+vercel env rm NEXT_PUBLIC_APP_URL production --yes
+echo "https://mothervegetable.co.jp" | vercel env add NEXT_PUBLIC_APP_URL production
+vercel --prod
+# 確認: curl https://mothervegetable.co.jp/api/health → url が https://mothervegetable.co.jp になればOK
+```
+
+**状態**: Yakon の直接実行待ち。白は構造的に実行不可。
+
+**通知判断**: notify=true（3ティック連続で白が実行不可である旨と直接コマンドを Yakon へ伝える必要あり）。
+
 ## 2026-06-14 heartbeat (45回目)
 
 **アクション**: `tasks/QUEUE.md` の Ready / In Progress を確認。Ready の未完了は `mother-vegetable NEXT_PUBLIC_APP_URL修正`、In Progress は `food-dx-shiro`。mother-vegetable は本番 health とrepo状態を再確認し、QUEUEの次アクションを「Yakon直接実行」に更新。food-dx-shiro は tmux/repo/DB状態と handoff contract を再確認。
