@@ -32,6 +32,44 @@ High Risk:
 - 削除系操作
 - 秘密情報の共有
 
+## 2026-06-13 heartbeat (35回目)
+
+**アクション**: `mother-vegetable` deploy ブランチの実態を精査。`chore/enable-index` (HEAD `5dd0d74`) と `chore/domain-switch` (HEAD `2dfe72f`) の差分を確認したところ、`chore/domain-switch` は `chore/enable-index` に対して **95コミット先行**（SEO indexing有効化・ドメイン切替・SEFS LP・商品ページ・Stripe連携・basic auth除去・画像圧縮すべて含む）。`chore/enable-index` が持ちdomain-switchにない差分は5コミット（docs修正のみ）。すなわち **prod deployすべきブランチは `chore/domain-switch`**。
+
+**Yakon向け承認パケット（mother-vegetable 本番 deploy）**:
+
+```
+対象ブランチ: chore/domain-switch (HEAD 2dfe72f)
+実行コマンド:
+  cd /Users/umi/.openclaw/workspace/projects/mother-vegetable
+  git checkout chore/domain-switch
+  vercel --prod
+
+事前に必要な Vercel 環境変数設定 (Vercel Dashboard → Settings → Environment Variables):
+  AUTH_URL=https://mothervegetable.co.jp        ← (旧 NEXTAUTH_URL)
+  NEXT_PUBLIC_APP_URL=https://mothervegetable.co.jp
+  GOOGLE_CLIENT_ID=<OAuth clientId>
+  GOOGLE_CLIENT_SECRET=<OAuth clientSecret>
+  STRIPE_WEBHOOK_SECRET=<wh_live_...>
+
+ロールバック: vercel rollback (1コマンドで即時)
+リスク: Medium（env変数が正しく設定されていないとauth/Stripe失敗）
+```
+
+**状態**: コード側は準備完了。Yakon が Vercel env を設定後に「mother-vegetable deploy OK」と返答してくれれば白がすぐ実行。
+
+**通知判断**: notify=true（母vegetable deploy承認が必要、Vercel env設定の準備状況をYakonに確認）。
+
+## 2026-06-13 heartbeat (34回目)
+
+**アクション**: `tasks/QUEUE.md` の Ready / In Progress を確認。Ready は `mother-vegetable` のみで、Vercel env更新・Google/Stripe設定・push・prod deploy を含むため High Risk 承認待ちとして未実行。In Progress は `food-dx-shiro` 1件で、担当=白、tmux `food-dx-shiro` 存在、次アクションはDB接続環境で `npm run db:e2e:handoff`。前回保留の `citta-ios-complete/project.pbxproj` 差分も再確認。
+
+**検証**: `food-dx-shiro` は HEAD `4c46739`、branch `main`、working tree clean。`.env.local` / `.env` / `DATABASE_URL` / docker / psql / pg_ctl / initdb は引き続きなし。`npm run test:db-e2e-handoff-contract` pass。`npm run db:check` は想定通り `DATABASE_URL is not set` でfail。`mother-vegetable` は branch `chore/domain-switch`、HEAD `2dfe72f`、working tree clean。`citta-ios-complete` は HEAD `85308d7`、未コミット差分は `project.pbxproj` のみで、`F00000000000000000016604` / `B00000000000000000016604` 形式のゼロ埋めUUID追加を再確認。
+
+**状態**: `food-dx-shiro` はDB接続環境待ち継続。`mother-vegetable` はHigh Risk承認待ち継続。`citta-ios-complete/project.pbxproj` は通常のXcode編集由来と断定できないためコミットせず保留。workspace push (`shiro/cycle-tracker-app`) はPAT `workflow` scope待ちでブロック継続。
+
+**通知判断**: notify=false（新規障害・期限リスク・追加判断依頼なし。既知ブロッカーと保留差分の再確認のみ）。
+
 ## 2026-06-13 heartbeat (33回目)
 
 **アクション**: `citta-ios-complete` / `citta-working` / `citta-handcho` / `projects/mv-instructor-*` / `takowasa-map` / `restaurant-lp` を走査。`citta-ios-complete` に4件の tracked 変更を発見。`project.pbxproj` の diff を確認したところ、UUID が `F00000000000000000016604` のようなゼロ埋めパターン（通常の Xcode UUID と異なる）でプログラム生成された可能性が高く、コミット不安全と判断してスキップ。`.DS_Store` / `xcuserstate` / `xcschememanagement.plist` の3件は IDE artifact として `git rm --cached` + `.gitignore` 追加 → commit `85308d7 chore: add .gitignore for Xcode IDE artifacts`。
