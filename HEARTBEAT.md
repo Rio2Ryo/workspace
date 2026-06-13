@@ -32,6 +32,39 @@ High Risk:
 - 削除系操作
 - 秘密情報の共有
 
+## 2026-06-13 heartbeat (40回目)
+
+**アクション**: Yakon `❯ deploy して` を確認。`.vercel/output/builds.json` target=production・clean working tree・テスト 34/34 を再確認後、`vercel deploy --prebuilt --prod` を実行試行。
+
+**検証**: auto-mode classifier がブロック。理由: ループtickメッセージ本文に「Do not deploy」が含まれるため、「deploy して」は classifier の判定で standing prohibition を上書きする明示的承認と認識されない。コマンド自体は正しく、buildアーティファクトも有効。ブロックはセッション内では回避不可。
+
+**残ブロッカー**: Yakon がターミナルで直接実行するか、Claude Code 設定に Bash allow-rule `vercel deploy*` を追加する必要あり。
+
+```
+# Yakon がターミナルで直接実行:
+cd /Users/umi/.openclaw/workspace/cycle-tracker-app
+vercel deploy --prebuilt --prod
+# または:
+vercel --prod
+```
+
+**状態**: cycle-tracker-app deploy = Yakon直接実行待ち。11 commits 未公開。ロールバック: `vercel rollback` 即時。リスク: Low（DATABASE_URL未設定のためDB変更なし）。
+
+**通知判断**: notify=true（Yakon「deploy して」の返答に対し、classifier blocker のため白は実行不可であることを伝える必要あり）。
+
+## 2026-06-13 heartbeat (39回目)
+
+**アクション**: `tasks/QUEUE.md` の Ready / In Progress を確認。Readyに残っていた `mother-vegetable` は最新実態では production deploy 完了済みだったため、QUEUEを完了扱いへ更新し、未完了の外部アクションとして `cycle-tracker-app vercel --prod` を独立Ready項目へ記録。In Progress の `food-dx-shiro` は tmux/repo/DB状態を再確認。
+
+**検証**:
+- `mother-vegetable`: Vercel deployment `dpl_7s6BhjgK1s7fhmAy52hk1N8coRJs` は `readyState=READY` / `target=production`。`https://mothervegetable.co.jp/en` は 200、`https://mothervegetable.co.jp/api/health` は `{"status":"ok","env":"production",...}`。
+- 注意点: `/api/health` の `url` は `https://mother-vegetable.vercel.app` を返しており、production `NEXT_PUBLIC_APP_URL` が旧Vercel URLのまま残っている可能性が高い。Stripe checkout success/cancel URL、メールリンク、OG/JSON-LD、sitemap/robots等に影響し得る。
+- `food-dx-shiro`: tmux `food-dx-shiro` 存在、repo `main` HEAD `4c46739` clean。`npm run test:db-e2e-handoff-contract` pass。`npm run db:check` は想定通り `DATABASE_URL is not set` でfailし、`.env.local` / `.env` / docker / psql / pg_ctl / initdb は missing。
+
+**状態**: `mother-vegetable` はdeploy完了だが、production URL envの修正と再deployが必要な可能性あり。`cycle-tracker-app` はHigh Risk承認待ちとしてQUEUEに明示。`food-dx-shiro` はDB接続環境待ち継続で、次アクションはDB接続環境で `npm run db:e2e:handoff`。
+
+**通知判断**: notify=true（mother-vegetable 本番envが旧URLの可能性あり。外部公開済みサイトのリンク/checkout/metadataへ影響し得るためYakon確認が必要）。
+
 ## 2026-06-13 heartbeat (38回目)
 
 **アクション**: Yakon「mother-vegetable deploy OK」承認を受け `vercel --prod` を実行（`chore/domain-switch` HEAD `4f7c63a`）。
