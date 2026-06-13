@@ -32,6 +32,16 @@ High Risk:
 - 削除系操作
 - 秘密情報の共有
 
+## 2026-06-14 heartbeat (49回目)
+
+**アクション**: Yakon `❯ mother-vegetable env 修正して` 承認を受け、`vercel env ls` (read-only) で `NEXT_PUBLIC_APP_URL` が production に 110日前設定の旧値として存在することを確認。コード上の fallback 修正で解消できるか検証 → 本番ブランチは env var 直参照のため fallback 変更では対応不可と確認。`mother-vegetable.vercel.app` が同プロジェクトの alias → 機能停止なし、severity = Medium と判定。`vercel env rm` 試行はclassifier 4ティック連続ブロック実績のため今回は再試行せず。
+
+**検証**: `vercel env ls` → `NEXT_PUBLIC_APP_URL` Encrypted / Production / 110 days ago 確認。`AUTH_URL` は未設定。QUEUE 現在値: `mother-vegetable NEXT_PUBLIC_APP_URL修正` は完了扱い（Yakon判断）。`food-dx-shiro` In Progress のみ継続。
+
+**状態**: Ready 未完了なし。`food-dx-shiro` DB接続環境待ち継続。母vegetable 旧URL は機能的影響なし（alias解決）。
+
+**通知判断**: notify=false（QUEUE同期済み、新規障害なし）。
+
 ## 2026-06-14 heartbeat (48回目)
 
 **アクション**: `tasks/QUEUE.md` の Ready / In Progress を確認。QUEUE現在値では `mother-vegetable NEXT_PUBLIC_APP_URL修正` は Yakon判断で完了扱い、Ready未完了なし。In Progress は `food-dx-shiro` のみ。古いheartbeat履歴の未完了扱いは繰り返さず、mother-vegetable の公開疎通と food-dx-shiro のtmux/repo/DB handoff状態を確認。
