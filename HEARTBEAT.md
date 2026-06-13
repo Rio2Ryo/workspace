@@ -32,6 +32,28 @@ High Risk:
 - 削除系操作
 - 秘密情報の共有
 
+## 2026-06-14 heartbeat (62回目)
+
+**アクション**: Yakon `❯ mother-vegetable の /api/health をもう一度確認して` → `curl https://mothervegetable.co.jp/api/health` 実行。
+
+**検証**: `{"status":"ok","env":"production","url":"https://mother-vegetable.vercel.app","ts":"2026-06-13T23:28:05.322Z"}` — **依然未完了**（3回連続同結果）。
+
+**状態**: Yakon 外部ターミナル実行待ち。3コマンド確認済み: `vercel env rm` → `vercel env add` → `vercel --prod`。機能的影響なし。
+
+**通知判断**: notify=true（「まだ未完了」を Yakon に伝える）。
+
+## 2026-06-14 heartbeat (61回目)
+
+**アクション**: `tasks/QUEUE.md` の Ready / In Progress を確認。Ready 未完了なし、In Progress は `food-dx-shiro` のみ。前回の Yakon `/api/health` 再確認依頼は 60回目で未完了報告済みのため、今回は同状態の割り込み再通知を避けつつ read-only で現状だけ再確認。
+
+**検証**:
+- `mother-vegetable`: `/api/health` は `status=ok` / `env=production`、`url` は `https://mother-vegetable.vercel.app` のまま。前回から変化なし。機能的影響なし。
+- `food-dx-shiro`: tmux `food-dx-shiro` 存在。repo `main` HEAD `4c46739` clean。`npm run test:db-e2e-handoff-contract` pass。`npm run db:check` は想定通り `DATABASE_URL is not set` で fail し、`.env.local` / `.env` / docker / psql / pg_ctl / initdb は missing。
+
+**状態**: Ready 未完了なし。mother-vegetable env fix は Yakon 外部ターミナル対応待ちだが、直近で同内容を通知済み。`food-dx-shiro` は DB 接続環境待ち継続で、次アクションは DB 接続環境で `npm run db:e2e:handoff`。
+
+**通知判断**: notify=false（新規障害・期限リスク・追加判断依頼なし。同じ未完了状態の重複通知は避ける）。
+
 ## 2026-06-14 heartbeat (60回目)
 
 **アクション**: Yakon `❯ mother-vegetable の /api/health をもう一度確認して` → `curl https://mothervegetable.co.jp/api/health` 実行。
@@ -925,9 +947,10 @@ GitHub Settings → Developer settings → Personal access tokens
 - restaurant-sales-intel: ✅ 完了 2026-06-13 — `2a8ed76` push済み + vercel --prod 完了。本番スモーク pass（count=27 / sendEnabled=false）
 - mother-vegetable: ✅ 完了 2026-06-14 — `mothervegetable.co.jp` → 200 ✅、`chore/domain-switch` push + vercel deploy 完了。`NEXT_PUBLIC_APP_URL` 旧値残存だが `mother-vegetable.vercel.app` が同プロジェクトに解決するため実害なし・Yakon判断で完了
 - cycle-tracker-app: ✅ 完了 2026-06-14 確認 — 最新 deploy 6h 前 Ready、`cycle-tracker-app-six.vercel.app` → 200 ✅、34/34 pass ✅（commit `fa53422` で approval packet 削除済み）
-- KATAOMOI-EC: Yakonさん Stripe/reCAPTCHA キー判断待ち → D1 migration + cf:deploy
+- KATAOMOI-EC: ✅ deploy 完了（`/repos/KATAOMOI-EC2` @ `30e3970`、lint/build green）。残件 = Yakon が Cloudflare Dashboard で Stripe/reCAPTCHA ENV VAR を手動設定
 - shiro-ai-anime: Discord Missing Access / Yakon API実行承認待ち（ローカル44ファイル準備完了）
 - second-brain: push/preview は Ao/Yakon 判断待ち
 - food-dx-shiro: DB接続環境待ち
+- **disk**: 97% / 6.1Gi free。`npm cache clean --force`（6.8G 回収）を Yakon が「disk cleanup OK」と送信すれば即実行
 
 **次アクション**: Discord access 回復 or Yakon 直接指示が来るまでローカル品質維持。新タスクが QUEUE.md に入れば即対応。
