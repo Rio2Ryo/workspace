@@ -5,14 +5,27 @@
     "@bmw_intokyo"
   ],
   "last_check": {
-    "checked_at": "2026-06-13T08:28:38Z",
-    "found_count": 4,
+    "checked_at": "2026-06-13T09:17:26Z",
+    "found_count": 15,
     "new_count": 0,
-    "status": "partial_error",
-    "error": "profile extraction returned partial result: found=4 previous_max=16"
+    "status": "ok",
+    "error": null
   },
-  "saved_count": 94,
+  "saved_count": 95,
   "posts": [
+    {
+      "handle": "@hal.lifedesign",
+      "post_id": "DZhU0GHkgpj",
+      "post_url": "https://www.threads.com/@hal.lifedesign/post/DZhU0GHkgpj",
+      "first_seen_at": "2026-06-13T09:17:07Z",
+      "captured_at": "2026-06-13T09:17:13Z",
+      "screenshot_size_bytes": 311240,
+      "screenshot_width": 1280,
+      "screenshot_height": 1800,
+      "post_text": "沖縄のクリエイティビティが集まる最高に刺激的な交流会「HUB」の6月の開催が決定！ もちろん参加するよね？ 今回も少しお時間頂きお話しさせて頂きます。 「これからの時代に必要な力とは？」 これまでの経験から自分なりの考えをシェアして、みんなで考えるきっかけをつくれたらなと。 とにかくみなさんとお会いできるのを楽しみにしています！",
+      "posted_at": "2026-06-13T09:16:22.000Z",
+      "screenshot_path": "screenshots/hal.lifedesign/DZhU0GHkgpj.png"
+    },
     {
       "handle": "@hal.lifedesign",
       "post_id": "DZgqy1BElHR",
@@ -1247,22 +1260,22 @@
     "partial_error_rate": 0.9990029910269193,
     "top_partial_error_reason": {
       "reason": "profile extraction returned partial result: found=4 previous_max=16",
-      "count": 752
+      "count": 750
     }
   },
   "recent_stats_by_window": {
     "1": {
       "window_hours": 1,
-      "total": 43,
+      "total": 42,
       "ok": 0,
-      "partial_error": 43,
+      "partial_error": 42,
       "error": 0,
       "other": 0,
       "success_rate": 0.0,
       "partial_error_rate": 1.0,
       "top_partial_error_reason": {
         "reason": "profile extraction returned partial result: found=4 previous_max=16",
-        "count": 33
+        "count": 31
       }
     },
     "24": {
@@ -1276,7 +1289,7 @@
       "partial_error_rate": 0.9990029910269193,
       "top_partial_error_reason": {
         "reason": "profile extraction returned partial result: found=4 previous_max=16",
-        "count": 752
+        "count": 750
       }
     },
     "168": {
@@ -1296,8 +1309,8 @@
   },
   "sync_state": {
     "cursor": 117,
-    "db_max": 117,
-    "delta": 0,
+    "db_max": 118,
+    "delta": 1,
     "cursor_file_exists": true
   },
   "dry_run_alert": null,
@@ -1306,7 +1319,7 @@
     {
       "handle": "@bmw_intokyo",
       "warn_ts": 1781202276,
-      "current_bucket": 0.6
+      "current_bucket": 0.8
     },
     {
       "handle": "@hal.lifedesign",
@@ -1314,5 +1327,5 @@
       "current_bucket": 1.0
     }
   ],
-  "snapshot_generated_at": "2026-06-13T08:28:38Z"
+  "snapshot_generated_at": "2026-06-13T09:17:26Z"
 }
