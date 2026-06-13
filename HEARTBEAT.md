@@ -32,6 +32,28 @@ High Risk:
 - 削除系操作
 - 秘密情報の共有
 
+## 2026-06-13 heartbeat (25回目)
+
+**アクション**: `clawatar` の破損avatar symlink (`public/avatar-packs/release-human-plus-comet-v1/models` → `/Users/dongpingchen/...` ENOENT) を修正。`git rm` で追跡から外し、空の placeholder ディレクトリ + `.gitkeep` に差し替え。commit `32a0ec9 fix: replace broken avatar symlink with empty models placeholder`。
+
+**検証**: `npm run build` → `✓ built in 1.15s`（修正前は ENOENT fail）。build 成功 ✅。chunk size warning のみ（既存の警告、コード変更なし）。
+
+**状態**: clawatar build ブロッカー解消。workspace push (`shiro/cycle-tracker-app`) は PAT `workflow` scope 待ちで引き続きブロック中。Readyの2件（mother-vegetable / KATAOMOI-EC）はHigh Risk承認待ち継続。
+
+**通知判断**: notify=false（clawatar はローカル修正・build pass 確認のみ。PAT ブロッカーは変化なし）。
+
+## 2026-06-13 heartbeat (24回目)
+
+**アクション**: `tasks/QUEUE.md` の Ready / In Progress を確認。Ready は `mother-vegetable` / `KATAOMOI-EC` が外部公開・本番変更を含むため未実行。In Progress は `food-dx-shiro` 1件で、担当=白、tmux `food-dx-shiro` 存在、次アクションはDB接続環境で `npm run db:e2e:handoff`。Yakon「workflow scope追加済み、pushして」後も失敗していた `git push origin shiro/cycle-tracker-app` を再試行。
+
+**検証**: workspace push は引き続き失敗。remote reject は `refusing to allow a Personal Access Token to create or update workflow .github/workflows/interaugh-homepage.yml without workflow scope` のまま。認証ストアは `credential.helper=store`、`~/.git-credentials` の `github.com` エントリは1件。`food-dx-shiro` は `npm run test:db-e2e-handoff-contract` pass、`npm run db:check` は想定通り `DATABASE_URL is not set` でfail（`.env.local` / `.env` / docker / psql / pg_ctl / initdb なし）。
+
+**状態**: `workspace / shiro/cycle-tracker-app` はコード/テスト起因ではなくGitHub token権限ブロッカーでpush不可。`food-dx-shiro` はDB接続環境待ち継続。Readyの2件はHigh Risk承認待ち継続。
+
+**Yakonへの依頼**: GitHub Settings → Developer settings → Personal access tokens で、実際に `~/.git-credentials` で使われているトークンを確認。Classic PAT なら `workflow` scope をSave/Update、Fine-grained PAT なら対象repoの `Repository permissions → Actions: Read and write` をSave。保存後にtoken valueが再表示された場合は `~/.git-credentials` の token 更新が必要。
+
+**通知判断**: notify=true（Yakon側でPAT/権限の追加確認が必要）。
+
 ## 2026-06-13 heartbeat (23回目)
 
 **アクション**: Yakon「workflow scope追加済み、pushして」の返答を受け `git push origin shiro/cycle-tracker-app` を再試行。
