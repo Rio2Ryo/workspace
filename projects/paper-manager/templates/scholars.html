@@ -1,0 +1,39 @@
+{% extends "base.html" %}
+{% block title %}注目学者リスト{% endblock %}
+{% block content %}
+
+<div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:1.5rem; flex-wrap:wrap; gap:0.5rem;">
+  <h2 style="font-size:1.1rem; font-weight:700;">注目学者リスト</h2>
+  <a href="/settings/mapping" class="btn btn-secondary" style="font-size:0.85rem; padding:0.4rem 0.9rem;">← マッピング設定</a>
+</div>
+
+{% if saved %}
+<div class="alert alert-success">✓ 学者リストを保存しました</div>
+{% endif %}
+
+<div class="card">
+  <p style="font-size:0.875rem; color:#6c757d; margin-bottom:0.5rem; line-height:1.7;">
+    ここに登録した学者の論文のみ、Notion の執筆者 <code>select</code> 列にオプションを追加します。<br>
+    リストが空の場合はすべての著者を書き込みます。
+  </p>
+
+  <form action="/settings/scholars" method="post">
+    <div style="margin-bottom:1rem;">
+      <label style="font-size:0.85rem; color:#495057; display:block; margin-bottom:0.4rem;">
+        学者名（1行1人、またはカンマ・読点区切り）
+      </label>
+      <textarea name="scholars" rows="10"
+        style="width:100%; padding:0.6rem 0.75rem; border:1px solid #ced4da; border-radius:8px; font-size:0.875rem; font-family:inherit; resize:vertical; line-height:1.8;"
+        placeholder="例:&#10;酒井克彦&#10;金子宏&#10;松沢智">{{ scholars_text }}</textarea>
+    </div>
+    <div style="font-size:0.8rem; color:#6c757d; margin-bottom:1rem;">
+      現在 <strong>{{ scholars | length }}</strong> 名登録済み
+    </div>
+    <div style="display:flex; gap:0.75rem;">
+      <button type="submit" class="btn btn-primary">保存</button>
+      <a href="/settings/mapping" class="btn btn-secondary">キャンセル</a>
+    </div>
+  </form>
+</div>
+
+{% endblock %}

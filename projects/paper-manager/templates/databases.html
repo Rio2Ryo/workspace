@@ -1,0 +1,66 @@
+{% extends "base.html" %}
+{% block title %}Notion DB 選択{% endblock %}
+{% block content %}
+<div class="card" style="max-width:600px;">
+  <h2 style="margin-bottom:0.5rem;">保存先データベースを選択</h2>
+  <p style="font-size:0.875rem; color:#6c757d; margin-bottom:1.5rem;">
+    論文を保存するNotionのデータベースを選んでください。
+  </p>
+
+  {% if error %}
+  <div style="margin-bottom:1.25rem; padding:1rem; background:#fff0f0; border:1px solid #fca5a5;
+              border-radius:8px; font-size:0.875rem; color:#7f1d1d;">
+    <strong>⚠️ DB作成に失敗しました</strong><br>
+    Notionのインテグレーションにページへのアクセス権がありません。<br>
+    Notionで任意のページを開き、右上 <code>…</code> → <strong>「接続を追加」</strong> → <strong>paper-manager</strong> を選択してから再試行してください。
+  </div>
+  {% endif %}
+
+  {% if databases %}
+  <form action="/select-db" method="post">
+    <ul class="db-list">
+      {% for db in databases %}
+      <li onclick="this.querySelector('input').checked=true">
+        <input type="radio" name="database_id" value="{{ db.id }}" required>
+        <strong>{{ db.title }}</strong>
+        <span style="font-size:0.75rem; color:#adb5bd; margin-left:0.5rem;">{{ db.id[:8] }}...</span>
+      </li>
+      {% endfor %}
+    </ul>
+    <button type="submit" class="btn btn-primary" style="margin-top:1rem; width:100%;">このDBに保存する</button>
+  </form>
+
+  <hr style="margin:1.5rem 0; border:none; border-top:1px solid #e9ecef;">
+  <p style="font-size:0.85rem; color:#6c757d; margin-bottom:0.75rem;">または新しいDBを作成：</p>
+  <form action="/create-db" method="post" style="display:flex; gap:0.5rem;">
+    <input type="text" name="db_title" value="論文管理"
+      style="flex:1; padding:0.6rem 0.75rem; border:1px solid #ced4da; border-radius:8px; font-size:0.875rem;">
+    <button type="submit" class="btn btn-secondary">📚 自動作成</button>
+  </form>
+
+  {% else %}
+  <div style="margin-bottom:1.25rem; padding:1rem; background:#fff9e6; border:1px solid #fde68a;
+              border-radius:8px; font-size:0.875rem; color:#78350f;">
+    アクセス可能なデータベースが見つかりません。<br>
+    以下の <strong>「DBを自動作成」</strong> で新しいDBを作れます。
+  </div>
+
+  <form action="/create-db" method="post">
+    <label style="display:block; font-size:0.85rem; font-weight:600; margin-bottom:0.4rem;">
+      新しいデータベースの名前
+    </label>
+    <input type="text" name="db_title" value="論文管理"
+      style="width:100%; padding:0.6rem 0.75rem; border:1px solid #ced4da; border-radius:8px;
+             font-size:0.875rem; box-sizing:border-box;">
+    <button type="submit" class="btn btn-primary" style="margin-top:0.75rem; width:100%;">
+      📚 DBを自動作成してはじめる
+    </button>
+  </form>
+
+  <p style="margin-top:1.5rem; font-size:0.8rem; color:#6c757d; line-height:1.6;">
+    すでにDBがある場合は、そのDBのページで右上 <code>…</code> →「接続を追加」→ paper-manager を追加してから
+    <a href="/databases" style="color:#4338ca;">再読み込み</a> してください。
+  </p>
+  {% endif %}
+</div>
+{% endblock %}

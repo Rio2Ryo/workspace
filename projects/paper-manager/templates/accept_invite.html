@@ -1,0 +1,48 @@
+{% extends "base.html" %}
+{% block title %}招待コードを入力{% endblock %}
+{% block content %}
+
+<div style="margin-bottom:1rem;">
+  <a href="/parent" style="color:#4338ca; text-decoration:none; font-size:0.875rem;">← 親アカウント管理に戻る</a>
+</div>
+
+<div class="card" style="max-width:480px; margin:1rem auto;">
+  <h2 style="margin-bottom:0.5rem;">招待コードを入力</h2>
+  <p style="font-size:0.85rem; color:#495057; line-height:1.7; margin-bottom:1.25rem;">
+    親アカウントから発行された8桁のコードを入力してください。<br>
+    紐付け後、親はあなたの論文データを閲覧できます（編集は不可）。
+  </p>
+
+  {% if error %}
+  <div class="alert alert-error">{{ error }}</div>
+  {% endif %}
+  {% if flash %}
+  <div class="alert alert-success">{{ flash }}</div>
+  {% endif %}
+
+  <form action="/accept-invite" method="post">
+    <label style="display:block; font-size:0.85rem; font-weight:600; margin-bottom:0.4rem;">
+      招待コード
+    </label>
+    <input type="text" name="code" required autofocus
+      maxlength="8" minlength="8"
+      placeholder="XXXXXXXX"
+      autocomplete="off" autocapitalize="characters" spellcheck="false"
+      style="width:100%; padding:0.8rem 0.75rem; border:1px solid #ced4da; border-radius:8px;
+             font-size:1.35rem; font-family:monospace; letter-spacing:0.18em; text-align:center;
+             text-transform:uppercase; box-sizing:border-box;"
+      oninput="this.value=this.value.toUpperCase()">
+    <button type="submit" class="btn btn-primary" style="margin-top:1rem; width:100%;">
+      親アカウントと紐づける
+    </button>
+  </form>
+
+  <div style="margin-top:1.25rem; padding:0.9rem 1rem; background:#f8f9fa; border-radius:8px; font-size:0.8rem; color:#495057; line-height:1.7;">
+    <strong>注意事項</strong><br>
+    ・親は論文一覧・詳細・メモを閲覧できますが、編集や削除はできません。<br>
+    ・紐付けはいつでも解除できます（親・子どちらからも操作可能）。<br>
+    ・コードは発行から一定時間で期限切れになります。
+  </div>
+</div>
+
+{% endblock %}

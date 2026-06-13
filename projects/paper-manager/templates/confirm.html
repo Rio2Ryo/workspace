@@ -1,0 +1,192 @@
+{% extends "base.html" %}
+{% block title %}内容確認・修正{% endblock %}
+{% block content %}
+
+<div class="card">
+  <h2 style="margin-bottom:0.25rem;">内容確認・修正</h2>
+  <p style="font-size:0.85rem; color:#6c757d; margin-bottom:1.5rem;">
+    AIが抽出した書誌情報を確認・修正してから Notion に登録してください。
+  </p>
+
+  {% if meta.cinii_result or meta.ndl_result %}
+  <div style="margin-bottom:1rem; display:flex; gap:0.5rem; flex-wrap:wrap;">
+    {% if meta.cinii_result %}
+    <span style="background:#e7f3ff;color:#1971c2;padding:3px 10px;border-radius:4px;font-size:0.8rem;">CiNii 照合済</span>
+    {% endif %}
+    {% if meta.ndl_result %}
+    <span style="background:#e6fcf5;color:#087f5b;padding:3px 10px;border-radius:4px;font-size:0.8rem;">NDL 照合済</span>
+    {% endif %}
+  </div>
+  {% endif %}
+
+  <form action="/confirm/{{ job_id }}" method="post">
+
+    <div style="display:grid; gap:1rem;">
+
+      <div>
+        <label style="font-size:0.85rem; color:#495057; display:block; margin-bottom:0.3rem;">論文タイトル</label>
+        <input type="text" name="title" value="{{ meta.title or '' }}"
+          style="width:100%; padding:0.6rem 0.75rem; border:1px solid #ced4da; border-radius:8px; font-size:0.875rem;">
+      </div>
+
+      <div>
+        <label style="font-size:0.85rem; color:#495057; display:block; margin-bottom:0.3rem;">著者（読点「、」またはカンマ「,」区切り）</label>
+        <input type="text" name="authors" value="{{ (meta.authors or []) | join('、') }}"
+          style="width:100%; padding:0.6rem 0.75rem; border:1px solid #ced4da; border-radius:8px; font-size:0.875rem;"
+          placeholder="例: 山田太郎、鈴木花子">
+      </div>
+
+      <div>
+        <label style="font-size:0.85rem; color:#495057; display:block; margin-bottom:0.3rem;">雑誌名</label>
+        <input type="text" name="journal" value="{{ meta.journal or '' }}"
+          style="width:100%; padding:0.6rem 0.75rem; border:1px solid #ced4da; border-radius:8px; font-size:0.875rem;">
+      </div>
+
+      <div style="display:grid; grid-template-columns:1fr 1fr 1fr 1fr; gap:0.75rem;">
+        <div>
+          <label style="font-size:0.85rem; color:#495057; display:block; margin-bottom:0.3rem;">発行年</label>
+          <input type="text" name="year" value="{{ meta.year or '' }}"
+            style="width:100%; padding:0.6rem 0.75rem; border:1px solid #ced4da; border-radius:8px; font-size:0.875rem;" placeholder="例: 2023">
+        </div>
+        <div>
+          <label style="font-size:0.85rem; color:#495057; display:block; margin-bottom:0.3rem;">巻</label>
+          <input type="text" name="volume" value="{{ meta.volume or '' }}"
+            style="width:100%; padding:0.6rem 0.75rem; border:1px solid #ced4da; border-radius:8px; font-size:0.875rem;">
+        </div>
+        <div>
+          <label style="font-size:0.85rem; color:#495057; display:block; margin-bottom:0.3rem;">号</label>
+          <input type="text" name="issue" value="{{ meta.issue or '' }}"
+            style="width:100%; padding:0.6rem 0.75rem; border:1px solid #ced4da; border-radius:8px; font-size:0.875rem;">
+        </div>
+        <div>
+          <label style="font-size:0.85rem; color:#495057; display:block; margin-bottom:0.3rem;">頁</label>
+          <input type="text" name="pages" value="{{ meta.pages or '' }}"
+            style="width:100%; padding:0.6rem 0.75rem; border:1px solid #ced4da; border-radius:8px; font-size:0.875rem;" placeholder="例: 12-25">
+        </div>
+      </div>
+
+      <div style="display:grid; grid-template-columns:1fr 1fr; gap:0.75rem;">
+        <div>
+          <label style="font-size:0.85rem; color:#495057; display:block; margin-bottom:0.3rem;">文献種別</label>
+          <select name="doc_type"
+            style="width:100%; padding:0.6rem 0.75rem; border:1px solid #ced4da; border-radius:8px; font-size:0.875rem; background:#fff;">
+            <option value="">---</option>
+            {% for opt in ["論文", "判批", "解説", "その他"] %}
+            <option value="{{ opt }}" {% if meta.type == opt %}selected{% endif %}>{{ opt }}</option>
+            {% endfor %}
+          </select>
+        </div>
+        <div>
+          <label style="font-size:0.85rem; color:#495057; display:block; margin-bottom:0.3rem;">DOI</label>
+          <input type="text" name="doi" value="{{ meta.doi or '' }}"
+            style="width:100%; padding:0.6rem 0.75rem; border:1px solid #ced4da; border-radius:8px; font-size:0.875rem;" placeholder="例: 10.xxxx/xxxxx">
+        </div>
+      </div>
+
+      <div>
+        <label style="font-size:0.85rem; color:#495057; display:block; margin-bottom:0.3rem;">
+          ファイル名
+          <span style="color:#868e96; font-weight:normal; font-size:0.78rem;">
+            (上記フィールドを変更すると自動更新 / 手動入力で固定化)
+          </span>
+        </label>
+        <input type="text" name="filename" id="filename-input" value="{{ filename or '' }}"
+          style="width:100%; padding:0.6rem 0.75rem; border:1px solid #ced4da; border-radius:8px; font-size:0.875rem; font-family:monospace;">
+      </div>
+
+    </div>
+
+    {% if summary %}
+    <div style="margin-top:1.5rem; padding:1rem; background:#f8f9fa; border-radius:8px; border:1px solid #e9ecef;">
+      <p style="font-size:0.8rem; color:#6c757d; margin-bottom:0.5rem; font-weight:600;">要約（参考）</p>
+      <p style="font-size:0.85rem; color:#495057; line-height:1.7;">{{ summary[:400] }}{% if summary|length > 400 %}…{% endif %}</p>
+    </div>
+    {% endif %}
+
+    {% if has_pdf %}
+    <div style="display:flex; gap:0.75rem; margin-top:1.25rem; flex-wrap:wrap;">
+      <a href="/view-pdf/{{ job_id }}" target="_blank" class="btn btn-secondary" style="font-size:0.85rem;">PDFを閲覧</a>
+      <a href="/pdf/{{ job_id }}?download=true" class="btn btn-secondary" style="font-size:0.85rem;">PDFをダウンロード</a>
+    </div>
+    {% endif %}
+
+    <div style="display:flex; gap:0.75rem; margin-top:1rem; flex-wrap:wrap;">
+      <button type="submit" class="btn btn-primary">確定して Notion に登録</button>
+      <a href="/" class="btn btn-secondary">キャンセル</a>
+    </div>
+
+  </form>
+</div>
+
+{% endblock %}
+
+{% block scripts %}
+<script>
+// Mirror utils/filename.py generate_filename() in JS so the filename input
+// auto-updates when the user edits title/authors/journal/year/volume/issue/pages.
+// Once the user manually types in the filename input, auto-update stops
+// (manual override mode) so we don't clobber their edit.
+function _sanitize(s) {
+  return String(s || '').replace(/[\r\n\/\\:*?"<>|]/g, '').trim();
+}
+function _isUnknown(v) {
+  if (v === null || v === undefined) return true;
+  const s = String(v).trim();
+  return s === '' || s === 'わからない' || s === 'null' || s === 'None';
+}
+function _authorsStr(raw) {
+  const parts = String(raw || '').split(/[、,・;\n]/).map(s => s.trim()).filter(s => s && s !== 'わからない');
+  return parts.length ? parts.join('・') : '';
+}
+function _volIssueStr(volume, issue) {
+  const parts = [];
+  if (!_isUnknown(volume)) parts.push(volume.trim() + '巻');
+  if (!_isUnknown(issue)) parts.push(issue.trim() + '号');
+  return parts.join('');
+}
+function _pagesStr(pages) {
+  return _isUnknown(pages) ? '' : pages.trim() + '頁';
+}
+function buildFilename() {
+  const title   = (document.querySelector('input[name="title"]')   || {}).value || '';
+  const authors = _authorsStr((document.querySelector('input[name="authors"]') || {}).value);
+  const journal = (document.querySelector('input[name="journal"]') || {}).value || '';
+  const year    = (document.querySelector('input[name="year"]')    || {}).value || '';
+  const volume  = (document.querySelector('input[name="volume"]')  || {}).value || '';
+  const issue   = (document.querySelector('input[name="issue"]')   || {}).value || '';
+  const pages   = (document.querySelector('input[name="pages"]')   || {}).value || '';
+
+  if (_isUnknown(title)) return '';
+
+  const parts = [];
+  if (authors) parts.push(_sanitize(authors));
+  parts.push('「' + _sanitize(title) + '」');
+  if (!_isUnknown(journal)) {
+    let j = _sanitize(journal);
+    const vi = _volIssueStr(volume, issue);
+    if (vi) j += _sanitize(vi);
+    const p = _pagesStr(pages);
+    if (p) j += _sanitize(p);
+    parts.push(j);
+  }
+  if (!_isUnknown(year)) parts.push('（' + _sanitize(String(year)) + '）');
+  return parts.join('') + '.pdf';
+}
+
+const filenameInput = document.getElementById('filename-input');
+let userOverride = false;
+if (filenameInput) {
+  // Once the user types into the filename field directly, stop auto-updates.
+  filenameInput.addEventListener('input', () => { userOverride = true; });
+}
+function refreshFilename() {
+  if (userOverride || !filenameInput) return;
+  const next = buildFilename();
+  if (next) filenameInput.value = next;
+}
+['title','authors','journal','year','volume','issue','pages'].forEach(name => {
+  const el = document.querySelector('input[name="' + name + '"]');
+  if (el) el.addEventListener('input', refreshFilename);
+});
+</script>
+{% endblock %}

@@ -1,0 +1,228 @@
+{% extends "base.html" %}
+{% block title %}ホーム{% endblock %}
+{% block content %}
+
+{% if (children and children|length > 0) or (parents and parents|length > 0) %}
+<div class="card" style="display:flex; align-items:center; gap:0.75rem; flex-wrap:wrap;">
+  <div style="flex:1; min-width:0;">
+    <div style="font-size:0.95rem; font-weight:600; margin-bottom:0.2rem;">親子アカウント</div>
+    <div style="font-size:0.82rem; color:#6c757d;">
+      {% if children and children|length > 0 %}
+        {{ children|length }}件の子アカウントを管理中
+        {% if parents and parents|length > 0 %} · 親アカウントから閲覧されています{% endif %}
+      {% elif parents and parents|length > 0 %}
+        親アカウントから閲覧されています
+      {% endif %}
+    </div>
+  </div>
+  <a href="/parent" class="btn btn-secondary" style="font-size:0.82rem; padding:0.4rem 0.9rem;">管理画面へ →</a>
+</div>
+{% endif %}
+
+{% if not connected %}
+<div class="card" style="max-width:520px; margin:2rem auto;">
+  <h2 style="margin-bottom:0.25rem;">論文PDF管理ツール</h2>
+  <p style="color:#6c757d; margin-bottom:1.5rem; font-size:0.875rem;">
+    PDFを投げるだけで書誌情報抽出・Notion登録まで自動化します
+  </p>
+
+  {% if token_error %}
+  <div class="alert alert-error" style="margin-bottom:1rem;">{{ token_error }}</div>
+  {% endif %}
+
+  {% if oauth_enabled %}
+  <a href="/auth/notion" class="btn btn-primary"
+     style="display:block; text-align:center; text-decoration:none; padding:0.75rem; font-size:1rem;">
+    Notion で認証する
+  </a>
+  <p style="margin-top:1rem; font-size:0.8rem; color:#6c757d; text-align:center;">
+    Notion のページが開き、アクセスを許可するだけで連携できます
+  </p>
+
+  {# Account-switch helper: lets the user add a second Notion account in a new
+     tab first, so Notion's OAuth workspace picker will list the new account. #}
+  <div style="margin-top:1.25rem; padding:0.85rem 1rem; background:#f5f3ff; border:1px solid #ddd6fe; border-radius:8px;">
+    <p style="font-size:0.78rem; color:#4338ca; font-weight:600; margin-bottom:0.5rem;">
+      💡 別のNotionアカウントに繋ぎたい場合
+    </p>
+    <ol style="font-size:0.78rem; color:#495057; line-height:1.7; padding-left:1.1rem; margin:0 0 0.6rem 0;">
+      <li><a href="https://www.notion.so/login?fromAgent=true" target="_blank" rel="noopener" style="color:#4338ca; font-weight:600;">notion.so を新規タブで開く</a> → 右上 <code>Add another account</code></li>
+      <li>このページに戻り「Notion で認証する」をクリック</li>
+      <li>Notion OAuth画面の右上ドロップダウンで新しいアカウントを選択</li>
+    </ol>
+    <a href="https://www.notion.so/login?fromAgent=true" target="_blank" rel="noopener"
+       style="display:inline-block; font-size:0.8rem; color:#4338ca; text-decoration:none; font-weight:600;">
+      🔗 Notion を別タブで開く
+    </a>
+  </div>
+  {% else %}
+  <form action="/auth/token" method="post">
+    <label style="display:block; font-size:0.85rem; font-weight:600; margin-bottom:0.4rem;">
+      Notion Integration Token
+    </label>
+    <input type="text" name="token" required
+      placeholder="secret_xxxxxxxxxxxx..."
+      style="width:100%; padding:0.6rem 0.75rem; border:1px solid #ced4da; border-radius:8px;
+             font-size:0.875rem; font-family:monospace; box-sizing:border-box;">
+    <button type="submit" class="btn btn-primary"
+      style="margin-top:0.75rem; width:100%;">連携する</button>
+  </form>
+
+  <div style="margin-top:1.25rem; padding:1rem; background:#f8f9fa; border-radius:8px; font-size:0.8rem; color:#495057; line-height:1.7;">
+    <strong>トークンの取得手順</strong><br>
+    1. <a href="https://www.notion.so/my-integrations" target="_blank" style="color:#4338ca;">notion.so/my-integrations</a> を開く<br>
+    2. 「新しいインテグレーション」→ 内部 → 作成<br>
+    3. 「シークレット」欄のトークン（<code>secret_...</code>）をコピー<br>
+    4. 保存先 DB を開き「接続」からインテグレーションを追加
+  </div>
+  {% endif %}
+</div>
+
+{% else %}
+
+{% if not database_selected %}
+<div class="alert alert-error">
+  保存先データベースが未選択です。
+  <a href="/databases" style="color:#b91c1c; font-weight:600;">DBを選択する →</a>
+</div>
+{% endif %}
+
+<div class="card">
+  <h2>PDFをアップロード</h2>
+  <form id="upload-form" action="/upload" method="post" enctype="multipart/form-data">
+    <div class="upload-area" id="drop-zone" onclick="document.getElementById('file-input').click()">
+      <svg width="40" height="40" fill="none" stroke="#ced4da" stroke-width="1.5" viewBox="0 0 24 24" style="margin-bottom:0.75rem;">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m2.25 0H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z" />
+      </svg>
+      <div style="font-weight:600;">クリックまたはドラッグ&ドロップ</div>
+      <p>PDF ファイル（最大 50MB）</p>
+    </div>
+    <input type="file" id="file-input" name="file" accept=".pdf" required>
+    <div id="file-name" style="margin-top:0.75rem; font-size:0.875rem; color:#495057; display:none;"></div>
+    <button type="submit" class="btn btn-primary" id="submit-btn"
+      style="margin-top:1rem; width:100%; opacity:0.5; cursor:default;"
+      {% if not database_selected %}disabled{% endif %}>
+      処理開始
+    </button>
+    {% if not database_selected %}
+    <p style="font-size:0.8rem; color:#6c757d; margin-top:0.5rem;">先に保存先DBを選択してください</p>
+    {% endif %}
+  </form>
+</div>
+
+{% endif %}
+{% endblock %}
+
+{% block scripts %}
+<script>
+const dropZone = document.getElementById('drop-zone');
+const fileInput = document.getElementById('file-input');
+const fileName = document.getElementById('file-name');
+const submitBtn = document.getElementById('submit-btn');
+
+if (fileInput) {
+  fileInput.addEventListener('change', () => {
+    if (fileInput.files.length > 0) {
+      fileName.textContent = 'ファイル: ' + fileInput.files[0].name;
+      fileName.style.display = 'block';
+      submitBtn.style.opacity = '1';
+      submitBtn.style.cursor = 'pointer';
+    }
+  });
+}
+
+if (dropZone) {
+  ['dragenter','dragover'].forEach(e => dropZone.addEventListener(e, ev => {
+    ev.preventDefault(); dropZone.classList.add('drag-over');
+  }));
+  ['dragleave','drop'].forEach(e => dropZone.addEventListener(e, ev => {
+    ev.preventDefault(); dropZone.classList.remove('drag-over');
+  }));
+  dropZone.addEventListener('drop', ev => {
+    const file = ev.dataTransfer.files[0];
+    if (file && file.type === 'application/pdf') {
+      const dt = new DataTransfer();
+      dt.items.add(file);
+      fileInput.files = dt.files;
+      fileName.textContent = 'ファイル: ' + file.name;
+      fileName.style.display = 'block';
+      submitBtn.style.opacity = '1';
+      submitBtn.style.cursor = 'pointer';
+    }
+  });
+}
+
+// Direct-to-Blob upload path bypasses Vercel's 4.5MB function body limit.
+// Files >4MB go directly to Vercel Blob from the browser; only the resulting
+// blob URL is sent to /upload. Smaller files keep the legacy form submission.
+const DIRECT_UPLOAD_THRESHOLD = 4 * 1024 * 1024;
+
+async function uploadViaBlob(file) {
+  const tokenResp = await fetch('/api/blob/upload-token', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ filename: file.name, contentLength: file.size }),
+  });
+  if (!tokenResp.ok) {
+    const detail = await tokenResp.text();
+    throw new Error('upload-token 取得に失敗: ' + detail);
+  }
+  const { uploadUrl, token } = await tokenResp.json();
+
+  const putResp = await fetch(uploadUrl, {
+    method: 'PUT',
+    headers: {
+      'Authorization': 'Bearer ' + token,
+      'Content-Type': 'application/pdf',
+      'x-content-type': 'application/pdf',
+    },
+    body: file,
+  });
+  if (!putResp.ok) {
+    const detail = await putResp.text();
+    throw new Error('Blob アップロード失敗: ' + detail);
+  }
+  const blobInfo = await putResp.json();
+  return blobInfo.url;
+}
+
+const form = document.getElementById('upload-form');
+if (form) {
+  form.addEventListener('submit', async (ev) => {
+    const f = fileInput && fileInput.files && fileInput.files[0];
+    if (!f) return;
+
+    if (f.size <= DIRECT_UPLOAD_THRESHOLD) {
+      submitBtn.innerHTML = '<span class="spinner"></span>処理中...';
+      submitBtn.disabled = true;
+      return; // legacy multipart path
+    }
+
+    // Large file → intercept and use direct-to-blob flow.
+    ev.preventDefault();
+    submitBtn.disabled = true;
+    try {
+      submitBtn.innerHTML = '<span class="spinner"></span>アップロード中...';
+      const blobUrl = await uploadViaBlob(f);
+      submitBtn.innerHTML = '<span class="spinner"></span>解析中...';
+      const fd = new FormData();
+      fd.append('blob_url', blobUrl);
+      fd.append('blob_filename', f.name);
+      const resp = await fetch('/upload', { method: 'POST', body: fd });
+      if (resp.redirected) {
+        window.location.href = resp.url;
+      } else {
+        const html = await resp.text();
+        document.open();
+        document.write(html);
+        document.close();
+      }
+    } catch (err) {
+      submitBtn.innerHTML = '処理開始';
+      submitBtn.disabled = false;
+      alert('アップロードに失敗しました: ' + (err && err.message ? err.message : err));
+    }
+  });
+}
+</script>
+{% endblock %}

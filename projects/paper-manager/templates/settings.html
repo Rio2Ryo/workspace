@@ -1,0 +1,148 @@
+{% extends "base.html" %}
+{% block title %}カラムマッピング設定{% endblock %}
+{% block content %}
+
+<div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:1.5rem; flex-wrap:wrap; gap:0.5rem;">
+  <h2 style="font-size:1.1rem; font-weight:700;">カラムマッピング設定</h2>
+  <a href="/" class="btn btn-secondary" style="font-size:0.85rem; padding:0.4rem 0.9rem;">← 戻る</a>
+</div>
+
+{% if saved %}
+<div class="alert alert-success">✓ マッピングを保存しました</div>
+{% endif %}
+
+<div class="card">
+  <p style="font-size:0.875rem; color:#6c757d; margin-bottom:0.5rem; line-height:1.7;">
+    対象DB: <strong>{{ database_name or "（未設定）" }}</strong>
+    {% if columns %}
+    &nbsp;·&nbsp; <span style="color:#4338ca;">{{ columns|length }}列を検出</span>
+    {% endif %}
+  </p>
+  <p style="font-size:0.82rem; color:#6c757d; margin-bottom:1.25rem;">
+    列名から自動で対応を推測します。変更したい行だけ上書きしてください。
+    <span style="background:#e7f5ff; color:#1971c2; padding:1px 5px; border-radius:4px; font-size:0.75rem;">自動</span>
+    は推測、何も選ばずに保存すると推測値をリセット（自動に戻す）します。
+  </p>
+
+  {% if not columns %}
+  <div class="alert alert-error" style="margin-bottom:1.25rem; display:block;">
+    Notionのカラム情報を取得できませんでした。
+    {% if schema_error %}
+    <br><code style="font-size:0.78rem;">{{ schema_error }}</code>
+    {% endif %}
+    {% if db_debug and db_debug.schema_error %}
+    <br><code style="font-size:0.78rem;">{{ db_debug.schema_error }}</code>
+    {% endif %}
+    {% if not database_id %}
+    DBを選択してから再度アクセスしてください。
+    {% else %}
+    <br>DB ID: <code style="font-size:0.78rem;">{{ database_id }}</code>
+    {% if db_debug %}
+    &nbsp;· prop_count={{ db_debug.prop_count }} · {{ db_debug.first_prop or "—" }}
+    {% endif %}
+    {% endif %}
+  </div>
+  {% endif %}
+
+  <form action="/settings/mapping" method="post">
+    <table class="meta-table" style="margin-bottom:1.5rem;">
+      <thead>
+        <tr>
+          <th style="padding:0.5rem 0.75rem; text-align:left; font-size:0.8rem; color:#6c757d; border-bottom:2px solid #e9ecef; width:160px;">情報の種類</th>
+          <th style="padding:0.5rem 0.75rem; text-align:left; font-size:0.8rem; color:#6c757d; border-bottom:2px solid #e9ecef;">Notionの列名</th>
+          <th style="padding:0.5rem 0.75rem; text-align:left; font-size:0.8rem; color:#6c757d; border-bottom:2px solid #e9ecef; width:90px;">列タイプ</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% set role_labels = [
+          ("title",            "タイトル",     "title型を自動検出"),
+          ("author_primary",   "筆頭著者",     "select推奨"),
+          ("authors_all",      "全著者",       "rich_text推奨"),
+          ("journal",          "雑誌名",       "select/rich_text"),
+          ("year",             "年",           "number推奨"),
+          ("doc_type",         "文献種別",     "select推奨"),
+          ("summary",          "要約（詳細）", "rich_text"),
+          ("one_line_summary", "一行要約",     "rich_text・追加生成"),
+          ("memo",             "メモ",         "rich_text・空欄登録"),
+          ("doi",              "DOI",          "url推奨"),
+          ("pdf",              "PDF（DL）",     "url推奨"),
+          ("pdf_view",         "PDF閲覧URL",   "url・インライン表示"),
+          ("read",             "既読",         "checkbox"),
+        ] %}
+        {% for role, label, hint in role_labels %}
+        {% set auto_val = inferred.get(role) %}
+        {% set user_val = user_mapping.get(role) %}
+        {% set effective_val = mapping.get(role) %}
+        <tr>
+          <td style="vertical-align:middle;">
+            <div style="font-weight:500; font-size:0.875rem;">{{ label }}</div>
+            <div style="font-size:0.72rem; color:#adb5bd;">{{ hint }}</div>
+          </td>
+          <td style="vertical-align:middle;">
+            <div style="display:flex; align-items:center; gap:0.4rem; flex-wrap:wrap;">
+              {% if auto_val and not user_val %}
+              <span style="background:#e7f5ff; color:#1971c2; padding:1px 6px; border-radius:4px; font-size:0.72rem; white-space:nowrap;">自動: {{ auto_val }}</span>
+              {% endif %}
+              <select name="role_{{ role }}"
+                style="padding:0.35rem 0.5rem; border:1px solid {% if user_val %}#4338ca{% else %}#ced4da{% endif %}; border-radius:6px; font-size:0.82rem; max-width:200px;">
+                <option value="">{% if auto_val %}— 自動（{{ auto_val }}）—{% else %}— マッピングしない —{% endif %}</option>
+                {% for col_name, col_type in columns.items() %}
+                <option value="{{ col_name }}"
+                  {% if user_val == col_name %}selected{% endif %}>
+                  {{ col_name }} ({{ col_type }})
+                </option>
+                {% endfor %}
+              </select>
+              {% if user_val %}
+              <span style="font-size:0.72rem; color:#4338ca; white-space:nowrap;">手動設定</span>
+              {% endif %}
+            </div>
+          </td>
+          <td style="vertical-align:middle; font-size:0.8rem; color:#6c757d;">
+            {% if effective_val and effective_val in columns %}{{ columns[effective_val] }}{% endif %}
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+
+    {% if not mapping.get('authors_all') %}
+    <div class="alert alert-error" style="margin-bottom:1rem; font-size:0.85rem;">
+      ⚠️ <strong>全著者</strong> がどの列にもマッピングされていません。Notion に複数著者が登録されません。<code>rich_text</code> 型の列（例: <code>全著者</code>）を設定してください。
+    </div>
+    {% endif %}
+
+    <div style="display:flex; gap:0.75rem; align-items:center; flex-wrap:wrap;">
+      <button type="submit" class="btn btn-primary">保存</button>
+      <a href="/settings/mapping" class="btn btn-secondary">再読み込み（自動推測をリフレッシュ）</a>
+      <a href="/settings/scholars" class="btn btn-secondary">注目学者リスト →</a>
+    </div>
+  </form>
+</div>
+
+<div class="card" style="background:#fffbeb; border-color:#fde68a;">
+  <h3 style="font-size:0.9rem; font-weight:600; margin-bottom:0.5rem; color:#92400e;">💡 自動検出について</h3>
+  <ul style="font-size:0.82rem; color:#78350f; line-height:2; padding-left:1.2rem;">
+    <li>PDFをアップロードするたびに、Notionの列名を確認して自動でマッピングします。</li>
+    <li>「一行要約」列があれば自動で検出され、<strong>Claudeが120文字以内の要約を生成</strong>して入力します。</li>
+    <li>手動設定した列は青枠で表示されます。空白で保存すると自動検出に戻ります。</li>
+    <li>列名が変わった場合は「再読み込み」で再推測できます。</li>
+  </ul>
+</div>
+
+<div class="card">
+  <h2 style="margin-bottom:0.5rem;">API アクセス</h2>
+  <p style="font-size:0.875rem; color:#6c757d; margin-bottom:1rem;">
+    ChatGPTなど外部AIからこのアプリを呼び出す際に使うAPIキーです
+  </p>
+  {% if api_key %}
+  <div class="api-key-box">{{ api_key }}</div>
+  <p style="font-size:0.8rem; color:#6c757d; margin-top:0.5rem;">このキーは安全な場所に保存してください</p>
+  {% else %}
+  <form action="/api-key/create" method="post">
+    <button type="submit" class="btn btn-secondary">APIキーを発行する</button>
+  </form>
+  {% endif %}
+</div>
+
+{% endblock %}

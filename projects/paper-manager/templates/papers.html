@@ -1,0 +1,146 @@
+{% extends "base.html" %}
+{% block title %}論文一覧{% endblock %}
+{% block content %}
+
+{% if viewing_as_child and viewed_user %}
+<div style="position:sticky; top:0; z-index:50; margin:-2rem -1.5rem 1.25rem; padding:0.7rem 1.5rem;
+            background:#fff3bf; border-bottom:1px solid #f59f00; display:flex; align-items:center;
+            gap:0.75rem; flex-wrap:wrap; font-size:0.85rem; color:#664d03;">
+  <span>🔍 <strong>{{ viewed_user.name or "子アカウント" }}</strong> さんのデータを閲覧中（読み取り専用）</span>
+  <a href="/papers" style="margin-left:auto; color:#4338ca; text-decoration:none; font-weight:600;">
+    通常表示に戻る →
+  </a>
+</div>
+{% endif %}
+
+<div style="margin-bottom:1.25rem;">
+  <form action="/papers" method="get">
+    <div style="display:flex; gap:0.5rem; flex-wrap:wrap; align-items:center; margin-bottom:0.75rem;">
+      <input type="text" name="q" value="{{ query }}" placeholder="タイトル・著者・要約・メモで検索"
+        style="padding:0.5rem 0.75rem; border:1px solid #ced4da; border-radius:8px; font-size:0.875rem; flex:1; min-width:200px;">
+      <button type="submit" class="btn btn-secondary" style="padding:0.5rem 1rem;">検索</button>
+      {% if query or cinii or ndl or memo or sort != "newest" %}
+      <a href="/papers" class="btn btn-secondary" style="padding:0.5rem 1rem;">クリア</a>
+      {% endif %}
+    </div>
+    <div style="display:flex; gap:0.75rem; flex-wrap:wrap; align-items:center;">
+      <select name="sort" onchange="this.form.submit()"
+        style="padding:0.4rem 0.6rem; border:1px solid #ced4da; border-radius:6px; font-size:0.8rem; color:#495057;">
+        <option value="newest" {% if sort=="newest" %}selected{% endif %}>新しい順</option>
+        <option value="oldest" {% if sort=="oldest" %}selected{% endif %}>古い順</option>
+        <option value="year_desc" {% if sort=="year_desc" %}selected{% endif %}>発行年（新→旧）</option>
+        <option value="year_asc" {% if sort=="year_asc" %}selected{% endif %}>発行年（旧→新）</option>
+      </select>
+      <label style="font-size:0.8rem; color:#495057; display:flex; align-items:center; gap:0.3rem; cursor:pointer;">
+        <input type="checkbox" name="cinii" value="1" {% if cinii %}checked{% endif %} onchange="this.form.submit()">
+        CiNii照合済
+      </label>
+      <label style="font-size:0.8rem; color:#495057; display:flex; align-items:center; gap:0.3rem; cursor:pointer;">
+        <input type="checkbox" name="ndl" value="1" {% if ndl %}checked{% endif %} onchange="this.form.submit()">
+        NDL照合済
+      </label>
+      <label style="font-size:0.8rem; color:#495057; display:flex; align-items:center; gap:0.3rem; cursor:pointer;">
+        <input type="checkbox" name="memo" value="1" {% if memo %}checked{% endif %} onchange="this.form.submit()">
+        メモあり
+      </label>
+      <span style="margin-left:auto; font-size:0.85rem; color:#6c757d;">{{ papers|length }}件</span>
+    </div>
+  </form>
+  {% if papers %}
+  <div style="display:flex; gap:0.5rem; margin-top:0.75rem; justify-content:flex-end;">
+    <a href="/papers/export?format=csv&q={{ query }}&sort={{ sort }}{% if cinii %}&cinii=1{% endif %}{% if ndl %}&ndl=1{% endif %}{% if memo %}&memo=1{% endif %}"
+       class="btn btn-secondary" style="font-size:0.78rem; padding:0.35rem 0.8rem;">
+      ⬇ CSV
+    </a>
+    <a href="/papers/export?format=json&q={{ query }}&sort={{ sort }}{% if cinii %}&cinii=1{% endif %}{% if ndl %}&ndl=1{% endif %}{% if memo %}&memo=1{% endif %}"
+       class="btn btn-secondary" style="font-size:0.78rem; padding:0.35rem 0.8rem;">
+      ⬇ JSON
+    </a>
+  </div>
+  {% endif %}
+</div>
+
+{% if papers %}
+<div style="display:flex; flex-direction:column; gap:0.75rem;">
+  {% for p in papers %}
+  <div class="card" style="padding:1.25rem; margin-bottom:0; cursor:pointer; transition:border-color 0.15s, box-shadow 0.15s;"
+       onclick="location.href='/papers/{{ p.paper_id }}'"
+       onmouseover="this.style.borderColor='#4338ca';this.style.boxShadow='0 2px 8px rgba(67,56,202,0.08)'"
+       onmouseout="this.style.borderColor='#e9ecef';this.style.boxShadow=''">
+    <div style="display:flex; justify-content:space-between; align-items:flex-start; gap:1rem;">
+      <div style="flex:1; min-width:0;">
+        <div class="hl-target" style="font-weight:600; font-size:0.95rem; margin-bottom:0.3rem; word-break:break-word;">
+          {{ p.title or "(タイトル不明)" }}
+        </div>
+        <div style="font-size:0.8rem; color:#6c757d; margin-bottom:0.5rem;">
+          {% if p.authors %}<span class="hl-target">{{ p.authors | join("・") }}</span>{% endif %}
+          {% if p.journal %}&nbsp;·&nbsp; <span class="hl-target">{{ p.journal }}</span>{% endif %}
+          {% if p.year %}&nbsp;·&nbsp; {{ p.year }}年{% endif %}
+          &nbsp;·&nbsp; {{ p.created_at[:10] }}
+        </div>
+        {% if p.cinii_verified or p.ndl_verified %}
+        <div style="margin-bottom:0.5rem;">
+          {% if p.cinii_verified %}<span style="background:#e7f3ff;color:#1971c2;padding:2px 8px;border-radius:4px;font-size:0.75rem;margin-right:4px;">CiNii照合済</span>{% endif %}
+          {% if p.ndl_verified %}<span style="background:#e6fcf5;color:#087f5b;padding:2px 8px;border-radius:4px;font-size:0.75rem;">NDL照合済</span>{% endif %}
+        </div>
+        {% endif %}
+        {% if p.memo %}
+        <p style="font-size:0.8rem; color:#6c757d; font-style:italic; margin-bottom:0.4rem;">
+          📝 {{ p.memo[:80] }}{% if p.memo|length > 80 %}...{% endif %}
+        </p>
+        {% endif %}
+        {% if p.summary %}
+        <p class="hl-target" style="font-size:0.85rem; color:#495057; line-height:1.6;">
+          {{ p.summary[:180] }}{% if p.summary|length > 180 %}...{% endif %}
+        </p>
+        {% endif %}
+      </div>
+      <div style="display:flex; flex-direction:column; gap:0.4rem; flex-shrink:0;">
+        <a href="/papers/{{ p.paper_id }}" onclick="event.stopPropagation()"
+           class="btn btn-primary" style="font-size:0.78rem; padding:0.35rem 0.75rem; white-space:nowrap;">
+          詳細
+        </a>
+        {% if p.notion_url %}
+        <a href="{{ p.notion_url }}" target="_blank" onclick="event.stopPropagation()"
+           class="btn btn-secondary" style="font-size:0.78rem; padding:0.35rem 0.75rem; white-space:nowrap;">
+          Notion
+        </a>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+  {% endfor %}
+</div>
+
+{% else %}
+<div class="card" style="text-align:center; padding:3rem; color:#6c757d;">
+  {% if query %}
+  「{{ query }}」に一致する論文が見つかりませんでした。
+  {% else %}
+  {% if viewing_as_child %}
+  このアカウントにはまだ論文が登録されていません。
+  {% else %}
+  まだ論文が登録されていません。<br>
+  <a href="/" style="color:#4338ca; margin-top:0.5rem; display:inline-block;">PDFをアップロードする →</a>
+  {% endif %}
+  {% endif %}
+</div>
+{% endif %}
+
+{% endblock %}
+
+{% block scripts %}
+{% if query %}
+<script>
+const kw = {{ query | tojson }};
+if (kw) {
+  const re = new RegExp(kw.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'gi');
+  document.querySelectorAll('.hl-target').forEach(el => {
+    el.innerHTML = el.textContent.replace(re, m =>
+      `<mark style="background:#fff3bf;border-radius:2px;padding:0 2px;">${m}</mark>`
+    );
+  });
+}
+</script>
+{% endif %}
+{% endblock %}

@@ -1,0 +1,40 @@
+{% extends "base.html" %}
+{% block title %}処理中{% endblock %}
+{% block content %}
+<div class="card" style="text-align:center; padding:3rem 2rem;">
+  <div class="spinner" style="width:40px;height:40px;border-width:3px;margin:0 auto 1.5rem;display:block;"></div>
+  <h2 style="margin-bottom:0.5rem;">処理中...</h2>
+  <p style="color:#6c757d; font-size:0.9rem; margin-bottom:0.5rem;">PDFを解析してNotion登録するまで少々お待ちください。</p>
+  <p style="color:#adb5bd; font-size:0.8rem;">通常 20〜40秒かかります</p>
+  <p id="status" style="margin-top:1.5rem; font-size:0.875rem; color:#6c757d;"></p>
+</div>
+{% endblock %}
+{% block scripts %}
+<script>
+const jobId = "{{ job_id }}";
+let attempts = 0;
+async function poll() {
+  attempts++;
+  try {
+    const res = await fetch("/job/" + jobId);
+    const data = await res.json();
+    const el = document.getElementById("status");
+    if (data.status === "done") {
+      window.location.href = "/result/" + jobId;
+    } else if (data.status === "error") {
+      el.textContent = "エラー: " + (data.error || "不明なエラー");
+      el.style.color = "#b91c1c";
+    } else {
+      if (attempts < 3) el.textContent = "テキスト抽出中...";
+      else if (attempts < 7) el.textContent = "書誌情報を取得中...";
+      else if (attempts < 12) el.textContent = "CiNii / NDL で照合中...";
+      else el.textContent = "要約生成 & Notion登録中...";
+      setTimeout(poll, 3000);
+    }
+  } catch {
+    setTimeout(poll, 3000);
+  }
+}
+poll();
+</script>
+{% endblock %}

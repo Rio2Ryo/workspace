@@ -1,0 +1,131 @@
+{% extends "base.html" %}
+{% block title %}{{ paper.title or "論文詳細" }}{% endblock %}
+{% block content %}
+
+{% if viewing_as_child and viewed_user %}
+<div style="position:sticky; top:0; z-index:50; margin:-2rem -1.5rem 1.25rem; padding:0.7rem 1.5rem;
+            background:#fff3bf; border-bottom:1px solid #f59f00; display:flex; align-items:center;
+            gap:0.75rem; flex-wrap:wrap; font-size:0.85rem; color:#664d03;">
+  <span>🔍 <strong>{{ viewed_user.name or "子アカウント" }}</strong> さんのデータを閲覧中（読み取り専用）</span>
+  <a href="/papers/{{ paper.paper_id }}" style="margin-left:auto; color:#4338ca; text-decoration:none; font-weight:600;">
+    通常表示に戻る →
+  </a>
+</div>
+{% endif %}
+
+<div style="margin-bottom:1rem;">
+  <a href="/papers{% if viewing_as_child and viewed_user %}?view_as={{ viewed_user.user_id }}{% endif %}"
+     style="color:#4338ca; text-decoration:none; font-size:0.875rem;">← 論文一覧に戻る</a>
+</div>
+
+<!-- 書誌情報 + Notion -->
+<div class="card">
+  <div style="display:flex; justify-content:space-between; align-items:flex-start; gap:1rem; flex-wrap:wrap;">
+    <div style="flex:1;">
+      <h1 style="font-size:1.15rem; font-weight:700; margin-bottom:0.5rem; line-height:1.5;">
+        {{ paper.title or "(タイトル不明)" }}
+      </h1>
+      {% if paper.authors %}
+      <p style="font-size:0.875rem; color:#495057; margin-bottom:0.25rem;">
+        {{ paper.authors | join("・") }}
+      </p>
+      {% endif %}
+      <p style="font-size:0.8rem; color:#6c757d;">
+        {% if paper.journal %}{{ paper.journal }}{% endif %}
+        {% if paper.volume %}&nbsp;{{ paper.volume }}巻{% endif %}
+        {% if paper.issue %} {{ paper.issue }}号{% endif %}
+        {% if paper.pages %} pp.{{ paper.pages }}{% endif %}
+        {% if paper.year %}&nbsp;·&nbsp; {{ paper.year }}年{% endif %}
+        &nbsp;·&nbsp; 登録日 {{ paper.created_at[:10] }}
+      </p>
+    </div>
+    <div style="display:flex; flex-direction:column; gap:0.5rem; flex-shrink:0;">
+      {% if paper.notion_url %}
+      <a href="{{ paper.notion_url }}" target="_blank" class="btn btn-primary" style="white-space:nowrap;">
+        Notionで見る →
+      </a>
+      {% endif %}
+      {% if not viewing_as_child %}
+      <a href="/papers/{{ paper.paper_id }}/edit" class="btn btn-secondary" style="white-space:nowrap; text-align:center;">
+        ✏️ 編集
+      </a>
+      {% endif %}
+    </div>
+  </div>
+
+  <!-- 検証状態 -->
+  {% if paper.manually_edited %}
+  <div style="margin-top:0.75rem;">
+    <span style="background:#fff3bf;color:#e67700;padding:3px 10px;border-radius:12px;font-size:0.78rem;">
+      ✏️ 手動修正済み{% if paper.updated_at %} · {{ paper.updated_at[:10] }}{% endif %}
+    </span>
+  </div>
+  {% endif %}
+
+  {% if paper.cinii_verified or paper.ndl_verified %}
+  <div style="margin-top:1rem; display:flex; gap:0.5rem; flex-wrap:wrap;">
+    {% if paper.cinii_verified %}
+    <span style="background:#e7f3ff;color:#1971c2;padding:4px 12px;border-radius:12px;font-size:0.8rem;">✓ CiNii 照合済</span>
+    {% endif %}
+    {% if paper.ndl_verified %}
+    <span style="background:#e6fcf5;color:#087f5b;padding:4px 12px;border-radius:12px;font-size:0.8rem;">✓ NDL 照合済</span>
+    {% endif %}
+  </div>
+  {% endif %}
+
+  {% if paper.filename %}
+  <p style="margin-top:0.75rem; font-size:0.8rem; color:#adb5bd;">ファイル名: {{ paper.filename }}</p>
+  {% endif %}
+</div>
+
+<!-- 要約 -->
+{% if paper.summary %}
+<div class="card">
+  <h2>要約</h2>
+  <p style="font-size:0.9rem; line-height:1.8; color:#495057; white-space:pre-wrap;">{{ paper.summary }}</p>
+</div>
+{% endif %}
+
+<!-- メモ -->
+<div class="card">
+  <h2 style="margin-bottom:0.75rem;">メモ</h2>
+  {% if viewing_as_child %}
+  {% if paper.memo %}
+  <p style="font-size:0.9rem; line-height:1.8; color:#495057; white-space:pre-wrap;">{{ paper.memo }}</p>
+  {% else %}
+  <p style="font-size:0.85rem; color:#adb5bd;">メモはありません。</p>
+  {% endif %}
+  <p style="font-size:0.78rem; color:#adb5bd; margin-top:0.75rem;">閲覧モードのため編集できません。</p>
+  {% else %}
+  <form action="/papers/{{ paper.paper_id }}/memo" method="post">
+    <textarea name="memo" rows="5"
+      style="width:100%; padding:0.75rem; border:1px solid #ced4da; border-radius:8px;
+             font-size:0.875rem; font-family:inherit; resize:vertical; line-height:1.6;"
+      placeholder="この論文についてのメモを自由に記入できます...">{{ paper.memo or "" }}</textarea>
+    <button type="submit" class="btn btn-primary" style="margin-top:0.75rem;">保存</button>
+  </form>
+  {% endif %}
+</div>
+
+<!-- 関連論文 -->
+{% if related %}
+<div class="card">
+  <h2 style="margin-bottom:1rem;">関連論文（{{ related|length }}件）</h2>
+  <div style="display:flex; flex-direction:column; gap:0.5rem;">
+    {% for r in related %}
+    <a href="/papers/{{ r.paper_id }}{% if viewing_as_child and viewed_user %}?view_as={{ viewed_user.user_id }}{% endif %}" style="display:block; padding:0.75rem 1rem; border:1px solid #e9ecef;
+       border-radius:8px; text-decoration:none; color:inherit; transition:border-color 0.15s;"
+       onmouseover="this.style.borderColor='#4338ca'" onmouseout="this.style.borderColor='#e9ecef'">
+      <div style="font-weight:600; font-size:0.875rem; margin-bottom:0.2rem;">{{ r.title or "(タイトル不明)" }}</div>
+      <div style="font-size:0.78rem; color:#6c757d;">
+        {% if r.authors %}{{ r.authors | join("・") }}{% endif %}
+        {% if r.journal %}&nbsp;·&nbsp; {{ r.journal }}{% endif %}
+        {% if r.year %}&nbsp;·&nbsp; {{ r.year }}年{% endif %}
+      </div>
+    </a>
+    {% endfor %}
+  </div>
+</div>
+{% endif %}
+
+{% endblock %}

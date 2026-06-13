@@ -1,0 +1,169 @@
+{% extends "base.html" %}
+{% block title %}書誌情報を編集{% endblock %}
+{% block content %}
+
+<div style="margin-bottom:1rem;">
+  <a href="/papers/{{ paper.paper_id }}" style="color:#4338ca; text-decoration:none; font-size:0.875rem;">← 詳細に戻る</a>
+</div>
+
+{% if viewing_as_child %}
+<div class="card" style="text-align:center;">
+  <h2 style="margin-bottom:0.5rem;">閲覧モードでは編集できません</h2>
+  <p style="font-size:0.9rem; color:#6c757d; margin-bottom:1rem;">
+    親アカウントとして子アカウントのデータを閲覧しているため、編集操作は許可されていません。
+  </p>
+  <a href="/papers/{{ paper.paper_id }}{% if viewed_user %}?view_as={{ viewed_user.user_id }}{% endif %}" class="btn btn-secondary">詳細に戻る</a>
+</div>
+{% else %}
+
+<div class="card">
+  <h2 style="margin-bottom:0.25rem;">書誌情報を編集</h2>
+  {% if paper.manually_edited %}
+  <p style="font-size:0.8rem; color:#e67700; margin-bottom:1.25rem;">
+    ✏️ 手動修正済み（最終更新: {{ paper.updated_at[:16] if paper.updated_at else "-" }}）
+  </p>
+  {% else %}
+  <p style="font-size:0.8rem; color:#6c757d; margin-bottom:1.25rem;">AI抽出結果を修正できます。修正後は「手動修正済み」フラグが付きます。</p>
+  {% endif %}
+
+  <form action="/papers/{{ paper.paper_id }}/edit" method="post">
+    <div style="display:grid; gap:1rem;">
+
+      <div>
+        <label style="font-size:0.85rem; color:#495057; display:block; margin-bottom:0.3rem;">論文タイトル</label>
+        <input type="text" name="title" value="{{ paper.title or '' }}"
+          style="width:100%; padding:0.6rem 0.75rem; border:1px solid #ced4da; border-radius:8px; font-size:0.875rem;">
+      </div>
+
+      <div>
+        <label style="font-size:0.85rem; color:#495057; display:block; margin-bottom:0.3rem;">著者（読点「、」またはカンマ「,」区切り）</label>
+        <input type="text" name="authors" value="{{ (paper.authors or []) | join('、') }}"
+          style="width:100%; padding:0.6rem 0.75rem; border:1px solid #ced4da; border-radius:8px; font-size:0.875rem;"
+          placeholder="例: 山田太郎、鈴木花子">
+      </div>
+
+      <div>
+        <label style="font-size:0.85rem; color:#495057; display:block; margin-bottom:0.3rem;">雑誌名</label>
+        <input type="text" name="journal" value="{{ paper.journal or '' }}"
+          style="width:100%; padding:0.6rem 0.75rem; border:1px solid #ced4da; border-radius:8px; font-size:0.875rem;">
+      </div>
+
+      <div style="display:grid; grid-template-columns:1fr 1fr 1fr 1fr; gap:0.75rem;">
+        <div>
+          <label style="font-size:0.85rem; color:#495057; display:block; margin-bottom:0.3rem;">発行年</label>
+          <input type="text" name="year" value="{{ paper.year or '' }}"
+            style="width:100%; padding:0.6rem 0.75rem; border:1px solid #ced4da; border-radius:8px; font-size:0.875rem;" placeholder="例: 2023">
+        </div>
+        <div>
+          <label style="font-size:0.85rem; color:#495057; display:block; margin-bottom:0.3rem;">巻</label>
+          <input type="text" name="volume" value="{{ paper.volume or '' }}"
+            style="width:100%; padding:0.6rem 0.75rem; border:1px solid #ced4da; border-radius:8px; font-size:0.875rem;">
+        </div>
+        <div>
+          <label style="font-size:0.85rem; color:#495057; display:block; margin-bottom:0.3rem;">号</label>
+          <input type="text" name="issue" value="{{ paper.issue or '' }}"
+            style="width:100%; padding:0.6rem 0.75rem; border:1px solid #ced4da; border-radius:8px; font-size:0.875rem;">
+        </div>
+        <div>
+          <label style="font-size:0.85rem; color:#495057; display:block; margin-bottom:0.3rem;">頁</label>
+          <input type="text" name="pages" value="{{ paper.pages or '' }}"
+            style="width:100%; padding:0.6rem 0.75rem; border:1px solid #ced4da; border-radius:8px; font-size:0.875rem;" placeholder="例: 12-25">
+        </div>
+      </div>
+
+      <div>
+        <label style="font-size:0.85rem; color:#495057; display:block; margin-bottom:0.3rem;">メモ</label>
+        <textarea name="memo" rows="4"
+          style="width:100%; padding:0.6rem 0.75rem; border:1px solid #ced4da; border-radius:8px; font-size:0.875rem; font-family:inherit; resize:vertical; line-height:1.6;"
+          placeholder="この論文についてのメモ...">{{ paper.memo or '' }}</textarea>
+      </div>
+
+      <div style="border-top:1px solid #e9ecef; padding-top:1rem;">
+        <label style="font-size:0.85rem; color:#495057; display:block; margin-bottom:0.3rem;">
+          ファイル名 <span style="color:#868e96; font-weight:normal;">(自動生成プレビュー / 保存時に確定)</span>
+        </label>
+        <div id="filename-preview"
+             style="width:100%; padding:0.6rem 0.75rem; border:1px solid #ced4da; border-radius:8px; font-size:0.875rem; background:#f8f9fa; color:#212529; font-family:monospace; min-height:1.5em; word-break:break-all;">
+          {{ paper.filename or '(タイトルを入力するとファイル名が表示されます)' }}
+        </div>
+        <p style="font-size:0.75rem; color:#868e96; margin-top:0.4rem;">
+          上のフィールド（タイトル/著者/雑誌/年/巻/号/頁）を変更すると即座にファイル名が更新されます。
+        </p>
+      </div>
+
+    </div>
+
+    <div style="display:flex; gap:0.75rem; margin-top:1.5rem;">
+      <button type="submit" class="btn btn-primary">保存</button>
+      <a href="/papers/{{ paper.paper_id }}" class="btn btn-secondary">キャンセル</a>
+    </div>
+  </form>
+</div>
+
+{% endif %}
+
+{% endblock %}
+
+{% block scripts %}
+<script>
+// Mirror utils/filename.py generate_filename() in JS for live preview.
+// Sanitize: strip newlines, slashes, and characters illegal in OS filenames.
+function _sanitize(s) {
+  return String(s || '').replace(/[\r\n\/\\:*?"<>|]/g, '').trim();
+}
+function _isUnknown(v) {
+  if (v === null || v === undefined) return true;
+  const s = String(v).trim();
+  return s === '' || s === 'わからない' || s === 'null' || s === 'None';
+}
+function _authorsStr(raw) {
+  // Edit form uses 、 , ・ ; or newline as separators (mirrors backend regex)
+  const parts = String(raw || '').split(/[、,・;\n]/).map(s => s.trim()).filter(s => s && s !== 'わからない');
+  return parts.length ? parts.join('・') : '';
+}
+function _volIssueStr(volume, issue) {
+  const parts = [];
+  if (!_isUnknown(volume)) parts.push(volume.trim() + '巻');
+  if (!_isUnknown(issue)) parts.push(issue.trim() + '号');
+  return parts.join('');
+}
+function _pagesStr(pages) {
+  return _isUnknown(pages) ? '' : pages.trim() + '頁';
+}
+function buildFilename() {
+  const title   = document.querySelector('input[name="title"]').value;
+  const authors = _authorsStr(document.querySelector('input[name="authors"]').value);
+  const journal = document.querySelector('input[name="journal"]').value;
+  const year    = document.querySelector('input[name="year"]').value;
+  const volume  = document.querySelector('input[name="volume"]').value;
+  const issue   = document.querySelector('input[name="issue"]').value;
+  const pages   = document.querySelector('input[name="pages"]').value;
+
+  if (_isUnknown(title)) return '(タイトルを入力するとファイル名が表示されます)';
+
+  const parts = [];
+  if (authors) parts.push(_sanitize(authors));
+  parts.push('「' + _sanitize(title) + '」');
+  if (!_isUnknown(journal)) {
+    let j = _sanitize(journal);
+    const vi = _volIssueStr(volume, issue);
+    if (vi) j += _sanitize(vi);
+    const p = _pagesStr(pages);
+    if (p) j += _sanitize(p);
+    parts.push(j);
+  }
+  if (!_isUnknown(year)) parts.push('（' + _sanitize(String(year)) + '）');
+  return parts.join('') + '.pdf';
+}
+function refreshPreview() {
+  const el = document.getElementById('filename-preview');
+  if (el) el.textContent = buildFilename();
+}
+['title','authors','journal','year','volume','issue','pages'].forEach(name => {
+  const el = document.querySelector('input[name="' + name + '"]');
+  if (el) el.addEventListener('input', refreshPreview);
+});
+// Initial render to align preview with current values (e.g. after AI extraction).
+refreshPreview();
+</script>
+{% endblock %}

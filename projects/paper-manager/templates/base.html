@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>論文管理 - {% block title %}{% endblock %}</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; background: #f8f9fa; color: #212529; min-height: 100vh; }
+    .container { max-width: 760px; margin: 0 auto; padding: 2rem 1.5rem; }
+    header { background: #fff; border-bottom: 1px solid #e9ecef; padding: 0.75rem 1rem; display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap; }
+    header h1 { font-size: 1.1rem; font-weight: 700; color: #343a40; white-space: nowrap; }
+    header .workspace { font-size: 0.8rem; color: #6c757d; margin-left: auto; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 120px; }
+    header a.disconnect { font-size: 0.8rem; color: #dc3545; text-decoration: none; white-space: nowrap; }
+    .card { background: #fff; border: 1px solid #e9ecef; border-radius: 12px; padding: 2rem; margin-bottom: 1.5rem; }
+    .card h2 { font-size: 1.1rem; font-weight: 600; margin-bottom: 1rem; }
+    .btn { display: inline-block; padding: 0.6rem 1.4rem; border-radius: 8px; font-size: 0.9rem; font-weight: 600; cursor: pointer; border: none; text-decoration: none; transition: opacity 0.15s; }
+    .btn:hover { opacity: 0.85; }
+    .btn-primary { background: #4338ca; color: #fff; }
+    .btn-secondary { background: #e9ecef; color: #343a40; }
+    .btn-danger { background: #dc3545; color: #fff; }
+    .alert { padding: 0.8rem 1rem; border-radius: 8px; margin-bottom: 1rem; font-size: 0.9rem; }
+    .alert-error { background: #fff5f5; border: 1px solid #fca5a5; color: #b91c1c; }
+    .alert-success { background: #f0fdf4; border: 1px solid #86efac; color: #166534; }
+    .meta-table { width: 100%; border-collapse: collapse; font-size: 0.875rem; }
+    .meta-table td { padding: 0.5rem 0.75rem; border-bottom: 1px solid #f1f3f5; }
+    .meta-table td:first-child { color: #6c757d; width: 120px; white-space: nowrap; }
+    .upload-area { border: 2px dashed #ced4da; border-radius: 12px; padding: 3rem; text-align: center; cursor: pointer; transition: border-color 0.2s; }
+    .upload-area:hover, .upload-area.drag-over { border-color: #4338ca; background: #f5f3ff; }
+    .upload-area p { color: #6c757d; font-size: 0.9rem; margin-top: 0.5rem; }
+    #file-input { display: none; }
+    .spinner { display: inline-block; width: 20px; height: 20px; border: 2px solid #e9ecef; border-top-color: #4338ca; border-radius: 50%; animation: spin 0.7s linear infinite; vertical-align: middle; margin-right: 0.5rem; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .db-list { list-style: none; }
+    .db-list li { padding: 0.75rem 1rem; border: 1px solid #e9ecef; border-radius: 8px; margin-bottom: 0.5rem; cursor: pointer; transition: border-color 0.2s, background 0.2s; display: flex; align-items: center; gap: 0.75rem; }
+    .db-list li:hover { border-color: #4338ca; background: #f5f3ff; }
+    .db-list li input[type=radio] { accent-color: #4338ca; }
+    .api-key-box { font-family: monospace; font-size: 0.85rem; background: #f1f3f5; padding: 0.6rem 1rem; border-radius: 6px; word-break: break-all; }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>論文管理</h1>
+    <nav style="display:flex; gap:0.25rem; margin-left:0.5rem;">
+      <a href="/" style="padding:0.3rem 0.6rem; border-radius:6px; font-size:0.85rem; color:#495057; text-decoration:none; white-space:nowrap;"
+         onmouseover="this.style.background='#f1f3f5'" onmouseout="this.style.background=''">アップロード</a>
+      <a href="/papers" style="padding:0.3rem 0.6rem; border-radius:6px; font-size:0.85rem; color:#495057; text-decoration:none; white-space:nowrap;"
+         onmouseover="this.style.background='#f1f3f5'" onmouseout="this.style.background=''">論文一覧</a>
+      <a href="/settings/mapping" style="padding:0.3rem 0.6rem; border-radius:6px; font-size:0.85rem; color:#495057; text-decoration:none; white-space:nowrap;"
+         onmouseover="this.style.background='#f1f3f5'" onmouseout="this.style.background=''">設定</a>
+      {% if current_user %}
+      <a href="/parent" style="padding:0.3rem 0.6rem; border-radius:6px; font-size:0.85rem; color:#495057; text-decoration:none; white-space:nowrap;"
+         onmouseover="this.style.background='#f1f3f5'" onmouseout="this.style.background=''">親アカウント</a>
+      <a href="/accept-invite" style="padding:0.3rem 0.6rem; border-radius:6px; font-size:0.78rem; color:#868e96; text-decoration:none; white-space:nowrap;"
+         onmouseover="this.style.background='#f1f3f5'" onmouseout="this.style.background=''">招待コードを入力</a>
+      {% endif %}
+    </nav>
+    {% if workspace_name %}
+    <span class="workspace">{{ workspace_name }}</span>
+    <a href="/switch-account" class="disconnect"
+       style="color:#4338ca;"
+       title="別のNotionワークスペースに切り替える">別Notionに切替</a>
+    <a href="/logout" class="disconnect"
+       onclick="return confirm('ログアウトしますか？\n（再ログインで別のNotionワークスペースに切り替えられます）');"
+       title="ログアウト">ログアウト</a>
+    {% endif %}
+  </header>
+  <div class="container">
+    {% block content %}{% endblock %}
+  </div>
+  {% block scripts %}{% endblock %}
+</body>
+</html>

@@ -1,0 +1,108 @@
+{% extends "base.html" %}
+{% block title %}処理結果{% endblock %}
+{% block content %}
+
+{% if job.status == "registering" %}
+<div class="alert" style="background:#e3f2fd; border:1px solid #90caf9; color:#1565c0; padding:1rem; border-radius:8px;">
+  Notion に登録中です... ページをリロードしてください。
+</div>
+<a href="/" class="btn btn-secondary">ホームへ戻る</a>
+
+{% elif job.status == "error" %}
+<div class="alert alert-error">
+  処理中にエラーが発生しました: {{ job.error }}
+</div>
+<a href="/" class="btn btn-secondary">ホームへ戻る</a>
+
+{% else %}
+{% set r = job.result %}
+
+{% if job.status == "partial" %}
+<div class="alert" style="background:#fff3cd; border:1px solid #ffc107; color:#856404; padding:1rem; border-radius:8px; margin-bottom:1rem;">
+  <strong>⚠ Notion に登録しましたが、一部のプロパティが書き込めませんでした。</strong>
+  {% if r.notion_url %}
+  <a href="{{ r.notion_url }}" target="_blank" style="color:#856404; font-weight:600; margin-left:0.5rem;">
+    Notionで確認する →
+  </a>
+  {% endif %}
+</div>
+{% if r.failed_props %}
+<div class="card" style="background:#fff8e1; border:1px solid #ffe082; margin-bottom:1rem;">
+  <h2 style="font-size:0.85rem; color:#e65100;">書き込みに失敗したプロパティ</h2>
+  <ul style="font-size:0.8rem; color:#bf360c; margin:0; padding-left:1.5rem;">
+    {% for prop in r.failed_props %}
+    <li>{{ prop }}</li>
+    {% endfor %}
+  </ul>
+</div>
+{% endif %}
+{% if r.warnings %}
+<div class="card" style="background:#fff8e1; border:1px solid #ffe082; margin-bottom:1rem;">
+  <h2 style="font-size:0.85rem; color:#e65100;">警告</h2>
+  <ul style="font-size:0.8rem; color:#bf360c; margin:0; padding-left:1.5rem;">
+    {% for w in r.warnings %}
+    <li>{{ w }}</li>
+    {% endfor %}
+  </ul>
+</div>
+{% endif %}
+{% else %}
+<div class="alert alert-success">
+  Notion に登録しました！
+  {% if r.notion_url %}
+  <a href="{{ r.notion_url }}" target="_blank" style="color:#166534; font-weight:600; margin-left:0.5rem;">
+    Notionで見る →
+  </a>
+  {% endif %}
+</div>
+{% endif %}
+
+<div class="card">
+  <h2>書誌情報</h2>
+  <table class="meta-table">
+    <tr><td>ファイル名</td><td style="font-weight:500;">{{ r.filename or "(生成できませんでした)" }}</td></tr>
+    <tr><td>タイトル</td><td>{{ r.metadata.title or "-" }}</td></tr>
+    <tr><td>筆頭著者</td><td>{{ (r.metadata.authors or [""]) | first or "-" }}</td></tr>
+    <tr><td>全著者</td><td>{{ (r.metadata.authors or []) | join("・") or "-" }}</td></tr>
+    <tr><td>雑誌名</td><td>{{ r.metadata.journal or "-" }}</td></tr>
+    <tr><td>巻</td><td>{{ r.metadata.volume or "-" }}</td></tr>
+    <tr><td>号</td><td>{{ r.metadata.issue or "-" }}</td></tr>
+    <tr><td>頁</td><td>{{ r.metadata.pages or "-" }}</td></tr>
+    <tr><td>発行年</td><td>{{ r.metadata.year or "-" }}</td></tr>
+    <tr><td>照合元</td><td>
+      {% if r.metadata.cinii_result %}<span style="background:#e7f3ff;color:#1971c2;padding:2px 8px;border-radius:4px;font-size:0.8rem;margin-right:4px;">CiNii</span>{% endif %}
+      {% if r.metadata.ndl_result %}<span style="background:#e6fcf5;color:#087f5b;padding:2px 8px;border-radius:4px;font-size:0.8rem;">NDL</span>{% endif %}
+    </td></tr>
+  </table>
+</div>
+
+{% if r.debug_props %}
+<div class="card" style="background:#f8f9fa; border:1px dashed #adb5bd;">
+  <h2 style="font-size:0.85rem; color:#6c757d;">🔍 Notionに書き込んだ列</h2>
+  <p style="font-size:0.8rem; font-family:monospace; color:#495057;">{{ r.debug_props | join(", ") }}</p>
+  {% if r.debug_schema %}
+  <p style="font-size:0.75rem; font-family:monospace; color:#868e96; margin-top:0.5rem;">DBスキーマ: {{ r.debug_schema }}</p>
+  {% endif %}
+</div>
+{% endif %}
+
+{% if r.summary %}
+<div class="card">
+  <h2>要約</h2>
+  <p style="font-size:0.9rem; line-height:1.8; color:#495057;">{{ r.summary }}</p>
+</div>
+{% endif %}
+
+<div style="display:flex; gap:1rem; flex-wrap:wrap;">
+  <a href="/" class="btn btn-primary">別のPDFを処理する</a>
+  {% if r.notion_url %}
+  <a href="{{ r.notion_url }}" target="_blank" class="btn btn-secondary">Notionで確認する</a>
+  {% endif %}
+  {% if r.pdf_url %}
+  <a href="/view-pdf/{{ job.job_id }}" target="_blank" class="btn btn-secondary">PDFを閲覧</a>
+  <a href="/pdf/{{ job.job_id }}?download=true" class="btn btn-secondary">PDFをダウンロード</a>
+  {% endif %}
+</div>
+
+{% endif %}
+{% endblock %}
