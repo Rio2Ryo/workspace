@@ -1,0 +1,5 @@
+# OpenClaw ゲートウェイを 2 時間ごとに再起動（Discord 接続切れの自動復旧）
+0 2,4,6,8,10,12,14,16,18,20,22 * * * npx openclaw gateway restart 2>/dev/null
+
+# 毎日午前7時：クリプト＆AIニュース配信
+0 7 * * * npx openclaw sessions spawn --task "朝のクリプト＆AI ニュースブリーフィング" --label "morning-briefing" --mode run 2>/dev/null
