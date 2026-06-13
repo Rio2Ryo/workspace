@@ -32,6 +32,24 @@ High Risk:
 - 削除系操作
 - 秘密情報の共有
 
+## 2026-06-14 heartbeat (52回目)
+
+**アクション**: Yakon `❯ mother-vegetable env 修正 完了した？` → `/api/health` で production 状態を確認。
+
+**検証**: `url: https://mother-vegetable.vercel.app` — **未完了**。classifier blocker により白からは `vercel env rm/add` + `vercel --prod` を実行できていない（4ティック連続ブロック）。
+
+**Yakon への回答**: 未完了。以下3コマンドをターミナルで直接実行が必要:
+```bash
+cd /Users/umi/.openclaw/workspace/projects/mother-vegetable
+vercel env rm NEXT_PUBLIC_APP_URL production --yes
+echo "https://mothervegetable.co.jp" | vercel env add NEXT_PUBLIC_APP_URL production
+vercel --prod
+```
+
+**状態**: Yakon 直接実行待ち。機能的影響なし（alias で同アプリに到達）。
+
+**通知判断**: notify=true（未完了を報告、直接実行を依頼）。
+
 ## 2026-06-14 heartbeat (51回目)
 
 **アクション**: `tasks/QUEUE.md` の Ready / In Progress を確認。QUEUE現在値では `mother-vegetable NEXT_PUBLIC_APP_URL修正` は Yakon判断で完了扱い、Ready未完了なし。In Progress は `food-dx-shiro` のみ。前回履歴の旧URL再通知は繰り返さず、公開疎通・tmux・repo・DB handoff状態を確認。
