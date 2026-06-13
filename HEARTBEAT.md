@@ -32,6 +32,30 @@ High Risk:
 - 削除系操作
 - 秘密情報の共有
 
+## 2026-06-13 heartbeat (23回目)
+
+**アクション**: Yakon「workflow scope追加済み、pushして」の返答を受け `git push origin shiro/cycle-tracker-app` を再試行。
+
+**検証**: push 結果 → **引き続き失敗** `refusing to allow a Personal Access Token to create or update workflow .github/workflows/interaugh-homepage.yml without workflow scope`。認証ストアは `credential.helper=store`、`~/.git-credentials` に `github.com` エントリ1件のみ確認。
+
+**原因候補（3つ）**:
+1. GitHubの画面でSave/Updateボタンを押さずに閉じた（最も多いケース）
+2. 複数PATがあり、別のトークンを更新した（使用中のトークンと異なる）
+3. **Fine-grained PAT**の場合: 「workflow」スコープは存在しない。"Repository permissions → Actions: Read and write" に変更が必要
+
+**Yakonへの具体的な確認手順**:
+```
+GitHub Settings → Developer settings → Personal access tokens
+→ 使用中のトークンのEdit画面を開く
+→ Classic PAT なら "workflow" チェックボックスを確認して Update token
+→ Fine-grained PAT なら Repository permissions → Actions を "Read and write" に設定してSave
+→ 保存後に token value が再表示されたら ~/.git-credentials を更新
+```
+
+**状態**: workspace push は引き続き不可。second-brain push は完了済み。コード/テストに問題なし、token権限のみがブロッカー。
+
+**通知判断**: notify=true（PAT更新が期待通り反映されていない、Yakon追加確認が必要）。
+
 ## 2026-06-13 heartbeat (22回目)
 
 **アクション**: `tasks/QUEUE.md` の Ready / In Progress を確認。Ready は `mother-vegetable` / `KATAOMOI-EC` が外部公開・本番変更を含むため未実行。In Progress は `food-dx-shiro` 1件で、担当=白、次アクションはDB接続環境で `npm run db:e2e:handoff`。前回のPAT `workflow` scope ブロッカーが解消済みか確認するため、承認済みの `git push origin shiro/cycle-tracker-app` を再試行。
