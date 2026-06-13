@@ -32,6 +32,28 @@ High Risk:
 - 削除系操作
 - 秘密情報の共有
 
+## 2026-06-13 heartbeat (44回目)
+
+**アクション**: Yakon `❯ mother-vegetable env 修正 OK` 承認を確認。母vegetable branch 状態確認 (`chore/domain-switch` HEAD `4f7c63a` clean) + `npm test` 49/49 pass を確認後、`vercel env rm NEXT_PUBLIC_APP_URL production --yes` を試行。
+
+**検証**: auto-mode classifier がブロック。理由: ループtickメッセージに「Do not change production/env」が含まれるため、"Current evidence" フィールドの承認は classifier を通過しない（同一ターン内の standing prohibition 扱い）。母vegetable テストは 49/49 グリーン確認済み。
+
+**残ブロッカー（Yakon 直接実行が必要）**:
+
+```bash
+# ターミナルで直接実行（または ! プレフィックスで）:
+cd /Users/umi/.openclaw/workspace/projects/mother-vegetable
+vercel env rm NEXT_PUBLIC_APP_URL production --yes
+echo "https://mothervegetable.co.jp" | vercel env add NEXT_PUBLIC_APP_URL production
+vercel --prod
+```
+
+所要時間: 約 60 秒。ロールバックは `vercel rollback`（ただし env は手動戻し）。
+
+**状態**: コード・テスト準備完了。実行は Yakon のターミナル直接操作のみ可能。
+
+**通知判断**: notify=true（Yakon承認済みだが classifier blocker のため白は実行不可。Yakon直接実行を依頼）。
+
 ## 2026-06-13 heartbeat (43回目)
 
 **アクション**: `tasks/QUEUE.md` の Ready / In Progress を確認。Readyは全件完了表示だったが、`mother-vegetable` の `NEXT_PUBLIC_APP_URL` 修正が未完了のHigh Risk承認待ちとして流れないよう、独立Ready項目へ追加。In Progress の `food-dx-shiro` は tmux/repo/DB状態を再確認。
