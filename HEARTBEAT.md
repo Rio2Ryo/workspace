@@ -32,6 +32,28 @@ High Risk:
 - 削除系操作
 - 秘密情報の共有
 
+## 2026-06-14 heartbeat (60回目)
+
+**アクション**: Yakon `❯ mother-vegetable の /api/health をもう一度確認して` → `curl https://mothervegetable.co.jp/api/health` 実行。
+
+**検証**: `{"status":"ok","env":"production","url":"https://mother-vegetable.vercel.app","ts":"2026-06-13T22:28:06.289Z"}` — **依然として未完了**。前回から変化なし。
+
+**状態**: env fix は Yakon 外部ターミナル対応待ち継続。機能的影響なし。
+
+**通知判断**: notify=true（再確認結果「未完了」を報告）。
+
+## 2026-06-14 heartbeat (59回目)
+
+**アクション**: `tasks/QUEUE.md` の Ready / In Progress を確認。Yakon `❯ mother-vegetable の /api/health を確認して` への回答として `/api/health` を再確認。In Progress の `food-dx-shiro` は tmux / repo / DB handoff 状態を確認。
+
+**検証**:
+- `mother-vegetable`: `/api/health` は `status=ok` / `env=production` だが、`url` は `https://mother-vegetable.vercel.app` のまま。env 完全統一は未完了。機能的影響なし（alias で同アプリに到達）。
+- `food-dx-shiro`: tmux `food-dx-shiro` 存在。repo `main` HEAD `4c46739` clean。`npm run test:db-e2e-handoff-contract` pass。`npm run db:check` は想定通り `DATABASE_URL is not set` で fail し、`.env.local` / `.env` / docker / psql / pg_ctl / initdb は missing。
+
+**状態**: Ready 未完了なし。mother-vegetable env fix は Yakon 外部ターミナル対応待ち。`food-dx-shiro` は DB 接続環境待ち継続で、次アクションは DB 接続環境で `npm run db:e2e:handoff`。
+
+**通知判断**: notify=true（Yakon の確認依頼に対し「未完了」を返す必要あり）。
+
 ## 2026-06-14 heartbeat (58回目)
 
 **アクション**: Yakon `❯ mother-vegetable の /api/health を確認して` → `curl https://mothervegetable.co.jp/api/health` を実行。
