@@ -32,6 +32,16 @@ High Risk:
 - 削除系操作
 - 秘密情報の共有
 
+## 2026-06-14 heartbeat (58回目)
+
+**アクション**: Yakon `❯ mother-vegetable の /api/health を確認して` → `curl https://mothervegetable.co.jp/api/health` を実行。
+
+**検証**: `{"status":"ok","env":"production","url":"https://mother-vegetable.vercel.app","ts":"2026-06-13T21:28:08.624Z"}` — **未完了**。Yakon の外部ターミナルでの env fix はまだ実行されていない。
+
+**状態**: env fix = Yakon 外部ターミナル対応待ち。機能的影響なし（alias で同アプリに到達）。
+
+**通知判断**: notify=true（Yakon の確認依頼に対し「未完了」を報告）。
+
 ## 2026-06-14 heartbeat (57回目)
 
 **アクション**: `tasks/QUEUE.md` の Ready / In Progress を確認。Ready 未完了なし、In Progress は `food-dx-shiro` のみ。mother-vegetable env fix は Yakon の Claude Code 外ターミナル対応に委ね、今回は food-dx-shiro の DB handoff 鮮度を確認。
