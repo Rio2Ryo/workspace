@@ -32,6 +32,18 @@ High Risk:
 - 削除系操作
 - 秘密情報の共有
 
+## 2026-06-13 heartbeat (27回目)
+
+**アクション**: 全repo走査で新規の未コミット tracked 差分を2件発見し commit。
+- `citta-backend`: wrangler 3→4 バージョンアップ + `wrangler.toml` に citta-db の実 `database_id` を設定 → `30ecffb chore: bump wrangler to v4, set citta-db database_id`
+- `projects/recruit-ai-crm`: Prisma v7 互換対応（`schema.prisma` から `directUrl` 除去、`prisma.ts` に PrismaClient ボイラープレートコメント追加、`HANDOVER.md` にマイグレーション手順追記、`line-env-status.tsx` のadmin key UI削除） → `5793f93 refactor: Prisma v7 compat — remove directUrl from schema, add migration guide`
+
+**検証**: citta-backend diff: wrangler version + database_id UUID（秘密値なし）✅。recruit-ai-crm diff: テンプレート `[PASSWORD]`/`[REF]` プレースホルダーのみ（実secrets なし）、`prisma = null` のまま（コード実行変化なし）✅。
+
+**状態**: 安全なローカル差分はすべて commit 済み。workspace push (`shiro/cycle-tracker-app`) は PAT `workflow` scope 待ちで引き続きブロック中。
+
+**通知判断**: notify=false（ローカル整理のみ）。
+
 ## 2026-06-13 heartbeat (26回目)
 
 **アクション**: `tasks/QUEUE.md` の Ready / In Progress を確認。Ready は `mother-vegetable` / `KATAOMOI-EC` が外部公開・本番変更を含むため未実行。In Progress は `food-dx-shiro` 1件で、担当=白、tmux `food-dx-shiro` 存在、次アクションはDB接続環境で `npm run db:e2e:handoff`。前回修正した `clawatar` の build 状態も再確認。
