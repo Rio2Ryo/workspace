@@ -32,6 +32,16 @@ High Risk:
 - 削除系操作
 - 秘密情報の共有
 
+## 2026-06-13 heartbeat (20回目)
+
+**アクション**: `tasks/QUEUE.md` の Ready / In Progress を確認。Ready は `mother-vegetable` / `KATAOMOI-EC` が外部公開・本番変更を含むため未実行。In Progress は `food-dx-shiro` 1件で、担当=白、tmux `food-dx-shiro` 存在、次アクションはDB接続環境で `npm run db:e2e:handoff`。前回 `citta-ios` が「pbxproj 44参照残存」とされていたため、Xcode CLIで `xcodebuild -list` とDebug simulator buildを実行し、実ビルド可否を確認した。
+
+**検証**: `food-dx-shiro` は `npm run test:db-e2e-handoff-contract` pass、`npm run db:check` は想定通り `DATABASE_URL is not set` でfail（`.env.local` / `.env` / docker / psql / pg_ctl / initdb なし）。`citta-ios` は `xcodebuild -list -project CittaApp.xcodeproj` pass、`xcodebuild -project CittaApp.xcodeproj -scheme CittaApp -configuration Debug -sdk iphonesimulator -destination 'generic/platform=iOS Simulator' CODE_SIGNING_ALLOWED=NO build` が `BUILD SUCCEEDED`。警告は `AccentColor` asset不在のみ。
+
+**状態**: `citta-ios` は削除済みSwiftファイル名の参照カウントは残るが、現CLIビルドは成立するため「ビルド壊れ」扱いから「未コミット大規模移動/整理差分、Xcode上の見え方確認待ち」に修正。`food-dx-shiro` はDB接続環境待ち継続。High Risk待ちは push / deploy / D1 migration 系のみで、承認なしには未実行。
+
+**通知判断**: notify=false（新規の期限リスク・障害・追加判断依頼なし。citta-iosはむしろビルド可と確認できたため割り込み不要）。
+
 ## 2026-06-13 heartbeat (19回目)
 
 **アクション**: `clawatar/server/llm-proxy.mjs`（OpenAI互換→Anthropic変換プロキシ、171行、秘密値なし・`node --check` pass）を commit `2e5315d feat: add LLM proxy server for voice pipeline` にまとめた。`cycle-tracker-app/DEPLOY_APPROVAL.md` を確認 — 10コミット分の `vercel --prod` 承認パケットが存在（リスク: Low、ロールバック: `vercel rollback` 即時）。
