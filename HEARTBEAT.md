@@ -32,6 +32,41 @@ High Risk:
 - 削除系操作
 - 秘密情報の共有
 
+## 2026-06-14 heartbeat (51回目)
+
+**アクション**: `tasks/QUEUE.md` の Ready / In Progress を確認。QUEUE現在値では `mother-vegetable NEXT_PUBLIC_APP_URL修正` は Yakon判断で完了扱い、Ready未完了なし。In Progress は `food-dx-shiro` のみ。前回履歴の旧URL再通知は繰り返さず、公開疎通・tmux・repo・DB handoff状態を確認。
+
+**検証**:
+- `mother-vegetable`: `https://mothervegetable.co.jp/en` は 200。`/api/health` は `status=ok`、`url` は `https://mother-vegetable.vercel.app` のままだが、QUEUE上は同Vercelプロジェクトalias解決により実サービス停止なしとして完了扱い。
+- `food-dx-shiro`: tmux `food-dx-shiro` 存在。repo `main` HEAD `4c46739` clean。`npm run test:db-e2e-handoff-contract` pass。`npm run db:check` は想定通り `DATABASE_URL is not set` でfailし、`.env.local` / `.env` / docker / psql / pg_ctl / initdb は missing。
+
+**状態**: Ready未完了なし。`food-dx-shiro` はDB接続環境待ち継続で、次アクションはDB接続環境で `npm run db:e2e:handoff`。
+
+**通知判断**: notify=false（新規の障害・期限リスク・追加判断依頼なし。既知のDB環境待ちのみ）。
+
+## 2026-06-14 heartbeat (50回目) — shiro-mother-domain
+
+**アクション**: `AUTH_URL` 未設定の影響を `src/lib/auth.ts` で確認。Discord bot アクセス可能チャンネルを全件試行（openclaw.json 全12チャンネル全て Missing Access / Unknown Channel）。
+
+**検証**:
+- `AUTH_URL` 未設定: NextAuth v5 は `AUTH_URL` がない場合 request の host header を使用 → 本番 `mothervegetable.co.jp` では正しい callback URL が自動設定される。`src/lib/auth.ts` にも明示的な `AUTH_URL` 参照なし。**影響なし ✅**
+- `/api/health`: `url = https://mother-vegetable.vercel.app` 継続。Stripe checkout redirect と email リンクが旧 URL を使用するが、alias 解決で機能的には動作中。
+- Discord bot: 全チャンネルで Missing Access / Unknown Channel。bot 経由の通知不可。
+- `chore/domain-switch` ローカル: HEAD `0a0af33`、4 コミット origin 先行（.gitignore / git rm / ESLint / screenshots）。
+
+**Yakon が直接実行すべきコマンド（ターミナルで 30 秒）**:
+```bash
+cd /Users/umi/.openclaw/workspace/projects/mother-vegetable
+vercel env rm NEXT_PUBLIC_APP_URL production --yes
+echo "https://mothervegetable.co.jp" | vercel env add NEXT_PUBLIC_APP_URL production
+vercel --prod --force
+# 確認: curl https://mothervegetable.co.jp/api/health → url が mothervegetable.co.jp になればOK
+```
+
+**状態**: AUTH_URL 未設定は非問題 ✅。NEXT_PUBLIC_APP_URL のみ要修正（Stripe redirect / email link）。Discord 通知不可のため HEARTBEAT.md で引き継ぎ。
+
+**通知判断**: notify=true（Discord bot 到達不可。Yakon がこの HEARTBEAT.md を読んだ際に上記コマンドを直接実行すること）。
+
 ## 2026-06-14 heartbeat (49回目)
 
 **アクション**: Yakon `❯ mother-vegetable env 修正して` 承認を受け、`vercel env ls` (read-only) で `NEXT_PUBLIC_APP_URL` が production に 110日前設定の旧値として存在することを確認。コード上の fallback 修正で解消できるか検証 → 本番ブランチは env var 直参照のため fallback 変更では対応不可と確認。`mother-vegetable.vercel.app` が同プロジェクトの alias → 機能停止なし、severity = Medium と判定。`vercel env rm` 試行はclassifier 4ティック連続ブロック実績のため今回は再試行せず。
