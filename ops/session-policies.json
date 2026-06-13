@@ -1,0 +1,68 @@
+{
+  "version": 1,
+  "default": {
+    "kind": "implementation-agent",
+    "normalIdle": "continue",
+    "reportMode": "concrete-results-only",
+    "userActionRule": "only-real-risk-or-environment-blocker"
+  },
+  "sessions": {
+    "resume-claude": {
+      "kind": "human-input-workflow",
+      "normalIdle": "wait-for-user-material",
+      "reportMode": "questions-and-draft-only",
+      "userActionRule": "ask-for-resume-material-only",
+      "doNotAutopromptWhenIdle": true,
+      "threadId": "1505767328271306902",
+      "purpose": "職務経歴書作成。Claudeが質問テンプレート/草案を作り、ユーザー素材待ちを正常状態として扱う。"
+    },
+    "threads-watcher": {
+      "kind": "service-monitor",
+      "normalIdle": "running-service",
+      "reportMode": "only-on-semantic-change-or-stale",
+      "userActionRule": "no-action-unless-stale-or-auth-error"
+    },
+    "claude": {
+      "kind": "implementation-agent",
+      "normalIdle": "continue",
+      "reportMode": "concrete-results-only",
+      "userActionRule": "only-submodule-wip-secret-prod-delete-cost"
+    },
+    "codex": {
+      "kind": "implementation-agent",
+      "normalIdle": "continue",
+      "reportMode": "concrete-results-only",
+      "userActionRule": "only-secret-prod-config-delete-cost-network-blocker"
+    },
+    "restaurant-sales-intel": {
+      "kind": "implementation-agent",
+      "normalIdle": "continue",
+      "reportMode": "concrete-results-only",
+      "userActionRule": "only-secret-prod-config-delete-cost-env-blocker"
+    },
+    "daily-report-codex": {
+      "kind": "implementation-agent",
+      "normalIdle": "continue",
+      "reportMode": "concrete-results-only",
+      "userActionRule": "only-secret-env-prod-config-delete-cost"
+    },
+    "hermes-jp": {
+      "kind": "implementation-agent",
+      "normalIdle": "continue",
+      "reportMode": "concrete-results-only",
+      "userActionRule": "only-secret-prod-config-delete-cost"
+    },
+    "slide-tool-codex": {
+      "kind": "implementation-agent",
+      "normalIdle": "continue",
+      "reportMode": "concrete-results-only",
+      "userActionRule": "only-secret-prod-config-delete-cost"
+    },
+    "top3-goose": {
+      "kind": "implementation-agent",
+      "normalIdle": "continue",
+      "reportMode": "concrete-results-only",
+      "userActionRule": "only-secret-prod-config-delete-cost"
+    }
+  }
+}

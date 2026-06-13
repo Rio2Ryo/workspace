@@ -1,0 +1,157 @@
+{
+  "apiBase": "https://second-brain-api.common-gifted-tokyo.workers.dev",
+  "workspace": "ws_default",
+  "sessions": [
+    {
+      "tmuxSession": "claude",
+      "discordThreadId": "1501366244174069904",
+      "title": "tmux claude セッション運用",
+      "assigneeId": "claude",
+      "host": "shiro"
+    },
+    {
+      "tmuxSession": "codex",
+      "discordThreadId": "1501366333886042346",
+      "title": "tmux codex セッション運用",
+      "assigneeId": "codex",
+      "host": "shiro"
+    },
+    {
+      "tmuxSession": "restaurant-sales-intel",
+      "discordThreadId": "1501399826397532231",
+      "title": "Restaurant Sales Intel: 飲食店営業リスト作成アプリ",
+      "assigneeId": "codex",
+      "host": "shiro"
+    },
+    {
+      "tmuxSession": "fortune-all-patterns",
+      "discordThreadId": "1501359734203089127",
+      "threadName": "fortune-all-patterns",
+      "sessionName": "fortune-all-patterns",
+      "title": "fortune-all-patterns: 全部盛りプロフィール占いアプリ",
+      "assigneeId": "hermes",
+      "host": "shiro",
+      "project": "fortune-all-patterns",
+      "workspacePath": "/Users/umi/.hermes/workspace/fortune-all-patterns",
+      "deployUrl": "https://fortune-all-patterns.vercel.app"
+    },
+    {
+      "tmuxSession": "goose",
+      "discordThreadId": "1501556320048906301",
+      "title": "goose セッション運用",
+      "assigneeId": "goose",
+      "host": "shiro"
+    },
+    {
+      "tmuxSession": "slide-tool-codex",
+      "discordThreadId": "1505385904825696317",
+      "title": "slide-tool-codex: AIスライド作成ツール開発",
+      "assigneeId": "codex",
+      "host": "shiro"
+    },
+    {
+      "tmuxSession": "top3-goose",
+      "discordThreadId": "1505419396691267584",
+      "title": "top3-favorites-app: 自分のトップ3/好きなもの保存アプリMVP",
+      "assigneeId": "goose",
+      "host": "shiro"
+    },
+    {
+      "tmuxSession": "daily-report-codex",
+      "discordThreadId": "1505429154215100507",
+      "title": "daily-report-app: AI判定/管理者確認付き日報アプリ",
+      "assigneeId": "codex",
+      "host": "shiro"
+    },
+    {
+      "tmuxSession": "threads-watcher",
+      "discordThreadId": "1505544095274238192",
+      "title": "threads-watcher: Threads監視・進捗報告",
+      "assigneeId": "shiro",
+      "host": "shiro"
+    },
+    {
+      "tmuxSession": "resume-claude",
+      "discordThreadId": "1505767328271306902",
+      "title": "職務経歴書作成-Claude",
+      "assigneeId": "claude",
+      "host": "shiro",
+      "project": "resume"
+    },
+    {
+      "host": "gohanai",
+      "tmuxSession": "ontrust-vls-system",
+      "discordThreadId": "1472481338140659826",
+      "title": "Ontrust VLS システム",
+      "assigneeId": "gohanai-claude",
+      "project": "ontrust",
+      "workspacePath": "/home/gohanai/workspace/_catchup/vls-system"
+    },
+    {
+      "host": "gohanai",
+      "tmuxSession": "ontrust-email-manager",
+      "discordThreadId": "1472481338140659826",
+      "title": "Ontrust Email Manager",
+      "assigneeId": "gohanai-claude",
+      "project": "ontrust",
+      "workspacePath": "/home/gohanai/workspace/_catchup/email-manager"
+    },
+    {
+      "host": "sora",
+      "tmuxSession": "sora-hermes",
+      "discordThreadId": "1472597788343668850",
+      "title": "Sora Hermes本体",
+      "assigneeId": "sora-hermes",
+      "project": "sora-vps"
+    },
+    {
+      "host": "sora",
+      "tmuxSession": "sora-codex",
+      "discordThreadId": "1472597788343668850",
+      "title": "Sora Codex",
+      "assigneeId": "sora-codex",
+      "project": "sora-vps"
+    },
+    {
+      "host": "sora",
+      "tmuxSession": "sora-claude",
+      "discordThreadId": "1472597788343668850",
+      "title": "Sora Claude Code",
+      "assigneeId": "sora-claude",
+      "project": "sora-vps"
+    },
+    {
+      "host": "sora",
+      "tmuxSession": "sora-goose",
+      "discordThreadId": "1472597788343668850",
+      "title": "Sora Goose",
+      "assigneeId": "sora-goose",
+      "project": "sora-vps"
+    },
+    {
+      "host": "sora",
+      "tmuxSession": "sora-openclaw",
+      "discordThreadId": "1472597788343668850",
+      "title": "Sora OpenClaw",
+      "assigneeId": "sora-openclaw",
+      "project": "sora-vps"
+    },
+    {
+      "host": "sora",
+      "tmuxSession": "sora-grok",
+      "discordThreadId": "1472597788343668850",
+      "title": "Sora Grok",
+      "assigneeId": "sora-grok",
+      "project": "sora-vps"
+    },
+    {
+      "tmuxSession": "interaugh-codex",
+      "discordThreadId": "1506920712542355538",
+      "title": "interaugh-homepage: スマホビュー崩れ修正",
+      "assigneeId": "codex",
+      "host": "shiro",
+      "project": "interaugh-homepage",
+      "workspacePath": "/Users/umi/.openclaw/workspace/projects/interaugh-homepage"
+    }
+  ]
+}
