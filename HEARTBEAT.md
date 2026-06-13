@@ -32,6 +32,19 @@ High Risk:
 - 削除系操作
 - 秘密情報の共有
 
+## 2026-06-13 heartbeat (19回目)
+
+**アクション**: `clawatar/server/llm-proxy.mjs`（OpenAI互換→Anthropic変換プロキシ、171行、秘密値なし・`node --check` pass）を commit `2e5315d feat: add LLM proxy server for voice pipeline` にまとめた。`cycle-tracker-app/DEPLOY_APPROVAL.md` を確認 — 10コミット分の `vercel --prod` 承認パケットが存在（リスク: Low、ロールバック: `vercel rollback` 即時）。
+
+**検証**: clawatar llm-proxy.mjs: APIキーはenv変数または `~/.openclaw/openclaw.json` 経由で取得、ハードコード秘密値なし ✅。`cycle-tracker-app` の全34ユニットテスト pass、全21 E2E アサーション `-six` prod に対してグリーン ✅。
+
+**状態**:
+- ローカル安全差分: 完了（clawatar LLM proxy commit済み）
+- `citta-ios` pbxproj: 44参照残存のまま（Xcode作業必要、外部ツール待ち）
+- High Risk 待ち: ① `git push origin shiro/cycle-tracker-app`（本workspaceブランチ）② `git push origin shiro/phase2-perf-metrics`（second-brain、31コミット先行）③ `vercel --prod`（cycle-tracker-app、Low risk）④ KATAOMOI-EC D1 migration + cf:deploy（Medium risk）
+
+**通知判断**: notify=true（push承認が保留中、Yakon判断必要）。
+
 ## 2026-06-13 heartbeat (18回目)
 
 **アクション**: `tasks/QUEUE.md` の Ready / In Progress を確認。Ready は `mother-vegetable` / `KATAOMOI-EC` が外部公開・本番変更を含むため未実行。In Progress は `food-dx-shiro` 1件で、担当=白、tmux `food-dx-shiro` 存在、次アクションはDB接続環境で `npm run db:e2e:handoff`。前回残存の安全差分として `recruit-ai-crm` を検証し、LINE応募フォームのname validation / 送信失敗UI / handover / Next proxy追加を commit `3ce771b fix: harden LINE apply handoff flow` に整理。
