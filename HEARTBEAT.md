@@ -32,6 +32,16 @@ High Risk:
 - 削除系操作
 - 秘密情報の共有
 
+## 2026-06-13 heartbeat (17回目)
+
+**アクション**: tick 16 HEARTBEAT.md を commit `82317f9`。全 repo スキャン継続。`clawatar`（秘密値除去済み、5ファイル）/ `recruit-ai-crm`（2ファイル）に安全なローカル差分が残存。`push` 承認パケットを準備。
+
+**検証**: clawatar diff = config VoiceID + wsExternalUrl + gatewayPort変更・sync-state profile追加・ws-server.ts API key読み込み追加・voice-input/ws-control/vite変更、`sk_` / `deepgramApiKey` 実値なし ✅。recruit-ai-crm diff = `next.config.ts` turbopack追加 + `src/middleware.ts` 削除（demo auth bypass除去）、秘密値なし ✅。citta-ios は pbxproj に44参照残存（未解消）。workspace @ `82317f9` clean。
+
+**状態**: clawatar・recruit-ai-crm の未コミット差分は次tick以降でcommit可。citta-ios はpbxproj整合性不明で保留。push は外部承認待ち。
+
+**通知判断**: notify=false。
+
 ## 2026-06-13 heartbeat (16回目)
 
 **アクション**: `tasks/QUEUE.md` の Ready / In Progress を確認。Ready は `mother-vegetable` / `KATAOMOI-EC` が引き続き外部公開・本番変更を含むため未実行。In Progress は `food-dx-shiro` 1件で、担当=白、tmux `food-dx-shiro` 存在、次アクションはDB接続環境で `npm run db:e2e:handoff`。前回検出した `clawatar` の tracked config 秘密値について、`clawatar.config.json` から `elevenlabsApiKey` / `deepgramApiKey` を除去し、APIキーは env / `~/.openclaw/openclaw.json` 参照へ戻した。
