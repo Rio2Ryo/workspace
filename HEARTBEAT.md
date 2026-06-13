@@ -32,6 +32,25 @@ High Risk:
 - 削除系操作
 - 秘密情報の共有
 
+## 2026-06-13 heartbeat (21回目)
+
+**アクション**: Yakon「push OK」承認を受け、両ブランチのpushを実行。
+
+**検証**:
+- `second-brain / shiro/phase2-perf-metrics` → push ✅ `3610d6b..6e75630`（31コミット、GitHub上に反映済み）
+- `workspace / shiro/cycle-tracker-app` → push ❌ `refusing to allow a Personal Access Token to create or update workflow without 'workflow' scope`
+
+**ブロッカー詳細**: 当ブランチには commit `e12bece Fix Interaugh mobile hero rendering` が `.github/workflows/interaugh-homepage.yml` を変更している。GitHub は PAT に `workflow` スコープがないとワークフローファイルを含む push を拒否する。コードに問題はなく、**PAT の権限追加のみが解決策**。
+
+**Yakonへの依頼**:
+1. GitHub → Settings → Developer settings → Personal access tokens → 使用中の token を選択
+2. `workflow` スコープにチェックを追加 → Save
+3. その後 `git push origin shiro/cycle-tracker-app` を白が再実行
+
+**状態**: second-brain push 完了。workspace push は PAT `workflow` スコープ追加後に再実行可。他のHigh Risk作業（vercel --prod / KATAOMOI-EC）は引き続き未実行。
+
+**通知判断**: notify=true（workspace push ブロッカー発生、Yakon PAT 更新が必要）。
+
 ## 2026-06-13 heartbeat (20回目)
 
 **アクション**: `tasks/QUEUE.md` の Ready / In Progress を確認。Ready は `mother-vegetable` / `KATAOMOI-EC` が外部公開・本番変更を含むため未実行。In Progress は `food-dx-shiro` 1件で、担当=白、tmux `food-dx-shiro` 存在、次アクションはDB接続環境で `npm run db:e2e:handoff`。前回 `citta-ios` が「pbxproj 44参照残存」とされていたため、Xcode CLIで `xcodebuild -list` とDebug simulator buildを実行し、実ビルド可否を確認した。
