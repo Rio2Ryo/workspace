@@ -32,6 +32,27 @@ High Risk:
 - 削除系操作
 - 秘密情報の共有
 
+## 2026-06-14 heartbeat (53回目)
+
+**アクション**: `tasks/QUEUE.md` の Ready / In Progress を確認。最新 HEARTBEAT 52回目の Yakon「mother-vegetable env 修正 完了した？」に対して、`/api/health` で現 production 状態を再確認。In Progress の `food-dx-shiro` は tmux / repo / DB handoff 状態を確認。
+
+**検証**:
+- `mother-vegetable`: `/api/health` は `status=ok` だが、`url` は `https://mother-vegetable.vercel.app` のまま。env統一は未完了。白からの `vercel env rm/add` + `vercel --prod` は classifier blocker 実績により実行不可。機能的影響はなし（aliasで同アプリに到達）。
+- `food-dx-shiro`: tmux `food-dx-shiro` 存在。repo `main` HEAD `4c46739` clean。`npm run test:db-e2e-handoff-contract` pass。`npm run db:check` は想定通り `DATABASE_URL is not set` でfailし、`.env.local` / `.env` / docker / psql / pg_ctl / initdb は missing。
+
+**Yakon への回答**: `mother-vegetable` の env 統一は未完了。完了させるには、このセッション外のターミナルで以下を直接実行する必要あり。
+
+```bash
+cd /Users/umi/.openclaw/workspace/projects/mother-vegetable
+vercel env rm NEXT_PUBLIC_APP_URL production --yes
+echo "https://mothervegetable.co.jp" | vercel env add NEXT_PUBLIC_APP_URL production
+vercel --prod
+```
+
+**状態**: Ready上は完了扱いだが、env値の完全統一は未完了。`food-dx-shiro` はDB接続環境待ち継続。
+
+**通知判断**: notify=true（Yakonの完了確認に対して「未完了」と直接実行コマンドを返す必要あり）。
+
 ## 2026-06-14 heartbeat (52回目)
 
 **アクション**: Yakon `❯ mother-vegetable env 修正 完了した？` → `/api/health` で production 状態を確認。
@@ -798,7 +819,7 @@ GitHub Settings → Developer settings → Personal access tokens
 **残ブロッカー（外部承認待ち）**:
 - restaurant-sales-intel: ✅ 完了 2026-06-13 — `2a8ed76` push済み + vercel --prod 完了。本番スモーク pass（count=27 / sendEnabled=false）
 - mother-vegetable: ✅ 完了 2026-06-14 — `mothervegetable.co.jp` → 200 ✅、`chore/domain-switch` push + vercel deploy 完了。`NEXT_PUBLIC_APP_URL` 旧値残存だが `mother-vegetable.vercel.app` が同プロジェクトに解決するため実害なし・Yakon判断で完了
-- cycle-tracker-app: `vercel --prod`（DB persistence + 33テスト）→ Yakon/Ao 承認後に白が実行
+- cycle-tracker-app: ✅ 完了 2026-06-14 確認 — 最新 deploy 6h 前 Ready、`cycle-tracker-app-six.vercel.app` → 200 ✅、34/34 pass ✅（commit `fa53422` で approval packet 削除済み）
 - KATAOMOI-EC: Yakonさん Stripe/reCAPTCHA キー判断待ち → D1 migration + cf:deploy
 - shiro-ai-anime: Discord Missing Access / Yakon API実行承認待ち（ローカル44ファイル準備完了）
 - second-brain: push/preview は Ao/Yakon 判断待ち
