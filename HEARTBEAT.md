@@ -32,6 +32,26 @@ High Risk:
 - 削除系操作
 - 秘密情報の共有
 
+## 2026-06-13 heartbeat (33回目)
+
+**アクション**: `citta-ios-complete` / `citta-working` / `citta-handcho` / `projects/mv-instructor-*` / `takowasa-map` / `restaurant-lp` を走査。`citta-ios-complete` に4件の tracked 変更を発見。`project.pbxproj` の diff を確認したところ、UUID が `F00000000000000000016604` のようなゼロ埋めパターン（通常の Xcode UUID と異なる）でプログラム生成された可能性が高く、コミット不安全と判断してスキップ。`.DS_Store` / `xcuserstate` / `xcschememanagement.plist` の3件は IDE artifact として `git rm --cached` + `.gitignore` 追加 → commit `85308d7 chore: add .gitignore for Xcode IDE artifacts`。
+
+**検証**: `citta-ios-complete` の pbxproj 変更はゼロ埋め UUID のため意図的 Xcode 操作ではない可能性 → 未コミットのまま保留。その他の走査 repo はすべて tracked 変更なし ✅。
+
+**状態**: 走査済み repo すべてでローカル安全差分を解消。`citta-ios-complete/project.pbxproj` の不審な変更のみ未コミット保留（破壊的操作なし）。workspace push / mother-vegetable vercel --prod は引き続き外部承認待ち。
+
+**通知判断**: notify=false（ローカル整理完了。新規の期限リスクなし）。
+
+## 2026-06-13 heartbeat (32回目)
+
+**アクション**: `tasks/QUEUE.md` の Ready / In Progress を確認。Ready は `mother-vegetable` のみで、Vercel env更新・Google/Stripe設定・push・prod deploy を含むため High Risk 承認待ちとして未実行。In Progress は `food-dx-shiro` 1件で、担当=白、tmux `food-dx-shiro` 存在、次アクションはDB接続環境で `npm run db:e2e:handoff`。
+
+**検証**: `food-dx-shiro` は HEAD `4c46739`、branch `main`、working tree clean。`.env.local` / `.env` / `DATABASE_URL` / docker / psql / pg_ctl / initdb は引き続きなし。`npm run test:db-e2e-handoff-contract` pass。`npm run db:check` は想定通り `DATABASE_URL is not set` でfail。`mother-vegetable` は branch `chore/domain-switch`、HEAD `2dfe72f`、working tree clean。
+
+**状態**: `food-dx-shiro` はDB接続環境待ち継続。`mother-vegetable` はHigh Risk承認待ち継続。workspace push (`shiro/cycle-tracker-app`) はPAT `workflow` scope待ちでブロック継続。KATAOMOI-EC はdeploy/migration完了済みで、Stripe / reCAPTCHA ENV VAR 手動設定待ち。
+
+**通知判断**: notify=false（新規障害・期限リスク・追加判断依頼なし。既知ブロッカーのみ）。
+
 ## 2026-06-13 heartbeat (31回目)
 
 **アクション**: `citta-ios` の未コミット差分28件を整理。IDE artifacts（`.DS_Store`・xcuserstate）を追跡解除して `.gitignore` を新規作成。obsolete Swift ファイル23件（CloudKitService / CloudflareService / ShareService / ImageRenderer / HandwritingViewModel / WakuwakuViewModel / WeeklyViewModel / 各View / Models）を削除、pbxproj build番号 7→9 バンプ・CittaApp.swift / CittaTheme.swift / ContentView.swift の軽微な変更を commit `54d3978 chore: remove obsolete Swift files, add .gitignore, bump build to 9`。
