@@ -32,6 +32,16 @@ High Risk:
 - 削除系操作
 - 秘密情報の共有
 
+## 2026-06-13 heartbeat (16回目)
+
+**アクション**: `tasks/QUEUE.md` の Ready / In Progress を確認。Ready は `mother-vegetable` / `KATAOMOI-EC` が引き続き外部公開・本番変更を含むため未実行。In Progress は `food-dx-shiro` 1件で、担当=白、tmux `food-dx-shiro` 存在、次アクションはDB接続環境で `npm run db:e2e:handoff`。前回検出した `clawatar` の tracked config 秘密値について、`clawatar.config.json` から `elevenlabsApiKey` / `deepgramApiKey` を除去し、APIキーは env / `~/.openclaw/openclaw.json` 参照へ戻した。
+
+**検証**: `food-dx-shiro` は `git status --short` clean、`npm run test:db-e2e-handoff-contract` pass、`npm run db:check` は想定通り `DATABASE_URL is not set` でfail（`.env.local` / `.env` / docker / psql / pg_ctl / initdb なし）。`clawatar` の秘密値パターンスキャンは実キー検出なし。`npm run build` は config ではなく tracked symlink `public/avatar-packs/release-human-plus-comet-v1/models` が `/Users/dongpingchen/...` を指す破損リンクのため ENOENT fail。`citta-ios` は削除済みSwiftファイル名が `project.pbxproj` に各6参照ずつ残る状態を再確認。
+
+**状態**: `clawatar.config.json` の未コミット秘密値は除去済み（他の未コミット差分は維持）。`clawatar` の次アクションは破損avatar symlinkの復元/差し替え判断、`citta-ios` の次アクションはpbxproj整合性修正。`food-dx-shiro` はDB接続環境待ち継続。Readyの2件はHigh Risk承認待ち継続。
+
+**通知判断**: notify=false（秘密値はローカルtracked configから除去済み。新規の期限リスク・外部公開・人間判断依頼なし）。
+
 ## 2026-06-13 heartbeat (15回目)
 
 **アクション**: root-level repos を走査して未コミット差分を確認。`citta-ios`（28ファイル）/ `clawatar`（6ファイル）/ `mvt-simulation`（4ファイル）/ `mvt-nft-dev`（3ファイル）/ `citta-final`（15ファイル）に変更を発見。clawatar の `clawatar.config.json` に実APIキー（`elevenlabsApiKey: sk_...`、`deepgramApiKey`）を検出 → 未コミット。citta-ios は削除済みSwiftファイル15件が `project.pbxproj` に44参照残存 → ビルド壊れ状態のため未コミット。`mvt-simulation` は秘密値なし・clean差分を確認しcommit `291dd29`。
