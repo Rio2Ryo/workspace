@@ -32,6 +32,16 @@ High Risk:
 - 削除系操作
 - 秘密情報の共有
 
+## 2026-06-13 heartbeat (30回目)
+
+**アクション**: `tasks/QUEUE.md` の Ready / In Progress を確認。Ready は `mother-vegetable` のみ（外部公開・本番変更を含むため未実行）。In Progress は `food-dx-shiro` 1件で、担当=白、tmux `food-dx-shiro` 存在、次アクションはDB接続環境で `npm run db:e2e:handoff`。既知の PAT `workflow` scope 待ち・KATAOMOI-EC ENV VAR 残件については新情報なしのため再通知しない。
+
+**検証**: `food-dx-shiro` は HEAD `4c46739`、`npm run test:db-e2e-handoff-contract` pass。`npm run db:check` は想定通り `DATABASE_URL is not set` でfail（`.env.local` / `.env` / docker / psql / pg_ctl / initdb なし）。
+
+**状態**: `food-dx-shiro` はDB接続環境待ち継続。`mother-vegetable` はHigh Risk承認待ち継続。workspace push (`shiro/cycle-tracker-app`) はPAT `workflow` scope待ちで引き続きブロック中。KATAOMOI-EC はdeploy/migration完了済みで、Stripe / reCAPTCHA ENV VAR 手動設定待ち。
+
+**通知判断**: notify=false（新規障害・期限リスク・追加判断依頼なし。既知ブロッカーのみ）。
+
 ## 2026-06-13 heartbeat (29回目)
 
 **アクション**: `citta-final` に追跡済みの未コミット差分15件を発見。IDE生成ファイル（`.DS_Store`・Xcode xcuserstate・xcschememanagement.plist）を `git rm --cached` で追跡解除し、`.gitignore` を新規作成。SwiftData モデルリファクタリング（HandwritingNote/ScheduleItem/WakuwakuItem の relationship 追加、CloudflareService に authToken + login メソッド追加、WakuwakuViewModel/WeeklyViewModel 削除等）を commit `12b2e3d refactor: SwiftData model relationships, add .gitignore for IDE artifacts`。
