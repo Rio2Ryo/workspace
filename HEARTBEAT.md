@@ -32,6 +32,18 @@ High Risk:
 - 削除系操作
 - 秘密情報の共有
 
+## 2026-06-13 heartbeat (43回目)
+
+**アクション**: `tasks/QUEUE.md` の Ready / In Progress を確認。Readyは全件完了表示だったが、`mother-vegetable` の `NEXT_PUBLIC_APP_URL` 修正が未完了のHigh Risk承認待ちとして流れないよう、独立Ready項目へ追加。In Progress の `food-dx-shiro` は tmux/repo/DB状態を再確認。
+
+**検証**:
+- `mother-vegetable`: `https://mothervegetable.co.jp/api/health` は `status=ok` だが、`url` は引き続き `https://mother-vegetable.vercel.app`。前回の旧URL影響は未解消。production env変更 + redeploy はHigh Riskのため未実行。
+- `food-dx-shiro`: tmux `food-dx-shiro` 存在、repo `main` HEAD `4c46739` clean。`npm run test:db-e2e-handoff-contract` pass。`npm run db:check` は想定通り `DATABASE_URL is not set` でfailし、`.env.local` / `.env` / docker / psql / pg_ctl / initdb は missing。
+
+**状態**: `mother-vegetable NEXT_PUBLIC_APP_URL修正` をQUEUE Readyに追加済み。Yakonの「mother-vegetable env修正OK」で白が `vercel env rm/add` + `vercel --prod` を実行可能。`food-dx-shiro` はDB接続環境待ち継続。
+
+**通知判断**: notify=false（旧URL問題は前回すでに承認パケット付きで通知済み。今回は記録同期と再確認のみで新規割り込み事項なし）。
+
 ## 2026-06-13 heartbeat (42回目)
 
 **アクション**: `mother-vegetable` 本番の `NEXT_PUBLIC_APP_URL` 誤設定を影響範囲・修正コマンドまで精査。`/api/health` → `url: https://mother-vegetable.vercel.app` を確認。grep でコード上の全使用箇所を特定。

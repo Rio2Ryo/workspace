@@ -5,11 +5,11 @@
     "@bmw_intokyo"
   ],
   "last_check": {
-    "checked_at": "2026-06-13T13:28:08Z",
-    "found_count": 15,
+    "checked_at": "2026-06-13T14:28:17Z",
+    "found_count": 4,
     "new_count": 0,
-    "status": "ok",
-    "error": null
+    "status": "partial_error",
+    "error": "profile extraction returned partial result: found=4 previous_max=15"
   },
   "saved_count": 95,
   "posts": [
@@ -1251,16 +1251,16 @@
   ],
   "recent_stats": {
     "window_hours": 24,
-    "total": 1002,
+    "total": 1005,
     "ok": 0,
-    "partial_error": 1001,
+    "partial_error": 1004,
     "error": 1,
     "other": 0,
     "success_rate": 0.0,
-    "partial_error_rate": 0.999001996007984,
+    "partial_error_rate": 0.9990049751243781,
     "top_partial_error_reason": {
       "reason": "profile extraction returned partial result: found=4 previous_max=16",
-      "count": 764
+      "count": 780
     }
   },
   "recent_stats_by_window": {
@@ -1275,21 +1275,21 @@
       "partial_error_rate": 1.0,
       "top_partial_error_reason": {
         "reason": "profile extraction returned partial result: found=4 previous_max=16",
-        "count": 31
+        "count": 27
       }
     },
     "24": {
       "window_hours": 24,
-      "total": 1002,
+      "total": 1005,
       "ok": 0,
-      "partial_error": 1001,
+      "partial_error": 1004,
       "error": 1,
       "other": 0,
       "success_rate": 0.0,
-      "partial_error_rate": 0.999001996007984,
+      "partial_error_rate": 0.9990049751243781,
       "top_partial_error_reason": {
         "reason": "profile extraction returned partial result: found=4 previous_max=16",
-        "count": 764
+        "count": 780
       }
     },
     "168": {
@@ -1303,7 +1303,7 @@
       "partial_error_rate": 0.9995291902071564,
       "top_partial_error_reason": {
         "reason": "profile extraction returned partial result: found=4 previous_max=16",
-        "count": 4455
+        "count": 4452
       }
     }
   },
@@ -1319,7 +1319,7 @@
     {
       "handle": "@bmw_intokyo",
       "warn_ts": 1781202276,
-      "current_bucket": 0.5
+      "current_bucket": 0.7
     },
     {
       "handle": "@hal.lifedesign",
@@ -1327,5 +1327,5 @@
       "current_bucket": 1.0
     }
   ],
-  "snapshot_generated_at": "2026-06-13T13:28:08Z"
+  "snapshot_generated_at": "2026-06-13T14:28:17Z"
 }
