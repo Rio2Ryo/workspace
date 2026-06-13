@@ -32,6 +32,16 @@ High Risk:
 - 削除系操作
 - 秘密情報の共有
 
+## 2026-06-13 heartbeat (22回目)
+
+**アクション**: `tasks/QUEUE.md` の Ready / In Progress を確認。Ready は `mother-vegetable` / `KATAOMOI-EC` が外部公開・本番変更を含むため未実行。In Progress は `food-dx-shiro` 1件で、担当=白、次アクションはDB接続環境で `npm run db:e2e:handoff`。前回のPAT `workflow` scope ブロッカーが解消済みか確認するため、承認済みの `git push origin shiro/cycle-tracker-app` を再試行。
+
+**検証**: `food-dx-shiro` は `npm run test:db-e2e-handoff-contract` pass、`npm run db:check` は想定通り `DATABASE_URL is not set` でfail（`.env.local` / `.env` / docker / psql / pg_ctl / initdb なし）。workspace push は再度 `refusing to allow a Personal Access Token to create or update workflow .github/workflows/interaugh-homepage.yml without workflow scope` でremote reject。
+
+**状態**: `second-brain / shiro/phase2-perf-metrics` はpush済み。`workspace / shiro/cycle-tracker-app` はPATに `workflow` scopeが付くまでpush不可。コード/テスト起因ではなくGitHub token権限ブロッカー。Vercel本番deploy / KATAOMOI-EC D1 migration + deploy は引き続き未実行。
+
+**通知判断**: notify=true（Yakon側でPAT `workflow` scope追加が必要。同じpush再試行でも未解消）。
+
 ## 2026-06-13 heartbeat (21回目)
 
 **アクション**: Yakon「push OK」承認を受け、両ブランチのpushを実行。
