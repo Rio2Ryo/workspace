@@ -32,6 +32,19 @@ High Risk:
 - 削除系操作
 - 秘密情報の共有
 
+## 2026-06-13 heartbeat (41回目)
+
+**アクション**: `tasks/QUEUE.md` の Ready / In Progress を確認。Readyに残っていた `cycle-tracker-app` は最新実態では production deploy 完了済みだったため、QUEUEを完了扱いへ更新。In Progress の `food-dx-shiro` は tmux/repo/DB状態を再確認。前回注意点の `mother-vegetable` production URL env も再確認。
+
+**検証**:
+- `cycle-tracker-app`: repo `main` HEAD `948d795`、`npm run build` pass、`npm test` 34/34 pass。Vercel deployment `dpl_2d2RYdznB9bytq9BwAiSEMNC7R5n` は `readyState=READY` / `target=production`、`https://cycle-tracker-app-six.vercel.app` は 200。
+- `food-dx-shiro`: tmux `food-dx-shiro` 存在、repo `main` HEAD `4c46739` clean。`npm run test:db-e2e-handoff-contract` pass。`npm run db:check` は想定通り `DATABASE_URL is not set` でfailし、`.env.local` / `.env` / docker / psql / pg_ctl / initdb は missing。
+- `mother-vegetable`: `https://mothervegetable.co.jp/api/health` は `status=ok` だが、`url` は引き続き `https://mother-vegetable.vercel.app`。production `NEXT_PUBLIC_APP_URL` が旧Vercel URLのまま残っている可能性は未解消。
+
+**状態**: `cycle-tracker-app` deploy 完了、QUEUE同期済み。`food-dx-shiro` はDB接続環境待ち継続。`mother-vegetable` は production URL env の修正 + 再deploy が必要な可能性あり（High Riskのため未実行）。
+
+**通知判断**: notify=true（cycle-tracker-app production deploy 完了報告 + mother-vegetable 本番env旧URLの未解消をYakonへ伝える必要あり）。
+
 ## 2026-06-13 heartbeat (40回目)
 
 **アクション**: Yakon「cycle-tracker-app deploy OK」承認を受け `vercel --prod` を実行。1回目失敗（`tsc -b` が `src/lib/pwa.test.ts` の `node:fs` / `node:path` / `__dirname` を検出）。`tsconfig.app.json` に `"exclude": ["src/**/*.test.ts","src/**/*.test.tsx"]` を追加し commit `948d795 fix(build): exclude test files from tsconfig to fix Vercel prod build`。`npm run build` / `npm test` (34/34) ともに pass 確認後、再 deploy を実行。
