@@ -32,6 +32,16 @@ High Risk:
 - 削除系操作
 - 秘密情報の共有
 
+## 2026-06-13 heartbeat (31回目)
+
+**アクション**: `citta-ios` の未コミット差分28件を整理。IDE artifacts（`.DS_Store`・xcuserstate）を追跡解除して `.gitignore` を新規作成。obsolete Swift ファイル23件（CloudKitService / CloudflareService / ShareService / ImageRenderer / HandwritingViewModel / WakuwakuViewModel / WeeklyViewModel / 各View / Models）を削除、pbxproj build番号 7→9 バンプ・CittaApp.swift / CittaTheme.swift / ContentView.swift の軽微な変更を commit `54d3978 chore: remove obsolete Swift files, add .gitignore, bump build to 9`。
+
+**検証**: `xcodebuild` は tick 20 で `BUILD SUCCEEDED` 確認済み。diff に秘密値なし ✅。29 files changed, 40 insertions(+), 4762 deletions(-)。
+
+**状態**: citta-ios の積み残し差分をすべて commit 済み。workspace push はPAT `workflow` scope 待ち継続。mother-vegetable は High Risk 承認待ち継続。走査済み全 repo でローカル安全差分はほぼ解消。
+
+**通知判断**: notify=false（ローカル整理のみ）。
+
 ## 2026-06-13 heartbeat (30回目)
 
 **アクション**: `tasks/QUEUE.md` の Ready / In Progress を確認。Ready は `mother-vegetable` のみ（外部公開・本番変更を含むため未実行）。In Progress は `food-dx-shiro` 1件で、担当=白、tmux `food-dx-shiro` 存在、次アクションはDB接続環境で `npm run db:e2e:handoff`。既知の PAT `workflow` scope 待ち・KATAOMOI-EC ENV VAR 残件については新情報なしのため再通知しない。
