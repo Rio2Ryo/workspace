@@ -32,6 +32,16 @@ High Risk:
 - 削除系操作
 - 秘密情報の共有
 
+## 2026-06-13 heartbeat (14回目)
+
+**アクション**: `tasks/QUEUE.md` の Ready / In Progress を確認。Ready は `mother-vegetable` / `KATAOMOI-EC` がHigh Risk承認待ち、In Progress は `food-dx-shiro` のDB接続環境待ち。前回残っていた安全な未コミット差分 `gmail-knowledge` / `ai-profile-link-mvp` を整理。
+
+**検証**: `gmail-knowledge` は DB healthcheck / DB障害時503ハンドリングを確認し、`.venv_e2e/bin/python -m py_compile app.py db.py` pass、`DATABASE_URL=` で healthcheck smoke pass。秘密値スキャン pass。commit `355fd86 feat: add Gmail Knowledge DB health checks`。`ai-profile-link-mvp` は `npm run lint` / `npm run test` / `npm run build` pass、秘密値スキャン pass。commit `764e333 feat: add AI profile evidence and snapshots`。
+
+**状態**: 前回残っていた `gmail-knowledge` / `ai-profile-link-mvp` のローカル安全差分はcommit済み。Readyの2件はHigh Riskのため未実行。`food-dx-shiro` は `npm run db:check` が想定通り `DATABASE_URL is not set` でfailし、`.env.local` / `.env` / docker / psql / pg_ctl / initdb 不在を再確認。`npm run test:db-e2e-handoff-contract` pass。次アクションはDB接続環境で `npm run db:e2e:handoff`。
+
+**通知判断**: notify=false（ローカル整理完了のみ。新規の障害・期限リスク・ユーザー判断依頼なし）。
+
 ## 2026-06-13 heartbeat (13回目)
 
 **アクション**: 全プロジェクトの未コミット差分をスキャン。`recruit-ai-crm` / `gmail-knowledge` / `ai-profile-link-mvp` に未コミット変更を発見。秘密値スキャン pass。`recruit-ai-crm` の LINE webhook userId null-guard + `crypto.randomUUID()` バグ修正を commit `73a2eaa` として整理。
