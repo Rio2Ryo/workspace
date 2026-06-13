@@ -5,14 +5,27 @@
     "@bmw_intokyo"
   ],
   "last_check": {
-    "checked_at": "2026-06-12T23:36:19Z",
+    "checked_at": "2026-06-13T03:12:04Z",
     "found_count": 4,
     "new_count": 0,
     "status": "partial_error",
     "error": "profile extraction returned partial result: found=4 previous_max=15"
   },
-  "saved_count": 93,
+  "saved_count": 94,
   "posts": [
+    {
+      "handle": "@hal.lifedesign",
+      "post_id": "DZgqy1BElHR",
+      "post_url": "https://www.threads.com/@hal.lifedesign/post/DZgqy1BElHR",
+      "first_seen_at": "2026-06-13T03:10:19Z",
+      "captured_at": "2026-06-13T03:10:24Z",
+      "screenshot_size_bytes": 976365,
+      "screenshot_width": 1280,
+      "screenshot_height": 1800,
+      "post_text": "姪っ子が欲しがってたやつ 手に入れた。 ロートZ! キングスライムボトル。",
+      "posted_at": "2026-06-13T03:09:11.000Z",
+      "screenshot_path": "screenshots/hal.lifedesign/DZgqy1BElHR.png"
+    },
     {
       "handle": "@hal.lifedesign",
       "post_id": "DZgSSSJkrA2",
@@ -1234,7 +1247,7 @@
     "partial_error_rate": 0.9990029910269193,
     "top_partial_error_reason": {
       "reason": "profile extraction returned partial result: found=4 previous_max=16",
-      "count": 742
+      "count": 757
     }
   },
   "recent_stats_by_window": {
@@ -1249,7 +1262,7 @@
       "partial_error_rate": 1.0,
       "top_partial_error_reason": {
         "reason": "profile extraction returned partial result: found=4 previous_max=16",
-        "count": 43
+        "count": 27
       }
     },
     "24": {
@@ -1263,27 +1276,27 @@
       "partial_error_rate": 0.9990029910269193,
       "top_partial_error_reason": {
         "reason": "profile extraction returned partial result: found=4 previous_max=16",
-        "count": 742
+        "count": 757
       }
     },
     "168": {
       "window_hours": 168,
-      "total": 6373,
+      "total": 6372,
       "ok": 0,
-      "partial_error": 6370,
+      "partial_error": 6369,
       "error": 3,
       "other": 0,
       "success_rate": 0.0,
-      "partial_error_rate": 0.9995292640828495,
+      "partial_error_rate": 0.9995291902071564,
       "top_partial_error_reason": {
         "reason": "profile extraction returned partial result: found=4 previous_max=16",
-        "count": 4430
+        "count": 4453
       }
     }
   },
   "sync_state": {
-    "cursor": 115,
-    "db_max": 116,
+    "cursor": 116,
+    "db_max": 117,
     "delta": 1,
     "cursor_file_exists": true
   },
@@ -1293,7 +1306,7 @@
     {
       "handle": "@bmw_intokyo",
       "warn_ts": 1781202276,
-      "current_bucket": 1.0
+      "current_bucket": 0.6
     },
     {
       "handle": "@hal.lifedesign",
@@ -1301,5 +1314,5 @@
       "current_bucket": 1.0
     }
   ],
-  "snapshot_generated_at": "2026-06-12T23:36:19Z"
+  "snapshot_generated_at": "2026-06-13T03:12:04Z"
 }
