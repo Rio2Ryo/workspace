@@ -32,6 +32,46 @@ High Risk:
 - 削除系操作
 - 秘密情報の共有
 
+## 2026-06-13 heartbeat (42回目)
+
+**アクション**: `mother-vegetable` 本番の `NEXT_PUBLIC_APP_URL` 誤設定を影響範囲・修正コマンドまで精査。`/api/health` → `url: https://mother-vegetable.vercel.app` を確認。grep でコード上の全使用箇所を特定。
+
+**検証**: `NEXT_PUBLIC_APP_URL` が旧 Vercel URL (`https://mother-vegetable.vercel.app`) のまま影響する箇所:
+
+| ファイル | 影響 |
+|---|---|
+| `api/checkout/route.ts` | Stripe 決済完了/キャンセル後のリダイレクト先が旧URL |
+| `api/checkout/subscription/route.ts` | サブスクリプション決済のリダイレクト先が旧URL |
+| `lib/email.ts` | 会員登録確認メール・パスワードリセットメールのリンクが旧URL |
+| `api/instructor/register/route.ts` | 講師登録メールのリンクが旧URL |
+| `api/instructor/connect/route.ts` | 講師連携フローのURLが旧URL |
+| `api/admin/instructors/` | 紹介リンク(referralUrl)が旧URL |
+| `sitemap.ts` / `robots.ts` | fallback が `https://mothervegetable.co.jp` なので影響軽微 |
+| `layout.tsx` | fallback あり、SEO影響軽微 |
+
+**Yakon向け承認パケット（mother-vegetable NEXT_PUBLIC_APP_URL 修正 + 再deploy）**
+
+```
+問題: production NEXT_PUBLIC_APP_URL = https://mother-vegetable.vercel.app (旧URL)
+影響: Stripe checkout リダイレクト・認証メールリンクが旧URLに向く
+修正: Vercel env 更新 + redeploy
+
+実行手順（白が実行 or Yakon がターミナルで直接）:
+  cd /Users/umi/.openclaw/workspace/projects/mother-vegetable
+  vercel env rm NEXT_PUBLIC_APP_URL production --yes
+  echo "https://mothervegetable.co.jp" | vercel env add NEXT_PUBLIC_APP_URL production
+  vercel --prod
+
+ロールバック: vercel rollback (ただし env は手動で元に戻す必要あり)
+リスク: Medium（env変更 + 本番redeploy。スキーマ変更・データ変更なし）
+```
+
+推奨: **今すぐ修正**。Stripe 決済ユーザーが旧 Vercel URLにリダイレクトされるバグは実害あり。
+
+**状態**: 承認パケット完備。Yakon の「OK」1回で白が即実行。
+
+**通知判断**: notify=true（Stripe/メールの旧URLバグをYakon確認依頼）。
+
 ## 2026-06-13 heartbeat (41回目)
 
 **アクション**: `tasks/QUEUE.md` の Ready / In Progress を確認。Readyに残っていた `cycle-tracker-app` は最新実態では production deploy 完了済みだったため、QUEUEを完了扱いへ更新。In Progress の `food-dx-shiro` は tmux/repo/DB状態を再確認。前回注意点の `mother-vegetable` production URL env も再確認。
