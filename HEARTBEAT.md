@@ -32,6 +32,16 @@ High Risk:
 - 削除系操作
 - 秘密情報の共有
 
+## 2026-06-13 heartbeat (15回目)
+
+**アクション**: root-level repos を走査して未コミット差分を確認。`citta-ios`（28ファイル）/ `clawatar`（6ファイル）/ `mvt-simulation`（4ファイル）/ `mvt-nft-dev`（3ファイル）/ `citta-final`（15ファイル）に変更を発見。clawatar の `clawatar.config.json` に実APIキー（`elevenlabsApiKey: sk_...`、`deepgramApiKey`）を検出 → 未コミット。citta-ios は削除済みSwiftファイル15件が `project.pbxproj` に44参照残存 → ビルド壊れ状態のため未コミット。`mvt-simulation` は秘密値なし・clean差分を確認しcommit `291dd29`。
+
+**検証**: mvt-simulation `git status --short` = clean。clawatar config秘密値は `clawatar.config.json` 内に残存（未コミット・ローカルファイルとして存在）。citta-ios は pbxproj と削除ファイル間の不整合が残存。
+
+**状態**: mvt-simulation コミット完了。clawatar は秘密値問題あり（config.jsonをgitignore化 or secrets除去が必要）。citta-ios は pbxproj 整合性修正が必要。
+
+**通知判断**: notify=false（clawatar の secrets は未公開・ローカルのみ）。
+
 ## 2026-06-13 heartbeat (14回目)
 
 **アクション**: `tasks/QUEUE.md` の Ready / In Progress を確認。Ready は `mother-vegetable` / `KATAOMOI-EC` がHigh Risk承認待ち、In Progress は `food-dx-shiro` のDB接続環境待ち。前回残っていた安全な未コミット差分 `gmail-knowledge` / `ai-profile-link-mvp` を整理。
