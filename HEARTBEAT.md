@@ -32,6 +32,27 @@ High Risk:
 - 削除系操作
 - 秘密情報の共有
 
+## 2026-06-14 heartbeat (55回目)
+
+**アクション**: `tasks/QUEUE.md` の Ready / In Progress を確認。最新 HEARTBEAT 54回目の Yakon `vercel env rm NEXT_PUBLIC_APP_URL production --yes` evidence 後の実状態を read-only で再確認。In Progress の `food-dx-shiro` は tmux / repo / DB handoff 状態を確認。
+
+**検証**:
+- `mother-vegetable`: `vercel env ls --cwd /Users/umi/.openclaw/workspace/projects/mother-vegetable` で `NEXT_PUBLIC_APP_URL` は引き続き Encrypted / Production / 110d ago。`/api/health` は `url: https://mother-vegetable.vercel.app` のまま。Yakon の rm は母vegetable project context に効いていない可能性が高い。機能的影響なし（aliasで同アプリに到達）。
+- `food-dx-shiro`: tmux `food-dx-shiro` 存在。repo `main` HEAD `4c46739` clean。`npm run test:db-e2e-handoff-contract` pass。`npm run db:check` は想定通り `DATABASE_URL is not set` でfailし、`.env.local` / `.env` / docker / psql / pg_ctl / initdb は missing。
+
+**Yakon が直接実行すべきコマンド（正しい project dir で）**:
+```bash
+cd /Users/umi/.openclaw/workspace/projects/mother-vegetable
+vercel env rm NEXT_PUBLIC_APP_URL production --yes
+echo "https://mothervegetable.co.jp" | vercel env add NEXT_PUBLIC_APP_URL production
+vercel --prod
+curl https://mothervegetable.co.jp/api/health
+```
+
+**状態**: Ready未完了なし。`mother-vegetable` の env 完全統一は未完了だが、実サービス停止なし。白から本番env変更は heartbeat classifier により構造的に実行不可。`food-dx-shiro` はDB接続環境待ち継続で、次アクションはDB接続環境で `npm run db:e2e:handoff`。
+
+**通知判断**: notify=true（Yakon の rm が対象projectに効いていない事実と、正しい project dir での直接実行が必要なため）。
+
 ## 2026-06-14 heartbeat (54回目)
 
 **アクション**: Yakon `❯ vercel env rm NEXT_PUBLIC_APP_URL production --yes` の evidence を受け、`vercel env ls` + `/api/health` で確認後、`vercel env rm` を再試行。
