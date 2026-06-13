@@ -32,6 +32,26 @@ High Risk:
 - 削除系操作
 - 秘密情報の共有
 
+## 2026-06-13 heartbeat (29回目)
+
+**アクション**: `citta-final` に追跡済みの未コミット差分15件を発見。IDE生成ファイル（`.DS_Store`・Xcode xcuserstate・xcschememanagement.plist）を `git rm --cached` で追跡解除し、`.gitignore` を新規作成。SwiftData モデルリファクタリング（HandwritingNote/ScheduleItem/WakuwakuItem の relationship 追加、CloudflareService に authToken + login メソッド追加、WakuwakuViewModel/WeeklyViewModel 削除等）を commit `12b2e3d refactor: SwiftData model relationships, add .gitignore for IDE artifacts`。
+
+**検証**: 秘密値スキャン — `CloudflareService.swift` に `@Published var authToken: String?` と `func login(email:password:)` 追加のみ（ハードコード値なし）✅。391 insertions / 2515 deletions（大半は IDE artifact 削除）。`git status --short | grep -v '^??'` = clean ✅。
+
+**状態**: citta-final commit 済み。workspace push (`shiro/cycle-tracker-app`) は PAT `workflow` scope 待ちで引き続きブロック中。mother-vegetable は High Risk 承認待ち継続。
+
+**通知判断**: notify=false（ローカル整理のみ）。
+
+## 2026-06-13 heartbeat (28回目)
+
+**アクション**: `tasks/QUEUE.md` の Ready / In Progress を確認。Ready は `mother-vegetable` のみ（外部公開・本番変更を含むため未実行）。`KATAOMOI-EC` は QUEUE 上で完了済みに移動済み（D1 migration 0001–0003 適用 + Cloudflare Workers deploy 完了）。In Progress は `food-dx-shiro` 1件で、担当=白、tmux `food-dx-shiro` 存在、次アクションはDB接続環境で `npm run db:e2e:handoff`。
+
+**検証**: `food-dx-shiro` は HEAD `4c46739`、`npm run test:db-e2e-handoff-contract` pass。`npm run db:check` は想定通り `DATABASE_URL is not set` でfail（`.env.local` / `.env` / docker / psql / pg_ctl / initdb なし）。
+
+**状態**: `food-dx-shiro` はDB接続環境待ち継続。`mother-vegetable` はHigh Risk承認待ち継続。`KATAOMOI-EC` はmigration/deploy完了、残件は Cloudflare Dashboard での Stripe / reCAPTCHA ENV VAR 手動設定（Yakon担当）。workspace push (`shiro/cycle-tracker-app`) はPAT `workflow` scope待ちで引き続きブロック中。
+
+**通知判断**: notify=true（KATAOMOI-EC は本番deploy後の Stripe / reCAPTCHA ENV VAR 設定が残り、Yakon側の手動対応が必要）。
+
 ## 2026-06-13 heartbeat (27回目)
 
 **アクション**: 全repo走査で新規の未コミット tracked 差分を2件発見し commit。
