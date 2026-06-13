@@ -5,14 +5,40 @@
     "@bmw_intokyo"
   ],
   "last_check": {
-    "checked_at": "2026-06-13T23:28:33Z",
+    "checked_at": "2026-06-13T23:42:53Z",
     "found_count": 4,
     "new_count": 0,
     "status": "partial_error",
     "error": "profile extraction returned partial result: found=4 previous_max=15"
   },
-  "saved_count": 95,
+  "saved_count": 97,
   "posts": [
+    {
+      "handle": "@hal.lifedesign",
+      "post_id": "DZi3ns1D9GQ",
+      "post_url": "https://www.threads.com/@hal.lifedesign/post/DZi3ns1D9GQ",
+      "first_seen_at": "2026-06-13T23:41:10Z",
+      "captured_at": "2026-06-13T23:41:16Z",
+      "screenshot_size_bytes": 721556,
+      "screenshot_width": 1280,
+      "screenshot_height": 1800,
+      "post_text": "温泉＆サウナからの Zhyvagoでコーヒータイム。 この流れ 最強なんじゃないだろうか。",
+      "posted_at": "2026-06-13T23:39:45.000Z",
+      "screenshot_path": "screenshots/hal.lifedesign/DZi3ns1D9GQ.png"
+    },
+    {
+      "handle": "@hal.lifedesign",
+      "post_id": "DZi3czIj5kn",
+      "post_url": "https://www.threads.com/@hal.lifedesign/post/DZi3czIj5kn",
+      "first_seen_at": "2026-06-13T23:39:40Z",
+      "captured_at": "2026-06-13T23:39:45Z",
+      "screenshot_size_bytes": 717467,
+      "screenshot_width": 1280,
+      "screenshot_height": 1800,
+      "post_text": "今日はトレーニングオフで 早朝から温泉＆サウナへ。 整いました。",
+      "posted_at": "2026-06-13T23:38:15.000Z",
+      "screenshot_path": "screenshots/hal.lifedesign/DZi3czIj5kn.png"
+    },
     {
       "handle": "@hal.lifedesign",
       "post_id": "DZhU0GHkgpj",
@@ -1260,22 +1286,22 @@
     "partial_error_rate": 1.0,
     "top_partial_error_reason": {
       "reason": "profile extraction returned partial result: found=4 previous_max=16",
-      "count": 731
+      "count": 729
     }
   },
   "recent_stats_by_window": {
     "1": {
       "window_hours": 1,
-      "total": 42,
+      "total": 43,
       "ok": 0,
-      "partial_error": 42,
+      "partial_error": 43,
       "error": 0,
       "other": 0,
       "success_rate": 0.0,
       "partial_error_rate": 1.0,
       "top_partial_error_reason": {
         "reason": "profile extraction returned partial result: found=4 previous_max=16",
-        "count": 37
+        "count": 36
       }
     },
     "24": {
@@ -1289,7 +1315,7 @@
       "partial_error_rate": 1.0,
       "top_partial_error_reason": {
         "reason": "profile extraction returned partial result: found=4 previous_max=16",
-        "count": 731
+        "count": 729
       }
     },
     "168": {
@@ -1303,14 +1329,14 @@
       "partial_error_rate": 0.9995289684408856,
       "top_partial_error_reason": {
         "reason": "profile extraction returned partial result: found=4 previous_max=16",
-        "count": 4489
+        "count": 4492
       }
     }
   },
   "sync_state": {
     "cursor": 118,
-    "db_max": 118,
-    "delta": 0,
+    "db_max": 120,
+    "delta": 2,
     "cursor_file_exists": true
   },
   "dry_run_alert": null,
@@ -1327,5 +1353,5 @@
       "current_bucket": 1.0
     }
   ],
-  "snapshot_generated_at": "2026-06-13T23:28:33Z"
+  "snapshot_generated_at": "2026-06-13T23:42:53Z"
 }
