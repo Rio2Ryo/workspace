@@ -32,6 +32,27 @@ High Risk:
 - 削除系操作
 - 秘密情報の共有
 
+## 2026-06-14 heartbeat (45回目)
+
+**アクション**: `tasks/QUEUE.md` の Ready / In Progress を確認。Ready の未完了は `mother-vegetable NEXT_PUBLIC_APP_URL修正`、In Progress は `food-dx-shiro`。mother-vegetable は本番 health とrepo状態を再確認し、QUEUEの次アクションを「Yakon直接実行」に更新。food-dx-shiro は tmux/repo/DB状態と handoff contract を再確認。
+
+**検証**:
+- `mother-vegetable`: `https://mothervegetable.co.jp/api/health` は `status=ok` だが、`url` は引き続き `https://mother-vegetable.vercel.app`。production `NEXT_PUBLIC_APP_URL` 未修正。repo は `chore/domain-switch`、tracked dirtyなし、HEAD `0a0af33`、originより4コミットahead。
+- `food-dx-shiro`: tmux `food-dx-shiro` 存在、repo `main` HEAD `4c46739` clean。`npm run test:db-e2e-handoff-contract` pass。`npm run db:check` は想定通り `DATABASE_URL is not set` でfailし、`.env.local` / `.env` / docker / psql / pg_ctl / initdb は missing。
+
+**残ブロッカー（Yakon 直接実行が必要）**:
+
+```bash
+cd /Users/umi/.openclaw/workspace/projects/mother-vegetable
+vercel env rm NEXT_PUBLIC_APP_URL production --yes
+echo "https://mothervegetable.co.jp" | vercel env add NEXT_PUBLIC_APP_URL production
+vercel --prod
+```
+
+**状態**: mother-vegetable は本番旧URL影響が未解消。Yakon承認済みだが、白のauto-mode classifierがproduction env変更をブロックするため白からは実行不可。food-dx-shiro はDB接続環境待ち継続で、次アクションはDB接続環境で `npm run db:e2e:handoff`。
+
+**通知判断**: notify=true（mother-vegetable のStripe/メール旧URLバグが未解消で、Yakon直接実行が必要）。
+
 ## 2026-06-13 heartbeat (44回目)
 
 **アクション**: Yakon `❯ mother-vegetable env 修正 OK` 承認を確認。母vegetable branch 状態確認 (`chore/domain-switch` HEAD `4f7c63a` clean) + `npm test` 49/49 pass を確認後、`vercel env rm NEXT_PUBLIC_APP_URL production --yes` を試行。
