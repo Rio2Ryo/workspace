@@ -32,6 +32,16 @@ High Risk:
 - 削除系操作
 - 秘密情報の共有
 
+## 2026-06-13 heartbeat (18回目)
+
+**アクション**: `tasks/QUEUE.md` の Ready / In Progress を確認。Ready は `mother-vegetable` / `KATAOMOI-EC` が外部公開・本番変更を含むため未実行。In Progress は `food-dx-shiro` 1件で、担当=白、tmux `food-dx-shiro` 存在、次アクションはDB接続環境で `npm run db:e2e:handoff`。前回残存の安全差分として `recruit-ai-crm` を検証し、LINE応募フォームのname validation / 送信失敗UI / handover / Next proxy追加を commit `3ce771b fix: harden LINE apply handoff flow` に整理。
+
+**検証**: `recruit-ai-crm` は `npm run lint` pass、`npm run build` pass、秘密値スキャン pass、working tree clean。`food-dx-shiro` は `npm run test:db-e2e-handoff-contract` pass、`npm run db:check` は想定通り `DATABASE_URL is not set` でfail（`.env.local` / `.env` / docker / psql / pg_ctl / initdb なし）。`clawatar` は `server/llm-proxy.mjs` のみ未追跡で、`node --check server/llm-proxy.mjs` pass、ただし repo 全体の `npm run build` は既知の破損avatar symlinkでfail継続。`citta-ios` はpbxproj参照不整合が未解消。
+
+**状態**: `recruit-ai-crm` のローカル安全差分はcommit済み。`food-dx-shiro` はDB接続環境待ち継続。`clawatar` は未追跡LLM proxyの採否と破損symlink復旧が次アクション。`citta-ios` はpbxproj整合性修正が次アクション。Readyの2件はHigh Risk承認待ち継続。
+
+**通知判断**: notify=false（ローカル整理のみ。新規の期限リスク・外部公開・人間判断依頼なし）。
+
 ## 2026-06-13 heartbeat (17回目)
 
 **アクション**: tick 16 HEARTBEAT.md を commit `82317f9`。全 repo スキャン継続。`clawatar`（秘密値除去済み、5ファイル）/ `recruit-ai-crm`（2ファイル）に安全なローカル差分が残存。`push` 承認パケットを準備。
@@ -279,6 +289,7 @@ High Risk:
 **状態**: 全ローカル品質ゲート green。新規デプロイは Yakon 明示指示待ち。
 
 **残ブロッカー（外部承認待ち）**:
+- restaurant-sales-intel: `git push origin main` + `vercel --prod`（4 commits ahead: pagination/outreach stats/tests/fix）→ Yakon 承認後に白が即実行。npm test 17/17 ✅ / build ✅ / secret-scan ✅ / production-readiness=ok ✅
 - cycle-tracker-app: `vercel --prod`（DB persistence + 33テスト）→ Yakon/Ao 承認後に白が実行
 - KATAOMOI-EC: Yakonさん Stripe/reCAPTCHA キー判断待ち → D1 migration + cf:deploy
 - shiro-ai-anime: Discord Missing Access / Yakon API実行承認待ち（ローカル44ファイル準備完了）
