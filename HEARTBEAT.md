@@ -32,6 +32,18 @@ High Risk:
 - 削除系操作
 - 秘密情報の共有
 
+## 2026-06-14 heartbeat (48回目)
+
+**アクション**: `tasks/QUEUE.md` の Ready / In Progress を確認。QUEUE現在値では `mother-vegetable NEXT_PUBLIC_APP_URL修正` は Yakon判断で完了扱い、Ready未完了なし。In Progress は `food-dx-shiro` のみ。古いheartbeat履歴の未完了扱いは繰り返さず、mother-vegetable の公開疎通と food-dx-shiro のtmux/repo/DB handoff状態を確認。
+
+**検証**:
+- `mother-vegetable`: `https://mothervegetable.co.jp/en` は 200。`/api/health` は `status=ok`、`url` は引き続き `https://mother-vegetable.vercel.app` だが、QUEUE上は「同Vercelプロジェクトに解決されるため実サービス停止なし」として完了扱い。
+- `food-dx-shiro`: tmux `food-dx-shiro` 存在、repo `main` HEAD `4c46739` clean。`npm run test:db-e2e-handoff-contract` pass。`npm run db:check` は想定通り `DATABASE_URL is not set` でfailし、`.env.local` / `.env` / docker / psql / pg_ctl / initdb は missing。
+
+**状態**: Ready未完了なし。`food-dx-shiro` はDB接続環境待ち継続で、次アクションはDB接続環境で `npm run db:e2e:handoff`。
+
+**通知判断**: notify=false（新規の障害・期限リスク・追加判断依頼なし。mother-vegetable はQUEUE上完了扱い、food-dx-shiro は既知のDB環境待ちのみ）。
+
 ## 2026-06-14 heartbeat (47回目)
 
 **アクション**: `tasks/QUEUE.md` の Ready / In Progress を確認。Ready の未完了は `mother-vegetable NEXT_PUBLIC_APP_URL修正`、In Progress は `food-dx-shiro`。前回の構造的ブロックを踏まえ、白から `vercel env rm/add` や `vercel --prod` は再試行せず、本番health・repo・tmux・DB handoff状態を確認。
@@ -722,6 +734,7 @@ GitHub Settings → Developer settings → Personal access tokens
 
 **残ブロッカー（外部承認待ち）**:
 - restaurant-sales-intel: ✅ 完了 2026-06-13 — `2a8ed76` push済み + vercel --prod 完了。本番スモーク pass（count=27 / sendEnabled=false）
+- mother-vegetable: ✅ 完了 2026-06-14 — `mothervegetable.co.jp` → 200 ✅、`chore/domain-switch` push + vercel deploy 完了。`NEXT_PUBLIC_APP_URL` 旧値残存だが `mother-vegetable.vercel.app` が同プロジェクトに解決するため実害なし・Yakon判断で完了
 - cycle-tracker-app: `vercel --prod`（DB persistence + 33テスト）→ Yakon/Ao 承認後に白が実行
 - KATAOMOI-EC: Yakonさん Stripe/reCAPTCHA キー判断待ち → D1 migration + cf:deploy
 - shiro-ai-anime: Discord Missing Access / Yakon API実行承認待ち（ローカル44ファイル準備完了）
