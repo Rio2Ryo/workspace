@@ -1,0 +1,11 @@
+{
+  "scripts": {
+    "test:slides": "node --test slide-tool/tests/*.test.mjs",
+    "verify:slides": "node slide-tool/scripts/verify-artifacts.mjs",
+    "verify:slide-report": "node slide-tool/scripts/verify-discord-report.mjs",
+    "suggest:slide-policy": "node slide-tool/scripts/suggest-manifest-policy.mjs"
+  },
+  "dependencies": {
+    "pptxgenjs": "^4.0.1"
+  }
+}
