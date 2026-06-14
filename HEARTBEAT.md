@@ -32,6 +32,28 @@ High Risk:
 - 削除系操作
 - 秘密情報の共有
 
+## 2026-06-14 heartbeat (69回目)
+
+**アクション**: `tasks/QUEUE.md` の Ready / In Progress を確認。Ready 未完了なし、In Progress は `food-dx-shiro` のみ。`mother-vegetable` は `/api/health` + `vercel ls` + `vercel env ls` で再確認。`food-dx-shiro` は tmux/repo/DB handoff 状態、disk は空き容量と削除候補を確認（削除は未実行）。
+
+**検証**:
+- `mother-vegetable`: `/api/health` → `url=https://mother-vegetable.vercel.app` で旧URL継続。`vercel ls` → 1時間前に Production deploy `mother-vegetable-ikiosisb1...` が Ready。`vercel env ls` → `NEXT_PUBLIC_APP_URL` は Encrypted / Production / **111d ago** のまま。env 更新なしの redeploy が継続している。
+- `food-dx-shiro`: tmux `food-dx-shiro` 存在。repo `main` HEAD `4c46739` clean。`npm run test:db-e2e-handoff-contract` pass。`npm run db:check` は想定通り `DATABASE_URL is not set` で fail し、`.env.local` / `.env` / docker / psql / pg_ctl / initdb は missing。
+- disk: `/System/Volumes/Data` は 98% 使用、空き **5.6GiB**。削除候補は `/Users/umi/.npm` が 6.8G、`/Users/umi/.cache` が 3.9G。削除前確認ルールに従い未削除。
+
+**状態**: Ready 未完了なし。`mother-vegetable` は `vercel --prod` のみが繰り返され、env 更新が未実行のため旧URL継続。`food-dx-shiro` は DB 接続環境待ち継続。ディスク空きは 5.6GiB まで低下。
+
+**Yakon へ（重要）**: `vercel --prod` の前に必ず env を更新する。
+```bash
+cd /Users/umi/.openclaw/workspace/projects/mother-vegetable
+vercel env rm NEXT_PUBLIC_APP_URL production --yes
+echo "https://mothervegetable.co.jp" | vercel env add NEXT_PUBLIC_APP_URL production
+vercel --prod
+```
+`vercel env ls` で `NEXT_PUBLIC_APP_URL` の Age が "just now" になってから deploy する。
+
+**通知判断**: notify=true（旧URL継続 + env更新未実行が再確認され、disk空きも 5.6GiB まで低下）。
+
 ## 2026-06-14 heartbeat (68回目)
 
 **アクション**: `/api/health` + `vercel ls` + `vercel env ls` で状態確認。
