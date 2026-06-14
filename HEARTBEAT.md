@@ -32,6 +32,16 @@ High Risk:
 - 削除系操作
 - 秘密情報の共有
 
+## 2026-06-14 heartbeat (70回目)
+
+**アクション**: `/api/health` + `vercel ls` + `vercel env ls` を一括確認。
+
+**検証**: `url: https://mother-vegetable.vercel.app` — 旧URL継続。直近 production deploy = 1h前（変化なし）。`NEXT_PUBLIC_APP_URL` = 111d ago（変化なし）。
+
+**状態**: Yakon による env rm → add → deploy（この順）待ち。次の deploy では必ず先に env 更新が必要。
+
+**通知判断**: notify=true（依然旧URLのまま）。
+
 ## 2026-06-14 heartbeat (69回目)
 
 **アクション**: `tasks/QUEUE.md` の Ready / In Progress を確認。Ready 未完了なし、In Progress は `food-dx-shiro` のみ。`mother-vegetable` は `/api/health` + `vercel ls` + `vercel env ls` で再確認。`food-dx-shiro` は tmux/repo/DB handoff 状態、disk は空き容量と削除候補を確認（削除は未実行）。
