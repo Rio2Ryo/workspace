@@ -301,10 +301,13 @@ function shouldNotify(session, status, previous) {
 
 function shouldNudge(status, previous) {
   if (!act) return false;
-  const permissionNeedsRefine = status.state === 'permission-wait'
-    && /Prepare approval packet|Reduce choices|generic|missing/i.test(status.next || '');
-  if (status.state !== 'needs-action' && !permissionNeedsRefine) return false;
-  if (status.highRisk && !permissionNeedsRefine) return false;
+  const needsApprovalPacket = status.state === 'permission-wait'
+    && ['external-action', 'needs-yakon', 'done-signoff'].includes(status.decisionKind);
+  const needsBlockedRefine = status.state === 'blocked';
+  const needsStalePromptAction = status.state === 'needs-action';
+  const shouldActOnState = needsApprovalPacket || needsBlockedRefine || needsStalePromptAction;
+  if (!shouldActOnState) return false;
+  if (status.highRisk && !needsApprovalPacket) return false;
   if (previous?.lastNudgedAt && now - previous.lastNudgedAt < nudgeCooldownMinutes * 60 * 1000) return false;
   return true;
 }

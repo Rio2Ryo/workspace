@@ -32,6 +32,76 @@ High Risk:
 - 削除系操作
 - 秘密情報の共有
 
+## 2026-06-15 heartbeat (106回目)
+
+**アクション**: `tasks/QUEUE.md` の Ready / In Progress を確認。Ready 未完了なし、In Progress は `food-dx-shiro` のみ。停止判定に従い、`food-dx-shiro` の tmux / repo / DB接続環境 / handoff契約を再確認し、disk と workspace tracked 変更も確認。
+
+**検証**:
+- QUEUE Ready 未完了なし。In Progress = `food-dx-shiro`。
+- `food-dx-shiro`: tmux `food-dx-shiro` 存在。repo `main` HEAD `4c46739`、tracked 変更なし。
+- `.env.local` / `.env` / `DATABASE_URL` / docker / psql / pg_ctl / initdb は missing。
+- `npm run test:db-e2e-handoff-contract` → pass。
+- `npm run db:check` → 想定通り `DATABASE_URL is not set` で fail。
+- `npm run db:e2e:handoff` → `目的 / 現担当 / 現状 / 次アクション / 詰まり / 支援候補 / 期限` と seed後20 route確認リストを出力できることを確認。
+- disk: `/System/Volumes/Data` は 98% 使用、空き 5.7GiB。前回と同水準で、既存の disk cleanup 承認待ち範囲内。削除系操作は未実行。
+- workspace tracked 変更: `HEARTBEAT.md` の追記、`projects/threads-watcher/threads-watcher-status/state.json` の watcher 自動 snapshot 更新（`checked_at: 15:07:24Z → 21:06:26Z`、`found_count: 4 → 5`、`partial_error` 継続）、別セッション由来の `memory/2026-06-14.md` 変更を確認。今回のheartbeatでは既存差分の巻き戻しなし。
+
+**状態**: Ready 未完了なし。`food-dx-shiro` は担当=白、次アクションは DB接続環境で `npm run db:e2e:handoff` の手順を実行し、seed後の日本語E2E結果を `目的 / 現担当 / 現状 / 次アクション / 詰まり / 支援候補 / 期限` 形式で回収すること。詰まりは技術環境待ち（DB接続）。disk cleanup / KATAOMOI-EC ENV VAR / citta-ios push は既存承認待ちで、新規判断依頼なし。
+
+**通知判断**: notify=false（新規障害なし。既知のDB待ち・disk cleanup承認待ち・自動state更新のみ）。
+
+## 2026-06-15 heartbeat (105回目)
+
+**アクション**: `tasks/QUEUE.md` の Ready / In Progress を確認。Ready 未完了なし、In Progress は `food-dx-shiro` のみ。停止判定に従い、`food-dx-shiro` の tmux / repo / DB接続環境 / handoff契約を再確認し、disk と workspace tracked 変更も確認。
+
+**検証**:
+- QUEUE Ready 未完了なし。In Progress = `food-dx-shiro`。
+- `food-dx-shiro`: tmux `food-dx-shiro` 存在。repo `main` HEAD `4c46739`、tracked 変更なし。
+- `.env.local` / `.env` / `DATABASE_URL` / docker / psql / pg_ctl / initdb は missing。
+- `npm run test:db-e2e-handoff-contract` → pass。
+- `npm run db:check` → 想定通り `DATABASE_URL is not set` で fail。
+- `npm run db:e2e:handoff` → `目的 / 現担当 / 現状 / 次アクション / 詰まり / 支援候補 / 期限` と seed後20 route確認リストを出力できることを確認。
+- disk: `/System/Volumes/Data` は 98% 使用、空き 5.7GiB。前回と同水準で、既存の disk cleanup 承認待ち範囲内。削除系操作は未実行。
+- workspace tracked 変更: `HEARTBEAT.md` の追記、`projects/threads-watcher/threads-watcher-status/state.json` の watcher 自動 snapshot 更新（`checked_at: 15:07:24Z → 20:05:19Z`、`found_count: 4`、`partial_error` 継続）、別セッション由来の `memory/2026-06-14.md` 変更を確認。今回のheartbeatでは既存差分の巻き戻しなし。
+
+**状態**: Ready 未完了なし。`food-dx-shiro` は担当=白、次アクションは DB接続環境で `npm run db:e2e:handoff` の手順を実行し、seed後の日本語E2E結果を `目的 / 現担当 / 現状 / 次アクション / 詰まり / 支援候補 / 期限` 形式で回収すること。詰まりは技術環境待ち（DB接続）。disk cleanup / KATAOMOI-EC ENV VAR / citta-ios push は既存承認待ちで、新規判断依頼なし。
+
+**通知判断**: notify=false（新規障害なし。既知のDB待ち・disk cleanup承認待ち・自動state更新のみ）。
+
+## 2026-06-15 heartbeat (104回目)
+
+**アクション**: `tasks/QUEUE.md` の Ready / In Progress を確認。Ready 未完了なし、In Progress は `food-dx-shiro` のみ。停止判定に従い、`food-dx-shiro` の tmux / repo / DB接続環境 / handoff契約を再確認し、disk と workspace tracked 変更も確認。
+
+**検証**:
+- QUEUE Ready 未完了なし。In Progress = `food-dx-shiro`。
+- `food-dx-shiro`: tmux `food-dx-shiro` 存在。repo `main` HEAD `4c46739`、tracked 変更なし。
+- `npm run test:db-e2e-handoff-contract` → pass。
+- `npm run db:check` → 想定通り `DATABASE_URL is not set` で fail（`.env.local` / `.env` / docker / psql / pg_ctl / initdb missing）。
+- `npm run db:e2e:handoff` → `目的 / 現担当 / 現状 / 次アクション / 詰まり / 支援候補 / 期限` と seed後20 route確認リストを出力できることを確認。
+- disk: `/System/Volumes/Data` は 98% 使用、空き 5.7GiB。前回と同水準で、既存の disk cleanup 承認待ち範囲内。削除系操作は未実行。
+- workspace tracked 変更: 前回追記した `HEARTBEAT.md`、`projects/threads-watcher/threads-watcher-status/state.json` の watcher 自動 snapshot 更新（`checked_at: 15:07:24Z → 19:05:27Z`、`found_count: 4`、`partial_error` 継続）、別セッション由来の `memory/2026-06-14.md` 変更を確認。今回のheartbeatでは既存差分の巻き戻しなし。
+
+**状態**: Ready 未完了なし。`food-dx-shiro` は担当=白、次アクションは DB接続環境で `npm run db:e2e:handoff` の手順を実行し、seed後の日本語E2E結果を `目的 / 現担当 / 現状 / 次アクション / 詰まり / 支援候補 / 期限` 形式で回収すること。詰まりは技術環境待ち（DB接続）。disk cleanup / KATAOMOI-EC ENV VAR / citta-ios push は既存承認待ちで、新規判断依頼なし。
+
+**通知判断**: notify=false（新規障害なし。既知のDB待ち・disk cleanup承認待ち・自動state更新のみ）。
+
+## 2026-06-15 heartbeat (103回目)
+
+**アクション**: `tasks/QUEUE.md` の Ready / In Progress を確認。Ready 未完了なし、In Progress は `food-dx-shiro` のみ。停止判定に従い、`food-dx-shiro` の tmux / repo / DB接続環境 / handoff契約を再確認し、disk と workspace tracked 変更も確認。
+
+**検証**:
+- QUEUE Ready 未完了なし。In Progress = `food-dx-shiro`。
+- `food-dx-shiro`: tmux `food-dx-shiro` 存在。repo `main` HEAD `4c46739`、tracked 変更なし。
+- `npm run test:db-e2e-handoff-contract` → pass。
+- `npm run db:check` → 想定通り `DATABASE_URL is not set` で fail（`.env.local` / `.env` / docker / psql / pg_ctl / initdb missing）。
+- `npm run db:e2e:handoff` → `目的 / 現担当 / 現状 / 次アクション / 詰まり / 支援候補 / 期限` と seed後20 route確認リストを出力できることを確認。
+- disk: `/System/Volumes/Data` は 98% 使用、空き 5.7GiB。前回と同水準で、既存の disk cleanup 承認待ち範囲内。削除系操作は未実行。
+- workspace tracked 変更: `projects/threads-watcher/threads-watcher-status/state.json` の watcher 自動 snapshot 更新（`checked_at: 15:07:24Z → 18:06:28Z`、`found_count: 4`、`partial_error` 継続）と、別セッション由来の `memory/2026-06-14.md` 変更を確認。今回のheartbeatでは編集・巻き戻しなし。
+
+**状態**: Ready 未完了なし。`food-dx-shiro` は担当=白、次アクションは DB接続環境で `npm run db:e2e:handoff` の手順を実行し、seed後の日本語E2E結果を `目的 / 現担当 / 現状 / 次アクション / 詰まり / 支援候補 / 期限` 形式で回収すること。詰まりは技術環境待ち（DB接続）。disk cleanup / KATAOMOI-EC ENV VAR / citta-ios push は既存承認待ちで、新規判断依頼なし。
+
+**通知判断**: notify=false（新規障害なし。既知のDB待ち・disk cleanup承認待ち・自動state更新のみ）。
+
 ## 2026-06-15 heartbeat (102回目)
 
 **アクション**: `tasks/QUEUE.md` の Ready / In Progress を確認。Ready 未完了なし、In Progress は `food-dx-shiro` のみ。停止判定に従い、`food-dx-shiro` の tmux / repo / DB接続環境 / handoff契約を再確認し、disk と workspace tracked 変更も確認。
