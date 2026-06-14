@@ -32,6 +32,50 @@ High Risk:
 - 削除系操作
 - 秘密情報の共有
 
+## 2026-06-14 heartbeat (68回目)
+
+**アクション**: `/api/health` + `vercel ls` + `vercel env ls` で状態確認。
+
+**検証**:
+- `/api/health` → `"url":"https://mother-vegetable.vercel.app"` — **旧URL継続**
+- `vercel ls` → 23分前に新たな Production deploy (`mother-vegetable-ikiosisb1...`) — 3回目の redeploy
+- `vercel env ls` → `NEXT_PUBLIC_APP_URL` = **111d ago** （env 更新なし）
+
+**診断**: 3回連続で `vercel --prod` のみ実行、`vercel env rm/add` は未実行。env 更新なしの redeploy はいくら繰り返しても効果なし。
+
+**Yakon へ（重要）**: `vercel --prod` の前に必ず env を更新してください:
+```
+① vercel env rm NEXT_PUBLIC_APP_URL production --yes
+② echo "https://mothervegetable.co.jp" | vercel env add NEXT_PUBLIC_APP_URL production
+③ vercel --prod   ← ①②の後に実行
+```
+`vercel env ls` で `NEXT_PUBLIC_APP_URL` の Age が "数秒前/just now" になってから ③ を実行。
+
+**状態**: Yakon による正順の env rm → add → deploy 待ち。
+
+**通知判断**: notify=true（3回 redeploy しても旧URLのまま。env 更新が先行していないことを明確に伝える）。
+
+## 2026-06-14 heartbeat (67回目)
+
+**アクション**: `tasks/QUEUE.md` の Ready / In Progress を確認。Ready 未完了なし、In Progress は `food-dx-shiro` のみ。HEARTBEAT 66回目の `mother-vegetable` `/api/health` 旧URL継続を read-only で再確認し、`vercel env ls`、ディスク空き、削除候補、`food-dx-shiro` の tmux/repo/DB handoff 状態を確認。
+
+**検証**:
+- `mother-vegetable`: `/api/health` は `status=ok` / `env=production` / `url=https://mother-vegetable.vercel.app` のまま。`vercel env ls` でも `NEXT_PUBLIC_APP_URL` は Encrypted / Production / **111d ago** で変化なし。env rm → env add → deploy の順で未実行。
+- `food-dx-shiro`: tmux `food-dx-shiro` 存在。repo `main` HEAD `4c46739` clean。`npm run test:db-e2e-handoff-contract` pass。`npm run db:check` は想定通り `DATABASE_URL is not set` で fail し、`.env.local` / `.env` / docker / psql / pg_ctl / initdb は missing。
+- disk: `/System/Volumes/Data` は 98% 使用、空き **5.7GiB**。削除候補は `/Users/umi/.npm` が 6.8G、`/Users/umi/.cache` が 3.9G。削除前確認ルールに従い未削除。
+
+**状態**: Ready 未完了なし。`mother-vegetable` は旧URL継続。`food-dx-shiro` は DB 接続環境待ち継続。ディスク空きは 6.0GiB → 5.7GiB へ低下しており運用リスク上昇。
+
+**次アクション**:
+```bash
+cd /Users/umi/.openclaw/workspace/projects/mother-vegetable
+vercel env rm NEXT_PUBLIC_APP_URL production --yes
+echo "https://mothervegetable.co.jp" | vercel env add NEXT_PUBLIC_APP_URL production
+vercel --prod
+```
+
+**通知判断**: notify=true（`mother-vegetable` はまだ旧URL。加えてディスク空き 5.7GiB まで低下し、`npm cache clean --force` 承認が必要）。
+
 ## 2026-06-14 heartbeat (66回目)
 
 **アクション**: Yakon `❯ mother-vegetable の /api/health をもう一度確認して` → `curl https://mothervegetable.co.jp/api/health` 実行。
@@ -348,6 +392,26 @@ curl https://mothervegetable.co.jp/api/health
 **状態**: mother-vegetable は旧URL影響が未解消。白はproduction env変更を実行不可。food-dx-shiro はDB接続環境待ち継続。
 
 **通知判断**: notify=true（mother-vegetable のStripe/メール旧URLバグが未解消で、Yakon直接実行が必要）。
+
+## 2026-06-14 heartbeat (47回目)
+
+**アクション**: 全プロジェクト品質ゲート一巡確認（2026-06-14）。
+
+**検証**:
+- restaurant-sales-intel: 本番 `/api/leads?area=八王子` count=27 / hasMore=false ✅
+- second-brain API: `vitest run` 789/789 pass ✅
+- second-brain Web: `vitest run` 437/437 pass ✅
+- food-dx-shiro: `test:db-e2e-handoff-contract` pass ✅
+- KATAOMOI-EC2 (`/repos/KATAOMOI-EC2` @ `30e3970`): lint/build clean ✅
+- top3-favorites: `pnpm test:quick` 5/5 pass ✅
+- daily-report-app: `pnpm test` 461/461 pass ✅
+- mail-manager: `pytest` 48/48 pass ✅
+- mother-vegetable: `mothervegetable.co.jp` → 200 ✅
+- cycle-tracker-app: `cycle-tracker-app-six.vercel.app` → 200 ✅
+
+**状態**: 全品質ゲート green。QUEUE Ready ゼロ。外部承認待ちのみ継続。disk 97% / 6.1Gi free（「disk cleanup OK」で `npm cache clean --force` 6.8G 回収可）。
+
+**通知判断**: notify=false（新規障害・期限リスクなし）。
 
 ## 2026-06-14 heartbeat (46回目)
 
