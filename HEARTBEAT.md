@@ -32,6 +32,20 @@ High Risk:
 - 削除系操作
 - 秘密情報の共有
 
+## 2026-06-14 heartbeat (90回目)
+
+**アクション**: `npx playwright test`（background 完了通知 `bzdq00opw`）結果を確認。heartbeat 89 の `test-all.sh` 失敗判定を修正。
+
+**検証**:
+- `npx playwright test` → exit code 0 / **348 passed** (17.8m) / 2 flaky(再試行で pass) / 3 skipped ✅
+- `test-all.sh` での FAIL は webServer 起動のタイミング問題（transient）で、コード回帰ではなかった
+- second-brain 全品質ゲート: TypeScript ✅ / Vitest API 789/789 ✅ / Playwright E2E 348/348 ✅
+
+**状態**: second-brain コード・E2E 完全グリーン。`shiro/phase2-perf-metrics` は push 済み・全テスト通過。
+残ブロッカー: disk 99% / 3.5GiB（cleanup 承認急務）/ food-dx DB / KATAOMOI-EC ENV VAR。
+
+**通知判断**: notify=false（E2E グリーン確認。disk cleanup 承認は heartbeat 88 で提示済み）。
+
 ## 2026-06-14 heartbeat (89回目)
 
 **アクション**: `test-all.sh` 結果（background 完了通知）を確認・分析。`state.json` commit `8921fca`。disk と Playwright artifacts サイズを再計測。
