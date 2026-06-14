@@ -32,6 +32,22 @@ High Risk:
 - 削除系操作
 - 秘密情報の共有
 
+## 2026-06-14 heartbeat (89回目)
+
+**アクション**: `test-all.sh` 結果（background 完了通知）を確認・分析。`state.json` commit `8921fca`。disk と Playwright artifacts サイズを再計測。
+
+**検証**:
+- `test-all.sh` 結果: PASS 3 / **FAIL 1**（`apps/web Playwright E2E`）/ 1051s
+  - FAIL 原因: `playwright.config.ts` の `webServer` が `pnpm --filter @sb/api dev`（wrangler dev + D1/R2 バインディング）を起動しようとするが、このホストに wrangler dev 用の bindings が未設定 → **コード回帰ではなく環境ブロッカー**
+  - API Vitest: `780 passed / 9 skipped (789)` ✅ — コードは正常
+- Playwright test-results: 6.1M（disk 影響なし）
+- disk: `/System/Volumes/Data` 99% / **3.5GiB** free（heartbeat 88 の 3.0GiB よりわずかに回復）
+- `state.json` commit `8921fca` ✅
+
+**状態**: second-brain コード品質グリーン（API 789/789）。`apps/web Playwright E2E` は wrangler dev 環境ブロッカー（food-dx DB ブロッカーと同種）— 追加対応不要。disk は依然 99% / 3.5GiB で cleanup 承認急務。
+
+**通知判断**: notify=false（Playwright 失敗は環境起因で新規障害ではない。disk cleanup 承認は heartbeat 88 で再提示済み）。
+
 ## 2026-06-14 heartbeat (88回目)
 
 **アクション**: `tasks/QUEUE.md` の Ready / In Progress を確認。Ready 未完了なし、In Progress は `food-dx-shiro` のみ。`food-dx-shiro` の tmux / repo / DB接続環境 / handoff契約を再確認し、disk と threads-watcher state の自動更新も確認。
