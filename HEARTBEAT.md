@@ -32,6 +32,22 @@ High Risk:
 - 削除系操作
 - 秘密情報の共有
 
+## 2026-06-14 heartbeat (86回目)
+
+**アクション**: `tasks/QUEUE.md` の Ready / In Progress を確認。Ready 未完了なし、In Progress は `food-dx-shiro` のみ。`food-dx-shiro` の tmux / repo / DB接続環境 / handoff契約を再確認し、disk と threads-watcher state の自動更新も確認。
+
+**検証**:
+- QUEUE Ready 未完了なし。In Progress = `food-dx-shiro`。
+- `food-dx-shiro`: tmux `food-dx-shiro` 存在。repo `main` HEAD `4c46739` clean。
+- `npm run test:db-e2e-handoff-contract` → pass。`npm run db:check` → 想定通り `DATABASE_URL is not set` で fail（`.env.local` / `.env` / docker / psql / pg_ctl / initdb missing）。
+- disk: `/System/Volumes/Data` は 98% 使用、空き 5.2GiB。削除候補は `/Users/umi/.npm` 6.8G、`~/Library/Developer/Xcode/DerivedData` 547M。削除は High Risk（削除系操作）扱いのため未実行。
+- workspace branch `shiro/cycle-tracker-app` は origin より 2 commits ahead。push は本ティック未承認のためスキップ。
+- workspace tracked 変更は `projects/threads-watcher/threads-watcher-status/state.json` の watcher 自動 snapshot 更新のみ（`checked_at: 08:29:38Z → 09:07:08Z`、`partial_error` 継続）。
+
+**状態**: Ready 未完了なし。`food-dx-shiro` は DB 接続環境待ち継続。次アクションは DB接続環境で `npm run db:e2e:handoff` の手順を実行し、seed後の日本語E2E結果を報告フォーマットで回収すること。disk cleanup 承認パケットは heartbeat 79/80 で提出済み。threads-watcher は外部要因の partial_error 継続でローカル対処なし。
+
+**通知判断**: notify=false（新規障害なし。既知のDB待ち・disk cleanup承認待ち・自動state更新のみ）。
+
 ## 2026-06-14 heartbeat (85回目)
 
 **アクション**: cycle-tracker-app・top3-favorites の test suite を本番 deploy 後の品質ゲートとして再確認。remote tracking 状態も確認。
