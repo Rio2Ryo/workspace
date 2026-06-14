@@ -1703,3 +1703,40 @@ GitHub Settings → Developer settings → Personal access tokens
 **期限**: 設定なし。ahead commits 蓄積が続くと conflict リスク微増。
 
 **Yakon の回答形式**: 「workflow scope OK」または「revert OK」の一言で対応可。
+
+## 2026-06-14 heartbeat (tick 82)
+
+**アクション**: `citta-ios` の未追跡ソースファイル 32 件を調査してローカルコミット（push なし）。
+
+**調査結果**:
+- `citta-ios` は `origin/main` より **9 commits ahead**（build 9 / v2.2.1 の完成状態）
+- `citta-ios-complete` は同じ remote を向く別ローカルコピー、**2 commits ahead**（旧 `.gitignore` + SwiftData refactor のみ）
+- `citta-ios` の 32 個の Swift ソースファイル（HandwritingView.swift, CloudKitService.swift, WakuwakuListView.swift 等）が `.gitignore` 対象外なのに未 stage だった
+- `project.pbxproj` はすでに全ファイルを参照済み（grep で 12 件 confirm）
+
+**検証**: `git add` → `git commit b0549a1 chore: track all Swift source files and app resources` → `git status` clean ✅  
+全 32 ファイル committed、secrets なし（upload-to-testflight.sh は env vars で認証）
+
+---
+
+### 🗂️ Yakon 承認パケット — citta-ios push
+
+**スコープ**: `git push origin main` from `/Users/umi/.openclaw/workspace/citta-ios`  
+**正確なコマンド**: `git -C /Users/umi/.openclaw/workspace/citta-ios push origin main`  
+**内容**: 9 commits（SwiftData リファクタ + notebook UI + 手書き機能 + build 9 + 32 ソースファイル追加）  
+**ロールバック**: `git push origin <旧 remote SHA>:main --force`（remote SHA: `12b2e3d`）  
+**リスク**: 低。新規コミット push のみ、履歴書き換えなし。  
+**副作用**: `citta-ios-complete` が remote と diverge（`85308d7` が孤立）。不要なら `citta-ios-complete` ディレクトリを削除するだけでよい。  
+**推奨**: ✅ `citta-ios` が唯一の最新完成版（build 9 IPA 生成済み）。push して GitHub remote を最新化。  
+**Yakon への質問**: 「citta-ios push OK」と送信してください。
+
+---
+
+**残ブロッカー（外部承認待ち）**:
+- **citta-ios push**: Yakon 「OK」待ち（9 commits、ローカル clean ✅）
+- **disk cleanup**: Yakon 「OK」待ち（`npm cache clean --force` で 6.8G 即回収）
+- shiro-ai-anime: Discord Missing Access / Yakon API実行承認待ち
+- second-brain: push/preview は Ao/Yakon 判断待ち
+- food-dx-shiro: DB接続環境待ち
+
+**次アクション**: Yakon 承認待ち。それまでローカル品質維持継続。
