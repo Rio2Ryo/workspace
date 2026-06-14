@@ -5,7 +5,7 @@
     "@bmw_intokyo"
   ],
   "last_check": {
-    "checked_at": "2026-06-14T12:28:52Z",
+    "checked_at": "2026-06-14T13:07:58Z",
     "found_count": 15,
     "new_count": 0,
     "status": "ok",
@@ -1277,16 +1277,16 @@
   ],
   "recent_stats": {
     "window_hours": 24,
-    "total": 1007,
+    "total": 1006,
     "ok": 0,
-    "partial_error": 1007,
+    "partial_error": 1006,
     "error": 0,
     "other": 0,
     "success_rate": 0.0,
     "partial_error_rate": 1.0,
     "top_partial_error_reason": {
       "reason": "profile extraction returned partial result: found=4 previous_max=16",
-      "count": 693
+      "count": 682
     }
   },
   "recent_stats_by_window": {
@@ -1300,22 +1300,22 @@
       "success_rate": 0.0,
       "partial_error_rate": 1.0,
       "top_partial_error_reason": {
-        "reason": "profile extraction returned partial result: found=4 previous_max=16",
-        "count": 28
+        "reason": "profile extraction returned partial result: found=15 previous_max=16",
+        "count": 21
       }
     },
     "24": {
       "window_hours": 24,
-      "total": 1007,
+      "total": 1006,
       "ok": 0,
-      "partial_error": 1007,
+      "partial_error": 1006,
       "error": 0,
       "other": 0,
       "success_rate": 0.0,
       "partial_error_rate": 1.0,
       "top_partial_error_reason": {
         "reason": "profile extraction returned partial result: found=4 previous_max=16",
-        "count": 693
+        "count": 682
       }
     },
     "168": {
@@ -1329,7 +1329,7 @@
       "partial_error_rate": 0.9995288204806031,
       "top_partial_error_reason": {
         "reason": "profile extraction returned partial result: found=4 previous_max=16",
-        "count": 4517
+        "count": 4513
       }
     }
   },
@@ -1345,7 +1345,7 @@
     {
       "handle": "@bmw_intokyo",
       "warn_ts": 1781202276,
-      "current_bucket": 0.7
+      "current_bucket": 0.5
     },
     {
       "handle": "@hal.lifedesign",
@@ -1353,5 +1353,5 @@
       "current_bucket": 1.0
     }
   ],
-  "snapshot_generated_at": "2026-06-14T12:28:52Z"
+  "snapshot_generated_at": "2026-06-14T13:07:58Z"
 }

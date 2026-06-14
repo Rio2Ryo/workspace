@@ -32,6 +32,24 @@ High Risk:
 - 削除系操作
 - 秘密情報の共有
 
+## 2026-06-14 heartbeat (97回目)
+
+**アクション**: `tasks/QUEUE.md` の Ready / In Progress を確認。Ready 未完了なし、In Progress は `food-dx-shiro` のみ。`food-dx-shiro` の tmux / repo / DB接続環境 / handoff契約を再確認し、workspace ahead 状態と workflow 復元コミットのpush注意点、disk、threads-watcher state の自動更新を確認。
+
+**検証**:
+- QUEUE Ready 未完了なし。In Progress = `food-dx-shiro`。
+- `food-dx-shiro`: tmux `food-dx-shiro` 存在。repo `main` HEAD `4c46739`、tracked 変更なし。
+- `npm run test:db-e2e-handoff-contract` → pass。
+- `npm run db:check` → 想定通り `DATABASE_URL is not set` で fail（`.env.local` / `.env` / docker / psql / pg_ctl / initdb missing）。
+- workspace branch `shiro/cycle-tracker-app` は origin より 2 commits ahead。`2235123` で `.github/workflows/interaugh-homepage.yml` を復元済み、HEAD `0409d75` で heartbeat 96 記録済み。
+- `.github/workflows/interaugh-homepage.yml` は 33行で存在。次の push は GitHub PAT の `workflow` scope が必要。
+- disk: `/System/Volumes/Data` は 97% 使用、空き 6.4GiB。
+- workspace tracked 変更は `projects/threads-watcher/threads-watcher-status/state.json` の watcher 自動 snapshot 更新のみ（`checked_at: 12:28:52Z → 13:06:28Z`、`ok → partial_error`、`found_count: 15 → 4`）。
+
+**状態**: Ready 未完了なし。`food-dx-shiro` は DB 接続環境待ち継続。次アクションは DB接続環境で `npm run db:e2e:handoff` の手順を実行し、seed後の日本語E2E結果を報告フォーマットで回収すること。`interaugh-homepage` は修正済みでローカルテスト green だが、workflow file を含むため push 前に PAT `workflow` scope 確認が必要。
+
+**通知判断**: notify=true（workflow file を再追加したため、次の push は PAT `workflow` scope がないと拒否される可能性が高い。Yakon に事前通知）。
+
 ## 2026-06-14 heartbeat (96回目)
 
 **アクション**: `interaugh-homepage` `pnpm test:mobile-hero` を初実行 → ワークフローファイル削除（`fa80e1e`）による ENOENT を発見。`.github/workflows/interaugh-homepage.yml` を再作成してテスト修正。
