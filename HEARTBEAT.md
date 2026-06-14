@@ -1893,3 +1893,44 @@ GitHub Settings → Developer settings → Personal access tokens
 - food-dx-shiro: DB接続環境待ち
 
 **次アクション**: Yakon 承認待ち。それまでローカル品質維持継続。
+
+## 2026-06-15 heartbeat (tick 83)
+
+**アクション**: `citta-ios push OK` 受信 → `git push origin main` 実行 → **non-fast-forward で rejected**。
+
+**調査結果**:
+- remote `origin/main` = `12b2e3d refactor: SwiftData model relationships` (2026-06-13 に push 済み)
+- local `main` = `b0549a1`（9 commits ahead of `12b2e3d`の祖先 `f1aa42f` から diverge）
+- `git merge origin/main --no-commit` → **10 コンフリクト**:
+  - `CittaApp/Models/HandwritingNote.swift` — remote で修正、local で `CittaApp/` flat 移動後削除
+  - 同様のパターン: `WakuwakuItem`, `CloudflareService`, `ShareService`, `ImageRenderer`, `HandwritingViewModel`, `ContentView`, `WakuwakuListView`, `WeeklyView`（9 件）
+  - `.gitignore`（add/add）
+- 原因: remote `12b2e3d` は旧サブディレクトリ構造を大幅削減。local build 9 は同ファイルを flat 構造に再編成。両方が同じファイルを異なる方法で変更。
+- `git merge --abort` で clean state に戻した ✅
+
+---
+
+### 🗂️ Yakon 承認パケット — citta-ios force push (更新版)
+
+**状況**: 自動マージ不可。10 コンフリクト（Swift ファイル構造の diverge）。
+
+**Option A（推奨）: force push ローカルを remote に上書き**  
+コマンド: `git -C /Users/umi/.openclaw/workspace/citta-ios push --force origin main`  
+結果: remote `12b2e3d`（SwiftData refactor）を上書き。ローカル build 9 / v2.2.1 が正史になる。  
+ロールバック: `git push --force origin 12b2e3d:main`  
+リスク: remote の `12b2e3d` で行った削減（`CloudflareService`, `HandwritingViewModel` 等のスリム化）が失われる可能性。ただし build 9 の IPA が動作確認済みのため、コード的に問題ない可能性が高い。
+
+**Option B: 手動 merge conflict 解決（Shiro 非推奨）**  
+10 件の Swift ソースコードを両方の変更を見ながら手動マージ。コンパイル確認なしには安全か判断不能。Xcode での確認が必要。
+
+**Yakon の回答形式**: 「force push OK」= Option A で即実行。「自分でやる」= ローカル `citta-ios` は clean state で待機。
+
+---
+
+**残ブロッカー（外部承認待ち）**:
+- **citta-ios force push**: Yakon 「force push OK」または「自分でやる」待ち
+- **disk cleanup**: Yakon 「disk cleanup OK」待ち（npm cache 6.8G）
+- second-brain: push/preview は Ao/Yakon 判断待ち
+- food-dx-shiro: DB接続環境待ち
+
+**次アクション**: Yakon 回答待ち。
