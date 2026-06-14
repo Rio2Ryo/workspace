@@ -32,6 +32,37 @@ High Risk:
 - 削除系操作
 - 秘密情報の共有
 
+## 2026-06-14 heartbeat (66回目)
+
+**アクション**: Yakon `❯ mother-vegetable の /api/health をもう一度確認して` → `curl https://mothervegetable.co.jp/api/health` 実行。
+
+**検証**: `{"status":"ok","env":"production","url":"https://mother-vegetable.vercel.app","ts":"2026-06-14T01:28:04.879Z"}` — **依然旧URL**。前回診断通り、env 更新なし deploy のため変化なし。
+
+**状態**: Yakon による env rm → env add → vercel --prod の順での再実行待ち。
+
+**通知判断**: notify=true（まだ旧URLのままで、順序通り3コマンドの再実行が必要）。
+
+## 2026-06-14 heartbeat (65回目)
+
+**アクション**: `tasks/QUEUE.md` の Ready / In Progress を確認。Ready 未完了なし、In Progress は `food-dx-shiro` のみ。HEARTBEAT 64回目の `mother-vegetable` env 修正後確認として `/api/health` + `vercel env ls` + `vercel ls` を read-only で再確認。加えてディスク空き容量と削除候補を確認（削除は未実行）。
+
+**検証**:
+- `mother-vegetable`: `/api/health` は `status=ok` / `env=production` だが、`url` は `https://mother-vegetable.vercel.app` のまま。`vercel env ls` でも `NEXT_PUBLIC_APP_URL` は Encrypted / Production / **111d ago** で変化なし。`vercel ls` では 2時間前の Production deployment `mother-vegetable-85it86w6k...` が Ready。つまり再deployは走っているが、env更新が先行していないため旧値が再利用されている。
+- `food-dx-shiro`: tmux `food-dx-shiro` 存在。repo `main` HEAD `4c46739` clean。`npm run test:db-e2e-handoff-contract` pass。`npm run db:check` は想定通り `DATABASE_URL is not set` で fail し、`.env.local` / `.env` / docker / psql / pg_ctl / initdb は missing。
+- disk: `/System/Volumes/Data` は 98% 使用、空き 6.0GiB。削除候補は `/Users/umi/.npm` が 6.8G、`/Users/umi/.cache` が 3.9G。削除前確認ルールに従い未削除。
+
+**状態**: Ready 未完了なし。`mother-vegetable` は deploy 済みだが env 更新未反映で旧URL継続。`food-dx-shiro` は DB 接続環境待ち継続。ディスクは 10GiB 未満で運用リスク。
+
+**次アクション**:
+```bash
+cd /Users/umi/.openclaw/workspace/projects/mother-vegetable
+vercel env rm NEXT_PUBLIC_APP_URL production --yes
+echo "https://mothervegetable.co.jp" | vercel env add NEXT_PUBLIC_APP_URL production
+vercel --prod
+```
+
+**通知判断**: notify=true（`mother-vegetable` はenv更新なしの再deployで旧URLのまま。加えて空き容量6.0GiBのため `npm cache clean --force` 承認も必要）。
+
 ## 2026-06-14 heartbeat (64回目)
 
 **アクション**: Yakon「mother-vegetable env 修正完了した」を受け `/api/health` + `vercel env ls` + `vercel ls` で状態確認。
