@@ -32,6 +32,25 @@ High Risk:
 - 削除系操作
 - 秘密情報の共有
 
+## 2026-06-15 heartbeat (110回目)
+
+**アクション**: `tasks/QUEUE.md` の Ready / In Progress を確認。Ready 未完了なし、In Progress は `food-dx-shiro` のみ。停止判定に従い、`food-dx-shiro` の tmux / repo / DB接続環境 / handoff契約を再確認し、disk と workspace tracked 変更も確認。
+
+**検証**:
+- QUEUE Ready 未完了なし。In Progress = `food-dx-shiro`。
+- `food-dx-shiro`: tmux `food-dx-shiro` 存在。repo `main` HEAD `4c46739`、tracked 変更なし。
+- `.env.local` / `.env` / `DATABASE_URL` / docker / psql / pg_ctl / initdb は missing。
+- `npm run test:db-e2e-handoff-contract` → pass。
+- `npm run db:check` → 想定通り `DATABASE_URL is not set` で fail。
+- `npm run db:e2e:handoff` → 判断依頼サマリーは「Yakonさんにお願いしたいこと: なし」、引き継ぎパケットは `目的 / 現担当 / 現状 / 次アクション / 詰まり / 支援候補 / 期限` 形式を維持。
+- disk: `/System/Volumes/Data` は 97% 使用、空き 6.6GiB。既存の disk cleanup 承認待ち範囲内。削除系操作は未実行。
+- workspace branch `shiro/cycle-tracker-app` は origin より 2 commits ahead（`8d1e8ad` workflow restore + `7c96f14` heartbeat 109）。workflow file を含むため push には PAT `workflow` scope が必要。push は未実行。
+- workspace tracked 変更: `MEMORY.md` の運用ルール記録追記、`projects/threads-watcher/threads-watcher-status/state.json` の watcher 自動 snapshot 更新（`checked_at: 22:49:07Z → 23:06:22Z`、`found_count: 15 → 4`、`ok → partial_error`）、`HEARTBEAT.md` の本記録を確認。今回のheartbeatでは既存差分の巻き戻しなし。
+
+**状態**: Ready 未完了なし。`food-dx-shiro` は担当=白、次アクションは DB接続環境で `npm run db:e2e:handoff` の手順を実行し、seed後の日本語E2E結果を固定形式で回収すること。詰まりは技術環境待ち（DB接続）。interaugh workflow push / disk cleanup / KATAOMOI-EC ENV VAR は既存承認待ちで、新規判断依頼なし。
+
+**通知判断**: notify=false（新規障害なし。既知のDB待ち・workflow push承認待ち・disk cleanup承認待ち・watcher揺れ戻しのみ）。
+
 ## 2026-06-15 heartbeat (108回目)
 
 **アクション**: `tasks/QUEUE.md` の Ready / In Progress を確認。Ready 未完了なし、In Progress は `food-dx-shiro` のみ。停止判定に従い、`food-dx-shiro` の tmux / repo / DB接続環境 / handoff契約を再確認し、disk と workspace tracked 変更も確認。
