@@ -32,6 +32,21 @@ High Risk:
 - 削除系操作
 - 秘密情報の共有
 
+## 2026-06-14 heartbeat (82回目)
+
+**アクション**: 全 repo tracked 差分スキャン（workspace / repos / projects / root-level）。`state.json` commit `99fc5a9`（watcher 自動更新 `06:58:03Z → 07:xx:xxZ`）。food-dx-shiro の lint・build を再確認。second-brain は `shiro/phase2-perf-metrics` clean を確認。
+
+**検証**:
+- `npm run lint`（food-dx-shiro 全workspace）→ `✔ No ESLint warnings or errors` ✅（API/Web/shared/ui 0 errors 0 warnings）
+- `npm run build`（food-dx-shiro Web）→ `✓ Compiled successfully` / `✓ Generating static pages (21/21)` ✅
+- second-brain `shiro/phase2-perf-metrics` → HEAD `6e75630` clean ✅
+- repos/ 配下 → tracked 変更なし ✅
+- citta-ios-complete → `project.pbxproj` ゼロ埋め UUID 差分のみ（既知スキップ）
+
+**状態**: workspace clean。food-dx-shiro の lint/build 品質グリーン継続。Ready 未完了なし。残ブロッカー: food-dx-shiro DB接続環境待ち / disk 98% / 5.3GiB（`disk cleanup OK` 承認待ち）/ KATAOMOI-EC ENV VAR Yakon担当。
+
+**通知判断**: notify=false（再確認グリーンのみ。disk cleanup 承認パケットは heartbeat 79/80 に提出済み）。
+
 ## 2026-06-14 heartbeat (81回目)
 
 **アクション**: food-dx-qwen の API lint warnings 残数を確認。`npx eslint apps/api/src --ext .ts` + `build:api` + `build:web` を実行。
