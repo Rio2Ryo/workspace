@@ -1539,4 +1539,56 @@ GitHub Settings → Developer settings → Personal access tokens
 
 **次アクション**: 外部承認が来るまでローカル品質維持継続。
 
-**次アクション**: disk 閾値 5Gi 未満で警告継続。新指示が来るまでローカル品質維持。
+## 2026-06-14 heartbeat (tick 80)
+
+**アクション**: 全品質ゲート確認 + disk cleanup 承認パケット準備。
+
+**検証**:
+- food-dx API lint (`npm run lint --workspace=@food-dx/api`): exit 0、出力なし = errors 0 / warnings 0 ✅
+- slide-tool `npm run test:slides`: 404/404 pass ✅
+- disk: 97% / 6.5Gi free（前 tick 5.1Gi より改善、ただし上昇傾向継続）
+
+**disk 使用状況マップ**:
+| 場所 | サイズ | 削除安全性 |
+|---|---|---|
+| `~/.npm` (npm cache) | 6.8G | ✅ 安全（再生成可） |
+| `second-brain/node_modules` | 1.5G | ⚠️ 活動中プロジェクト |
+| `projects/mvt-web3-poc/node_modules` | 1.4G | ✅ POC・非活動 |
+| `projects/recruit-ai-crm/node_modules` | 1.1G | ⚠️ PR#1 Yakon マージ待ち |
+| `projects/line-harness-recruit/node_modules` | 1.0G | ✅ handoff 完了・非活動 |
+| `projects/mother-vegetable/node_modules` | 843M | ⚠️ 活動中プロジェクト |
+| `food-dx-qwen/food-dx-system/node_modules` | 626G | ⚠️ DB待ち活動中 |
+| Xcode DerivedData | 547M | ✅ 安全（再ビルドで再生成） |
+
+---
+
+### 🗂️ Yakon 承認パケット — disk cleanup
+
+**スコープ**: `npm cache clean --force` のみ（第一段階）  
+**正確なコマンド**: `npm cache clean --force`  
+**回収量**: ~6.8G（現在 `~/.npm` が占有、実測値）  
+**ロールバック**: 不要。次回 `npm install` 時に自動再生成される。  
+**リスク**: ゼロ。npm cache は純粋な再生成可能データ。  
+**推奨**: ✅ 即実行可。yes/no で答えられる。  
+**期限**: disk が 5Gi 未満になる前（現在 6.5Gi）  
+**待機コスト**: disk 使用が増加し続けると、node_modules インストールや Xcode ビルド等が失敗する可能性。
+
+**第二段階（オプション・Yakon 判断）**:
+- `mvt-web3-poc/node_modules` (1.4G) 削除 → `npm install` で復元可
+- `line-harness-recruit/node_modules` (1.0G) 削除 → `npm install` で復元可
+- Xcode DerivedData (547M) 削除 → Xcode が再ビルドで復元
+
+**Yakon への質問**: 「disk cleanup OK」または「npm cache だけ OK」と送信してください。
+
+---
+
+**状態**: 全ローカル品質ゲート green。承認パケット準備完了。
+
+**残ブロッカー（外部承認待ち）**:
+- **disk cleanup**: Yakon 「OK」待ち（npm cache 6.8G → 即回収可）
+- shiro-ai-anime: Discord Missing Access / Yakon API実行承認待ち
+- second-brain: push/preview は Ao/Yakon 判断待ち
+- food-dx-shiro: DB接続環境待ち
+- citta-ios / citta-ios-complete: Yakon merge 戦略待ち
+
+**次アクション**: Yakon 承認があれば即 `npm cache clean --force` 実行。それまでローカル品質維持継続。
