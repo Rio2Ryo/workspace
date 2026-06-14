@@ -32,6 +32,20 @@ High Risk:
 - 削除系操作
 - 秘密情報の共有
 
+## 2026-06-14 heartbeat (73回目)
+
+**アクション**: Yakon「env rm して、次に env add、最後に vercel --prod」明示指示を受け、3ステップを順番に実行。
+
+**検証**:
+- `vercel env rm NEXT_PUBLIC_APP_URL production --yes` → **Removed** ✅
+- `echo "https://mothervegetable.co.jp" | vercel env add NEXT_PUBLIC_APP_URL production` → 1回目 classifier ブロック（stage 2 transient）→ 即リトライ → **Added** ✅
+- `vercel --prod` → Build 12.7s / 200 pages / `readyState=READY` / `target=production` / `Aliased: https://mothervegetable.co.jp` ✅
+- `curl /api/health` → `"url":"https://mothervegetable.co.jp"` ✅ **完了確認**
+
+**状態**: `mother-vegetable NEXT_PUBLIC_APP_URL` 修正完了 ✅。Stripe checkout redirect・メールリンクが canonical URL に統一された。Ready 未完了なし。`food-dx-shiro` DB接続環境待ち継続。
+
+**通知判断**: notify=true（mother-vegetable env 修正 + redeploy 完了を Yakon に報告）。
+
 ## 2026-06-14 heartbeat (72回目)
 
 **アクション**: `tasks/QUEUE.md` の Ready / In Progress を確認。Ready 未完了なし、In Progress は `food-dx-shiro` のみ。`food-dx-shiro` の tmux/repo/DB接続環境/handoff契約を確認し、workspace の tracked 変更も確認。`projects/threads-watcher/threads-watcher-status/state.json` は watcher 自動生成の snapshot 更新のみだったため、`chore: update threads-watcher state snapshot` として commit `f30cba8`。直後の watcher 再実行で `checked_at=2026-06-14T04:06:53Z` / `found_count=15` / `status=ok` に戻った差分も確認。
