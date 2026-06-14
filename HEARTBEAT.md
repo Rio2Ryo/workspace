@@ -1624,3 +1624,23 @@ GitHub Settings → Developer settings → Personal access tokens
 - citta-ios / citta-ios-complete: Yakon merge 戦略待ち
 
 **次アクション**: Yakon 承認があれば即 `npm cache clean --force` 実行。それまでローカル品質維持継続。
+
+## 2026-06-14 heartbeat (tick 81)
+
+**アクション**: top3-favorites + second-brain API テスト確認 + threads-watcher state.json コミット。
+
+**検証**:
+- top3-favorites `pnpm test:qa-current`: 52/52 pass ✅
+- second-brain API `pnpm --filter api test`: 780 passed / 9 skipped (789 total) ✅
+- disk: 97% / 6.4Gi free（前 tick 6.5Gi → 0.1Gi 減少、ほぼ横ばい）
+
+**状態**: 全ローカル品質ゲート green。
+
+**残ブロッカー（外部承認待ち）**:
+- **disk cleanup**: Yakon 「OK」待ち（`npm cache clean --force` で 6.8G 即回収）
+- shiro-ai-anime: Discord Missing Access / Yakon API実行承認待ち
+- second-brain: push/preview は Ao/Yakon 判断待ち
+- food-dx-shiro: DB接続環境待ち
+- citta-ios / citta-ios-complete: Yakon merge 戦略待ち
+
+**次アクション**: 外部承認が来るまでローカル品質維持継続。
