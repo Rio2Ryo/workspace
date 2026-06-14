@@ -5,14 +5,27 @@
     "@bmw_intokyo"
   ],
   "last_check": {
-    "checked_at": "2026-06-14T22:06:24Z",
+    "checked_at": "2026-06-14T22:44:51Z",
     "found_count": 15,
     "new_count": 0,
     "status": "ok",
     "error": null
   },
-  "saved_count": 97,
+  "saved_count": 98,
   "posts": [
+    {
+      "handle": "@hal.lifedesign",
+      "post_id": "DZlV8Y2Em0f",
+      "post_url": "https://www.threads.com/@hal.lifedesign/post/DZlV8Y2Em0f",
+      "first_seen_at": "2026-06-14T22:44:33Z",
+      "captured_at": "2026-06-14T22:44:38Z",
+      "screenshot_size_bytes": 600613,
+      "screenshot_width": 1280,
+      "screenshot_height": 1800,
+      "post_text": "今日は胸トレ。 最近意図せず5on1offのサイクルになってるけど回復追いついてないかも？ 休む勇気。",
+      "posted_at": "2026-06-14T22:43:12.000Z",
+      "screenshot_path": "screenshots/hal.lifedesign/DZlV8Y2Em0f.png"
+    },
     {
       "handle": "@hal.lifedesign",
       "post_id": "DZi3ns1D9GQ",
@@ -1286,22 +1299,22 @@
     "partial_error_rate": 1.0,
     "top_partial_error_reason": {
       "reason": "profile extraction returned partial result: found=4 previous_max=16",
-      "count": 638
+      "count": 627
     }
   },
   "recent_stats_by_window": {
     "1": {
       "window_hours": 1,
-      "total": 43,
+      "total": 42,
       "ok": 0,
-      "partial_error": 43,
+      "partial_error": 42,
       "error": 0,
       "other": 0,
       "success_rate": 0.0,
       "partial_error_rate": 1.0,
       "top_partial_error_reason": {
         "reason": "profile extraction returned partial result: found=4 previous_max=16",
-        "count": 26
+        "count": 25
       }
     },
     "24": {
@@ -1315,18 +1328,18 @@
       "partial_error_rate": 1.0,
       "top_partial_error_reason": {
         "reason": "profile extraction returned partial result: found=4 previous_max=16",
-        "count": 638
+        "count": 627
       }
     },
     "168": {
       "window_hours": 168,
-      "total": 6365,
+      "total": 6364,
       "ok": 0,
-      "partial_error": 6362,
+      "partial_error": 6361,
       "error": 3,
       "other": 0,
       "success_rate": 0.0,
-      "partial_error_rate": 0.999528672427337,
+      "partial_error_rate": 0.9995285983658077,
       "top_partial_error_reason": {
         "reason": "profile extraction returned partial result: found=4 previous_max=16",
         "count": 4510
@@ -1335,8 +1348,8 @@
   },
   "sync_state": {
     "cursor": 120,
-    "db_max": 120,
-    "delta": 0,
+    "db_max": 121,
+    "delta": 1,
     "cursor_file_exists": true
   },
   "dry_run_alert": null,
@@ -1345,7 +1358,7 @@
     {
       "handle": "@bmw_intokyo",
       "warn_ts": 1781202276,
-      "current_bucket": 0.7
+      "current_bucket": 0.8
     },
     {
       "handle": "@hal.lifedesign",
@@ -1353,5 +1366,5 @@
       "current_bucket": 1.0
     }
   ],
-  "snapshot_generated_at": "2026-06-14T22:06:24Z"
+  "snapshot_generated_at": "2026-06-14T22:44:51Z"
 }
