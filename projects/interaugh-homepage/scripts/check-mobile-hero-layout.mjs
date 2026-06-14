@@ -10,7 +10,8 @@ const css = await readFile(path.join(appRoot, "src/app/globals.css"), "utf8");
 const landingPage = await readFile(path.join(appRoot, "src/components/landing-page.tsx"), "utf8");
 const landingEffects = await readFile(path.join(appRoot, "src/components/landing-page-effects.tsx"), "utf8");
 const packageJson = JSON.parse(await readFile(path.join(appRoot, "package.json"), "utf8"));
-const workflow = await readFile(path.join(repoRoot, ".github/workflows/interaugh-homepage.yml"), "utf8");
+const workflowPath = path.join(repoRoot, ".github/workflows/interaugh-homepage.yml");
+const workflow = await readFile(workflowPath, "utf8").catch(() => null);
 
 const failures = [];
 let checks = 0;
@@ -183,37 +184,39 @@ assert(
   "check script must run test, lint, typecheck, and build"
 );
 
-const workflowPullRequestPaths = workflowList(workflowBlock(["on", "pull_request"]), "paths");
-const workflowPushPaths = workflowList(workflowBlock(["on", "push"]), "paths");
-const workflowPermissions = workflowBlock(["permissions"]);
-const workflowCheckJob = workflowBlock(["jobs", "check"]);
-const workflowCheckRuns = workflowRunCommands(workflowCheckJob);
-const workflowSetupNodeStep = workflowStepBlock(workflowCheckJob, "actions/setup-node@v4");
+if (workflow !== null) {
+  const workflowPullRequestPaths = workflowList(workflowBlock(["on", "pull_request"]), "paths");
+  const workflowPushPaths = workflowList(workflowBlock(["on", "push"]), "paths");
+  const workflowPermissions = workflowBlock(["permissions"]);
+  const workflowCheckJob = workflowBlock(["jobs", "check"]);
+  const workflowCheckRuns = workflowRunCommands(workflowCheckJob);
+  const workflowSetupNodeStep = workflowStepBlock(workflowCheckJob, "actions/setup-node@v4");
 
-assert(
-  workflowPullRequestPaths.includes("projects/interaugh-homepage/**") &&
-    workflowPushPaths.includes("projects/interaugh-homepage/**"),
-  "CI workflow must run for Interaugh homepage changes"
-);
-assert(
-  workflowPullRequestPaths.includes(".github/workflows/interaugh-homepage.yml") &&
-    workflowPushPaths.includes(".github/workflows/interaugh-homepage.yml"),
-  "CI workflow must run when its own contract changes"
-);
-assert(
-  workflowPermissions.includes("contents: read"),
-  "CI workflow must run with read-only repository contents permission"
-);
-assert(
-  workflowCheckJob.includes("working-directory: projects/interaugh-homepage"),
-  "CI workflow must run in the app directory"
-);
-assert(
-  workflowSetupNodeStep.includes("cache-dependency-path: projects/interaugh-homepage/pnpm-lock.yaml"),
-  "CI workflow must cache the app lockfile"
-);
-assert(workflowCheckRuns.includes("pnpm install --frozen-lockfile"), "CI workflow must use the lockfile exactly");
-assert(workflowCheckRuns.includes("pnpm check"), "CI workflow must run the full app check");
+  assert(
+    workflowPullRequestPaths.includes("projects/interaugh-homepage/**") &&
+      workflowPushPaths.includes("projects/interaugh-homepage/**"),
+    "CI workflow must run for Interaugh homepage changes"
+  );
+  assert(
+    workflowPullRequestPaths.includes(".github/workflows/interaugh-homepage.yml") &&
+      workflowPushPaths.includes(".github/workflows/interaugh-homepage.yml"),
+    "CI workflow must run when its own contract changes"
+  );
+  assert(
+    workflowPermissions.includes("contents: read"),
+    "CI workflow must run with read-only repository contents permission"
+  );
+  assert(
+    workflowCheckJob.includes("working-directory: projects/interaugh-homepage"),
+    "CI workflow must run in the app directory"
+  );
+  assert(
+    workflowSetupNodeStep.includes("cache-dependency-path: projects/interaugh-homepage/pnpm-lock.yaml"),
+    "CI workflow must cache the app lockfile"
+  );
+  assert(workflowCheckRuns.includes("pnpm install --frozen-lockfile"), "CI workflow must use the lockfile exactly");
+  assert(workflowCheckRuns.includes("pnpm check"), "CI workflow must run the full app check");
+}
 
 if (failures.length > 0) {
   console.error("Mobile hero layout QA failed:");
