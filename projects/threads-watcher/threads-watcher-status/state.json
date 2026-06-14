@@ -5,11 +5,11 @@
     "@bmw_intokyo"
   ],
   "last_check": {
-    "checked_at": "2026-06-14T04:58:09Z",
-    "found_count": 15,
+    "checked_at": "2026-06-14T05:06:45Z",
+    "found_count": 4,
     "new_count": 0,
-    "status": "ok",
-    "error": null
+    "status": "partial_error",
+    "error": "profile extraction returned partial result: found=4 previous_max=15"
   },
   "saved_count": 97,
   "posts": [
@@ -1320,16 +1320,16 @@
     },
     "168": {
       "window_hours": 168,
-      "total": 6369,
+      "total": 6368,
       "ok": 0,
-      "partial_error": 6366,
+      "partial_error": 6365,
       "error": 3,
       "other": 0,
       "success_rate": 0.0,
-      "partial_error_rate": 0.9995289684408856,
+      "partial_error_rate": 0.9995288944723618,
       "top_partial_error_reason": {
         "reason": "profile extraction returned partial result: found=4 previous_max=16",
-        "count": 4503
+        "count": 4506
       }
     }
   },
@@ -1353,5 +1353,5 @@
       "current_bucket": 1.0
     }
   ],
-  "snapshot_generated_at": "2026-06-14T04:58:09Z"
+  "snapshot_generated_at": "2026-06-14T05:06:45Z"
 }
