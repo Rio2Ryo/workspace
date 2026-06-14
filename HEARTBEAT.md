@@ -32,6 +32,19 @@ High Risk:
 - 削除系操作
 - 秘密情報の共有
 
+## 2026-06-14 heartbeat (81回目)
+
+**アクション**: food-dx-qwen の API lint warnings 残数を確認。`npx eslint apps/api/src --ext .ts` + `build:api` + `build:web` を実行。
+
+**検証**:
+- `eslint apps/api/src` → exit:0 / 出力なし = **0 errors / 0 warnings** ✅（以前の132件は解消済み）
+- `npm run build:api` → tsc エラー0 ✅
+- `npm run build:web` → static/dynamic pages 正常生成 ✅
+
+**状態**: food-dx-qwen は lint・build ともにクリーン。ローカル作業は全完了。残作業は全て DB接続環境待ち（seed / E2E）。Ready 未完了なし。
+
+**通知判断**: notify=false（food-dx クリーン確認のみ。新規障害なし）。
+
 ## 2026-06-14 heartbeat (80回目)
 
 **アクション**: `tasks/QUEUE.md` の Ready / In Progress を確認。Ready 未完了なし、In Progress は `food-dx-shiro` のみ。`food-dx-shiro` の tmux / repo / DB接続環境 / handoff契約を再確認。disk cleanup 承認待ちの現状も再計測。workspace tracked 変更は `projects/threads-watcher/threads-watcher-status/state.json` の watcher 自動生成 snapshot 更新のみ（`checked_at: 06:58:03Z → 07:06:27Z`、`found_count: 13 → 15`、`partial_error` 継続）。
