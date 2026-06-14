@@ -5,7 +5,7 @@
     "@bmw_intokyo"
   ],
   "last_check": {
-    "checked_at": "2026-06-14T13:58:42Z",
+    "checked_at": "2026-06-14T14:07:24Z",
     "found_count": 4,
     "new_count": 0,
     "status": "partial_error",
@@ -1353,5 +1353,5 @@
       "current_bucket": 1.0
     }
   ],
-  "snapshot_generated_at": "2026-06-14T13:58:42Z"
+  "snapshot_generated_at": "2026-06-14T14:07:24Z"
 }

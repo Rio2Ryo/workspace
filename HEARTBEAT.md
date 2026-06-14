@@ -32,6 +32,23 @@ High Risk:
 - 削除系操作
 - 秘密情報の共有
 
+## 2026-06-14 heartbeat (99回目)
+
+**アクション**: `tasks/QUEUE.md` の Ready / In Progress を確認。Ready 未完了なし、In Progress は `food-dx-shiro` のみ。`food-dx-shiro` の tmux / repo / DB接続環境 / handoff契約を再確認し、workspace の push後状態・workflowファイル有無・disk・threads-watcher state 自動更新を確認。
+
+**検証**:
+- QUEUE Ready 未完了なし。In Progress = `food-dx-shiro`。
+- `food-dx-shiro`: tmux `food-dx-shiro` 存在。repo `main` HEAD `4c46739`、tracked 変更なし。
+- `npm run test:db-e2e-handoff-contract` → pass。
+- `npm run db:check` → 想定通り `DATABASE_URL is not set` で fail（`.env.local` / `.env` / docker / psql / pg_ctl / initdb missing）。
+- workspace branch `shiro/cycle-tracker-app` は origin より2 commits ahead（`b44dc20` / `fff87ff` の記録・QUEUE同期コミット）。push済み実体は `0801f33` までで、workflowファイルは heartbeat 98 の意図的トレードオフ通り missing。
+- disk: `/System/Volumes/Data` は 97% 使用、空き 6.3GiB。
+- workspace tracked 変更は `projects/threads-watcher/threads-watcher-status/state.json` の watcher 自動 snapshot 更新のみ（`checked_at: 13:58:42Z → 14:07:24Z`、`partial_error` 継続）。
+
+**状態**: Ready 未完了なし。`food-dx-shiro` は DB 接続環境待ち継続。次アクションは DB接続環境で `npm run db:e2e:handoff` の手順を実行し、seed後の日本語E2E結果を報告フォーマットで回収すること。interaugh workflow ENOENT は push を優先した既知トレードオフで、新規対応なし。disk cleanup / KATAOMOI-EC ENV VAR / citta-ios push は既存承認待ち。
+
+**通知判断**: notify=false（新規障害なし。既知のDB待ち・disk cleanup承認待ち・自動state更新のみ）。
+
 ## 2026-06-14 heartbeat (98回目)
 
 **アクション**: `! git push origin shiro/cycle-tracker-app` 承認確認。push 成否・並列セッション差分・QUEUE.md unstaged 変更を確認し commit `b44dc20`。
