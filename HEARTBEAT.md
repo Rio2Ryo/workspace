@@ -1449,4 +1449,28 @@ GitHub Settings → Developer settings → Personal access tokens
 - citta-ios / citta-ios-complete: Yakon merge 戦略待ち
 - **disk**: 98% / 5.1Gi free ⚠️ — `npm cache clean --force`（推定 6.8G 回収）を Yakon が「disk cleanup OK」と送信すれば即実行
 
+## 2026-06-14 heartbeat (tick 79)
+
+**アクション**: cycle-tracker-app production e2e smoke test 全 6 シナリオ実行・検証。
+
+**検証**:
+- Scenario 1 (stale lastPeriodStart 2025-11-01 → 正規化): ✅ pass
+- Scenario 2 (fresh default render — summary/calendar/disclaimer): ✅ pass
+- Scenario 3 (calendar +8ヶ月後も予測セル描画、got 28 cells): ✅ pass
+- Scenario 4 (future lastPeriodStart 2099-01-15 → 未開始 banner): ✅ pass
+- Scenario 5 (mid-period → nextPeriod は翌周期、あと 20-30 日): ✅ pass
+- Scenario 6 (a11y: slider aria-valuetext / gridcell aria-label / aria-current=date): ✅ pass
+- **合計**: `✅ all scenarios passed`（6 scenarios、screenshots 6枚生成）
+
+**状態**: production `https://cycle-tracker-app-six.vercel.app` 全ヘルスチェック green。
+
+**残ブロッカー（外部承認待ち）**:
+- shiro-ai-anime: Discord Missing Access / Yakon API実行承認待ち
+- second-brain: push/preview は Ao/Yakon 判断待ち
+- food-dx-shiro: DB接続環境待ち
+- citta-ios / citta-ios-complete: Yakon merge 戦略待ち
+- **disk**: 98% / 5.1Gi free ⚠️ — `npm cache clean --force`（推定 6.8G 回収）Yakon 承認待ち
+
+**次アクション**: 外部承認が来るまでローカル品質維持継続。
+
 **次アクション**: disk 閾値 5Gi 未満で警告継続。新指示が来るまでローカル品質維持。
