@@ -32,6 +32,21 @@ High Risk:
 - 削除系操作
 - 秘密情報の共有
 
+## 2026-06-14 heartbeat (72回目)
+
+**アクション**: `tasks/QUEUE.md` の Ready / In Progress を確認。Ready 未完了なし、In Progress は `food-dx-shiro` のみ。`food-dx-shiro` の tmux/repo/DB接続環境/handoff契約を確認し、workspace の tracked 変更も確認。`projects/threads-watcher/threads-watcher-status/state.json` は watcher 自動生成の snapshot 更新のみだったため、`chore: update threads-watcher state snapshot` として commit `f30cba8`。直後の watcher 再実行で `checked_at=2026-06-14T04:06:53Z` / `found_count=15` / `status=ok` に戻った差分も確認。
+
+**検証**:
+- QUEUE Ready 未完了なし。In Progress = `food-dx-shiro`。
+- `food-dx-shiro`: tmux `food-dx-shiro` 存在。repo `main` HEAD `4c46739` clean。`.env.local` / `.env` / `DATABASE_URL` / docker / psql / pg_ctl / initdb は missing。
+- `npm run test:db-e2e-handoff-contract` → pass。`npm run db:check` → 想定通り `DATABASE_URL is not set` で fail。`npm run db:e2e:handoff` → 固定7項目（目的 / 現担当 / 現状 / 次アクション / 詰まり / 支援候補 / 期限）と seed後20 route確認リストを出力できることを確認。
+- disk: `/System/Volumes/Data` は 98% 使用、空き 5.5GiB。削除候補の実削除は削除系操作のため未実行。
+- workspace tracked 変更は heartbeat記録と最新 state snapshot のみ。
+
+**状態**: Ready 未完了なし。`food-dx-shiro` は DB 接続環境待ち継続。次アクションは DB接続環境で `npm run db:e2e:handoff` の手順を実行し、seed後の日本語E2E結果を報告フォーマットで回収すること。threads-watcher は直近 snapshot で partial_error から ok に回復。ディスク空きは少ないが、削除は High Risk 扱いのため未実行。
+
+**通知判断**: notify=false（新規障害・期限リスク・追加判断依頼なし。既知のDB環境待ちとauto-generated state更新のみ）。
+
 ## 2026-06-14 heartbeat (71回目)
 
 **アクション**: workspace `shiro/cycle-tracker-app` の tracked 変更を確認。`projects/threads-watcher/threads-watcher-status/state.json` が watcher 自動生成の timestamp / error count 更新（前回: `03:28:14Z`, 今回: `03:59:46Z`、count: 704→700）を含んでいたため、`chore: update threads-watcher state snapshot` として commit `2c8930a`。
