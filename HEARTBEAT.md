@@ -32,6 +32,24 @@ High Risk:
 - 削除系操作
 - 秘密情報の共有
 
+## 2026-06-14 heartbeat (98回目)
+
+**アクション**: `! git push origin shiro/cycle-tracker-app` 承認確認。push 成否・並列セッション差分・QUEUE.md unstaged 変更を確認し commit `b44dc20`。
+
+**検証**:
+- `git log origin/shiro/cycle-tracker-app..HEAD` → 空 = push 成功 ✅（local = remote = `0801f33`）
+- 並列セッションが workflow ファイルを再削除（`0801f33`）してから push した — workflow ENOENT 状態に戻ったが意図的トレードオフ
+- `tasks/QUEUE.md` unstaged: **mother-vegetable ドメイン切替 完全完了** に更新済み
+  - `NEXT_PUBLIC_APP_URL` → `https://mothervegetable.co.jp` ✅
+  - `trustHost: true` (NextAuth v5) ✅ / `.trim()` 15ファイル ✅
+  - Google OAuth callback / Stripe webhook → co.jp ✅（Yakon が GCP + Stripe Dashboard で手動完了）
+  - sitemap 60 URL / robots.txt / vitest 49/49 ✅
+- `state.json` + `QUEUE.md` → commit `b44dc20` ✅
+
+**状態**: workspace push 完了 ✅。mother-vegetable ドメイン切替 **完全完了** ✅。残ブロッカー: food-dx DB / disk 97% cleanup / KATAOMOI-EC ENV VAR / interaugh workflow ENOENT（PAT scope 待ち）。
+
+**通知判断**: notify=false（push 確認・QUEUE更新のみ。新規障害なし）。
+
 ## 2026-06-14 heartbeat (97回目)
 
 **アクション**: `tasks/QUEUE.md` の Ready / In Progress を確認。Ready 未完了なし、In Progress は `food-dx-shiro` のみ。`food-dx-shiro` の tmux / repo / DB接続環境 / handoff契約を再確認し、workspace ahead 状態と workflow 復元コミットのpush注意点、disk、threads-watcher state の自動更新を確認。
