@@ -32,6 +32,19 @@ High Risk:
 - 削除系操作
 - 秘密情報の共有
 
+## 2026-06-14 heartbeat (63回目)
+
+**アクション**: `tasks/QUEUE.md` の Ready / In Progress を確認。Ready 未完了なし、In Progress は `food-dx-shiro` のみ。mother-vegetable `/api/health` は read-only 再確認。追加でディスク空き容量が 10GiB 未満のため削除候補を調査（削除は未実行）。
+
+**検証**:
+- `mother-vegetable`: `/api/health` は `status=ok` / `env=production`、`url` は `https://mother-vegetable.vercel.app` のまま。前回から変化なし。機能的影響なし。
+- `food-dx-shiro`: tmux `food-dx-shiro` 存在。repo `main` HEAD `4c46739` clean。`npm run test:db-e2e-handoff-contract` pass。`npm run db:check` は想定通り `DATABASE_URL is not set` で fail し、`.env.local` / `.env` / docker / psql / pg_ctl / initdb は missing。
+- disk: `/System/Volumes/Data` は 97% 使用、空き 6.1GiB。削除候補は `/Users/umi/.npm` が 6.8G、`/Users/umi/.cache` が 3.9G。OpenClaw workspace / project / Claude vm_bundles は未削除・未変更。
+
+**状態**: Ready 未完了なし。mother-vegetable env fix は Yakon 外部ターミナル対応待ち。`food-dx-shiro` は DB 接続環境待ち継続。ディスクは 10GiB 未満のため、削除前確認ルールに従い `npm cache clean --force` の承認待ち。
+
+**通知判断**: notify=true（空き容量 6.1GiB は運用リスク。`npm cache clean --force` で約 6.8G 回収見込みだが削除系操作のため Yakon 承認が必要）。
+
 ## 2026-06-14 heartbeat (62回目)
 
 **アクション**: Yakon `❯ mother-vegetable の /api/health をもう一度確認して` → `curl https://mothervegetable.co.jp/api/health` 実行。

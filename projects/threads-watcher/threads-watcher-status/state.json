@@ -5,11 +5,11 @@
     "@bmw_intokyo"
   ],
   "last_check": {
-    "checked_at": "2026-06-13T23:42:53Z",
-    "found_count": 4,
+    "checked_at": "2026-06-14T00:27:05Z",
+    "found_count": 13,
     "new_count": 0,
     "status": "partial_error",
-    "error": "profile extraction returned partial result: found=4 previous_max=15"
+    "error": "profile extraction returned partial result: found=13 previous_max=15"
   },
   "saved_count": 97,
   "posts": [
@@ -1286,22 +1286,22 @@
     "partial_error_rate": 1.0,
     "top_partial_error_reason": {
       "reason": "profile extraction returned partial result: found=4 previous_max=16",
-      "count": 729
+      "count": 717
     }
   },
   "recent_stats_by_window": {
     "1": {
       "window_hours": 1,
-      "total": 43,
+      "total": 42,
       "ok": 0,
-      "partial_error": 43,
+      "partial_error": 42,
       "error": 0,
       "other": 0,
       "success_rate": 0.0,
       "partial_error_rate": 1.0,
       "top_partial_error_reason": {
         "reason": "profile extraction returned partial result: found=4 previous_max=16",
-        "count": 36
+        "count": 28
       }
     },
     "24": {
@@ -1315,7 +1315,7 @@
       "partial_error_rate": 1.0,
       "top_partial_error_reason": {
         "reason": "profile extraction returned partial result: found=4 previous_max=16",
-        "count": 729
+        "count": 717
       }
     },
     "168": {
@@ -1329,14 +1329,14 @@
       "partial_error_rate": 0.9995289684408856,
       "top_partial_error_reason": {
         "reason": "profile extraction returned partial result: found=4 previous_max=16",
-        "count": 4492
+        "count": 4500
       }
     }
   },
   "sync_state": {
-    "cursor": 118,
+    "cursor": 120,
     "db_max": 120,
-    "delta": 2,
+    "delta": 0,
     "cursor_file_exists": true
   },
   "dry_run_alert": null,
@@ -1345,7 +1345,7 @@
     {
       "handle": "@bmw_intokyo",
       "warn_ts": 1781202276,
-      "current_bucket": 0.9
+      "current_bucket": 0.8
     },
     {
       "handle": "@hal.lifedesign",
@@ -1353,5 +1353,5 @@
       "current_bucket": 1.0
     }
   ],
-  "snapshot_generated_at": "2026-06-13T23:42:53Z"
+  "snapshot_generated_at": "2026-06-14T00:27:05Z"
 }
