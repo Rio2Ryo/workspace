@@ -1,0 +1,135 @@
+{
+  "updated": "2026-05-17T21:03:41.476866",
+  "rows": [
+    {
+      "session": "claude",
+      "thread": "1501366244174069904",
+      "project": "second-brain",
+      "state": "不明",
+      "summary": [
+        "未検証項目)— ps -A | grep chromium ベースの軽量ヘルスチェック関数追加"
+      ],
+      "git": "branch=shiro/phase2-perf-metrics, changed_files=32",
+      "deploy": "デプロイURLなし/不明"
+    },
+    {
+      "session": "codex",
+      "thread": "1501366333886042346",
+      "project": "second-brain",
+      "state": "完了/待機",
+      "summary": [
+        "実行したテスト /",
+        "- pnpm -C second-brain/apps/web test src/lib/e2e-safety.test.ts 成功",
+        "- pnpm -C second-brain/apps/web typecheck 成功",
+        "- pnpm -C second-brain/apps/web build 成功。既存React Hooks warningは継続、",
+        "残ブロッカー / 確認URL作成には preview push/deploy承認が必要です。リモートE2E",
+        "を実行する場合も ALLOW_REMOTE_E2E=1 の明示承認が必要です。",
+        "次に攻めるべき課題 / PlaywrightのShiro Daily専用specを追加し、ローカル環境で",
+        "ブラウザレベルで検証できるようにすること。"
+      ],
+      "git": "branch=shiro/phase2-perf-metrics, changed_files=32",
+      "deploy": "デプロイURLなし: Second Brain preview/deployは承認待ち。"
+    },
+    {
+      "session": "restaurant-sales-intel",
+      "thread": "1501399826397532231",
+      "project": "projects/restaurant-sales-intel",
+      "state": "完了/待機",
+      "summary": [
+        "- node scripts/test-outreach-api.mjs 成功",
+        "- npm test 成功",
+        "- npm run build 成功",
+        "残ブロッカー:",
+        "次に攻めるべき課題:"
+      ],
+      "git": "branch=main, changed_files=11",
+      "deploy": "デプロイURLなし: GitHub/Vercel外部反映は承認待ち。"
+    },
+    {
+      "session": "daily-report-codex",
+      "thread": "1505429154215100507",
+      "project": "projects/daily-report-app",
+      "state": "完了/待機",
+      "summary": [
+        "変更ファイル:",
+        "実行したテスト:",
+        "- pnpm test 成功",
+        "- pnpm typecheck 成功",
+        "- pnpm build 成功",
+        "残ブロッカー: 実Postgres接続、Vercel env設定、deploy、秘密値投入は未実施。",
+        "次に攻めるべき課題: Second Brain APIの limit/cursor/status/updatedSince フィル"
+      ],
+      "git": "branch=shiro/phase2-perf-metrics, changed_files=168",
+      "deploy": "デプロイURLなし: Vercel/DB/env/秘密値投入が未実施。preview deployには明示承認が必要。"
+    },
+    {
+      "session": "hermes-jp",
+      "thread": "1501359734203089127",
+      "project": "projects/top3-favorites",
+      "state": "完了/待機",
+      "summary": [
+        "ject=chromium --grep \"duplicate item ids\" → 200返却で失敗",
+        "ts --project=chromium --grep \"duplicate ids\" → 明確な重複IDエラー未表示で失敗",
+        "- Build: pnpm build → 成功",
+        "残ブロッカー:",
+        "- 4180番ポートは既存nodeが使用中のため、検証は引き続き PORT=4181 で実施しま",
+        "次に攻めるべき課題:",
+        "- export実ファイルの内容検証をPlaywrightで追加し、import/export往復のQAを自"
+      ],
+      "git": "branch=shiro/phase2-perf-metrics, changed_files=168",
+      "deploy": "デプロイURLなし: 外部公開/Vercel deploy未実施。preview deployには明示承認が必要。ローカルE2Eは可能。"
+    },
+    {
+      "session": "slide-tool-codex",
+      "thread": "1505385904825696317",
+      "project": "slide-tool",
+      "state": "完了/待機",
+      "summary": [
+        "変更ファイル:",
+        "実行したテスト:",
+        "残ブロッカー: なし。",
+        "次に攻めるべき課題: PPTX内部テキスト抽出は <a:t> ベースなので、画像化された文"
+      ],
+      "git": "branch=shiro/phase2-perf-metrics, changed_files=168",
+      "deploy": "デプロイ対象ではなくローカル生成物中心。公開URLなし。"
+    },
+    {
+      "session": "threads-watcher",
+      "thread": "1472105365138309172",
+      "project": "projects/threads-watcher",
+      "state": "常駐監視中",
+      "summary": [
+        "[done] @hal.lifedesign found=15 new_saved_to_db=0 at=2026-05-17T11:52:50Z",
+        "[done] @hal.lifedesign found=15 new_saved_to_db=0 at=2026-05-17T11:53:55Z",
+        "[done] @hal.lifedesign found=15 new_saved_to_db=0 at=2026-05-17T11:55:03Z",
+        "[done] @hal.lifedesign found=15 new_saved_to_db=0 at=2026-05-17T11:56:08Z",
+        "[done] @hal.lifedesign found=15 new_saved_to_db=0 at=2026-05-17T11:57:15Z",
+        "[done] @hal.lifedesign found=15 new_saved_to_db=0 at=2026-05-17T11:58:22Z",
+        "[done] @hal.lifedesign found=15 new_saved_to_db=0 at=2026-05-17T11:59:29Z",
+        "[done] @hal.lifedesign found=15 new_saved_to_db=0 at=2026-05-17T12:00:35Z",
+        "[done] @hal.lifedesign found=15 new_saved_to_db=0 at=2026-05-17T12:01:40Z",
+        "[done] @hal.lifedesign found=15 new_saved_to_db=0 at=2026-05-17T12:02:46Z"
+      ],
+      "git": "branch=shiro/phase2-perf-metrics, changed_files=168",
+      "deploy": "公開status URLは未確認/未反映。ローカル監視はDB/logで確認。"
+    },
+    {
+      "session": "top3-goose",
+      "thread": "1505419396691267584",
+      "project": "projects/top3-favorites",
+      "state": "完了/待機",
+      "summary": [
+        "- **変更ファイル**:",
+        "- **実行したテスト**:",
+        "- 修正前: 失敗再現",
+        "- 修正後: 成功",
+        "t/export UI exists\"` 成功",
+        "- `pnpm build` 成功",
+        "- **残ブロッカー**:",
+        "- **次に攻めるべき課題**:"
+      ],
+      "git": "branch=shiro/phase2-perf-metrics, changed_files=168",
+      "deploy": "デプロイURLなし: 外部公開/Vercel deploy未実施。preview deployには明示承認が必要。ローカルE2Eは可能。"
+    }
+  ]
+}
