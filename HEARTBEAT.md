@@ -2089,3 +2089,25 @@ GitHub Settings → Developer settings → Personal access tokens
 - **disk cleanup**: `npm cache clean --force` 6.8G — Yakon 「disk cleanup OK」待ち
 - second-brain: push/preview は Ao/Yakon 判断待ち
 - food-dx-shiro: DB接続環境待ち
+
+## 2026-06-15 heartbeat (tick 87)
+
+**アクション**: daily-report-app テスト確認 + second-brain deploy 状況確認。
+
+**検証**:
+- daily-report-app `npm test`: 461/461 pass ✅
+- second-brain `node scripts/deploy-handoff.mjs`: patch integrity OK ✅（ci.yml.patch / deploy.yml.patch ともに SHA-256 一致）
+- disk: 97% / 6.6Gi free（安定）
+- threads-watcher state.json: 定期更新をコミット
+
+**second-brain デプロイ準備状況**:
+- branch: `shiro/phase2-perf-metrics`
+- Web: 437/437 pass、API: 789 pass、deploy コマンド生成済み
+- ブロッカー: `git push origin shiro/phase2-perf-metrics` + CF Workers/Pages deploy — Ao/Yakon 承認待ち
+
+**残ブロッカー（外部承認待ち）**:
+- **second-brain push & deploy**: Ao または Yakon の「second-brain deploy OK」待ち
+- **disk cleanup**: `npm cache clean --force` 6.8G — Yakon 「disk cleanup OK」待ち
+- food-dx-shiro: DB接続環境待ち
+
+**次アクション**: 外部承認待ち。ローカル品質維持継続。
