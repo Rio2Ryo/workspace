@@ -5,11 +5,11 @@
     "@bmw_intokyo"
   ],
   "last_check": {
-    "checked_at": "2026-06-14T22:01:52Z",
+    "checked_at": "2026-06-14T22:02:06Z",
     "found_count": 15,
     "new_count": 0,
-    "status": "partial_error",
-    "error": "profile extraction returned partial result: found=15 previous_max=16"
+    "status": "ok",
+    "error": null
   },
   "saved_count": 97,
   "posts": [
@@ -1353,5 +1353,5 @@
       "current_bucket": 1.0
     }
   ],
-  "snapshot_generated_at": "2026-06-14T22:01:53Z"
+  "snapshot_generated_at": "2026-06-14T22:02:06Z"
 }
