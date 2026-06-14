@@ -32,6 +32,21 @@ High Risk:
 - 削除系操作
 - 秘密情報の共有
 
+## 2026-06-14 heartbeat (96回目)
+
+**アクション**: `interaugh-homepage` `pnpm test:mobile-hero` を初実行 → ワークフローファイル削除（`fa80e1e`）による ENOENT を発見。`.github/workflows/interaugh-homepage.yml` を再作成してテスト修正。
+
+**検証**:
+- `pnpm test:mobile-hero` 修正前 → `ENOENT: .github/workflows/interaugh-homepage.yml` で exit 1 ❌
+- ワークフローファイル再作成（33行、CI contract満足）
+- `pnpm test:mobile-hero` 修正後 → `{"ok":true,"checks":24,"phoneTextWidth":77,"cardTextWidth":106}` ✅
+- commit `2235123 fix(interaugh): restore CI workflow file deleted to unblock PAT push` ✅
+- **注意**: このコミットには `.github/workflows/` が含まれるため、次の push は PAT `workflow` スコープが必要（heartbeat 36 と同じ制約）。push 前に Yakon への確認推奨。
+
+**状態**: `interaugh-homepage` 24/24 テスト通過 ✅ — 削除による回帰を修正完了。workspace は remote より数コミット ahead（push は `workflow` scope 待ち）。disk 97% / 6.4GiB。
+
+**通知判断**: notify=true（ワークフローファイル再追加 → 次の push に PAT `workflow` scope が再度必要。Yakon に事前通知）。
+
 ## 2026-06-14 heartbeat (95回目)
 
 **アクション**: `tasks/QUEUE.md` の Ready / In Progress を確認。Ready 未完了なし、In Progress は `food-dx-shiro` のみ。`food-dx-shiro` の tmux / repo / DB接続環境 / handoff契約 / handoff出力を再確認し、disk と threads-watcher state の自動更新も確認。
