@@ -32,6 +32,21 @@ High Risk:
 - 削除系操作
 - 秘密情報の共有
 
+## 2026-06-14 heartbeat (78回目)
+
+**アクション**: `tasks/QUEUE.md` の Ready / In Progress を確認。Ready 未完了なし、In Progress は `food-dx-shiro` のみ。`food-dx-shiro` の tmux/repo/DB接続環境/handoff契約を確認。workspace tracked 変更は `projects/threads-watcher/threads-watcher-status/state.json` の watcher 自動生成 snapshot 更新のみ（`checked_at: 05:58:17Z → 06:05:26Z`、`status: partial_error → ok`、`found_count: 4 → 15`）。root-level scan で `citta-ios-complete/project.pbxproj` の既知差分も再確認。
+
+**検証**:
+- QUEUE Ready 未完了なし。In Progress = `food-dx-shiro`。
+- `food-dx-shiro`: tmux `food-dx-shiro` 存在。repo `main` HEAD `4c46739` clean。`.env.local` / `.env` / `DATABASE_URL` / docker / psql / pg_ctl / initdb は missing。
+- `npm run test:db-e2e-handoff-contract` → pass。`npm run db:check` → 想定通り `DATABASE_URL is not set` で fail。`npm run db:e2e:handoff` → 固定7項目（目的 / 現担当 / 現状 / 次アクション / 詰まり / 支援候補 / 期限）と seed後20 route確認リストを出力できることを確認。
+- `citta-ios-complete`: `project.pbxproj` はゼロ埋め UUID 追記のまま。参照先 Swift ファイルは存在し、`xcodebuild -list -project CittaApp.xcodeproj` は pass。ただし通常のPBXセクションではなく末尾追記のためコミットは保留。
+- disk: `/System/Volumes/Data` は 98% 使用、空き 5.3GiB。削除候補の実削除は削除系操作のため未実行。
+
+**状態**: Ready 未完了なし。`food-dx-shiro` は DB 接続環境待ち継続。次アクションは DB接続環境で `npm run db:e2e:handoff` の手順を実行し、seed後の日本語E2E結果を報告フォーマットで回収すること。threads-watcher は直近 snapshot で ok 回復。`citta-ios-complete/project.pbxproj` は Xcodeで読めるが差分形式が不自然なため保留。ディスク空きは少ないが、削除は High Risk 扱いのため未実行。
+
+**通知判断**: notify=false（新規障害・期限リスク・追加判断依頼なし。既知のDB環境待ち、auto-generated state更新、既知citta保留差分のみ）。
+
 ## 2026-06-14 heartbeat (77回目)
 
 **アクション**: 全 repo tracked 差分スキャン（workspace 2件 / root-level repos を `find -maxdepth 2 -name .git` で走査）。検出:
