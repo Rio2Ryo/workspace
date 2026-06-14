@@ -1,0 +1,135 @@
+From: shiro <noreply@anthropic.com>
+Subject: [PATCH] threads-watcher: remove dead code after DB-source-of-truth migration
+
+After watcher.py was rewritten to use SQLite (db.py) as the source of truth,
+the following state.json-era helpers became unreachable:
+
+  - STATE_FILE constant
+  - _load_state()
+  - _save_state()
+  - _write_web_snapshot()  (old `post_ids` shape, superseded by `_write_web_snapshot_from_db`)
+  - _check_handle()        (superseded by inline run_once)
+
+Verified unreferenced via grep across the entire project. All 34 pytest
+cases still pass after removal:
+  - tests/test_db.py: 9 passed
+  - tests/test_health.py: 10 passed
+  - tests/test_extract_post_ids.py: 11 passed
+  - tests/test_autoincrement_gap.py: 4 passed
+And the CLI smoke test `python watcher.py --health-check` returns exit 0
+unchanged.
+
+Apply to any tree where the dead code is still present:
+  git apply qa-reports/threads-watcher-dead-code-removal-2026-05-17.patch
+
+No external publishing. push deferred to Yakon approval.
+
+---
+--- a/projects/threads-watcher/watcher.py
++++ b/projects/threads-watcher/watcher.py
+@@ -28,7 +28,6 @@
+ 
+ 
+ PROJECT_ROOT = Path(__file__).resolve().parent
+-STATE_FILE = PROJECT_ROOT / "state.json"
+ SCREENSHOTS_DIR = PROJECT_ROOT / "screenshots"
+ WEB_SNAPSHOT_FILE = PROJECT_ROOT / "threads-watcher-status" / "state.json"
+ WEB_SNAPSHOT_HANDLE = "@hal.lifedesign"
+@@ -48,37 +47,6 @@
+     return handle if handle.startswith("@") else f"@{handle}"
+ 
+ 
+-def _load_state() -> dict[str, Any]:
+-    if not STATE_FILE.exists():
+-        return {}
+-    try:
+-        return json.loads(STATE_FILE.read_text(encoding="utf-8"))
+-    except json.JSONDecodeError:
+-        print(f"[warn] state.json is corrupted; starting fresh", file=sys.stderr)
+-        return {}
+-
+-
+-def _save_state(state: dict[str, Any]) -> None:
+-    STATE_FILE.write_text(json.dumps(state, ensure_ascii=False, indent=2), encoding="utf-8")
+-
+-
+-def _write_web_snapshot(state: dict[str, Any], handle: str) -> None:
+-    """Write a sanitized snapshot for the public Vercel status page.
+-
+-    Includes only the handle, post IDs (which are public), and timestamps.
+-    Never includes screenshot file paths or other internal state.
+-    """
+-    handle_state = state.get(handle) or {}
+-    snapshot = {
+-        "handle": handle,
+-        "last_checked_at": handle_state.get("last_checked_at"),
+-        "post_ids": list(handle_state.get("seen_post_ids", [])),
+-        "snapshot_generated_at": _now_iso(),
+-    }
+-    WEB_SNAPSHOT_FILE.parent.mkdir(parents=True, exist_ok=True)
+-    WEB_SNAPSHOT_FILE.write_text(json.dumps(snapshot, ensure_ascii=False, indent=2), encoding="utf-8")
+-
+-
+ def _write_web_snapshot_from_db(snapshot: dict[str, Any]) -> None:
+     """Write a sanitized status snapshot derived from the DB source of truth.
+ 
+@@ -206,59 +174,9 @@
+             "height": int(dimensions.get("height")) if dimensions.get("height") else None,
+         }
+     finally:
+-        context.close()
+-
+-
+-def _check_handle(playwright: Playwright, handle: str, state: dict[str, Any]) -> dict[str, Any]:
+-    handle = _normalize_handle(handle)
+-    handle_no_at = handle.lstrip("@")
+-    profile_url = f"https://www.threads.com/@{handle_no_at}"
+-    handle_state = state.setdefault(handle, {"seen_post_ids": [], "last_checked_at": None})
+-    seen_ids: list[str] = handle_state.get("seen_post_ids", [])
+-    seen_set = set(seen_ids)
+-
+-    browser = playwright.chromium.launch(headless=True)
+-    new_post_paths: list[Path] = []
+-    try:
+-        context = browser.new_context(
+-            user_agent=DEFAULT_USER_AGENT,
+-            viewport={"width": 1280, "height": 1800},
+-            locale="ja-JP",
+-        )
+-        page = context.new_page()
+-        page.goto(profile_url, wait_until="domcontentloaded", timeout=PROFILE_LOAD_TIMEOUT_MS)
+-        try:
+-            page.wait_for_load_state("networkidle", timeout=8_000)
+-        except PlaywrightTimeoutError:
+-            pass
+-        page.wait_for_timeout(2_000)
+-
+-        post_ids = _collect_post_ids_until_stable(page, handle)
+         context.close()
+ 
+-        if not post_ids:
+-            print(f"[warn] no post links found on {profile_url} — DOM may have changed or content gated", file=sys.stderr)
+ 
+-        # Process oldest-first so seen_post_ids order reflects observation order
+-        new_ids = [pid for pid in reversed(post_ids) if pid not in seen_set]
+-        for pid in new_ids:
+-            try:
+-                out = _screenshot_post(browser, handle, pid, SCREENSHOTS_DIR / handle_no_at)
+-                new_post_paths.append(out)
+-                seen_ids.append(pid)
+-                seen_set.add(pid)
+-                print(f"[saved] {pid} -> {out.relative_to(PROJECT_ROOT)}")
+-            except Exception as e:
+-                print(f"[error] failed to capture {pid}: {e}", file=sys.stderr)
+-    finally:
+-        browser.close()
+-
+-    handle_state["seen_post_ids"] = seen_ids
+-    handle_state["last_checked_at"] = _now_iso()
+-    state[handle] = handle_state
+-    return {"new_count": len(new_post_paths), "checked_at": handle_state["last_checked_at"]}
+-
+-
+ def run_once(handle: str) -> int:
+     handle = _normalize_handle(handle)
+     conn = connect(DB_FILE)
