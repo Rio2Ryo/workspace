@@ -32,6 +32,29 @@ High Risk:
 - 削除系操作
 - 秘密情報の共有
 
+## 2026-06-14 heartbeat (80回目)
+
+**アクション**: `tasks/QUEUE.md` の Ready / In Progress を確認。Ready 未完了なし、In Progress は `food-dx-shiro` のみ。`food-dx-shiro` の tmux / repo / DB接続環境 / handoff契約を再確認。disk cleanup 承認待ちの現状も再計測。workspace tracked 変更は `projects/threads-watcher/threads-watcher-status/state.json` の watcher 自動生成 snapshot 更新のみ（`checked_at: 06:58:03Z → 07:06:27Z`、`found_count: 13 → 15`、`partial_error` 継続）。
+
+**検証**:
+- QUEUE Ready 未完了なし。In Progress = `food-dx-shiro`。
+- `food-dx-shiro`: tmux `food-dx-shiro` 存在。repo `main` HEAD `4c46739` clean。`.env.local` / `.env` / `DATABASE_URL` / docker / psql / pg_ctl / initdb は missing。
+- `npm run test:db-e2e-handoff-contract` → pass。`npm run db:check` → 想定通り `DATABASE_URL is not set` で fail。`npm run db:e2e:handoff` → 固定7項目（目的 / 現担当 / 現状 / 次アクション / 詰まり / 支援候補 / 期限）と seed後20 route確認リストを出力できることを確認。
+- disk: `/System/Volumes/Data` は 98% 使用、空き 5.3GiB。削除候補は `/Users/umi/.npm` 6.8G、`~/Library/Developer/Xcode/DerivedData` 547M。削除は High Risk（削除系操作）扱いのため未実行。
+
+**状態**: Ready 未完了なし。`food-dx-shiro` は DB 接続環境待ち継続。次アクションは DB接続環境で `npm run db:e2e:handoff` の手順を実行し、seed後の日本語E2E結果を報告フォーマットで回収すること。threads-watcher は watcher 自動 snapshot 更新のみ。ディスクは 5.3GiB / 98% のままで、次の重い build でディスクフル失敗リスクあり。
+
+**Yakon 承認パケット — disk cleanup 継続**:
+- 目的: build失敗を避けるため、一時キャッシュのみ削除して空き容量を増やす。
+- 現担当: 白。
+- 現状: free 5.3GiB / 98%。`~/.npm` 6.8G、Xcode DerivedData 547M。
+- 次アクション: Yakon が `disk cleanup OK` と返答したら、まず `npm cache clean --force` を実行。必要なら続けて `rm -rf ~/Library/Developer/Xcode/DerivedData`。
+- 詰まり: 削除系操作のため承認待ち。
+- 支援候補: Yakon。
+- 期限: 今すぐ推奨。放置すると Next.js / food-dx などの重い build がディスク不足で失敗する可能性が高い。
+
+**通知判断**: notify=true（disk 98% / 5.3GiB free。`disk cleanup OK` の承認を早期に取る必要あり）。
+
 ## 2026-06-14 heartbeat (79回目)
 
 **アクション**: 全 repo tracked 差分スキャン + disk 削除候補の詳細計測。`state.json` commit `a701289`（watcher 自動更新 `06:05:26Z → 06:58:03Z`）。disk 残り 5.3GiB / 98% で `~/.npm` 6.8G・Xcode DerivedData 547M を確認。citta-ios-complete pbxproj の参照ファイルを `ls` で再確認 → `none`（ゼロ埋め UUID の参照先は不在、スキップ継続）。
