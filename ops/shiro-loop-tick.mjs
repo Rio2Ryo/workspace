@@ -22,7 +22,7 @@ const now = Date.now();
 
 const staleMinutes = numberArg('--stale-minutes', 30);
 const notifyCooldownMinutes = numberArg('--notify-cooldown-minutes', 240);
-const nudgeCooldownMinutes = numberArg('--nudge-cooldown-minutes', 45);
+const nudgeCooldownMinutes = numberArg('--nudge-cooldown-minutes', 20);
 const captureLines = numberArg('--capture-lines', 80);
 const maxNudges = numberArg('--max-nudges', 8);
 

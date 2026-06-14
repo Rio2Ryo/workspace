@@ -7,6 +7,7 @@ const STATE_DIR = path.join(ROOT, 'state/shiro-loop');
 const STATE_FILE = path.join(STATE_DIR, 'state.json');
 const DIGEST_FILE = path.join(STATE_DIR, 'digest-state.json');
 const VERIFIER_REPORT_FILE = path.join(STATE_DIR, 'last-verifier-report.json');
+const LAST_REPORT_FILE = path.join(STATE_DIR, 'last-report.json');
 const OPENCLAW_CONFIG_FILE = '/Users/umi/.openclaw/openclaw.json';
 const now = Date.now();
 
@@ -85,7 +86,7 @@ function buildProactiveSuggestions({ sessions, needsRefine, selfAction, verifier
   return [...new Set(suggestions)].slice(0, 4);
 }
 
-function buildDecisionReport({ sessions, changedSinceLastDigest, verifierReport }) {
+function buildDecisionReport({ sessions, changedSinceLastDigest, verifierReport, lastReport }) {
   const needsRefine = sessions.filter((item) => byVerifierVerdict(item, 'needs-refine'));
   const readyForYakon = sessions.filter(readyForHumanDecision);
   const needsPacket = sessions.filter((item) => {
@@ -149,6 +150,15 @@ function buildDecisionReport({ sessions, changedSinceLastDigest, verifierReport 
     });
   });
   const shiroActions = [...actionBySession.values()];
+  const actualActions = Array.isArray(lastReport?.notifications)
+    ? lastReport.notifications
+      .filter((item) => item.acted === true || item.kind === 'nudged')
+      .map((item) => ({
+        session: item.session,
+        action: item.kind === 'nudged' ? 'tmuxへ再投入' : '実行',
+        reason: item.reason || item.next || '',
+      }))
+    : [];
   const proactiveSuggestions = buildProactiveSuggestions({ sessions, needsRefine, selfAction, verifierMismatch });
 
   const label = pendingHuman.length > 0
@@ -169,7 +179,7 @@ function buildDecisionReport({ sessions, changedSinceLastDigest, verifierReport 
 
   const lines = [
     `Yakonさんがやること: ${pendingHuman.length ? `${pendingHuman.length}件あり（白が具体化中）` : 'なし'}`,
-    `白がやること: ${shiroActions.length ? `${shiroActions.length}件を整理/前進` : '通常監視'}`,
+    `白が実行したこと: ${actualActions.length ? `${actualActions.length}件` : 'なし'}`,
     `期限/影響: ${pendingHuman.length ? 'Yakonさん判断/作業が必要な項目は止まります。白がYes/Noで答えられる形に詰めます。' : '放置してもYakonさん側の作業は増えません。白が進めます。'}`,
     `推奨: ${recommendation}`,
   ];
@@ -183,9 +193,17 @@ function buildDecisionReport({ sessions, changedSinceLastDigest, verifierReport 
     if (yakonQuestions.length > 5) lines.push(`- 他 ${yakonQuestions.length - 5}件`);
   }
 
-  if (shiroActions.length) {
+  if (actualActions.length) {
     lines.push('');
-    lines.push('白が先にやること:');
+    lines.push('実行したこと:');
+    actualActions.slice(0, 8).forEach((item) => {
+      const reason = item.reason ? `（${item.reason.slice(0, 60)}）` : '';
+      lines.push(`- ${item.session}: ${item.action}${reason}`);
+    });
+    if (actualActions.length > 8) lines.push(`- 他 ${actualActions.length - 8}件`);
+  } else if (shiroActions.length) {
+    lines.push('');
+    lines.push('未実行の整理待ち:');
     shiroActions.slice(0, 8).forEach((item) => {
       lines.push(`- ${item.session}: ${item.action}`);
     });
@@ -210,13 +228,16 @@ function buildDecisionReport({ sessions, changedSinceLastDigest, verifierReport 
     const verdicts = Object.entries(verifierReport.verdictSummary).map(([key, value]) => `${labels[key] || key}${value}`).join(' / ');
     lines.push(`検証: ${verdicts || 'なし'}`);
   }
-  lines.push(`次: 白が要整理セッションを具体的な確認文に直し、Yakonさんには判断可能な形になったものだけ出します。`);
+  lines.push(actualActions.length
+    ? '次: 実行後の各セッション結果を確認し、変化があったスレッド単位で報告します。'
+    : '次: 未実行なので、報告ではなく再投入・実行を先に行います。');
 
   return {
     label,
     recommendation,
     yakonQuestions,
     shiroActions,
+    actualActions,
     proactiveSuggestions,
     verifierMismatch,
     humanMessage: lines.join('\n'),
@@ -227,6 +248,7 @@ function main() {
   const state = readJson(STATE_FILE, { sessions: {} });
   const digestState = readJson(DIGEST_FILE, { lastDigestAt: null });
   const verifierReport = readJson(VERIFIER_REPORT_FILE, null);
+  const lastReport = readJson(LAST_REPORT_FILE, null);
   const sessions = Object.entries(state.sessions || {}).map(([session, info]) => ({
     session,
     state: info.state || 'unknown',
@@ -261,7 +283,7 @@ function main() {
 
   const permissionWaitCount = summary['permission-wait'] || 0;
   const shouldSend = changedSinceLastDigest.length > 0 || attention.length > 0;
-  const decisionReport = buildDecisionReport({ sessions, changedSinceLastDigest, verifierReport });
+  const decisionReport = buildDecisionReport({ sessions, changedSinceLastDigest, verifierReport, lastReport });
 
   const report = {
     ts: new Date(now).toISOString(),
@@ -271,6 +293,7 @@ function main() {
     recommendation: decisionReport.recommendation,
     yakonQuestions: decisionReport.yakonQuestions,
     shiroActions: decisionReport.shiroActions,
+    actualActions: decisionReport.actualActions,
     proactiveSuggestions: decisionReport.proactiveSuggestions,
     verifierMismatch: decisionReport.verifierMismatch,
     total: sessions.length,
