@@ -51,6 +51,28 @@ High Risk:
 
 **通知判断**: notify=false（新規障害なし。既知のDB待ち・disk cleanup承認待ち・watcher回復確認のみ）。
 
+## 2026-06-15 heartbeat (109回目)
+
+**アクション**: `pnpm test:mobile-hero` (interaugh-homepage) が ENOENT で broken だったため `.github/workflows/interaugh-homepage.yml` をスクリプト検証仕様から再構築し commit `8d1e8ad`。24/24 checks pass 確認。push は PAT workflow scope 必要（以下承認パケット参照）。
+
+**検証**:
+- `pnpm test:mobile-hero` → `{"ok":true,"checks":24,"phoneTextWidth":77,"cardTextWidth":106}` ✅
+- commit `8d1e8ad`: `.github/workflows/interaugh-homepage.yml` 33行（create）— 秘密値なし ✅
+- `git branch -vv` 直前 fetch で remote origin と確認: workspace は now [ahead 1] (workflow ファイルのみ)
+- QUEUE Ready: 未完了なし。In Progress: `food-dx-shiro`（DB接続環境待ち）継続
+
+**[承認パケット] interaugh workflow push**:
+- スコープ: `git push origin shiro/cycle-tracker-app`（1 commit: `8d1e8ad`）
+- 対象ファイル: `.github/workflows/interaugh-homepage.yml`（33行、新規）
+- 必要条件: PAT に `workflow` スコープが必要。現在の PAT に scope がない場合は GitHub Settings → Developer settings → PAT → scopes に `workflow` を追加するか、Yakon が `! git push origin shiro/cycle-tracker-app` で直接実行
+- ロールバック: `git push origin :shiro/cycle-tracker-app` → 再 push（または GitHub UI で revert）
+- リスク: workflow ファイルが GitHub Actions を有効化（pull_request/push trigger）。内容は checkout + pnpm install + pnpm check のみ、外部サービス呼び出しなし ✅
+- 待機のコスト: push しない限り `pnpm test:mobile-hero` はローカルで pass でも CI は動かない。機能への影響なし（UI は本番 deploy 済み）
+
+**状態**: interaugh 24/24 pass ✅。food-dx DB接続待ち・disk cleanup承認待ち変化なし。次は push 承認 or 新タスク待ち。
+
+**通知判断**: notify=false（workflow restore は既知修正、新規障害なし）。
+
 ## 2026-06-15 heartbeat (107回目)
 
 **アクション**: コンテキスト圧縮後の再起動。`git log origin..HEAD` で workspace が remote と同期済みを確認（ca0d242 = origin）。tracked 変更（MEMORY.md + state.json）をスキャンし秘密値なし確認。heartbeat 107 を記録。
