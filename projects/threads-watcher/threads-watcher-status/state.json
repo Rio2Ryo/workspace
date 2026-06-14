@@ -5,7 +5,7 @@
     "@bmw_intokyo"
   ],
   "last_check": {
-    "checked_at": "2026-06-14T03:28:14Z",
+    "checked_at": "2026-06-14T04:00:58Z",
     "found_count": 4,
     "new_count": 0,
     "status": "partial_error",
@@ -1286,22 +1286,22 @@
     "partial_error_rate": 1.0,
     "top_partial_error_reason": {
       "reason": "profile extraction returned partial result: found=4 previous_max=16",
-      "count": 704
+      "count": 700
     }
   },
   "recent_stats_by_window": {
     "1": {
       "window_hours": 1,
-      "total": 42,
+      "total": 43,
       "ok": 0,
-      "partial_error": 42,
+      "partial_error": 43,
       "error": 0,
       "other": 0,
       "success_rate": 0.0,
       "partial_error_rate": 1.0,
       "top_partial_error_reason": {
         "reason": "profile extraction returned partial result: found=4 previous_max=16",
-        "count": 31
+        "count": 25
       }
     },
     "24": {
@@ -1315,7 +1315,7 @@
       "partial_error_rate": 1.0,
       "top_partial_error_reason": {
         "reason": "profile extraction returned partial result: found=4 previous_max=16",
-        "count": 704
+        "count": 700
       }
     },
     "168": {
@@ -1329,7 +1329,7 @@
       "partial_error_rate": 0.9995289684408856,
       "top_partial_error_reason": {
         "reason": "profile extraction returned partial result: found=4 previous_max=16",
-        "count": 4502
+        "count": 4499
       }
     }
   },
@@ -1353,5 +1353,5 @@
       "current_bucket": 1.0
     }
   ],
-  "snapshot_generated_at": "2026-06-14T03:28:14Z"
+  "snapshot_generated_at": "2026-06-14T04:00:58Z"
 }
