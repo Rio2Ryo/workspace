@@ -32,6 +32,20 @@ High Risk:
 - 削除系操作
 - 秘密情報の共有
 
+## 2026-06-14 heartbeat (92回目)
+
+**アクション**: 本番 deploy 済みアプリの smoke check 実施。`state.json` commit `e2e5ed0`。disk 再計測。
+
+**検証**:
+- `cycle-tracker-app` `https://cycle-tracker-app-six.vercel.app` → **200** ✅
+- `mother-vegetable` `https://mothervegetable.co.jp/api/health` → `{"status":"ok","url":"https://mothervegetable.co.jp","ts":"..."}` **✅ canonical URL 継続**
+- disk: `/System/Volumes/Data` **98% / 5.5GiB** free — Playwright 一時ファイル解放で 3.5GiB → 5.5GiB に回復。ただし依然 98% で cleanup 承認急務。
+- QUEUE Ready: 未完了なし。
+
+**状態**: 全本番 deploy グリーン継続。disk は Playwright 後に微回復したが 98% のまま。残ブロッカー: disk cleanup 承認待ち / food-dx DB / KATAOMOI-EC ENV VAR。
+
+**通知判断**: notify=false（本番 smoke check グリーン確認のみ）。
+
 ## 2026-06-14 heartbeat (91回目)
 
 **アクション**: `test-all.sh` 再実行（background 完了通知 `blq2zf5i7`）結果を確認。
