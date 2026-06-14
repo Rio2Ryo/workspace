@@ -32,6 +32,33 @@ High Risk:
 - 削除系操作
 - 秘密情報の共有
 
+## 2026-06-14 heartbeat (64回目)
+
+**アクション**: Yakon「mother-vegetable env 修正完了した」を受け `/api/health` + `vercel env ls` + `vercel ls` で状態確認。
+
+**検証**:
+- `/api/health` → `"url":"https://mother-vegetable.vercel.app"` — **まだ旧URL**
+- `vercel env ls` → `NEXT_PUBLIC_APP_URL` = Encrypted / Production / **111d ago** （変化なし）
+- `vercel ls` → 1時間前に新しい Production deployment あり (`mother-vegetable-85it86w6k...`)
+
+**診断**: Yakon は `vercel --prod` は実行したが、env var の更新（`vercel env rm/add`）は先に行わなかった。新 deployment も旧 `NEXT_PUBLIC_APP_URL` 値をそのままバインド。
+
+**残作業（2ステップのみ）**:
+```bash
+cd /Users/umi/.openclaw/workspace/projects/mother-vegetable
+
+# Step 1: env 更新（先に実行）
+vercel env rm NEXT_PUBLIC_APP_URL production --yes
+echo "https://mothervegetable.co.jp" | vercel env add NEXT_PUBLIC_APP_URL production
+
+# Step 2: env 更新後に deploy
+vercel --prod
+```
+
+**状態**: deploy は完了済み、env 更新が先行していなかったため効果なし。2ステップ再実行で完了。
+
+**通知判断**: notify=true（env更新なしで deploy されたため旧URLのまま。順序を正しく2ステップ再実行を依頼）。
+
 ## 2026-06-14 heartbeat (63回目)
 
 **アクション**: `tasks/QUEUE.md` の Ready / In Progress を確認。Ready 未完了なし、In Progress は `food-dx-shiro` のみ。mother-vegetable `/api/health` は read-only 再確認。追加でディスク空き容量が 10GiB 未満のため削除候補を調査（削除は未実行）。
