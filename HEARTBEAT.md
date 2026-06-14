@@ -32,6 +32,36 @@ High Risk:
 - 削除系操作
 - 秘密情報の共有
 
+## 2026-06-14 heartbeat (79回目)
+
+**アクション**: 全 repo tracked 差分スキャン + disk 削除候補の詳細計測。`state.json` commit `a701289`（watcher 自動更新 `06:05:26Z → 06:58:03Z`）。disk 残り 5.3GiB / 98% で `~/.npm` 6.8G・Xcode DerivedData 547M を確認。citta-ios-complete pbxproj の参照ファイルを `ls` で再確認 → `none`（ゼロ埋め UUID の参照先は不在、スキップ継続）。
+
+**検証**: `git status --short | grep -v '^??'` = 空（clean）✅。QUEUE Ready 未完了なし。
+
+---
+
+### 🔴 Yakon 承認パケット — disk cleanup
+
+| 項目 | 内容 |
+|------|------|
+| **スコープ** | npm キャッシュ + Xcode DerivedData（一時キャッシュのみ、コード無変更） |
+| **実行コマンド** | `npm cache clean --force` → 6.8G 解放 |
+| | `rm -rf ~/Library/Developer/Xcode/DerivedData` → 547M 解放 |
+| **合計解放量** | 約 7.3G → free 5.3G → **12.6G（94% → ~92%）** |
+| **ロールバック** | 不要。`npm install` 実行時にキャッシュは自動再構築。DerivedData は Xcode 初回 build で再生成。 |
+| **リスク** | **Low** — どちらも再生成可能な一時ファイル。ソースコード・DB・secrets に触れない。 |
+| **推奨** | `npm cache clean --force` を先に実行（6.8G・ゼロリスク）。DerivedData はオプション。 |
+| **期限** | 今すぐ推奨。free 5.3G → 次の重い build（Next.js/food-dx）でディスクフル失敗リスクあり。 |
+| **待機コスト** | 空きがゼロになると全 `npm run build` が fail し、workspace 全作業が止まる。 |
+
+**Yakon 確認**: `disk cleanup OK` と返答してください → 白が即実行。
+
+---
+
+**状態**: workspace clean。disk cleanup 承認パケット準備完了。残ブロッカー: food-dx-shiro DB待ち / citta-ios-complete pbxproj保留 / KATAOMOI-EC ENV VAR Yakon担当。
+
+**通知判断**: notify=true（disk 98% / 5.3G free — 早期対処を Yakon に要請）。
+
 ## 2026-06-14 heartbeat (78回目)
 
 **アクション**: `tasks/QUEUE.md` の Ready / In Progress を確認。Ready 未完了なし、In Progress は `food-dx-shiro` のみ。`food-dx-shiro` の tmux/repo/DB接続環境/handoff契約を確認。workspace tracked 変更は `projects/threads-watcher/threads-watcher-status/state.json` の watcher 自動生成 snapshot 更新のみ（`checked_at: 05:58:17Z → 06:05:26Z`、`status: partial_error → ok`、`found_count: 4 → 15`）。root-level scan で `citta-ios-complete/project.pbxproj` の既知差分も再確認。
