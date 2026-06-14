@@ -32,6 +32,16 @@ High Risk:
 - 削除系操作
 - 秘密情報の共有
 
+## 2026-06-14 heartbeat (76回目)
+
+**アクション**: Yakon「mother-vegetable の /api/health をもう一度確認して」→ `curl https://mothervegetable.co.jp/api/health` 実行。
+
+**検証**: `{"status":"ok","env":"production","url":"https://mothervegetable.co.jp\n","ts":"2026-06-14T05:28:16.371Z"}` — **✅ canonical URL 確定**。
+
+**状態**: mother-vegetable `NEXT_PUBLIC_APP_URL` 修正・redeploy・確認すべて完了 ✅。Ready 未完了なし。food-dx-shiro のみ In Progress（DB接続環境待ち）。
+
+**通知判断**: notify=true（最終確認グリーンを Yakon に報告）。
+
 ## 2026-06-14 heartbeat (75回目)
 
 **アクション**: `tasks/QUEUE.md` の Ready / In Progress を確認。Ready 未完了なし、In Progress は `food-dx-shiro` のみ。`food-dx-shiro` の tmux/repo/DB接続環境/handoff契約を確認。workspace tracked 変更は `projects/threads-watcher/threads-watcher-status/state.json` の watcher 自動生成 snapshot 更新のみ（`checked_at: 04:58:09Z → 05:05:18Z`、`status: ok → partial_error`、`found_count: 15 → 4`）だったため、heartbeat記録と合わせて整理。
