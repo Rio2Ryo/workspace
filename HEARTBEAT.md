@@ -32,6 +32,31 @@ High Risk:
 - 削除系操作
 - 秘密情報の共有
 
+## 2026-06-14 heartbeat (88回目)
+
+**アクション**: `tasks/QUEUE.md` の Ready / In Progress を確認。Ready 未完了なし、In Progress は `food-dx-shiro` のみ。`food-dx-shiro` の tmux / repo / DB接続環境 / handoff契約を再確認し、disk と threads-watcher state の自動更新も確認。
+
+**検証**:
+- QUEUE Ready 未完了なし。In Progress = `food-dx-shiro`。
+- `food-dx-shiro`: tmux `food-dx-shiro` 存在。repo `main` HEAD `4c46739` clean。
+- `npm run test:db-e2e-handoff-contract` → pass。`npm run db:check` → 想定通り `DATABASE_URL is not set` で fail（`.env.local` / `.env` / docker / psql / pg_ctl / initdb missing）。
+- disk: `/System/Volumes/Data` は 99% 使用、空き 3.0GiB。削除候補は `/Users/umi/.npm` 6.8G、`~/Library/Developer/Xcode/DerivedData` 547M。削除は High Risk（削除系操作）扱いのため未実行。
+- workspace branch `shiro/cycle-tracker-app` は origin より 1 commit ahead。push は本ティック未承認のためスキップ。
+- workspace tracked 変更は `projects/threads-watcher/threads-watcher-status/state.json` の watcher 自動 snapshot 更新のみ（`checked_at: 09:31:30Z → 10:06:09Z`、`partial_error` 継続）。
+
+**状態**: Ready 未完了なし。`food-dx-shiro` は DB 接続環境待ち継続。次アクションは DB接続環境で `npm run db:e2e:handoff` の手順を実行し、seed後の日本語E2E結果を報告フォーマットで回収すること。threads-watcher は外部要因の partial_error 継続でローカル対処なし。disk は 3.0GiB まで低下し、次の重い build / install / test で失敗する可能性が高い。
+
+**Yakon 承認パケット — disk cleanup 再提示**:
+- 目的: build / test / install 失敗を避けるため、一時キャッシュのみ削除して空き容量を回復する。
+- 現担当: 白。
+- 現状: free 3.0GiB / 99%。`~/.npm` 6.8G、Xcode DerivedData 547M。
+- 次アクション: Yakon が `disk cleanup OK` と返答したら、まず `npm cache clean --force` を実行。必要なら続けて `rm -rf ~/Library/Developer/Xcode/DerivedData`。
+- 詰まり: 削除系操作のため承認待ち。
+- 支援候補: Yakon。
+- 期限: 今すぐ推奨。放置すると workspace 全体の build / test がディスク不足で止まる可能性が高い。
+
+**通知判断**: notify=true（disk が 3.0GiB / 99% まで低下し、既提出時より運用リスクが上がったため Yakon に割り込み確認）。
+
 ## 2026-06-14 heartbeat (87回目)
 
 **アクション**: second-brain API の Vitest test suite を再確認（前回確認: コンテキスト圧縮前）。workspace remote tracking 状態も再確認。
