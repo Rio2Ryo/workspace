@@ -32,6 +32,21 @@ High Risk:
 - 削除系操作
 - 秘密情報の共有
 
+## 2026-06-14 heartbeat (94回目)
+
+**アクション**: recruit-ai-crm（直近 commit `3ce771b` LINE apply ハードニング）の lint / build を初確認。slide-tool / daily-report-app / mail-manager のスクリプト有無も確認。`state.json` commit `4d74c03`。
+
+**検証**:
+- `recruit-ai-crm` `npm run lint` → exit 0 ✅
+- `recruit-ai-crm` `npm run build` → `✓ Compiled successfully` / `✓ Generating static pages (47/47)` ✅
+- slide-tool: `test` / `build` / `lint` スクリプトなし（静的ツール）
+- disk: `/System/Volumes/Data` **97% / 6.5GiB** — Playwright 一時ファイル解放後さらに回復（98%→97%）
+- workspace tracked 変更: `state.json` commit `4d74c03` のみ ✅
+
+**状態**: recruit-ai-crm lint/build グリーン確認。全ローカル品質ゲート（recruit-ai-crm / food-dx / cycle-tracker / top3 / second-brain）グリーン継続。disk 97% / 6.5GiB で改善傾向だが cleanup はまだ要望。
+
+**通知判断**: notify=false（recruit-ai-crm 検証グリーンのみ）。
+
 ## 2026-06-14 heartbeat (93回目)
 
 **アクション**: `tasks/QUEUE.md` の Ready / In Progress を確認。Ready 未完了なし、In Progress は `food-dx-shiro` のみ。`food-dx-shiro` の tmux / repo / DB接続環境 / handoff契約を再確認し、disk と threads-watcher state の自動更新も確認。
