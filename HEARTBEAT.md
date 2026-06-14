@@ -32,6 +32,22 @@ High Risk:
 - 削除系操作
 - 秘密情報の共有
 
+## 2026-06-15 heartbeat (100回目)
+
+**アクション**: `tasks/QUEUE.md` の Ready / In Progress を確認。Ready 未完了なし、In Progress は `food-dx-shiro` のみ。`food-dx-shiro` の tmux / repo / DB接続環境 / handoff契約を再確認し、disk と threads-watcher state 自動更新、別セッション由来の未コミット差分を確認。
+
+**検証**:
+- QUEUE Ready 未完了なし。In Progress = `food-dx-shiro`。
+- `food-dx-shiro`: tmux `food-dx-shiro` 存在。repo `main` HEAD `4c46739`、tracked 変更なし。
+- `npm run test:db-e2e-handoff-contract` → pass。
+- `npm run db:check` → 想定通り `DATABASE_URL is not set` で fail（`.env.local` / `.env` / docker / psql / pg_ctl / initdb missing）。
+- disk: `/System/Volumes/Data` は 97% 使用、空き 6.3GiB。
+- workspace tracked 変更: `projects/threads-watcher/threads-watcher-status/state.json` の watcher 自動 snapshot 更新（`checked_at: 14:07:24Z → 15:06:10Z`、`partial_error` 継続）と、別セッション由来の `memory/2026-06-14.md` 変更を確認。`memory/2026-06-14.md` は Yakon の「既存cron全停止とShiro Loop v2着手」記録で、今回のheartbeatでは編集・巻き戻しなし。
+
+**状態**: Ready 未完了なし。`food-dx-shiro` は DB 接続環境待ち継続。次アクションは DB接続環境で `npm run db:e2e:handoff` の手順を実行し、seed後の日本語E2E結果を報告フォーマットで回収すること。disk cleanup / KATAOMOI-EC ENV VAR / citta-ios push は既存承認待ち。別セッション由来のLoop v2差分は所有者不明のため、このheartbeatでは触らない。
+
+**通知判断**: notify=false（新規障害なし。既知のDB待ち・disk cleanup承認待ち・自動state更新のみ）。
+
 ## 2026-06-14 heartbeat (99回目)
 
 **アクション**: `tasks/QUEUE.md` の Ready / In Progress を確認。Ready 未完了なし、In Progress は `food-dx-shiro` のみ。`food-dx-shiro` の tmux / repo / DB接続環境 / handoff契約を再確認し、workspace の push後状態・workflowファイル有無・disk・threads-watcher state 自動更新を確認。
