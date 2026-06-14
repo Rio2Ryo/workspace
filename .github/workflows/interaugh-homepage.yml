@@ -1,0 +1,33 @@
+name: Interaugh Homepage CI
+
+on:
+  pull_request:
+    paths:
+      - "projects/interaugh-homepage/**"
+      - ".github/workflows/interaugh-homepage.yml"
+  push:
+    paths:
+      - "projects/interaugh-homepage/**"
+      - ".github/workflows/interaugh-homepage.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: projects/interaugh-homepage
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 9
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: pnpm
+          cache-dependency-path: projects/interaugh-homepage/pnpm-lock.yaml
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm check
