@@ -1677,3 +1677,29 @@ GitHub Settings → Developer settings → Personal access tokens
 - citta-ios / citta-ios-complete: Yakon merge 戦略待ち
 
 **次アクション**: 外部承認が来るまでローカル品質維持継続。
+
+## 2026-06-14 heartbeat — PAT workflow scope ブロッカー承認パケット
+
+**アクション**: `git push origin shiro/cycle-tracker-app` を試みたが、`refusing to allow a Personal Access Token to create or update workflow without 'workflow' scope` で拒否。commit `2235123`（interaugh CI workflow 復元）が `.github/workflows/interaugh-homepage.yml` を含むため構造的にブロック。
+
+**根本原因**: PAT に `workflow` スコープが付与されていない。このスコープなしに workflow ファイルを含む push は GitHub に拒否される。
+
+---
+
+### Yakon 承認パケット — PAT workflow scope 追加（推奨）
+
+**スコープ**: GitHub PAT の権限に `workflow` を追加する。
+
+**正確な手順（Option A・推奨）**:
+1. https://github.com/settings/tokens → 該当 PAT を選択 → `workflow` にチェック → Save
+2. 「workflow scope OK」と返信 → Shiro が次 tick で `git push` 実行
+
+**ロールバック**: `workflow` チェックを外すだけで即時に元の権限に戻る。リスクは PAT 漏洩時のみ（当 repo の workflow は interaugh CI / read-only `pnpm check` のみ）。
+
+**代替案 B（推奨度低）**: commit `2235123` を revert → workflow ファイルを再削除 → 現 PAT のまま push 可。CI が失われる。「revert OK」と返信でこちらを実行。
+
+**推奨**: **Option A**（PAT workflow scope 追加）。CI 維持 + push 解決。
+
+**期限**: 設定なし。ahead commits 蓄積が続くと conflict リスク微増。
+
+**Yakon の回答形式**: 「workflow scope OK」または「revert OK」の一言で対応可。
