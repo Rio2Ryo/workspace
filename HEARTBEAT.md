@@ -32,6 +32,49 @@ High Risk:
 - 削除系操作
 - 秘密情報の共有
 
+## 2026-06-15 heartbeat (116回目)
+
+**アクション**: `tasks/QUEUE.md` の Ready / In Progress を確認。Ready 未完了なし、In Progress は `food-dx-shiro` のみ。停止判定に従い、`food-dx-shiro` の tmux / repo / DB接続環境 / handoff契約を再確認し、DB待ち中の品質劣化がないか API lint / API build / Web build も確認。
+
+**検証**:
+- QUEUE Ready 未完了なし。In Progress = `food-dx-shiro`。
+- `food-dx-shiro`: tmux `food-dx-shiro` 存在。直近 pane の controller 文 shell 誤投入状態は前回から変化なし。今回のheartbeatでは自然文の tmux 直送は実施していない。
+- repo `/Users/umi/.openclaw/workspace/food-dx-qwen/food-dx-system`: branch `main`、HEAD `4c46739`、tracked 変更なし。
+- `.env.local` は存在するが、process env の `DATABASE_URL` は未設定。`npm run db:check` は `.env.local` の localhost:5432 を読み、TCP接続不能で想定通り fail。`docker` / `psql` / `pg_ctl` / `initdb` は missing。
+- `npm run test:db-e2e-handoff-contract` → pass。
+- `npm run db:e2e:handoff` → 判断依頼サマリーは「Yakonさんにお願いしたいこと: なし」、引き継ぎパケットは `目的 / 現担当 / 現状 / 次アクション / 詰まり / 支援候補 / 期限` 形式を維持。
+- `npm run lint --workspace=@food-dx/api` → pass。
+- `npm run build:api` → pass。
+- `npm run build:web` → pass（Next.js plugin warning のみ、21 pages generated）。
+- disk: `/System/Volumes/Data` は 98% 使用、空き 5.4GiB。既存の disk cleanup 承認待ち範囲内。削除系操作は未実行。
+- workspace branch `shiro/cycle-tracker-app` は origin より 1 commit ahead（`6b8ccb2 chore: add interaugh QA screenshots (84 files) and session-thread-overrides`）。push は外部反映のため未実行。
+- workspace tracked 変更: `HEARTBEAT.md` の本記録、`memory/2026-06-15.md`、`ops/shiro-workflow-controller.mjs`、`process/STATUS.md`、`process/rakui-done-packet.md`、`projects/threads-watcher/threads-watcher-status/state.json`、`second-brain` submodule 状態を確認。今回のheartbeatでは既存差分の巻き戻しなし。
+
+**状態**: Ready 未完了なし。`food-dx-shiro` は担当=白、次アクションは DB接続環境で `npm run db:e2e:handoff` の手順を実行し、seed後の日本語E2E結果を固定形式で回収すること。詰まりは技術環境待ち（PostgreSQL localhost:5432 未起動 / DB接続）。disk cleanup / RAKUI [DONE] packet / food-dx DB は既存承認待ちで、新規判断依頼なし。
+
+**通知判断**: notify=false（新規障害なし。既知のDB待ち・disk cleanup承認待ち・品質ゲート再確認のみ）。
+
+## 2026-06-15 heartbeat (115回目)
+
+**アクション**: `tasks/QUEUE.md` の Ready / In Progress を確認。Ready 未完了なし、In Progress は `food-dx-shiro` のみ。停止判定に従い、`food-dx-shiro` の tmux / repo / DB接続環境 / handoff契約を再確認し、DB待ち中の品質劣化がないか API lint / API build / Web build も確認。
+
+**検証**:
+- QUEUE Ready 未完了なし。In Progress = `food-dx-shiro`。
+- `food-dx-shiro`: tmux `food-dx-shiro` 存在。ただし直近 pane には controller 文が shell に投入され `zsh: command not found: Shiro` が複数残っているため、次回再投入時は自然文を shell に直送しない運用に注意。
+- repo `/Users/umi/.openclaw/workspace/food-dx-qwen/food-dx-system`: branch `main`、HEAD `4c46739`、tracked 変更なし。
+- `.env.local` は存在するが、process env の `DATABASE_URL` は未設定。`npm run db:check` は `.env.local` の localhost:5432 を読み、TCP接続不能で想定通り fail。`docker` / `psql` / `pg_ctl` / `initdb` は missing。
+- `npm run test:db-e2e-handoff-contract` → pass。
+- `npm run db:e2e:handoff` → 判断依頼サマリーは「Yakonさんにお願いしたいこと: なし」、引き継ぎパケットは `目的 / 現担当 / 現状 / 次アクション / 詰まり / 支援候補 / 期限` 形式を維持。
+- `npm run lint --workspace=@food-dx/api` → pass。
+- `npm run build:api` → pass。
+- `npm run build:web` → pass（Next.js plugin warning のみ、21 pages generated）。
+- disk: `/System/Volumes/Data` は 97% 使用、空き 6.5GiB。既存の disk cleanup 承認待ち範囲内。削除系操作は未実行。
+- workspace tracked 変更: `HEARTBEAT.md` の本記録、`process/rakui-done-packet.md`、`projects/threads-watcher/threads-watcher-status/state.json`、`second-brain` submodule 状態を確認。今回のheartbeatでは既存差分の巻き戻しなし。
+
+**状態**: Ready 未完了なし。`food-dx-shiro` は担当=白、次アクションは DB接続環境で `npm run db:e2e:handoff` の手順を実行し、seed後の日本語E2E結果を固定形式で回収すること。詰まりは技術環境待ち（PostgreSQL localhost:5432 未起動 / DB接続）。disk cleanup / RAKUI [DONE] packet / food-dx DB は既存承認待ちで、新規判断依頼なし。
+
+**通知判断**: notify=false（新規障害なし。既知のDB待ち・disk cleanup承認待ち・品質ゲート再確認のみ）。
+
 ## 2026-06-15 heartbeat (114回目)
 
 **アクション**: `tasks/QUEUE.md` の Ready / In Progress を確認。Ready 未完了なし、In Progress は `food-dx-shiro` のみ。停止判定に従い、`food-dx-shiro` の tmux / repo / DB接続環境 / handoff契約を再確認し、DB待ち中の品質劣化がないか API lint / API build / Web build も確認。
@@ -2312,6 +2355,8 @@ npm run build:api && npm run build:web
   - Alias: `https://shiro-phase2-perf-metrics.second-brain-web-73y.pages.dev`
 - **API live smoke**: `GET /health` → `{"status":"ok","timestamp":"2026-06-15T01:37:36.143Z"}` ✅
 - **Web live smoke**: HTML 200、`<title>Second Brain — ナレッジ管理</title>` ✅
+
+**Tick 93 (2026-06-15)**: Discord Missing Access を確認。RAKUI threadId を `null` → `1510430269822468166`（`#sora-hermes/Real Estate Investment Decision App`）に修正し `state/shiro-workflows/workflows.json` を更新（次回 controller 起動時に dispatch 対象になる）。food-dx lint 全ワークスペース 0 errors/0 warnings 再確認。承認パケット両件とも Discord 投稿は controller 経由待ち。
 
 **Tick 92 (2026-06-15)**: food-dx `.env.local` 作成（`.env.example` からコピー、gitignore済み、本番無関係）。`check-db-ready` エラーが「DATABASE_URL未設定」→「TCP接続不能(localhost:5432)」に前進。PostgreSQL さえ起動すれば即 `db:push && db:seed` 実行可能。STATUS.md に second-brain 完了・food-dx ブロッカー状態を追記。cycle-tracker-app e2e 全6シナリオ PASS 再確認。
 

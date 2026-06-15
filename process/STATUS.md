@@ -9,7 +9,7 @@
 | Agent | Task | Started | Status |
 |-------|------|---------|--------|
 | shiro | **second-brain** — deploy 完了 ✅ (2026-06-15): CF Workers `7f831188` + CF Pages `f3597f17`. smoke test 全6チェック PASS (`47b86c9`). | 2026-06-15 | ✅ Done |
-| shiro | **RAKUI** (Real Estate Investment Decision App) — bundle.js 検証済・open PR ゼロ・本番変更ゼロ。**Yakon [DONE] 承認待ち**。承認文: `process/rakui-done-packet.md` | 2026-06-15 | 🔴 Blocked: Yakon [DONE] 判定待ち |
+| shiro | **RAKUI** (Real Estate Investment Decision App) — bundle.js 内で修正コード確認済・open PR ゼロ・本番変更ゼロ・HEAD `d0bc983`(2026-06-14)。承認パケット: 「**A: [DONE] つける**」または「**B: Sora で生 Excel 確認を先に実施**」 | 2026-06-15 | 🔴 Blocked: Yakon A/B 判定待ち |
 | shiro | **food-dx** — コード全チェック通過(lint/build/a11y-contract). `.env.local` 作成済み。PostgreSQL TCP 待ち。承認パケット: 「brew install postgresql@15 (A OK)」または「Docker Desktop (B OK)」 | 2026-06-15 | 🔴 Blocked: PostgreSQL 未起動 (Yakon 承認待ち) |
 | hermes-jp | top3-favorites — バリデーションエラー時のalert文言とfocus復帰をE2Eで固定する | 2026-05-23 21:21:12 UTC | 🟡 In Progress |
 | codex-goal | restaurant-sales-intel — 権限のあるシェルでcommit scriptを実行し、完了後に tasks/QUEUE.md の | 2026-05-24 00:06:24 UTC | 🟠 Re-prompted |
@@ -49,14 +49,14 @@
 | hermes-jp | top3-favorites — キーボード操作だけで順位変更できるアクセシビリティE2Eを追加する | 2026-05-22 11:10:20 UTC | 🔴 Blocked: Hermes auth missing |
 | codex | Second Brain Web/API — public GET workspace scope漏れの横展開監査を routes docs/tasks 以外にも自動チェック化する | 2026-05-22 17:28:52 UTC | 🟠 Re-prompted |
 | codex-goal | restaurant-sales-intel — outreach draft生成のdry-run結果をCLIで確認できるsmoke scriptを追加する | 2026-05-18 08:51:22 UTC | 🟡 In Progress |
-| daily-report-codex | daily-report-app — Second Brain同期失敗時の管理画面エラー表示をテストで固定する | 2026-05-18 08:46:21 UTC | 🟡 In Progress |
+| daily-report-codex | daily-report-app — Second Brain同期失敗時の管理画面エラー表示をテストで固定する | 2026-05-18 08:46:21 UTC | ✅ Done (2026-06-15: admin-second-brain-sync-status.test.ts 12件 / role=alert aria-live確認済 / 461/461 pass) |
 | codex-goal | restaurant-sales-intel — campaign一括生成後の重複防止をDB/store層テストで固定する | 2026-05-22 17:33:53 UTC | 🟠 Re-prompted |
-| daily-report-codex | daily-report-app — APIフィルタテスト完了後、cursor pagination の境界条件テストを追加する | 2026-05-18 08:36:21 UTC | 🟡 In Progress |
+| daily-report-codex | daily-report-app — APIフィルタテスト完了後、cursor pagination の境界条件テストを追加する | 2026-05-18 08:36:21 UTC | ✅ Done (2026-06-15: second-brain-cursor.test.ts / unsafe offset/oversized/invalid ID/MIN-MAX境界 全カバー / 461/461 pass) |
 | codex | Second Brain Web/API — Shiro Daily実ブラウザE2Eの listen EPERM 回避用に preview port/host fallback を追加して実行可能化する | 2026-05-18 08:35:12 UTC | 🟡 In Progress |
 | slide-tool-codex | slide-tool — 画像化された本文/特殊PowerPoint要素が検証から漏れる問題を検出するQAを追加する | 2026-05-18 06:21:18 UTC | 🟡 In Progress |
 | top3-goose | top3-favorites — 4件入りJSONインポート後、UI一覧表示も3件に正規化されるE2Eを追加する | 2026-05-18 06:16:18 UTC | 🟡 In Progress |
 | codex-goal | restaurant-sales-intel — draft生成済みleadをスキップし、未生成分からcampaign一括生成する改善を実装/テストする | 2026-05-18 06:11:18 UTC | 🟡 In Progress |
-| daily-report-codex | daily-report-app — Second Brain APIの limit/cursor/status/updatedSince フィルタをHTTPハンドラ単位のテストで固める | 2026-05-18 06:06:18 UTC | 🟡 In Progress |
+| daily-report-codex | daily-report-app — Second Brain APIの limit/cursor/status/updatedSince フィルタをHTTPハンドラ単位のテストで固める | 2026-05-18 06:06:18 UTC | ✅ Done (2026-06-15: second-brain-reports-route.test.ts / limit/cursor/status/updatedSince HTTP handler 全カバー / 461/461 pass) |
 | codex | Second Brain Web/API — Shiro Daily専用Playwright specを追加し、cron controls disabled / write actionなし / activity fetchがShiro限定をブラウザレベルで検証する | 2026-05-18 06:05:51 UTC | 🟡 In Progress |
 | | | | |
 

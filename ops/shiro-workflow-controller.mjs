@@ -18,6 +18,7 @@ const APPROVAL_DISPATCH_FILE = path.join(WORKFLOW_DIR, 'approval-dispatch.json')
 const THREAD_REGISTRY_FILE = path.join(ROOT, 'state/shiro-channel-thread-registry.json');
 const TASK_MAP_FILE = path.join(ROOT, 'ops/task-session-map.json');
 const POLICY_FILE = path.join(ROOT, 'ops/session-policies.json');
+const SESSION_THREAD_OVERRIDES_FILE = path.join(ROOT, 'ops/session-thread-overrides.json');
 const LEGACY_STATE_FILE = path.join(ROOT, 'state/shiro-loop/state.json');
 const LEGACY_REPORT_FILE = path.join(ROOT, 'state/shiro-loop/last-report.json');
 
@@ -186,7 +187,7 @@ function extractExactAction(recent) {
 
 function isConcreteApprovalPacket(packet) {
   if (!packet) return false;
-  if (isNonDecisionAction(packet.exactAction) || isNonDecisionAction(packet.evidence)) return false;
+  if (isNonDecisionAction(packet.exactAction)) return false;
   const fields = [
     packet.subject,
     packet.recommendedDecision,
@@ -195,7 +196,9 @@ function isConcreteApprovalPacket(packet) {
     packet.rollback,
     packet.waitImpact,
   ];
-  return fields.every((value) => typeof value === 'string' && value.trim().length >= 8);
+  return fields.every((value) => typeof value === 'string' && value.trim().length >= 8)
+    && typeof packet.evidence === 'string'
+    && packet.evidence.trim().length >= 4;
 }
 
 function isNonDecisionAction(text) {
@@ -227,14 +230,26 @@ function mapThreadBySession(registry) {
   return map;
 }
 
-function buildInventory({ tmuxSessions, registry, taskBySession, previous }) {
+function overrideForSession(session, overrides) {
+  if (!session) return null;
+  return overrides.sessions?.[session] || null;
+}
+
+function buildInventory({ tmuxSessions, registry, taskBySession, previous, threadOverrides }) {
   const items = new Map();
+  const overrideEntries = Object.entries(threadOverrides.sessions || {});
+  const overrideByThread = new Map(overrideEntries.map(([session, override]) => [override.threadId, session]).filter(([threadId]) => threadId));
 
   for (const session of tmuxSessions.filter((name) => name.startsWith('shiro-'))) {
     items.set(session, { session, source: 'tmux' });
   }
 
+  for (const [session, override] of overrideEntries) {
+    if (!items.has(session)) items.set(session, { session, source: 'override', threadId: override.threadId || null });
+  }
+
   for (const thread of registry.threads || []) {
+    if (overrideByThread.has(thread.threadId)) continue;
     const session = thread.tmuxSession || thread.tmuxSessionGuess || null;
     const key = session || `thread:${thread.threadId}`;
     if (!items.has(key)) items.set(key, {
@@ -250,6 +265,8 @@ function buildInventory({ tmuxSessions, registry, taskBySession, previous }) {
   }
 
   for (const workflow of previous.workflows || []) {
+    if (!workflow.session && !workflow.threadId) continue;
+    if (workflow.threadId && overrideByThread.has(workflow.threadId)) continue;
     const key = workflow.session || `thread:${workflow.threadId}`;
     if (key && !items.has(key)) items.set(key, { session: workflow.session || null, source: 'previous', threadOnly: !workflow.session });
   }
@@ -285,14 +302,14 @@ function buildApprovalPacket({ session, title, recent, risk, decisionKind, evide
   };
 }
 
-function classifyWorkflow({ item, task, thread, policy, previous, tmuxOutput, captureError, legacy }) {
-  const title = thread?.name || task?.title || item.session || `thread:${thread?.threadId || 'unknown'}`;
+function classifyWorkflow({ item, task, thread, override, policy, previous, tmuxOutput, captureError, legacy }) {
+  const title = override?.title || thread?.name || task?.title || item.session || `thread:${thread?.threadId || override?.threadId || 'unknown'}`;
   const recent = recentText(tmuxOutput || '');
   const fingerprint = hash(`${title}\n${recent}`);
   const changed = previous?.fingerprint !== fingerprint;
   const lastChangedAt = changed ? now : previous?.lastChangedAt || now;
   const hasTmux = Boolean(item.session && !captureError);
-  const doneThread = /^\[DONE\]/.test(title);
+  const doneThread = Boolean(override?.doneThread) || /^\[DONE\]/.test(title);
   const prompt = matches(PROMPT_PATTERNS, recent.slice(-1600));
   const active = matches(ACTIVE_PATTERNS, recent);
   const highRisk = matches(HIGH_RISK_PATTERNS, recent);
@@ -302,6 +319,10 @@ function classifyWorkflow({ item, task, thread, policy, previous, tmuxOutput, ca
   const resultObserved = isResultEvidence(resultEvidence, recent);
   const doneCandidate = matches(DONE_PATTERNS, recent) || (resultObserved && /完了|done|no issues/i.test(recent));
   const safeAction = matches(SAFE_ACTION_PATTERNS, recent);
+  const busySpinner = /[✻✳✶✽✢].*(tokens|thinking|thought)/i.test(recent);
+  const completionMarker = /(?:^|\n)\s*(RESULT_OBSERVED|APPROVAL_PACKET_READY|BLOCKED_CONCRETE|STILL_RUNNING)\b/i.test(recent);
+  const bootstrapOnly = /Shiro bootstrap for Discord thread|produce one of: RESULT_OBSERVED|Remote Control failed to connect: Session creation failed/i.test(recent)
+    && !completionMarker;
 
   let status = 'watching';
   let decisionKind = 'watch';
@@ -312,6 +333,14 @@ function classifyWorkflow({ item, task, thread, policy, previous, tmuxOutput, ca
   } else if (!hasTmux) {
     status = 'needs_session';
     decisionKind = 'bootstrap-session';
+    risk = 'low';
+  } else if (bootstrapOnly) {
+    status = 'active';
+    decisionKind = 'watch';
+    risk = 'low';
+  } else if ((active || busySpinner) && !completionMarker) {
+    status = 'active';
+    decisionKind = 'watch';
     risk = 'low';
   } else if (blocked) {
     status = 'blocked';
@@ -367,7 +396,7 @@ function classifyWorkflow({ item, task, thread, policy, previous, tmuxOutput, ca
   return {
     id: item.session || `thread:${thread?.threadId || hash(title).slice(0, 8)}`,
     session: item.session || null,
-    threadId: thread?.threadId || task?.discordThreadId || previous?.threadId || null,
+    threadId: thread?.threadId || override?.threadId || task?.discordThreadId || previous?.threadId || null,
     title,
     source: item.source,
     status,
@@ -508,7 +537,7 @@ function buildHumanMessage(report) {
     lines.push('');
     lines.push('成果確認済み:');
     results.slice(0, 6).forEach((item) => {
-      lines.push(`- ${item.session || item.title}: ${item.verification.evidence || item.evidence}`);
+      lines.push(`- ${item.session || item.title}: ${displayEvidence(item.verification.evidence || item.evidence)}`);
     });
     if (results.length > 6) lines.push(`- 他 ${results.length - 6}件`);
   }
@@ -517,7 +546,7 @@ function buildHumanMessage(report) {
     lines.push('');
     lines.push('具体ブロッカー:');
     blocked.slice(0, 6).forEach((item) => {
-      lines.push(`- ${item.session || item.title}: ${item.evidence || item.nextAutoAction}`);
+      lines.push(`- ${item.session || item.title}: ${displayEvidence(item.evidence || item.nextAutoAction)}`);
     });
     if (blocked.length > 6) lines.push(`- 他 ${blocked.length - 6}件`);
   }
@@ -535,6 +564,17 @@ function buildHumanMessage(report) {
   lines.push(`事実: workflow ${report.summary.total} / approvalReady ${report.summary.approvalReady} / resultObserved ${report.summary.resultObserved} / actionsSent ${report.summary.actionsSent}`);
   lines.push('次: 次回tickで resultObserved または approvalPacket.ready になったものだけ報告します。');
   return lines.join('\n');
+}
+
+function displayEvidence(text) {
+  const value = String(text || '')
+    .replace(/^❯\s*/, '')
+    .replace(/⏵⏵.*$/g, '')
+    .replace(/Shiro bootstrap for Discord thread:.*$/i, '起動直後。初回結果待ち。')
+    .replace(/\s+/g, ' ')
+    .trim();
+  if (!value) return '詳細確認中';
+  return value.slice(0, 180);
 }
 
 function buildApprovalRequests(workflows, dispatchState) {
@@ -586,6 +626,7 @@ async function main() {
   const registry = readJson(THREAD_REGISTRY_FILE, { threads: [] });
   const taskMap = readJson(TASK_MAP_FILE, { sessions: [] });
   const policies = readJson(POLICY_FILE, { default: {} });
+  const threadOverrides = readJson(SESSION_THREAD_OVERRIDES_FILE, { sessions: {} });
   const previous = readJson(WORKFLOW_FILE, { version: 3, workflows: [] });
   const approvalDispatchState = readJson(APPROVAL_DISPATCH_FILE, { version: 1, sent: {} });
   const legacyState = readJson(LEGACY_STATE_FILE, { sessions: {} });
@@ -594,7 +635,7 @@ async function main() {
   const taskBySession = mapBySession(taskMap);
   const threadBySession = mapThreadBySession(registry);
   const tmuxSessions = await listTmuxSessions();
-  const inventory = buildInventory({ tmuxSessions, registry, taskBySession, previous });
+  const inventory = buildInventory({ tmuxSessions, registry, taskBySession, previous, threadOverrides });
   const legacyBySession = new Map((legacyReport.results || []).map((item) => [item.session, item]));
 
   const workflows = [];
@@ -606,6 +647,7 @@ async function main() {
     const session = item.session;
     const thread = session ? threadBySession.get(session) : (registry.threads || []).find((t) => t.threadId === item.threadId) || null;
     const task = session ? taskBySession.get(session) : null;
+    const override = overrideForSession(session, threadOverrides);
     const policy = policyFor(session, policies);
     const id = session || `thread:${thread?.threadId || hash(JSON.stringify(item)).slice(0, 8)}`;
     const prev = previousById.get(id) || {};
@@ -622,6 +664,7 @@ async function main() {
       item,
       task,
       thread,
+      override,
       policy,
       previous: prev,
       tmuxOutput,
