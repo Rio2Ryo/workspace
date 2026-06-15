@@ -1,0 +1,51 @@
+[
+  {
+    "slide": 1,
+    "title": "AIでスライドを作る最新ワークフロー",
+    "role": "cover/key visual",
+    "modelIntent": "GPT Image 2 / ChatGPT Images 2.0 prompt only; do not run paid API without approval",
+    "prompt": "Premium editorial cover for a presentation titled \"AIでスライドを作る最新ワークフロー\". Abstract workflow from chat bubbles to HTML canvas to editable PowerPoint slides. Clean Japanese business design, warm neutral paper, precise blue-green accents, no readable tiny text."
+  },
+  {
+    "slide": 2,
+    "title": "なぜ今変えるか",
+    "role": "diagram/icon/support visual",
+    "modelIntent": "GPT Image 2 / ChatGPT Images 2.0 prompt only; do not run paid API without approval",
+    "prompt": "Create a 16:9 presentation visual for \"AIでスライドを作る最新ワークフロー / なぜ今変えるか\". Use a premium Japanese business editorial style, artifact/HTML canvas motif, subtle warm paper background, blue and teal accents, crisp diagram-like composition. Leave safe empty space for editable slide text. Avoid logos, fake UI screenshots, dense text, and decorative clutter."
+  },
+  {
+    "slide": 3,
+    "title": "標準フロー",
+    "role": "diagram/icon/support visual",
+    "modelIntent": "GPT Image 2 / ChatGPT Images 2.0 prompt only; do not run paid API without approval",
+    "prompt": "Create a 16:9 presentation visual for \"AIでスライドを作る最新ワークフロー / 標準フロー\". Use a premium Japanese business editorial style, artifact/HTML canvas motif, subtle warm paper background, blue and teal accents, crisp diagram-like composition. Leave safe empty space for editable slide text. Avoid logos, fake UI screenshots, dense text, and decorative clutter."
+  },
+  {
+    "slide": 4,
+    "title": "ツールの使い分け",
+    "role": "diagram/icon/support visual",
+    "modelIntent": "GPT Image 2 / ChatGPT Images 2.0 prompt only; do not run paid API without approval",
+    "prompt": "Create a 16:9 presentation visual for \"AIでスライドを作る最新ワークフロー / ツールの使い分け\". Use a premium Japanese business editorial style, artifact/HTML canvas motif, subtle warm paper background, blue and teal accents, crisp diagram-like composition. Leave safe empty space for editable slide text. Avoid logos, fake UI screenshots, dense text, and decorative clutter."
+  },
+  {
+    "slide": 5,
+    "title": "内製フローの役割分担",
+    "role": "diagram/icon/support visual",
+    "modelIntent": "GPT Image 2 / ChatGPT Images 2.0 prompt only; do not run paid API without approval",
+    "prompt": "Create a 16:9 presentation visual for \"AIでスライドを作る最新ワークフロー / 内製フローの役割分担\". Use a premium Japanese business editorial style, artifact/HTML canvas motif, subtle warm paper background, blue and teal accents, crisp diagram-like composition. Leave safe empty space for editable slide text. Avoid logos, fake UI screenshots, dense text, and decorative clutter."
+  },
+  {
+    "slide": 6,
+    "title": "品質基準",
+    "role": "diagram/icon/support visual",
+    "modelIntent": "GPT Image 2 / ChatGPT Images 2.0 prompt only; do not run paid API without approval",
+    "prompt": "Create a 16:9 presentation visual for \"AIでスライドを作る最新ワークフロー / 品質基準\". Use a premium Japanese business editorial style, artifact/HTML canvas motif, subtle warm paper background, blue and teal accents, crisp diagram-like composition. Leave safe empty space for editable slide text. Avoid logos, fake UI screenshots, dense text, and decorative clutter."
+  },
+  {
+    "slide": 7,
+    "title": "次に試す依頼",
+    "role": "diagram/icon/support visual",
+    "modelIntent": "GPT Image 2 / ChatGPT Images 2.0 prompt only; do not run paid API without approval",
+    "prompt": "Create a 16:9 presentation visual for \"AIでスライドを作る最新ワークフロー / 次に試す依頼\". Use a premium Japanese business editorial style, artifact/HTML canvas motif, subtle warm paper background, blue and teal accents, crisp diagram-like composition. Leave safe empty space for editable slide text. Avoid logos, fake UI screenshots, dense text, and decorative clutter."
+  }
+]

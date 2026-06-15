@@ -1,0 +1,85 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>AIでスライドを作る最新ワークフロー</title>
+  <style>
+    :root {
+      --bg: #F6F3EE;
+      --paper: #FFFDF8;
+      --ink: #172033;
+      --muted: #667085;
+      --accent: #2563EB;
+      --accent2: #0F766E;
+      --warm: #C2410C;
+      --line: #D8DEE8;
+    }
+    * { box-sizing: border-box; }
+    body { margin: 0; background: #211f1b; color: var(--ink); font-family: "Hiragino Sans", "Yu Gothic", system-ui, sans-serif; }
+    main { display: grid; gap: 28px; padding: 28px; }
+    .slide { position: relative; width: min(1280px, calc(100vw - 56px)); aspect-ratio: 16 / 9; margin: 0 auto; overflow: hidden; background: var(--bg); padding: 64px 76px; box-shadow: 0 18px 50px rgba(0,0,0,.28); }
+    .slide::before { content: ""; position: absolute; inset: 0; background: linear-gradient(135deg, rgba(255,255,255,.72), rgba(255,255,255,0) 46%), radial-gradient(circle at 90% 12%, rgba(37,99,235,.18), transparent 28%), radial-gradient(circle at 15% 92%, rgba(194,65,12,.13), transparent 34%); pointer-events: none; }
+    .slide > * { position: relative; z-index: 1; }
+    .kicker { font-size: 14px; color: var(--muted); letter-spacing: .06em; text-transform: uppercase; margin-bottom: 42px; }
+    h1 { font-size: 78px; line-height: .96; letter-spacing: 0; width: 72%; margin: 0 0 26px; }
+    h2 { font-size: 52px; line-height: 1.02; letter-spacing: 0; width: 78%; margin: 0 0 18px; }
+    h3 { font-size: 20px; margin: 0 0 8px; color: var(--accent); }
+    p, li { font-size: 23px; line-height: 1.38; }
+    .subtitle { width: 74%; color: var(--muted); font-size: 26px; }
+    .claim { width: 70%; font-size: 28px; line-height: 1.25; color: var(--accent2); font-weight: 700; }
+    ul, ol { width: 62%; padding-left: 1.2em; margin-top: 30px; }
+    .grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 22px; margin-top: 40px; }
+    article { min-height: 132px; border-top: 3px solid var(--accent); padding-top: 16px; }
+    article p { font-size: 18px; color: var(--ink); margin: 0; }
+    .process ol { counter-reset: step; display: grid; grid-template-columns: repeat(2, minmax(0,1fr)); gap: 22px 44px; width: 84%; padding: 0; list-style: none; }
+    .process ol li { position: relative; padding-left: 54px; min-height: 54px; }
+    .process ol li::before { counter-increment: step; content: counter(step); position: absolute; left: 0; top: 0; width: 36px; height: 36px; border-radius: 50%; background: var(--ink); color: white; display: grid; place-items: center; font-size: 16px; font-weight: 800; }
+    aside { position: absolute; right: 76px; bottom: 44px; width: 34%; font-size: 15px; line-height: 1.45; color: var(--muted); border-top: 1px solid var(--line); padding-top: 14px; }
+    .cover aside { display: none; }
+    .cover:not(.no-badge)::after { content: "HTML first → editable PPTX"; position: absolute; right: 72px; bottom: 64px; font-weight: 800; color: var(--warm); font-size: 28px; z-index: 1; }
+    @media print { body { background: white; } main { padding: 0; gap: 0; } .slide { width: 100vw; box-shadow: none; page-break-after: always; } }
+  </style>
+</head>
+<body><main>
+      <section class="slide cover ">
+        <div class="kicker">01 / AIでスライドを作る最新ワークフロー</div>
+        <h1>AIでスライドを作る最新ワークフロー</h1><p class="subtitle">これからの資料作成は「いきなりPPTX」ではなく、会話から構成を固め、HTML/Artifactで見た目と流れを確認し、最後に編集可能PPTXへ落とすのが速い。</p><p class="claim">Artifact/HTML first, editable PPTX final.</p><ul><li>自然会話から開始</li><li>HTMLで速く確認</li><li>本文はPowerPointで編集可能</li></ul>
+        <aside>表紙では、いきなりPPTXではなく会話からプレビューを経て納品する思想を示す。</aside>
+      </section>
+
+      <section class="slide section ">
+        <div class="kicker">02 / AIでスライドを作る最新ワークフロー</div>
+        <h2>なぜ今変えるか</h2><p class="claim">GammaやCanvaだけに閉じると、最終PPTXの編集性や社内運用に制約が出る</p><div class="grid"><article><h3>Point 1</h3><p>GammaやCanvaだけに閉じると、最終PPTXの編集性や社内運用に制約が出る</p></article><article><h3>Point 2</h3><p>PPTX直生成だけだと、会話しながら構成や見た目を試す速度が落ちる</p></article><article><h3>Point 3</h3><p>Artifact/HTML firstなら、Discord上の自然文から構成と見た目を素早く反復できる</p></article></div>
+        <aside>なぜ今変えるかについて、要点を短く説明する。</aside>
+      </section>
+
+      <section class="slide process ">
+        <div class="kicker">03 / AIでスライドを作る最新ワークフロー</div>
+        <h2>標準フロー</h2><p class="claim">Discord自然文を受ける</p><ol><li>Discord自然文を受ける</li><li>要件、相手、目的、制約、納品形式を抽出する</li><li>outline JSONに変換する</li><li>HTML/Artifact風プレビューで流れと見た目を確認する</li><li>GPT Image 2向けに表紙、図解、アイコン、キービジュアルのプロンプトを作る</li><li>本文は編集可能なPPTXとして生成する</li></ol>
+        <aside>標準フローについて、要点を短く説明する。</aside>
+      </section>
+
+      <section class="slide comparison ">
+        <div class="kicker">04 / AIでスライドを作る最新ワークフロー</div>
+        <h2>ツールの使い分け</h2><p class="claim">Canva: ブランド素材、手動仕上げ、SNS/営業資料への展開</p><div class="grid"><article><h3>Canva</h3><p>ブランド素材、手動仕上げ、SNS/営業資料への展開</p></article><article><h3>Gamma</h3><p>速い初期案、Web共有、ざっくり構成探索</p></article><article><h3>Presenton</h3><p>ローカル/OSS寄り、PPTX/PDF出力、検証環境</p></article><article><h3>Plus AI</h3><p>Google SlidesやPowerPoint上で編集ワークフローを維持したい時</p></article><article><h3>Claude Design/Artifacts</h3><p>会話しながらHTML/デザイン案を詰める時</p></article><article><h3>GPT Image 2</h3><p>表紙、図解、キービジュアル、アイコン、質感の作成</p></article></div>
+        <aside>ツールの使い分けについて、要点を短く説明する。</aside>
+      </section>
+
+      <section class="slide process ">
+        <div class="kicker">05 / AIでスライドを作る最新ワークフロー</div>
+        <h2>内製フローの役割分担</h2><p class="claim">Shiro Slide Studio: 要件抽出、outline JSON、HTML preview、PPTX生成、検証ログ</p><ol><li>Shiro Slide Studio: 要件抽出、outline JSON、HTML preview、PPTX生成、検証ログ</li><li>GPT Image 2: 画像素材の生成指示。API実行は承認後</li><li>Canva/Gamma: 必要時の外部仕上げ候補。外部公開や課金は事前確認</li><li>PowerPoint: 最終編集と納品</li></ol>
+        <aside>内製フローの役割分担について、要点を短く説明する。</aside>
+      </section>
+
+      <section class="slide matrix ">
+        <div class="kicker">06 / AIでスライドを作る最新ワークフロー</div>
+        <h2>品質基準</h2><p class="claim">1スライド1メッセージ</p><div class="grid"><article><h3>Point 1</h3><p>1スライド1メッセージ</p></article><article><h3>Point 2</h3><p>本文テキストは編集可能に残す</p></article><article><h3>Point 3</h3><p>画像は背景ではなく、意味のある主役または補助素材として使う</p></article><article><h3>Point 4</h3><p>PPTX内部のスライド数、HTML preview、画像プロンプトを必ず確認する</p></article><article><h3>Point 5</h3><p>外部API、公開、課金、本番設定変更は実行前に止める</p></article></div>
+        <aside>品質基準について、要点を短く説明する。</aside>
+      </section>
+
+      <section class="slide process ">
+        <div class="kicker">07 / AIでスライドを作る最新ワークフロー</div>
+        <h2>次に試す依頼</h2><p class="claim">このDiscordスレッドで自然文のまま依頼する</p><ol><li>このDiscordスレッドで自然文のまま依頼する</li><li>足りない情報はShiroが最小限だけ質問する</li><li>まずHTML previewで方向性を見て、PPTXを修正する</li></ol>
+        <aside>次に試す依頼について、要点を短く説明する。</aside>
+      </section></main></body></html>

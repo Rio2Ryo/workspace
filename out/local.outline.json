@@ -1,0 +1,34 @@
+{
+  "title": "Local Brief",
+  "subtitle": "",
+  "audience": "",
+  "tone": "",
+  "thesis": "",
+  "artifactFirst": true,
+  "clientFacing": false,
+  "hideStudioBadge": false,
+  "generatedBy": "Shiro Slide Studio",
+  "theme": {
+    "mode": "artifact-first",
+    "background": "F6F3EE",
+    "paper": "FFFDF8",
+    "ink": "172033",
+    "muted": "667085",
+    "accent": "2563EB",
+    "accent2": "0F766E",
+    "warm": "C2410C",
+    "line": "D8DEE8"
+  },
+  "slides": [
+    {
+      "type": "cover",
+      "title": "Local Brief",
+      "subtitle": "",
+      "claim": "",
+      "bullets": [],
+      "columns": [],
+      "imagePrompt": "Create a 16:9 presentation visual for \"Local Brief / Local Brief\". Use a premium Japanese business editorial style, artifact/HTML canvas motif, subtle warm paper background, blue and teal accents, crisp diagram-like composition. Leave safe empty space for editable slide text. Avoid logos, fake UI screenshots, dense text, and decorative clutter.",
+      "speakerNotes": "caller cwd input should work"
+    }
+  ]
+}
