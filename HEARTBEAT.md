@@ -32,6 +32,29 @@ High Risk:
 - 削除系操作
 - 秘密情報の共有
 
+## 2026-06-15 heartbeat (123回目)
+
+**アクション**: `/Users/umi/.openclaw/workspace/HEARTBEAT.md` を指定パスで読み、`tasks/QUEUE.md` の Ready / In Progress を確認。Ready 未完了なし、In Progress は `food-dx-shiro` のみ。前回の「seed後日本語UIの実操作確認環境待ち」を待機で終えず、ブラウザなしで踏めるAPI dynamic smoke（注文追加、通知設定、承認一覧、PDF前段）を実行。新規注文作成でseed IDとvalidatorの不整合を検出し、低リスク修正してcommit。
+
+**検証**:
+- QUEUE Ready 未完了なし。In Progress = `food-dx-shiro`。
+- `food-dx-shiro`: tmux `food-dx-shiro` 存在。repo `/Users/umi/.openclaw/workspace/food-dx-qwen/food-dx-system` は branch `main`。今回 commit `bd2e0b7 fix: accept seeded string ids in shared validators` を作成。
+- API dynamic smoke 初回: login 200、products 200、orders 200 は通ったが、`POST /api/orders` が500。原因は seed 商品IDが `product-001` / `product-002` のような固定文字列で、`createOrderSchema` の `productId: z.string().uuid()` と不一致だったこと。
+- DB schemaは `String @default(uuid())` だがseedは固定文字列IDを明示投入しており、API/Web型も `productId: string` 前提のため、shared validatorのID入力を `idSchema = z.string().min(1)` へ統一。対象: `warehouseId` / `productId` / `categoryId` / `supplierId` / `companyId`。
+- API dev再起動後の dynamic smoke: `POST /api/auth/login` 200、`GET /api/products?limit=2` 200、`POST /api/orders` 201（`ORD-20260615-7702`、items 1）、`GET /api/orders/:id` 200、`PUT /api/notifications/preferences` 200（timezone `Asia/Tokyo`、email false）、`GET /api/approvals/pending` 200、`GET /api/pdf/templates` 200、`GET /api/pdf/preview/invoice/:id` 200（`application/pdf` base64あり）。
+- `npm run test:db-e2e-handoff-contract` → pass。
+- `npm run test:web:a11y-contract` → pass。
+- `npm run lint` → pass（Next.js plugin warning のみ）。
+- `npm run build:api` → pass。
+- `npm run build:web` → pass（21 pages generated）。
+- API dev session は停止済み。
+- disk: `/System/Volumes/Data` は 98% 使用、空き 4.5GiB。既存の disk cleanup 承認待ち範囲内。削除系操作は未実行。
+- workspace tracked 変更: `tasks/QUEUE.md` に本件の進行記録を追記、`HEARTBEAT.md` の本記録、既存自動更新ファイル（`projects/threads-watcher/threads-watcher-status/state.json` / `state/shiro-workflows/*` 等）を確認。今回のheartbeatでは既存差分の巻き戻しなし。
+
+**状態**: Ready 未完了なし。`food-dx-shiro` は担当=白。local DB seed済み状態で、APIログイン・seedデータ取得・主要Web route HTTP確認に加え、注文追加・通知設定・承認一覧・PDFプレビューのAPI dynamic smokeまで完了。次アクションは、利用可能なブラウザE2E環境でseed後日本語UIの実操作、console/network error、画面遷移の目視/スクリーンショット確認を行うこと。詰まりはOpenClaw browser localhost policy blockによる実ブラウザ操作確認環境待ちのみ。disk cleanup / RAKUI [DONE] packet は既存承認待ちで、新規判断依頼なし。
+
+**通知判断**: notify=false（注文作成ブロッカーをローカル修正し前進したが、ユーザーの即時判断は不要。削除・push・deploy・本番変更・秘密情報共有は実行していない）。
+
 ## 2026-06-15 heartbeat (122回目)
 
 **アクション**: `/Users/umi/.openclaw/workspace/HEARTBEAT.md` を指定パスで読み、`tasks/QUEUE.md` の Ready / In Progress を確認。Ready 未完了なし、In Progress は `food-dx-shiro` のみ。121回目でDB投入・seedまで進んだため、次アクションの seed後日本語UI確認へ進めた。OpenClaw browser は localhost navigation が policy でブロックされたため、ローカルAPI/Webを起動し、HTTP/APIベースでseed済みUI前段を確認。あわせてAPI dev起動を止めていたruntime blocker 2件を低リスク修正して commit。

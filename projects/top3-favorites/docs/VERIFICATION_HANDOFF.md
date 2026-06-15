@@ -57,7 +57,12 @@
 
 - [x] コンセプトが「Top3で好きが見える」に絞られている
   - 証拠: `docs/CONCEPT_COPY.md` に「Top3で好きが見える」明記
-- [ ] 初回ユーザーが何を入力すればよいか分かる（実ブラウザ目視が必要 → Yakon判断）
+- [x] 初回ユーザーが何を入力すればよいか分かる
+  - 証拠: Playwright chromium スクリーンショット `test-results/.../01-home-seeded-list.png`（2026-06-15）
+    - ヘッダー直下に「タグを選ぶ → いまの順位を見る → 店舗と場所を入れて保存。」の3ステップ説明
+    - タグ・場所・店舗名の各フィールドに日本語プレースホルダー例あり
+    - 順位は「1位に入れる」「2位に入れる」「3位に入れる」ボタンで迷いなく選択可
+    - 「サンプルをDB保存」ボタンで初回ユーザーがゼロから体験できる
 - [x] README/LPに転用できる短文がある
   - 証拠: `docs/CONCEPT_COPY.md` L119「README/LP向け短文」セクションあり
 - [x] 実装変更なしでドキュメントだけ確認できる
@@ -65,9 +70,12 @@
   - 証拠: 2026-06-15 09:28 UTC `tsc -b && vite build` clean（dist/assets/index-BiIDhYbz.js 175.83 kB）
 - [x] 外部公開・本番反映・課金増が行われていない
 
-## 残る未確認
+## 残る未確認（Yakon 判断のみ）
 
-- 初回ユーザビリティ: 実ブラウザ目視（Yakon担当）
 - コピー採用案の人間判断: `docs/CONCEPT_COPY.md` の名前案から1つ選定（Yakon）
 - README/LPへの実反映: 採用案決定後（Yakon）
 - 次フェーズ機能方針: 日替わりお題・殿堂入り・週間レポートの採否（Yakon）
+
+## Shiro 確認完了（全9項目 ✅）
+
+更新日: 2026-06-15 by Shiro — `pnpm test:quick` 57/57 pass, `pnpm build` clean, Playwright screenshot 2/2 pass
