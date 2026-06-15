@@ -5,11 +5,11 @@
     "@bmw_intokyo"
   ],
   "last_check": {
-    "checked_at": "2026-06-15T05:10:06Z",
+    "checked_at": "2026-06-15T07:27:48Z",
     "found_count": 4,
     "new_count": 0,
     "status": "partial_error",
-    "error": "profile extraction returned partial result: found=4 previous_max=16"
+    "error": "profile extraction returned partial result: found=4 previous_max=15"
   },
   "saved_count": 98,
   "posts": [
@@ -1290,16 +1290,16 @@
   ],
   "recent_stats": {
     "window_hours": 24,
-    "total": 1004,
+    "total": 1002,
     "ok": 0,
-    "partial_error": 1004,
+    "partial_error": 1002,
     "error": 0,
     "other": 0,
     "success_rate": 0.0,
     "partial_error_rate": 1.0,
     "top_partial_error_reason": {
       "reason": "profile extraction returned partial result: found=4 previous_max=16",
-      "count": 608
+      "count": 597
     }
   },
   "recent_stats_by_window": {
@@ -1314,35 +1314,35 @@
       "partial_error_rate": 1.0,
       "top_partial_error_reason": {
         "reason": "profile extraction returned partial result: found=4 previous_max=16",
-        "count": 23
+        "count": 21
       }
     },
     "24": {
       "window_hours": 24,
-      "total": 1004,
+      "total": 1002,
       "ok": 0,
-      "partial_error": 1004,
+      "partial_error": 1002,
       "error": 0,
       "other": 0,
       "success_rate": 0.0,
       "partial_error_rate": 1.0,
       "top_partial_error_reason": {
         "reason": "profile extraction returned partial result: found=4 previous_max=16",
-        "count": 608
+        "count": 597
       }
     },
     "168": {
       "window_hours": 168,
-      "total": 6361,
+      "total": 6370,
       "ok": 0,
-      "partial_error": 6358,
+      "partial_error": 6367,
       "error": 3,
       "other": 0,
       "success_rate": 0.0,
-      "partial_error_rate": 0.9995283760415029,
+      "partial_error_rate": 0.9995290423861852,
       "top_partial_error_reason": {
         "reason": "profile extraction returned partial result: found=4 previous_max=16",
-        "count": 4521
+        "count": 4519
       }
     }
   },
@@ -1358,7 +1358,7 @@
     {
       "handle": "@bmw_intokyo",
       "warn_ts": 1781202276,
-      "current_bucket": 0.7
+      "current_bucket": 0.8
     },
     {
       "handle": "@hal.lifedesign",
@@ -1366,5 +1366,5 @@
       "current_bucket": 1.0
     }
   ],
-  "snapshot_generated_at": "2026-06-15T05:10:06Z"
+  "snapshot_generated_at": "2026-06-15T07:27:48Z"
 }

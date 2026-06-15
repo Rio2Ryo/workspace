@@ -320,9 +320,19 @@ function classifyWorkflow({ item, task, thread, override, policy, previous, tmux
   const doneCandidate = matches(DONE_PATTERNS, recent) || (resultObserved && /完了|done|no issues/i.test(recent));
   const safeAction = matches(SAFE_ACTION_PATTERNS, recent);
   const busySpinner = /[✻✳✶✽✢].*(tokens|thinking|thought)/i.test(recent);
-  const completionMarker = /(?:^|\n)\s*(RESULT_OBSERVED|APPROVAL_PACKET_READY|BLOCKED_CONCRETE|STILL_RUNNING)\b/i.test(recent);
+  // Detect which terminal marker is present (last one wins if multiple)
+  const completionKind = (
+    /(?:^|\n)\s*APPROVAL_PACKET_READY\b/i.test(recent) ? 'approval' :
+    /(?:^|\n)\s*RESULT_OBSERVED\b/i.test(recent) ? 'result' :
+    /(?:^|\n)\s*STILL_RUNNING\b/i.test(recent) ? 'running' :
+    /(?:^|\n)\s*BLOCKED_CONCRETE\b/i.test(recent) ? 'blocked-marker' :
+    null
+  );
+  const completionMarker = completionKind !== null;
   const bootstrapOnly = /Shiro bootstrap for Discord thread|produce one of: RESULT_OBSERVED|Remote Control failed to connect: Session creation failed/i.test(recent)
     && !completionMarker;
+  // blocked is only meaningful when there is no explicit completion marker
+  const blockedSignal = matches(BLOCKED_PATTERNS, recent) && !completionMarker;
 
   let status = 'watching';
   let decisionKind = 'watch';
@@ -334,6 +344,22 @@ function classifyWorkflow({ item, task, thread, override, policy, previous, tmux
     status = 'needs_session';
     decisionKind = 'bootstrap-session';
     risk = 'low';
+  } else if (completionKind === 'approval') {
+    // Explicit APPROVAL_PACKET_READY marker: route to pending_approval regardless of blocked signals
+    status = 'pending_approval';
+    decisionKind = highRisk ? 'external-action' : 'needs-yakon';
+    risk = highRisk ? 'high' : 'mid';
+  } else if (completionKind === 'result') {
+    status = 'needs_verification';
+    decisionKind = 'verify-result';
+  } else if (completionKind === 'running') {
+    status = 'active';
+    decisionKind = 'watch';
+    risk = 'low';
+  } else if (completionKind === 'blocked-marker') {
+    status = 'blocked';
+    decisionKind = 'unblock';
+    risk = /credentials|secret|token|oauth|本番|課金|削除/i.test(recent) ? 'high' : 'mid';
   } else if (bootstrapOnly) {
     status = 'active';
     decisionKind = 'watch';
@@ -342,7 +368,7 @@ function classifyWorkflow({ item, task, thread, override, policy, previous, tmux
     status = 'active';
     decisionKind = 'watch';
     risk = 'low';
-  } else if (blocked) {
+  } else if (blockedSignal) {
     status = 'blocked';
     decisionKind = 'unblock';
     risk = /credentials|secret|token|oauth|本番|課金|削除/i.test(recent) ? 'high' : 'mid';
@@ -671,6 +697,21 @@ async function main() {
       captureError,
       legacy: legacyState.sessions?.[session] || legacyBySession.get(session) || null,
     });
+
+    // If a previous ready approval packet exists and the current classification
+    // doesn't show an explicit hard reset (new result observed, done, or high-risk block),
+    // restore the packet so it persists across ticks without relying on pane text.
+    if (!workflow.approvalPacket?.ready && prev.approvalPacket?.ready) {
+      const hardReset = workflow.status === 'done_excluded'
+        || workflow.resultObserved
+        || (workflow.status === 'blocked' && workflow.risk === 'high');
+      if (!hardReset) {
+        workflow.approvalPacket = { ...prev.approvalPacket };
+        workflow.status = 'pending_approval';
+        workflow.decisionKind = prev.decisionKind || 'needs-yakon';
+        workflow.progressReportable = true;
+      }
+    }
 
     if (shouldSendAction(workflow, prev) && actionCount < maxActions) {
       await sendAction(workflow);

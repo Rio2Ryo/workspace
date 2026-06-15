@@ -74,7 +74,7 @@
 
 | Agent | Task | Completed |
 |-------|------|-----------|
-| | | |
+| daily-report-codex | daily-report-app — `POST /api/agent-command/daily-report/preview` 実装 + builder 11テスト追加 (472/472 pass, tsc clean, build ✅) | 2026-06-15 |
 
 ---
 

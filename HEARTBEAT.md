@@ -32,6 +32,72 @@ High Risk:
 - 削除系操作
 - 秘密情報の共有
 
+## 2026-06-15 heartbeat (119回目)
+
+**アクション**: `/Users/umi/.openclaw/workspace/HEARTBEAT.md` を指定パスで読み、`tasks/QUEUE.md` の Ready / In Progress を確認。Ready 未完了なし、In Progress は `food-dx-shiro` のみ。停止判定に従い、`food-dx-shiro` の tmux / repo / DB接続環境 / handoff契約を再確認し、DB待ち中の品質劣化がないか API lint / API build / Web build も確認。
+
+**検証**:
+- QUEUE Ready 未完了なし。In Progress = `food-dx-shiro`。
+- `food-dx-shiro`: tmux `food-dx-shiro` 存在。直近 pane の controller 文 shell 誤投入状態は前回から変化なし。今回のheartbeatでも自然文の tmux 直送は実施していない。
+- repo `/Users/umi/.openclaw/workspace/food-dx-qwen/food-dx-system`: branch `main`、HEAD `4c46739`、tracked 変更なし。
+- `.env.local` は存在するが、process env の `DATABASE_URL` は未設定。`npm run db:check` は `.env.local` の localhost:5432 を読み、TCP接続不能で想定通り fail。`docker` / `psql` / `pg_ctl` / `initdb` は missing。
+- `npm run test:db-e2e-handoff-contract` → pass。
+- `npm run db:e2e:handoff` → 判断依頼サマリーは「Yakonさんにお願いしたいこと: なし」、引き継ぎパケットは `目的 / 現担当 / 現状 / 次アクション / 詰まり / 支援候補 / 期限` 形式を維持。
+- `npm run lint --workspace=@food-dx/api` → pass。
+- `npm run build:api` → pass。
+- `npm run build:web` → pass（Next.js plugin warning のみ、21 pages generated）。
+- disk: `/System/Volumes/Data` は 98% 使用、空き 5.3GiB。既存の disk cleanup 承認待ち範囲内。削除系操作は未実行。
+- workspace tracked 変更: `HEARTBEAT.md` の本記録、`ops/shiro-workflow-controller.mjs`、`process/STATUS.md`、`projects/threads-watcher/threads-watcher-status/state.json`、`second-brain` submodule、`state/shiro-loop/*`、`state/shiro-workflows/*` の既存差分を確認。今回のheartbeatでは既存差分の巻き戻しなし。
+
+**状態**: Ready 未完了なし。`food-dx-shiro` は担当=白、次アクションは DB接続環境で `npm run db:e2e:handoff` の手順を実行し、seed後の日本語E2E結果を固定形式で回収すること。詰まりは技術環境待ち（PostgreSQL localhost:5432 未起動 / DB接続）。disk cleanup / RAKUI [DONE] packet / food-dx DB は既存承認待ちで、新規判断依頼なし。
+
+**通知判断**: notify=false（新規障害なし。既知のDB待ち・disk cleanup承認待ち・品質ゲート再確認のみ）。
+
+## 2026-06-15 heartbeat (118回目)
+
+**アクション**: `tasks/QUEUE.md` の Ready / In Progress を確認。Ready 未完了なし、In Progress は `food-dx-shiro` のみ。加えて完了通知が来ていた `restaurant-sales-intel design implementation` を親側でレビューし、Claude Code 実装を検証。モバイル表示でボトムナビ/横並び見出しのはみ出しリスクを見つけたため、低リスクのローカル修正を追加して commit。
+
+**検証**:
+- QUEUE Ready 未完了なし。In Progress = `food-dx-shiro`。
+- `restaurant-sales-intel`: 変更対象は `public/index.html` / `public/styles.css` / `public/app.js` のみ。
+- `npm test` → pass。
+- `npm run build` → pass。
+- `node scripts/test-ui-copy.mjs` → pass。
+- `node scripts/test-local-http.mjs` → pass。
+- `node scripts/secret-scan.mjs` → pass。
+- `node scripts/production-readiness.mjs` → pass。
+- `http://127.0.0.1:4173/` → HTTP 200。デスクトップ headless screenshot は非空で主要UI表示確認。
+- モバイル screenshot で見出し/ボトムナビの横はみ出しリスクを確認し、`section-title-row` / `dashboard-grid` class 追加、860px以下のボトムナビを3列grid化、page actions wrap化、横overflow抑制を追加。
+- 追加修正後も build / UI copy / local HTTP / secret scan / production readiness / full `npm test` pass。
+- local commit `977d70a feat: apply restaurant sales intel redesign` 作成。push / deploy / 本番変更なし。
+- disk: `/System/Volumes/Data` は 98% 使用、空き 5.3GiB。削除系操作は未実行。
+
+**状態**: `restaurant-sales-intel` のデザイン実装レビューは完了。次アクションは必要なら Yakon/Ao の判断で `git push` / Vercel deploy。これは外部反映のため白からは未実行。`food-dx-shiro` は引き続き DB接続環境待ち。
+
+**通知判断**: notify=true（restaurant-sales-intel はローカル実装・親レビュー・追加修正・commit まで完了し、次が外部反映判断のため）。
+
+## 2026-06-15 heartbeat (117回目)
+
+**アクション**: `tasks/QUEUE.md` の Ready / In Progress を確認。Ready 未完了なし、In Progress は `food-dx-shiro` のみ。停止判定に従い、`food-dx-shiro` の tmux / repo / DB接続環境 / handoff契約を再確認し、DB待ち中の品質劣化がないか API lint / API build / Web build も確認。
+
+**検証**:
+- QUEUE Ready 未完了なし。In Progress = `food-dx-shiro`。
+- `food-dx-shiro`: tmux `food-dx-shiro` 存在。直近 pane の controller 文 shell 誤投入状態は前回から変化なし。今回のheartbeatでも自然文の tmux 直送は実施していない。
+- repo `/Users/umi/.openclaw/workspace/food-dx-qwen/food-dx-system`: branch `main`、HEAD `4c46739`、tracked 変更なし。
+- `.env.local` は存在するが、process env の `DATABASE_URL` は未設定。`npm run db:check` は `.env.local` の localhost:5432 を読み、TCP接続不能で想定通り fail。`docker` / `psql` / `pg_ctl` / `initdb` は missing。
+- `npm run test:db-e2e-handoff-contract` → pass。
+- `npm run db:e2e:handoff` → 判断依頼サマリーは「Yakonさんにお願いしたいこと: なし」、引き継ぎパケットは `目的 / 現担当 / 現状 / 次アクション / 詰まり / 支援候補 / 期限` 形式を維持。
+- `npm run lint --workspace=@food-dx/api` → pass。
+- `npm run build:api` → pass。
+- `npm run build:web` → pass（Next.js plugin warning のみ、21 pages generated）。
+- disk: `/System/Volumes/Data` は 98% 使用、空き 5.4GiB。既存の disk cleanup 承認待ち範囲内。削除系操作は未実行。
+- workspace branch `shiro/cycle-tracker-app` は origin より 1 commit ahead。push は外部反映のため未実行。
+- workspace tracked 変更: `HEARTBEAT.md` の本記録、`projects/threads-watcher/threads-watcher-status/state.json`、`second-brain` submodule 状態を確認。今回のheartbeatでは既存差分の巻き戻しなし。
+
+**状態**: Ready 未完了なし。`food-dx-shiro` は担当=白、次アクションは DB接続環境で `npm run db:e2e:handoff` の手順を実行し、seed後の日本語E2E結果を固定形式で回収すること。詰まりは技術環境待ち（PostgreSQL localhost:5432 未起動 / DB接続）。disk cleanup / RAKUI [DONE] packet / food-dx DB は既存承認待ちで、新規判断依頼なし。
+
+**通知判断**: notify=false（新規障害なし。既知のDB待ち・disk cleanup承認待ち・品質ゲート再確認のみ）。
+
 ## 2026-06-15 heartbeat (116回目)
 
 **アクション**: `tasks/QUEUE.md` の Ready / In Progress を確認。Ready 未完了なし、In Progress は `food-dx-shiro` のみ。停止判定に従い、`food-dx-shiro` の tmux / repo / DB接続環境 / handoff契約を再確認し、DB待ち中の品質劣化がないか API lint / API build / Web build も確認。
