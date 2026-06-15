@@ -32,6 +32,33 @@ High Risk:
 - 削除系操作
 - 秘密情報の共有
 
+## 2026-06-16 承認パケット: cycle-tracker-app force push
+
+**種別**: High Risk — 削除系操作（リモートブランチ履歴の上書き）
+
+**対象**: `https://github.com/Rio2Ryo/cycle-tracker-app.git` の `origin/main`
+
+**背景**:
+前セッションで `3d98fb7 chore: initial push (qa.yml added after workflow scope granted)` が origin/main に単独コミットとして登録されている。一方、ローカルの `main` は別の root `5f99b43 feat: initial cycle tracker app` から23コミット分の開発履歴を持つ。両者に共通祖先はなく、`git push origin main` が non-fast-forward で拒否される。
+
+**リモートの状態**:
+- `3d98fb7` — 1コミットのみ（プロジェクトファイル一式のスナップショット）
+
+**ローカルの状態**:
+- 23コミット（`5f99b43` 〜 `0522e96 feat: profile label customization`）
+- 34/34テスト pass、build clean、Vercel デプロイ済み
+
+**実行コマンド**:
+```
+git -C /Users/umi/.openclaw/workspace/cycle-tracker-app push --force origin main
+```
+
+**失うもの**: `3d98fb7` の内容はローカル23コミット履歴に完全に含まれており、失われるデータなし。
+
+**承認サイン**: 返信に `cycle-tracker force push OK` と書く
+
+---
+
 ## 2026-06-16 heartbeat (127回目)
 
 **アクション**: `/Users/umi/.openclaw/workspace/HEARTBEAT.md` を指定パスで読み、`tasks/QUEUE.md` の Ready / In Progress を確認。Ready 未完了なし、In Progress は `food-dx-shiro` のみ。前回 126回目で disk が 2.0GiB まで低下していたため、今回も削除は行わず、重いブラウザE2Eも避けて、実行中プロセスと disk 状態を read-only で確認した。
