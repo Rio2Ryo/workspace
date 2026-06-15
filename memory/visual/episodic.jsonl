@@ -1,0 +1,192 @@
+{"modality":"audio","event":"Dongping said: \"自己紹介してください！\"","entityIds":["user"],"ts":"2026-03-29T02:16:41.414Z","confidence":0.8}
+{"modality":"audio","event":"Dongping said: \"自己紹介してください！\"","entityIds":["user"],"ts":"2026-03-29T02:17:18.651Z","confidence":0.8}
+{"modality":"audio","event":"Dongping said: \"自己紹介してください！\"","entityIds":["user"],"ts":"2026-03-29T02:20:03.687Z","confidence":0.8}
+{"modality":"audio","event":"Dongping said: \"自己紹介してください！\"","entityIds":["user"],"ts":"2026-03-29T02:22:56.753Z","confidence":0.8}
+{"modality":"audio","event":"Dongping said: \"自己紹介してください！\"","entityIds":["user"],"ts":"2026-03-29T02:24:42.791Z","confidence":0.8}
+{"modality":"audio","event":"Dongping said: \"自己紹介してください！\"","entityIds":["user"],"ts":"2026-03-29T02:26:23.031Z","confidence":0.8}
+{"modality":"audio","event":"Dongping said: \"自己紹介してください！\"","entityIds":["user"],"ts":"2026-03-29T02:27:49.824Z","confidence":0.8}
+{"modality":"audio","event":"Dongping said: \"今日の天気ってどう思う？\"","entityIds":["user"],"ts":"2026-03-29T02:27:51.379Z","confidence":0.8}
+{"modality":"audio","event":"Dongping said: \"好きな食べ物は何？\"","entityIds":["user"],"ts":"2026-03-29T02:27:53.441Z","confidence":0.8}
+{"modality":"audio","event":"Dongping said: \"うーん、今日は少し眠い\"","entityIds":["user"],"ts":"2026-03-29T02:29:05.490Z","confidence":0.8}
+{"modality":"audio","event":"Dongping said: \"こんにちは\"","entityIds":["user"],"ts":"2026-03-29T02:46:42.143Z","confidence":0.8}
+{"modality":"audio","event":"Dongping said: \"こんにちは！\"","entityIds":["user"],"ts":"2026-03-29T02:46:42.552Z","confidence":0.8}
+{"modality":"audio","event":"Dongping said: \"！\"","entityIds":["user"],"ts":"2026-03-29T02:46:42.694Z","confidence":0.8}
+{"modality":"audio","event":"Dongping said: \"hello\"","entityIds":["user"],"ts":"2026-03-29T02:55:57.201Z","confidence":0.8}
+{"modality":"audio","event":"Dongping said: \"feeling more awake now\"","entityIds":["user"],"ts":"2026-03-29T02:56:11.868Z","confidence":0.8}
+{"modality":"audio","event":"Dongping said: \"take me to Moscow\"","entityIds":["user"],"ts":"2026-03-29T02:56:34.897Z","confidence":0.8}
+{"modality":"audio","event":"Dongping said: \"what is your name\" (mood: curious)","entityIds":["user"],"mood":"curious","ts":"2026-03-29T02:57:01.976Z","confidence":0.8}
+{"modality":"audio","event":"Dongping said: \"あざます\"","entityIds":["user"],"ts":"2026-03-29T03:01:18.848Z","confidence":0.8}
+{"modality":"audio","event":"Dongping said: \"今では大丈夫ですか\"","entityIds":["user"],"ts":"2026-03-29T03:01:21.919Z","confidence":0.8}
+{"modality":"audio","event":"Dongping said: \"はいはいはい 今日忙しいんですから はいはい\"","entityIds":["user"],"ts":"2026-03-29T03:01:26.874Z","confidence":0.8}
+{"modality":"audio","event":"Dongping said: \"日曜日ですよ\"","entityIds":["user"],"ts":"2026-03-29T03:01:42.056Z","confidence":0.8}
+{"modality":"audio","event":"Dongping said: \"お疲れ様です ありがとうございました\"","entityIds":["user"],"ts":"2026-03-29T03:01:52.494Z","confidence":0.8}
+{"modality":"audio","event":"Dongping said: \"面白いですね あれですけどまだ でも重要なのはわかる したのはその数字が目的ではなくて その数字は別にあらあらでもいいから 流れを数字で見たいという感じ つまり この事業の流れをただのプレゼン資料とか\"","entityIds":["user"],"ts":"2026-03-29T03:02:25.352Z","confidence":0.8}
+{"modality":"audio","event":"Dongping said: \"で その後に なんかね hna を撒くことになって\"","entityIds":["user"],"ts":"2026-03-29T03:02:32.414Z","confidence":0.8}
+{"modality":"audio","event":"Dongping said: \"でえっとちょっとこれ流してたら教えて欲しいんですけど外国人がえっと その日本の企業に対して投資が500万を超えると 内閣総理大臣の何かしらの\"","entityIds":["user"],"ts":"2026-03-29T03:02:49.744Z","confidence":0.8}
+{"modality":"audio","event":"Dongping said: \"認定と言いますか が必要っていう風に聞いたんだよ なんですけど\"","entityIds":["user"],"ts":"2026-03-29T03:02:55.155Z","confidence":0.8}
+{"modality":"audio","event":"Dongping said: \"あのそうなんですけどであれば 多分もしかしたら定得 断れたのかもしれないですが まあ その400万しか出せないのでとかっていう話でまあ 手伝えることは こう 財務のところとかを一緒にやってでえっと数字\"","entityIds":["user"],"ts":"2026-03-29T03:04:01.887Z","confidence":0.8}
+{"modality":"audio","event":"Dongping said: \"ねえ\"","entityIds":["user"],"ts":"2026-03-29T03:04:17.505Z","confidence":0.8}
+{"modality":"audio","event":"Dongping said: \"かもしれない\"","entityIds":["user"],"ts":"2026-03-29T03:04:21.769Z","confidence":0.8}
+{"modality":"audio","event":"Dongping said: \"ので そんな嘘はつかないと思うのでなんていうか 言ったら 長さに聞いた わかっちゃうことは 使わないと思うんですけどまだ だから シンプルに それがちょっと難しいという話なのかもしれないなと思って は\"","entityIds":["user"],"ts":"2026-03-29T03:04:59.172Z","confidence":0.8}
+{"modality":"audio","event":"Dongping said: \"ガチ 今日ですよね\"","entityIds":["user"],"ts":"2026-03-29T03:05:15.214Z","confidence":0.8}
+{"modality":"audio","event":"Dongping said: \"これ乗り換えてくれないですかね\"","entityIds":["user"],"ts":"2026-03-29T03:05:19.956Z","confidence":0.8}
+{"modality":"audio","event":"Dongping said: \"強豪 なんですけど 協業できたらいいんですけどそのその部分 仕上げは買ってくれたらそれで終わりでもいいですし\"","entityIds":["user"],"ts":"2026-03-29T03:06:25.528Z","confidence":0.8}
+{"modality":"audio","event":"Dongping said: \"マイグジットのやり方ですね\"","entityIds":["user"],"ts":"2026-03-29T03:06:41.533Z","confidence":0.8}
+{"modality":"audio","event":"Dongping said: \"そうね\"","entityIds":["user"],"ts":"2026-03-29T03:07:11.588Z","confidence":0.8}
+{"modality":"audio","event":"Dongping said: \"なりますけど その場合は\"","entityIds":["user"],"ts":"2026-03-29T03:07:26.261Z","confidence":0.8}
+{"modality":"audio","event":"Dongping said: \"事業だけというよりかも 株式会社で株は売った方が楽なんで\"","entityIds":["user"],"ts":"2026-03-29T03:07:31.186Z","confidence":0.8}
+{"modality":"audio","event":"Dongping said: \"なんか ちょろったけ 聞きました\"","entityIds":["user"],"ts":"2026-03-29T03:07:49.128Z","confidence":0.8}
+{"modality":"audio","event":"Dongping said: \"一応その それは やりたいですわ 言ったんですけど どんだけかかるかとかそういう話はまだ聞いてないんで\"","entityIds":["user"],"ts":"2026-03-29T03:08:10.980Z","confidence":0.8}
+{"modality":"audio","event":"Dongping said: \"多分そのサーバーをやってもね今の日本だとなかなか そのサーバーへの価値 みたいなのがないからあの少ないからわかる人が\"","entityIds":["user"],"ts":"2026-03-29T03:08:50.072Z","confidence":0.8}
+{"modality":"audio","event":"Dongping said: \"でていうのも 今の流れ的に 僕としてはそのサーバーでクラウドで貸す っていうところは\"","entityIds":["user"],"ts":"2026-03-29T03:09:02.862Z","confidence":0.8}
+{"modality":"audio","event":"Dongping said: \"微妙 というか 結局今の流れって固定費でパソコンを買ってそこにローカル エレメを入れてもう使い放題になる状態\"","entityIds":["user"],"ts":"2026-03-29T03:09:16.777Z","confidence":0.8}
+{"modality":"audio","event":"Dongping said: \"になってきそうなんですよでそれと ちょっと逆行してるなと思ったんで\"","entityIds":["user"],"ts":"2026-03-29T03:09:22.747Z","confidence":0.8}
+{"modality":"audio","event":"Dongping said: \"ターゲットとしては リテラシーの高い人がターゲットになるじゃないですかこれ\"","entityIds":["user"],"ts":"2026-03-29T03:09:40.761Z","confidence":0.8}
+{"modality":"audio","event":"Dongping said: \"そう そしたら 今の発送の人たちがほとんどになっちゃう\"","entityIds":["user"],"ts":"2026-03-29T03:10:00.069Z","confidence":0.8}
+{"modality":"audio","event":"Dongping said: \"ターゲットとしては そのスパコン\"","entityIds":["user"],"ts":"2026-03-29T03:10:16.421Z","confidence":0.8}
+{"modality":"audio","event":"Dongping said: \"スパコンのサブスクで稼ぐのではなくて\"","entityIds":["user"],"ts":"2026-03-29T03:10:20.953Z","confidence":0.8}
+{"modality":"audio","event":"Dongping said: \"スパコン を 客寄せパンダにして別のとこで稼ぐがいいと思うんですね\"","entityIds":["user"],"ts":"2026-03-29T03:10:26.028Z","confidence":0.8}
+{"modality":"audio","event":"Dongping said: \"つまり スパコン を 客寄せパンダにそのスパコンを中心としたエコシステムラ 使えと\"","entityIds":["user"],"ts":"2026-03-29T03:10:33.656Z","confidence":0.8}
+{"modality":"audio","event":"Dongping said: \"いう中ででその中で AI とかで全部つないだ状態で言えたらもう エコシステム 村を作るイメージかな スパコン 1台を中心において VM をそれぞれに切ってあげてでまあそれぞれのレイテンシーとかセッティ\"","entityIds":["user"],"ts":"2026-03-29T03:11:04.125Z","confidence":0.8}
+{"modality":"audio","event":"Dongping said: \"そしたら動くので スペックはでかいから\"","entityIds":["user"],"ts":"2026-03-29T03:11:08.647Z","confidence":0.8}
+{"modality":"audio","event":"Dongping said: \"なんかその方がいいんじゃないかなと思ってたりはします\"","entityIds":["user"],"ts":"2026-03-29T03:11:12.476Z","confidence":0.8}
+{"modality":"audio","event":"Dongping said: \"でしょ 結局日本のその スタートアップ つまり ワイコンビネーターみたいなことをやりたいって言ってたんで\"","entityIds":["user"],"ts":"2026-03-29T03:11:31.933Z","confidence":0.8}
+{"modality":"audio","event":"Dongping said: \"ってことはそうそう アクセラレーター的なことやりたいから そしたら じゃあ えっと その人たちが あのスタートアップで作るものをそこの経済圏の人たちにまずは使わせるっていうポップの状態にしてあげれば \"","entityIds":["user"],"ts":"2026-03-29T03:11:48.603Z","confidence":0.8}
+{"modality":"audio","event":"Dongping said: \"デスパコン 使えるっていう風にしてしまえば\"","entityIds":["user"],"ts":"2026-03-29T03:11:53.369Z","confidence":0.8}
+{"modality":"audio","event":"Dongping said: \"あのあれです なんかそういうやつでね\"","entityIds":["user"],"ts":"2026-03-29T03:12:13.245Z","confidence":0.8}
+{"modality":"audio","event":"Dongping said: \"150万円\"","entityIds":["user"],"ts":"2026-03-29T03:12:38.333Z","confidence":0.8}
+{"modality":"audio","event":"Dongping said: \"投資ではないです 投資ではなくなんかこう 一緒にやりましょう的な感じでまだだって 400万円 投資したって知らないし\"","entityIds":["user"],"ts":"2026-03-29T03:13:18.946Z","confidence":0.8}
+{"modality":"audio","event":"Dongping said: \"どうでしょうね えっと 僕がやりたいのは まさに ショーンさんがそのもの 1.5億 ショウさん 周りの人で買ってくれてでそうすると ジョイントベンチャーになるじゃないですか でまたベジタブル 株式会社\"","entityIds":["user"],"ts":"2026-03-29T03:14:18.385Z","confidence":0.8}
+{"modality":"audio","event":"Dongping said: \"作っているものなので 当然そこはそこに帰着しちゃうんですけど でも今回のジョイントベンチャーに関しては マザー ベジタブル 株式会社と日本法人とえっとま それこそ松本さんだと ショーンさんみたいな感じ\"","entityIds":["user"],"ts":"2026-03-29T03:14:49.712Z","confidence":0.8}
+{"modality":"audio","event":"Dongping said: \"そうすると 僕らのグリップが聞きやすい 結局そこのジョイントベンチャーの利益をどうやって出すか っていうだけなんで\"","entityIds":["user"],"ts":"2026-03-29T03:14:57.511Z","confidence":0.8}
+{"modality":"audio","event":"Dongping said: \"なんでジョイントベンチャー なんで いやあ の本体がやっていること つまり もう全部マザベスダブル しかやらないんで 口出ししないでくださいは ジョイントベンチャーではないので だから結局 口出しはで\"","entityIds":["user"],"ts":"2026-03-29T03:15:16.974Z","confidence":0.8}
+{"modality":"audio","event":"Dongping said: \"でショウさん的には C 業 餌ですね をが一番いいって言っててやりたいですよね もちろんね\"","entityIds":["user"],"ts":"2026-03-29T03:15:26.983Z","confidence":0.8}
+{"modality":"audio","event":"Dongping said: \"なんでそしたらまたベジタブル 原料とした餌をね トリートメントで開発して作るものだから別に技術がない 何か変わることもないのでそのまま 作ってあとはその使用用途としては今は魚の餌とそのまま 直しか本体\"","entityIds":["user"],"ts":"2026-03-29T03:16:24.639Z","confidence":0.8}
+{"modality":"audio","event":"Dongping said: \"名前ではなくて別の名前でで 原料 麻雀 しちゃったりしちゃったらいいので\"","entityIds":["user"],"ts":"2026-03-29T03:16:31.597Z","confidence":0.8}
+{"modality":"audio","event":"Dongping said: \"そしたら何の問題もないです\"","entityIds":["user"],"ts":"2026-03-29T03:16:34.521Z","confidence":0.8}
+{"modality":"audio","event":"Dongping said: \"か\"","entityIds":["user"],"ts":"2026-03-29T03:16:54.755Z","confidence":0.8}
+{"modality":"audio","event":"Dongping said: \"別の その ビジネスができるっていうのは 皆さんとだったらやってもいいなと思ってる感じ\"","entityIds":["user"],"ts":"2026-03-29T03:17:07.229Z","confidence":0.8}
+{"modality":"audio","event":"Dongping said: \"おもんない 理由 なんですよ そうそうそうそう\"","entityIds":["user"],"ts":"2026-03-29T03:17:31.474Z","confidence":0.8}
+{"modality":"audio","event":"Dongping said: \"今もう完全に 今言ったら取締役って書いてるだけなばかり 結局は バンバン なんでうちの会社なんて\"","entityIds":["user"],"ts":"2026-03-29T03:17:42.583Z","confidence":0.8}
+{"modality":"audio","event":"Dongping said: \"そんなことないです\"","entityIds":["user"],"ts":"2026-03-29T03:17:57.170Z","confidence":0.8}
+{"modality":"audio","event":"Dongping said: \"か\"","entityIds":["user"],"ts":"2026-03-29T03:18:09.534Z","confidence":0.8}
+{"modality":"audio","event":"Dongping said: \"なるほど\"","entityIds":["user"],"ts":"2026-03-29T03:18:48.584Z","confidence":0.8}
+{"modality":"audio","event":"Dongping said: \"ね\"","entityIds":["user"],"ts":"2026-03-29T03:18:53.517Z","confidence":0.8}
+{"modality":"audio","event":"Dongping said: \"そのまあなんか それだったら別に逆に言うと あれだな その人が永瀬さんに1.5億として流し さんが 順位とベンチャーでやるとかそういうことなのかわかんないけど\"","entityIds":["user"],"ts":"2026-03-29T03:19:09.574Z","confidence":0.8}
+{"modality":"audio","event":"Dongping said: \"それも一つ めちゃくちゃ やりやすいと思う\"","entityIds":["user"],"ts":"2026-03-29T03:19:18.535Z","confidence":0.8}
+{"modality":"audio","event":"Dongping said: \"そうですね\"","entityIds":["user"],"ts":"2026-03-29T03:19:35.666Z","confidence":0.8}
+{"modality":"audio","event":"Dongping said: \"そうですよね\"","entityIds":["user"],"ts":"2026-03-29T03:19:54.036Z","confidence":0.8}
+{"modality":"audio","event":"Dongping said: \"の販路というか 鶏 卵 だけれどもなんかある程度 そういうのがあったら まとめて買います みたいな そういうちょっと アグレッシブな企業がいたら じゃあそれで作りますっていうこっちの経営判断になるんで\"","entityIds":["user"],"ts":"2026-03-29T03:20:26.610Z","confidence":0.8}
+{"modality":"audio","event":"Dongping said: \"でやるってなった場合にはもう ジョイントベンチャー なんでそこの営業をやって取ってきたってことになるから 取り分がめっちゃ増えるわけじゃないですか\"","entityIds":["user"],"ts":"2026-03-29T03:20:36.840Z","confidence":0.8}
+{"modality":"audio","event":"Dongping said: \"でそのファクトリーの中で作るのももちろんいいけどシリカに関しては 別に 鉱山のシリカンを使っても同じものになりますから 食べないんで\"","entityIds":["user"],"ts":"2026-03-29T03:20:48.519Z","confidence":0.8}
+{"modality":"audio","event":"Dongping said: \"なんでそうするとめっちゃいっぱいあります\"","entityIds":["user"],"ts":"2026-03-29T03:20:53.553Z","confidence":0.8}
+{"modality":"audio","event":"Dongping said: \"ちょっとそこがね わかんないんだよな ブラックボックスされちゃってね\"","entityIds":["user"],"ts":"2026-03-29T03:21:10.703Z","confidence":0.8}
+{"modality":"audio","event":"Dongping said: \"くそじじいのせいで\"","entityIds":["user"],"ts":"2026-03-29T03:21:13.022Z","confidence":0.8}
+{"modality":"audio","event":"Dongping said: \"日本人だよ日本人の女だよ\"","entityIds":["user"],"ts":"2026-03-29T03:21:20.941Z","confidence":0.8}
+{"modality":"audio","event":"Dongping said: \"60歳にならない\"","entityIds":["user"],"ts":"2026-03-29T03:21:25.028Z","confidence":0.8}
+{"modality":"audio","event":"Dongping said: \"んですけど\"","entityIds":["user"],"ts":"2026-03-29T03:21:41.428Z","confidence":0.8}
+{"modality":"audio","event":"Dongping said: \"いや そうなんだよね まあ なんで僕を この気持ちにさせてる時点でもう ゴミ なんで一番最悪じゃないですか だって コアメンバーをこういう風にやる気出す するって もう マネジメントさくそ 中のクソ \"","entityIds":["user"],"ts":"2026-03-29T03:21:57.643Z","confidence":0.8}
+{"modality":"audio","event":"Dongping said: \"社長の器ではない\"","entityIds":["user"],"ts":"2026-03-29T03:22:00.532Z","confidence":0.8}
+{"modality":"audio","event":"Dongping said: \"150社 やってたみたいですけどね 昔はね でもそれ全部パワハラでやったんでしょうね\"","entityIds":["user"],"ts":"2026-03-29T03:22:06.346Z","confidence":0.8}
+{"modality":"audio","event":"Dongping said: \"自分の100% 管理下の中で動いて行かないと\"","entityIds":["user"],"ts":"2026-03-29T03:22:49.254Z","confidence":0.8}
+{"modality":"audio","event":"Dongping said: \"いや みたいな感じだね\"","entityIds":["user"],"ts":"2026-03-29T03:22:51.717Z","confidence":0.8}
+{"modality":"audio","event":"Dongping said: \"いいものは別にいいので だからそれを我々のビジネスに使うならもう 管轄をちょっと変えるというか もちろん ゼロじゃなくなるけど 0じゃないけど でもそれはもう僕らが自分たちで調子 してやっているものじ\"","entityIds":["user"],"ts":"2026-03-29T03:23:40.114Z","confidence":0.8}
+{"modality":"audio","event":"Dongping said: \"で契約もまた別の株式会社とやるのでちゃんとやりましょうっていう話になるので\"","entityIds":["user"],"ts":"2026-03-29T03:23:48.546Z","confidence":0.8}
+{"modality":"audio","event":"Dongping said: \"山本さん\"","entityIds":["user"],"ts":"2026-03-29T03:24:21.005Z","confidence":0.8}
+{"modality":"audio","event":"Dongping said: \"なるほど\"","entityIds":["user"],"ts":"2026-03-29T03:24:46.309Z","confidence":0.8}
+{"modality":"audio","event":"Dongping said: \"結構 密に連携すれば別にまもができたからラッキーですけどその AI の文脈もまさに バッチバチ こいじゃないですか で何なら片思い もちこいだったんで なんか似すぎ って感じ あの 責めるところが\"","entityIds":["user"],"ts":"2026-03-29T03:26:26.139Z","confidence":0.8}
+{"modality":"audio","event":"Dongping said: \"同じ 同じ NFC とタッチって 文脈と AI って 文脈は違うと思うけどまでも 幹細胞という意味か\"","entityIds":["user"],"ts":"2026-03-29T03:26:41.605Z","confidence":0.8}
+{"modality":"audio","event":"Dongping said: \"まあなんかそういうやる 健康であったりとか\"","entityIds":["user"],"ts":"2026-03-29T03:26:46.201Z","confidence":0.8}
+{"modality":"audio","event":"Dongping said: \"終わりましたね\"","entityIds":["user"],"ts":"2026-03-29T03:27:04.126Z","confidence":0.8}
+{"modality":"audio","event":"Dongping said: \"資金集めをしていくんですけど これがね 今後藤くんがね 結局僕があれをしなきゃ\"","entityIds":["user"],"ts":"2026-03-29T03:27:33.056Z","confidence":0.8}
+{"modality":"audio","event":"Dongping said: \"印象として20代の若者を支援したいっていう人 一定数いるから\"","entityIds":["user"],"ts":"2026-03-29T03:27:52.859Z","confidence":0.8}
+{"modality":"audio","event":"Dongping said: \"そういう戦略でした\"","entityIds":["user"],"ts":"2026-03-29T03:27:56.953Z","confidence":0.8}
+{"modality":"audio","event":"Dongping said: \"まあそうね\"","entityIds":["user"],"ts":"2026-03-29T03:28:07.411Z","confidence":0.8}
+{"modality":"audio","event":"Dongping said: \"ちょっと今\"","entityIds":["user"],"ts":"2026-03-29T03:28:25.537Z","confidence":0.8}
+{"modality":"audio","event":"Dongping said: \"まあ もちろん 忙しいなわかるんだけどこのエンジンをかけなきゃいけない時に本業がとかって言われると さすがにちょっとな\"","entityIds":["user"],"ts":"2026-03-29T03:28:35.982Z","confidence":0.8}
+{"modality":"audio","event":"Dongping said: \"そう 本業\"","entityIds":["user"],"ts":"2026-03-29T03:28:39.616Z","confidence":0.8}
+{"modality":"audio","event":"Dongping said: \"そう 本業 家族 子供が最初に来てその後に 片思い てなってくると\"","entityIds":["user"],"ts":"2026-03-29T03:28:47.125Z","confidence":0.8}
+{"modality":"audio","event":"Dongping said: \"ちょっとやだなと思ってます\"","entityIds":["user"],"ts":"2026-03-29T03:28:49.447Z","confidence":0.8}
+{"modality":"audio","event":"Dongping said: \"なんか持ってないらしいよ 使っちゃったって言ってた\"","entityIds":["user"],"ts":"2026-03-29T03:29:09.854Z","confidence":0.8}
+{"modality":"audio","event":"Dongping said: \"けど彼自身のお金は 旅行 行きまくったんだって\"","entityIds":["user"],"ts":"2026-03-29T03:29:21.973Z","confidence":0.8}
+{"modality":"audio","event":"Dongping said: \"アクセンチュア はやらない時に\"","entityIds":["user"],"ts":"2026-03-29T03:29:25.643Z","confidence":0.8}
+{"modality":"audio","event":"Dongping said: \"でかつ そのまま いろいろ ビジネスがあってお金入るから って思ってでなんか使いまくったらしい\"","entityIds":["user"],"ts":"2026-03-29T03:29:34.864Z","confidence":0.8}
+{"modality":"audio","event":"Dongping said: \"電話しましょうと言ってくれるじゃないですか これないですよね\"","entityIds":["user"],"ts":"2026-03-29T03:30:00.208Z","confidence":0.8}
+{"modality":"audio","event":"Dongping said: \"困ってます\" (mood: tired)","entityIds":["user"],"mood":"tired","ts":"2026-03-29T03:30:27.702Z","confidence":0.8}
+{"modality":"audio","event":"Dongping said: \"片思いは えっとね 言うて 名刺の部分だけなんすよ 時計 取ってるのはまあなんか 僕がこのリスクヘッジのために分散してんですよでその信頼 評価 スコアの方はコントラストで撮ってるので 熊木 さんなんで\"","entityIds":["user"],"ts":"2026-03-29T03:30:47.577Z","confidence":0.8}
+{"modality":"audio","event":"Dongping said: \"で 今回の分身 AI に関しては僕だけなんですよ\"","entityIds":["user"],"ts":"2026-03-29T03:30:53.288Z","confidence":0.8}
+{"modality":"audio","event":"Dongping said: \"個人個人名のみ\"","entityIds":["user"],"ts":"2026-03-29T03:30:59.167Z","confidence":0.8}
+{"modality":"audio","event":"Dongping said: \"で取っててそこなんですよね 結局コアの部分って名詞のあれ なんて 別に正直 特許取ってますって言ってるけどあの別にそれを 片思いで 神社 通ってないけど片思いでやらなくてもいいちゃいいわけですよ\"","entityIds":["user"],"ts":"2026-03-29T03:31:23.071Z","confidence":0.8}
+{"modality":"audio","event":"Dongping said: \"なぜなら 僕の 僕の名前は入ってるから\"","entityIds":["user"],"ts":"2026-03-29T03:31:27.838Z","confidence":0.8}
+{"modality":"audio","event":"Dongping said: \"やる気がないのであれば やんなきゃいいし 独占にならならないわけでもないわけで 一 番 100円で これで1億売ろうとすると何千万枚の行けるみたいな みんな このスキームの中で一番稼げるのは信頼 スコ\"","entityIds":["user"],"ts":"2026-03-29T03:31:57.323Z","confidence":0.8}
+{"modality":"audio","event":"Dongping said: \"そう\"","entityIds":["user"],"ts":"2026-03-29T03:32:00.006Z","confidence":0.8}
+{"modality":"audio","event":"Dongping said: \"なってますで この分身 AI に関しては完全 僕1人の特許でまあいろいろ 小牧さんも孤独も入りたそうだったけどなんか適当なこと言って1人にした理由が 僕はここが一番 次の時代に行けると思ってるのでシェ\"","entityIds":["user"],"ts":"2026-03-29T03:32:31.676Z","confidence":0.8}
+{"modality":"audio","event":"Dongping said: \"タッチした瞬間に 分身ができてでえっと シェア ミーの欠点はまあ言ったら僕もショーンさんの あの URL なくなってますから もう次ショーンさんの名刺は見れないわけですよ\"","entityIds":["user"],"ts":"2026-03-29T03:32:46.528Z","confidence":0.8}
+{"modality":"audio","event":"Dongping said: \"通常は 消しちゃうわけ\"","entityIds":["user"],"ts":"2026-03-29T03:32:57.012Z","confidence":0.8}
+{"modality":"audio","event":"Dongping said: \"間違って\"","entityIds":["user"],"ts":"2026-03-29T03:32:57.258Z","confidence":0.8}
+{"modality":"audio","event":"Dongping said: \"ます\"","entityIds":["user"],"ts":"2026-03-29T03:33:17.325Z","confidence":0.8}
+{"modality":"audio","event":"Dongping said: \"うんうん\"","entityIds":["user"],"ts":"2026-03-29T03:33:49.556Z","confidence":0.8}
+{"modality":"audio","event":"Dongping said: \"はあの逆に強み って何なんですかね タッチさせるだけですもんね\"","entityIds":["user"],"ts":"2026-03-29T03:34:03.206Z","confidence":0.8}
+{"modality":"audio","event":"Dongping said: \"まあ すごいな よくそんな程度のやつでなんかね 出資をさせられますね\"","entityIds":["user"],"ts":"2026-03-29T03:34:32.204Z","confidence":0.8}
+{"modality":"audio","event":"Dongping said: \"素晴らしい\"","entityIds":["user"],"ts":"2026-03-29T03:34:36.041Z","confidence":0.8}
+{"modality":"audio","event":"Dongping said: \"明らかに片思いが 上位互換 すぎて多分全ての分野で買っちゃいます それだったら\"","entityIds":["user"],"ts":"2026-03-29T03:34:48.411Z","confidence":0.8}
+{"modality":"audio","event":"Dongping said: \"本当に\"","entityIds":["user"],"ts":"2026-03-29T03:34:56.947Z","confidence":0.8}
+{"modality":"audio","event":"Dongping said: \"終了じゃねえの\"","entityIds":["user"],"ts":"2026-03-29T03:35:27.952Z","confidence":0.8}
+{"modality":"audio","event":"Dongping said: \"かもしれない\"","entityIds":["user"],"ts":"2026-03-29T03:36:01.842Z","confidence":0.8}
+{"modality":"audio","event":"Dongping said: \"高松さん ありがとうございます みたいな そういう 紹介でいいですか どういう内容をお伝えすればいいんですかね\"","entityIds":["user"],"ts":"2026-03-29T03:37:02.861Z","confidence":0.8}
+{"modality":"audio","event":"Dongping said: \"分かりました じゃあもう ほぼほぼ なんかそのノリで行ってるって事ですね あとは 僕が何か あの 信用できない 変なやつじゃなきゃいいってことね\"","entityIds":["user"],"ts":"2026-03-29T03:38:16.185Z","confidence":0.8}
+{"modality":"audio","event":"Dongping said: \"了解 了解 じゃあ えっと 案件をぶん投げまくるてください あの 長瀬さんでえっと あとはまあ 商談とかは自分もできるので呼んでくださいで\"","entityIds":["user"],"ts":"2026-03-29T03:39:52.236Z","confidence":0.8}
+{"modality":"audio","event":"Dongping said: \"そして 開発もできちゃうんで 僕はとできないことは 英語 ぐらいなんですけどまあ\"","entityIds":["user"],"ts":"2026-03-29T03:40:03.635Z","confidence":0.8}
+{"modality":"audio","event":"Dongping said: \"おもちゃ みんなであれですね プログラミングと英語だったんですよ\"","entityIds":["user"],"ts":"2026-03-29T03:40:16.252Z","confidence":0.8}
+{"modality":"audio","event":"Dongping said: \"プログラミングは今言ったら 僕の周りが優秀すぎて Google とかの人なんであとは あの あれ 何だっけ 求人の求人の Indeed か Indeed の検索エンジン 作ってるやつとか\"","entityIds":["user"],"ts":"2026-03-29T03:40:36.452Z","confidence":0.8}
+{"modality":"audio","event":"Dongping said: \"そのレベルなんすよ だからすごい優秀なやつら ばっかり Yahoo の広告やってたりとかするやつらがベースにいて こいつらに勝てねえな と思って情報を一旦やめたんですよね 僕はもう ハッキング ハッカ\"","entityIds":["user"],"ts":"2026-03-29T03:40:54.146Z","confidence":0.8}
+{"modality":"audio","event":"Dongping said: \"ね\"","entityIds":["user"],"ts":"2026-03-29T03:41:07.116Z","confidence":0.8}
+{"modality":"audio","event":"Dongping said: \"まあ それがロードとかのおかげで おかげさまで あの設計とか要件とかそういうのは得意なんで 料理ばっかやってたからね 落とし込むだけで行けるからだから そこで 自分1人で全て完結することができるように\"","entityIds":["user"],"ts":"2026-03-29T03:41:33.429Z","confidence":0.8}
+{"modality":"audio","event":"Dongping said: \"その通り\"","entityIds":["user"],"ts":"2026-03-29T03:41:45.879Z","confidence":0.8}
+{"modality":"audio","event":"Dongping said: \"牧場 来たんで そこは 開発は ぶん投げて欲しいです であとはあれですかね グローバルの商談があったら 流したらまたあの翻訳というか 通訳 みたいな形でついてもらって回るのもありかもしれないね 一緒に\"","entityIds":["user"],"ts":"2026-03-29T03:42:20.438Z","confidence":0.8}
+{"modality":"audio","event":"Dongping said: \"そこら辺はなんか 領域がちょうど 被ってないんで 足し算するとマジで2倍になるなと思ってます\"","entityIds":["user"],"ts":"2026-03-29T03:42:36.481Z","confidence":0.8}
+{"modality":"audio","event":"Dongping said: \"最近にいいね\"","entityIds":["user"],"ts":"2026-03-29T03:42:55.836Z","confidence":0.8}
+{"modality":"audio","event":"Dongping said: \"早口\"","entityIds":["user"],"ts":"2026-03-29T03:43:07.903Z","confidence":0.8}
+{"modality":"audio","event":"Dongping said: \"は楽しみに 何の準備もせずにただ単純に喋りに行きます\"","entityIds":["user"],"ts":"2026-03-29T03:43:46.557Z","confidence":0.8}
+{"modality":"audio","event":"Dongping said: \"1回あのテストをしてみたんですね 後藤くんに対してこの話を 二人はそこなんですけどえっと 名古屋 岐阜に行ってる時に同時に 10件 アプリケーション開発が来た どうするっていう質問したのね\"","entityIds":["user"],"ts":"2026-03-29T03:44:15.840Z","confidence":0.8}
+{"modality":"audio","event":"Dongping said: \"やめたほうがいいと思います いや 結局 要件を決めるところでクライアントとの調整に 工数がかかるからやめたほうがいいと思いますって言ったんですよ\"","entityIds":["user"],"ts":"2026-03-29T03:44:32.299Z","confidence":0.8}
+{"modality":"audio","event":"Dongping said: \"これ\"","entityIds":["user"],"ts":"2026-03-29T03:44:38.457Z","confidence":0.8}
+{"modality":"audio","event":"Dongping said: \"その後に 分かりました と逆にどうですか って言ってきて 僕一人 やってやります\"","entityIds":["user"],"ts":"2026-03-29T03:44:59.434Z","confidence":0.8}
+{"modality":"audio","event":"Dongping said: \"なので えっと 今回のやつは片思いでやろうかなと思ってたんですけどもしかしたら片思いでやらないかもしれないので そこら辺 ちょっと判断させてくださいなんで片思いでっていう 紹介はしないかもしれない\"","entityIds":["user"],"ts":"2026-03-29T03:45:17.562Z","confidence":0.8}
+{"modality":"audio","event":"Dongping said: \"まだまだねそれでね 決めるわけにはいかないからそれで ちょっと後藤君にはちょっとずつ自分から話すけどという形なので えっと まあ なぜならせさんに これを伝えてるかと言うと後藤君とまあ 山崎さんと流し\"","entityIds":["user"],"ts":"2026-03-29T03:46:00.473Z","confidence":0.8}
+{"modality":"audio","event":"Dongping said: \"で 山崎さんはあの相変わらず いい感じにやることを淡々とやるという感じなんであれ なんでなんか 山崎さんも逆に この開発には手伝ってくれると思いますよ\"","entityIds":["user"],"ts":"2026-03-29T03:46:15.005Z","confidence":0.8}
+{"modality":"audio","event":"Dongping said: \"今家を教えてんでうん\"","entityIds":["user"],"ts":"2026-03-29T03:46:18.130Z","confidence":0.8}
+{"modality":"audio","event":"Dongping said: \"うん\"","entityIds":["user"],"ts":"2026-03-29T03:46:23.654Z","confidence":0.8}
+{"modality":"audio","event":"Dongping said: \"いやそれ\"","entityIds":["user"],"ts":"2026-03-29T03:46:35.015Z","confidence":0.8}
+{"modality":"audio","event":"Dongping said: \"取らなかった 意味ないじゃない 行けないじゃない 結局1人やったら取るでしょ\"","entityIds":["user"],"ts":"2026-03-29T03:46:54.813Z","confidence":0.8}
+{"modality":"audio","event":"Dongping said: \"1月で引っ越す前提だもんね\"","entityIds":["user"],"ts":"2026-03-29T03:47:34.707Z","confidence":0.8}
+{"modality":"audio","event":"Dongping said: \"できますよね\"","entityIds":["user"],"ts":"2026-03-29T03:48:50.916Z","confidence":0.8}
+{"modality":"audio","event":"Dongping said: \"頑張ってください\"","entityIds":["user"],"ts":"2026-03-29T03:49:51.176Z","confidence":0.8}
+{"modality":"audio","event":"Dongping said: \"まあとはいえ 一緒にやりたいなって ちょっと肌感 もすごく良かったし 楽しかったしあとまあ何でしょうね 部屋にも行かせてもらった ホワイトボードに反応したとかねまあいろいろあるんですけどすごく 何だろ\"","entityIds":["user"],"ts":"2026-03-29T03:50:16.377Z","confidence":0.8}
+{"modality":"audio","event":"Dongping said: \"ます\"","entityIds":["user"],"ts":"2026-03-29T03:50:22.821Z","confidence":0.8}
+{"modality":"audio","event":"Dongping said: \"けどね\"","entityIds":["user"],"ts":"2026-03-29T03:50:33.827Z","confidence":0.8}
+{"modality":"audio","event":"Dongping said: \"4回\"","entityIds":["user"],"ts":"2026-03-29T03:50:39.447Z","confidence":0.8}
+{"modality":"audio","event":"Dongping said: \"あーそういうことは思います\"","entityIds":["user"],"ts":"2026-03-29T03:50:47.391Z","confidence":0.8}
+{"modality":"audio","event":"Dongping said: \"事務所として\"","entityIds":["user"],"ts":"2026-03-29T03:50:49.431Z","confidence":0.8}
+{"modality":"audio","event":"Dongping said: \"隠居生活は部下 じゃなくて最強だと思ってるので\"","entityIds":["user"],"ts":"2026-03-29T03:51:08.730Z","confidence":0.8}
+{"modality":"audio","event":"Dongping said: \"外歩かなきゃいけない ゲートタワーウエスト 限定ですけど\"","entityIds":["user"],"ts":"2026-03-29T03:51:27.329Z","confidence":0.8}
+{"modality":"audio","event":"Dongping said: \"まあ見つからないんで\"","entityIds":["user"],"ts":"2026-03-29T03:51:35.871Z","confidence":0.8}
+{"modality":"audio","event":"Dongping said: \"ブルー フロント芝浦\"","entityIds":["user"],"ts":"2026-03-29T03:51:48.587Z","confidence":0.8}
+{"modality":"audio","event":"Dongping said: \"目標に頑張りましょうか\"","entityIds":["user"],"ts":"2026-03-29T03:52:02.450Z","confidence":0.8}
+{"modality":"audio","event":"Dongping said: \"とから回収するっていうビジネス どうしてもそういう ボンネルになってるものと\"","entityIds":["user"],"ts":"2026-03-29T03:52:33.817Z","confidence":0.8}
+{"modality":"audio","event":"Dongping said: \"あとはもうアプリ開発 みたいに もう僕今 アプリ 開発 やろうとしてるのはどんなアプリ開発を無償でやってレベニューシェア でやるんですよ\"","entityIds":["user"],"ts":"2026-03-29T03:52:46.136Z","confidence":0.8}
+{"modality":"audio","event":"Dongping said: \"そしたら 僕らの力じゃなくて他人の力でね もらえるんでそう そこそこをやるね 先日もそのサーズの EC の人たちにも AI を導入するの 言ってで初期費用かかるんですよね 送水 1000万ぐらいかかる\"","entityIds":["user"],"ts":"2026-03-29T03:53:15.568Z","confidence":0.8}
+{"modality":"audio","event":"Dongping said: \"増やしていきたいでまあもちろん取れるとか取るのでなくて 基本料金 本当に1000万のとこ100万にします その分でメシア にしましょうみたいな\"","entityIds":["user"],"ts":"2026-03-29T03:53:36.459Z","confidence":0.8}
+{"modality":"audio","event":"Dongping said: \"聞こえるか\"","entityIds":["user"],"ts":"2026-03-29T16:33:11.969Z","confidence":0.8}
+{"modality":"audio","event":"Dongping said: \"早く\"","entityIds":["user"],"ts":"2026-03-29T16:33:36.038Z","confidence":0.8}
+{"modality":"audio","event":"Dongping said: \"反応が悪いです\"","entityIds":["user"],"ts":"2026-03-29T16:33:46.921Z","confidence":0.8}
+{"modality":"audio","event":"Dongping said: \"マイクの感度が悪いですね\"","entityIds":["user"],"ts":"2026-03-29T16:34:02.793Z","confidence":0.8}
+{"modality":"audio","event":"Dongping said: \"今あなたはどのオープンクロ で動いてんですか\"","entityIds":["user"],"ts":"2026-03-29T16:34:24.865Z","confidence":0.8}
+{"modality":"audio","event":"Dongping said: \"今知ってるんだっけ\"","entityIds":["user"],"ts":"2026-03-29T23:50:50.661Z","confidence":0.8}
+{"modality":"audio","event":"Dongping said: \"大丈夫\"","entityIds":["user"],"ts":"2026-03-29T23:50:57.491Z","confidence":0.8}
+{"modality":"audio","event":"Dongping said: \"やめてください\"","entityIds":["user"],"ts":"2026-03-29T23:51:32.250Z","confidence":0.8}
+{"modality":"audio","event":"Dongping said: \"議論できますか\"","entityIds":["user"],"ts":"2026-03-29T23:52:41.721Z","confidence":0.8}
+{"modality":"audio","event":"Dongping said: \"オープンクローバー 周りで議論したいです\"","entityIds":["user"],"ts":"2026-03-29T23:52:51.101Z","confidence":0.8}
+{"modality":"audio","event":"Dongping said: \"あなたの音声認識の精度を上げる方法を教えて\"","entityIds":["user"],"ts":"2026-03-29T23:53:08.903Z","confidence":0.8}
+{"modality":"audio","event":"Dongping said: \"あなた自身の技術の問題\"","entityIds":["user"],"ts":"2026-03-29T23:53:27.874Z","confidence":0.8}
+{"modality":"audio","event":"Dongping said: \"が多いよ\"","entityIds":["user"],"ts":"2026-03-29T23:53:43.763Z","confidence":0.8}
