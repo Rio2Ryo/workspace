@@ -85,7 +85,7 @@ async function chatWithOllama({ channelId, userText }) {
   }
 
   const data = await res.json()
-  const answer = data.message?.content?.trim() || '(empty response)'
+  const answer = data.message?.content?.trim() || data.message?.thinking?.trim() || '(empty response)'
   remember(channelId, 'user', userText)
   remember(channelId, 'assistant', answer)
   return { model, answer }

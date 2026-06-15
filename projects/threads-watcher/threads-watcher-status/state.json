@@ -5,11 +5,11 @@
     "@bmw_intokyo"
   ],
   "last_check": {
-    "checked_at": "2026-06-15T11:57:33Z",
+    "checked_at": "2026-06-15T12:58:22Z",
     "found_count": 4,
     "new_count": 0,
     "status": "partial_error",
-    "error": "profile extraction returned partial result: found=4 previous_max=15"
+    "error": "profile extraction returned partial result: found=4 previous_max=16"
   },
   "saved_count": 98,
   "posts": [
@@ -1299,7 +1299,7 @@
     "partial_error_rate": 1.0,
     "top_partial_error_reason": {
       "reason": "profile extraction returned partial result: found=4 previous_max=16",
-      "count": 597
+      "count": 605
     }
   },
   "recent_stats_by_window": {
@@ -1313,8 +1313,8 @@
       "success_rate": 0.0,
       "partial_error_rate": 1.0,
       "top_partial_error_reason": {
-        "reason": "profile extraction returned partial result: found=15 previous_max=16",
-        "count": 23
+        "reason": "profile extraction returned partial result: found=4 previous_max=16",
+        "count": 26
       }
     },
     "24": {
@@ -1328,21 +1328,21 @@
       "partial_error_rate": 1.0,
       "top_partial_error_reason": {
         "reason": "profile extraction returned partial result: found=4 previous_max=16",
-        "count": 597
+        "count": 605
       }
     },
     "168": {
       "window_hours": 168,
-      "total": 6537,
+      "total": 6579,
       "ok": 0,
-      "partial_error": 6535,
+      "partial_error": 6577,
       "error": 2,
       "other": 0,
       "success_rate": 0.0,
-      "partial_error_rate": 0.9996940492580695,
+      "partial_error_rate": 0.9996960024319805,
       "top_partial_error_reason": {
         "reason": "profile extraction returned partial result: found=4 previous_max=16",
-        "count": 4608
+        "count": 4634
       }
     }
   },
@@ -1358,7 +1358,7 @@
     {
       "handle": "@bmw_intokyo",
       "warn_ts": 1781202276,
-      "current_bucket": 0.8
+      "current_bucket": 0.7
     },
     {
       "handle": "@hal.lifedesign",
@@ -1366,5 +1366,5 @@
       "current_bucket": 1.0
     }
   ],
-  "snapshot_generated_at": "2026-06-15T11:57:33Z"
+  "snapshot_generated_at": "2026-06-15T12:58:23Z"
 }
