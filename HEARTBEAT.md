@@ -32,6 +32,34 @@ High Risk:
 - 削除系操作
 - 秘密情報の共有
 
+## 2026-06-15 heartbeat (122回目)
+
+**アクション**: `/Users/umi/.openclaw/workspace/HEARTBEAT.md` を指定パスで読み、`tasks/QUEUE.md` の Ready / In Progress を確認。Ready 未完了なし、In Progress は `food-dx-shiro` のみ。121回目でDB投入・seedまで進んだため、次アクションの seed後日本語UI確認へ進めた。OpenClaw browser は localhost navigation が policy でブロックされたため、ローカルAPI/Webを起動し、HTTP/APIベースでseed済みUI前段を確認。あわせてAPI dev起動を止めていたruntime blocker 2件を低リスク修正して commit。
+
+**検証**:
+- QUEUE Ready 未完了なし。In Progress = `food-dx-shiro`。
+- `food-dx-shiro`: tmux `food-dx-shiro` 存在。repo `/Users/umi/.openclaw/workspace/food-dx-qwen/food-dx-system` は branch `main`。今回 commit `0f7ed89 fix: unblock food-dx local API smoke handoff` を作成。
+- API dev初回起動は `@food-dx/shared/validators` の package exports が CJS runtime で解決できず fail。`packages/shared/package.json` の exports に `default` を追加して解消。
+- API dev再起動は `PDFDocument.use` が現行 `pdfkit` runtime に存在せず fail。`apps/api/src/services/pdfService.ts` を optional call にして解消。
+- local API 起動後、`GET /health` → 200。
+- seed済み認証: `POST /api/auth/login` with `admin@foodmarket.co.jp` → 200、user role `ADMIN`、token発行あり。
+- seed済みAPI確認: `/api/auth/me` 200、`/api/products` 200（products 5）、`/api/orders` 200（orders 3）、`/api/notifications` 200、`/api/analytics/sales` 200、`/api/analytics/customers` 200、`/api/analytics/products` 200。
+- Web主要route HTTP確認: `/`、`/login`、`/register`、`/dashboard`、`/products`、`/products/search`、`/orders`、`/orders/new`、`/orders/history`、`/notifications`、`/settings/notifications`、`/settings/approvals`、`/approvals`、`/documents`、`/analytics`、`/analytics/sales`、`/analytics/customers`、`/analytics/products` はすべて 200。HTML内に日本語UI語（食品/受発注/ログイン/登録/商品/注文/通知/設定/承認/分析 等）を確認。
+- `scripts/print-db-e2e-handoff.mjs` と `scripts/check-db-e2e-handoff-contract.mjs` を、DB未実施の旧文言から「local DB seed済み、残りはブラウザ実操作確認」へ更新。
+- `npm run test:db-e2e-handoff-contract` → pass。
+- `npm run test:web:a11y-contract` → pass。
+- `npm run lint` → pass（Next.js plugin warning のみ）。
+- `npm run build:api` → pass。
+- `npm run build:web` → pass（21 pages generated）。
+- OpenClaw browser `open http://localhost:3000/login` は policy block。今回は実ブラウザ操作・console/network監査までは未実施。
+- dev API/Web session は停止済み。
+- disk: `/System/Volumes/Data` は 98% 使用、空き 4.2GiB。既存の disk cleanup 承認待ち範囲内。削除系操作は未実行。
+- workspace tracked 変更: `tasks/QUEUE.md` に本件の進行記録を追記、`HEARTBEAT.md` の本記録、`projects/threads-watcher/threads-watcher-status/state.json` の既存自動更新を確認。今回のheartbeatでは既存差分の巻き戻しなし。
+
+**状態**: Ready 未完了なし。`food-dx-shiro` は担当=白。DB接続待ちとAPI起動blockerは解消し、local DB seed済み状態でAPIログイン・seedデータAPI・主要Web route HTTP表示までは確認済み。次アクションは利用可能なブラウザE2E環境で seed後日本語UIの実操作、console/network error、動的フロー（注文追加、通知設定、承認詳細、PDF等）を確認すること。詰まりはブラウザ実操作確認環境待ち。disk cleanup / RAKUI [DONE] packet は既存承認待ちで、新規判断依頼なし。
+
+**通知判断**: notify=false（前進はあったが、ユーザーの即時判断は不要。削除・push・deploy・本番変更・秘密情報共有は実行していない）。
+
 ## 2026-06-15 heartbeat (121回目)
 
 **アクション**: `/Users/umi/.openclaw/workspace/HEARTBEAT.md` を指定パスで読み、`tasks/QUEUE.md` の Ready / In Progress を確認。Ready 未完了なし、In Progress は `food-dx-shiro` のみ。停止判定に従い、`food-dx-shiro` の tmux / repo / DB接続環境 / handoff契約を再確認したところ、localhost PostgreSQL が到達可能になっていたため、DB投入・seed・契約テスト・品質ゲートを実行。
