@@ -59,6 +59,21 @@ git -C /Users/umi/.openclaw/workspace/cycle-tracker-app push --force origin main
 
 ---
 
+## 2026-06-16 heartbeat (129回目)
+
+**アクション**: `/Users/umi/.openclaw/workspace/HEARTBEAT.md` を指定パスで読み、`tasks/QUEUE.md` の Ready / In Progress を確認。Ready 未完了なし、In Progress は `food-dx-shiro` のみ。最上位の `cycle-tracker-app force push` 承認パケットは前回通知済みで、今回も承認サインがないため未実行。disk / 実行中プロセス / cycle-tracker の local/remote 状態を read-only で確認した。
+
+**検証**:
+- QUEUE Ready 未完了なし。In Progress = `food-dx-shiro`。
+- `cycle-tracker-app`: local `HEAD` は `0522e96`、`origin/main` は `3d98fb7`。`git merge-base HEAD origin/main` は空で、前回同様に共通祖先なし。working tree は tracked 変更なし。
+- `next dev` / API `tsx watch` / Playwright / Vite / Wrangler dev など、前回検証由来のローカル dev/test プロセスは残っていない。
+- disk: `/System/Volumes/Data` は 99% 使用、空き 3.8GiB。前回 2.9GiB から自然回復したが、build / browser E2E / install が止まり得る水準は継続。
+- push / force push / deploy / 本番変更 / 秘密情報共有 / 削除系操作は未実行。
+
+**状態**: `food-dx-shiro` は担当=白。前回までに local DB seed / API dynamic smoke / Web runtime blocker修正 / 通常ゲート全passまで完了済み。現在の詰まりは disk 空き不足による検証安定性リスク。`cycle-tracker-app` は force push 承認待ちで、承認サインは `cycle-tracker force push OK`。
+
+**通知判断**: notify=false（cycle-tracker force push 判断は前回 128回目で通知済み。disk は 2.9GiB から 3.8GiB へ改善し、新規悪化ではないため重複割り込みしない）。
+
 ## 2026-06-16 heartbeat (128回目)
 
 **アクション**: `/Users/umi/.openclaw/workspace/HEARTBEAT.md` を指定パスで読み、`tasks/QUEUE.md` の Ready / In Progress を確認。Ready 未完了なし、In Progress は `food-dx-shiro` のみ。最上位の `cycle-tracker-app force push` 承認パケットは High Risk（リモート履歴上書き）として認識し、承認サインがないため実行せず、read-only でローカル/remote 状態だけ照合した。disk は 2.9GiB / 99% のため、今回も削除と重いブラウザE2Eは行わなかった。
