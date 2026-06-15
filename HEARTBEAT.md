@@ -32,6 +32,22 @@ High Risk:
 - 削除系操作
 - 秘密情報の共有
 
+## 2026-06-15 heartbeat (126回目)
+
+**アクション**: `/Users/umi/.openclaw/workspace/HEARTBEAT.md` を指定パスで読み、`tasks/QUEUE.md` の Ready / In Progress を確認。Ready 未完了なし、In Progress は `food-dx-shiro` のみ。前回 125回目で disk が 3.0GiB まで自然回復していたが、今回は 2.0GiB まで再低下していたため、重いブラウザE2Eは実行せず、実行中プロセスと削除候補を read-only で確認した。
+
+**検証**:
+- QUEUE Ready 未完了なし。In Progress = `food-dx-shiro`。
+- `next dev` / API `tsx watch` / Playwright / Vite / Wrangler dev など、前回検証由来のローカル dev/test プロセスは残っていない。
+- disk: `/System/Volumes/Data` は 99% 使用、空き 2.0GiB。前回の 3.0GiB / 99% からさらに低下し、build / browser E2E / install が止まり得る水準。
+- 削除候補の read-only 計測: `/Users/umi/.npm` 6.9G、`~/Library/Developer/Xcode/DerivedData` 547M、`/Users/umi/.cache` 3.9G。いずれも削除系操作のため未実行。
+- `food-dx-shiro` の次アクションは、disk余裕を確保したうえで local rate limit を避ける低速ルート別ブラウザE2Eを行い、console/network error と画面遷移を確認すること。
+- push / deploy / 本番変更 / 秘密情報共有 / 削除系操作は未実行。
+
+**状態**: `food-dx-shiro` は担当=白。前回までに local DB seed / API dynamic smoke / Web runtime blocker修正 / 通常ゲート全passまで完了済み。現在の詰まりは disk 空き不足による検証安定性リスク。最小の次アクションは、Yakon承認後に再生成可能な npm cache のみ削除し、空き容量を回復してから低速ブラウザE2Eへ戻ること。
+
+**通知判断**: notify=true（前回 3.0GiB から 2.0GiB へ悪化。既存承認待ちではあるが、運用停止・検証失敗リスクが再上昇したため）。
+
 ## 2026-06-15 heartbeat (125回目)
 
 **アクション**: `/Users/umi/.openclaw/workspace/HEARTBEAT.md` を指定パスで読み、`tasks/QUEUE.md` の Ready / In Progress を確認。Ready 未完了なし、In Progress は `food-dx-shiro` のみ。前回 124回目で disk が 100% / 243MiB まで低下していたため、削除は行わず、実行中プロセス・repo状態・再生成可能な容量候補を read-only で確認した。
