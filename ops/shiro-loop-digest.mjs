@@ -8,6 +8,7 @@ const STATE_FILE = path.join(STATE_DIR, 'state.json');
 const DIGEST_FILE = path.join(STATE_DIR, 'digest-state.json');
 const VERIFIER_REPORT_FILE = path.join(STATE_DIR, 'last-verifier-report.json');
 const LAST_REPORT_FILE = path.join(STATE_DIR, 'last-report.json');
+const WORKFLOW_REPORT_FILE = path.join(ROOT, 'state/shiro-workflows/last-report.json');
 const OPENCLAW_CONFIG_FILE = '/Users/umi/.openclaw/openclaw.json';
 const now = Date.now();
 
@@ -150,15 +151,16 @@ function buildDecisionReport({ sessions, changedSinceLastDigest, verifierReport,
     });
   });
   const shiroActions = [...actionBySession.values()];
-  const actualActions = Array.isArray(lastReport?.notifications)
+  const nudgedActions = Array.isArray(lastReport?.notifications)
     ? lastReport.notifications
-      .filter((item) => item.acted === true || item.kind === 'nudged')
+      .filter((item) => item.kind === 'nudged' || item.acted === true)
       .map((item) => ({
         session: item.session,
-        action: item.kind === 'nudged' ? 'tmuxへ再投入' : '実行',
+        action: 'セッションへ再投入',
         reason: item.reason || item.next || '',
       }))
     : [];
+  const actualActions = [];
   const proactiveSuggestions = buildProactiveSuggestions({ sessions, needsRefine, selfAction, verifierMismatch });
 
   const label = pendingHuman.length > 0
@@ -179,7 +181,7 @@ function buildDecisionReport({ sessions, changedSinceLastDigest, verifierReport,
 
   const lines = [
     `Yakonさんがやること: ${pendingHuman.length ? `${pendingHuman.length}件あり（白が具体化中）` : 'なし'}`,
-    `白が実行したこと: ${actualActions.length ? `${actualActions.length}件` : 'なし'}`,
+    `白がやること: ${nudgedActions.length ? `再投入後の結果確認 ${nudgedActions.length}件` : shiroActions.length ? `整理待ち ${shiroActions.length}件` : 'なし'}`,
     `期限/影響: ${pendingHuman.length ? 'Yakonさん判断/作業が必要な項目は止まります。白がYes/Noで答えられる形に詰めます。' : '放置してもYakonさん側の作業は増えません。白が進めます。'}`,
     `推奨: ${recommendation}`,
   ];
@@ -201,6 +203,14 @@ function buildDecisionReport({ sessions, changedSinceLastDigest, verifierReport,
       lines.push(`- ${item.session}: ${item.action}${reason}`);
     });
     if (actualActions.length > 8) lines.push(`- 他 ${actualActions.length - 8}件`);
+  } else if (nudgedActions.length) {
+    lines.push('');
+    lines.push('再投入しただけで、まだ成果未確認:');
+    nudgedActions.slice(0, 8).forEach((item) => {
+      const reason = item.reason ? `（${item.reason.slice(0, 60)}）` : '';
+      lines.push(`- ${item.session}: ${item.action}${reason}`);
+    });
+    if (nudgedActions.length > 8) lines.push(`- 他 ${nudgedActions.length - 8}件`);
   } else if (shiroActions.length) {
     lines.push('');
     lines.push('未実行の整理待ち:');
@@ -229,8 +239,10 @@ function buildDecisionReport({ sessions, changedSinceLastDigest, verifierReport,
     lines.push(`検証: ${verdicts || 'なし'}`);
   }
   lines.push(actualActions.length
-    ? '次: 実行後の各セッション結果を確認し、変化があったスレッド単位で報告します。'
-    : '次: 未実行なので、報告ではなく再投入・実行を先に行います。');
+    ? '次: 実行結果を確認し、変化があったスレッド単位で報告します。'
+    : nudgedActions.length
+      ? '次: 再投入後の成果を確認し、成果が出るまで進捗扱いにしません。'
+    : '次: 未実行なので、報告より先に各セッションへの確認送信・実行を進めます。');
 
   return {
     label,
@@ -238,6 +250,7 @@ function buildDecisionReport({ sessions, changedSinceLastDigest, verifierReport,
     yakonQuestions,
     shiroActions,
     actualActions,
+    nudgedActions,
     proactiveSuggestions,
     verifierMismatch,
     humanMessage: lines.join('\n'),
@@ -245,6 +258,22 @@ function buildDecisionReport({ sessions, changedSinceLastDigest, verifierReport,
 }
 
 function main() {
+  const workflowReport = readJson(WORKFLOW_REPORT_FILE, null);
+  if (workflowReport?.humanMessage) {
+    const report = {
+      ts: new Date(now).toISOString(),
+      shouldSend: true,
+      reportLabel: 'Shiro workflow controller',
+      source: 'state/shiro-workflows/last-report.json',
+      humanMessage: workflowReport.humanMessage,
+      workflowSummary: workflowReport.summary || null,
+    };
+    writeJson(path.join(STATE_DIR, 'last-digest.json'), report);
+    writeJson(DIGEST_FILE, { lastDigestAt: now });
+    console.log(JSON.stringify(report, null, 2));
+    return;
+  }
+
   const state = readJson(STATE_FILE, { sessions: {} });
   const digestState = readJson(DIGEST_FILE, { lastDigestAt: null });
   const verifierReport = readJson(VERIFIER_REPORT_FILE, null);

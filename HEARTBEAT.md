@@ -89,6 +89,20 @@ High Risk:
 
 **通知判断**: notify=false（新規障害なし。既知のDB待ち・disk cleanup承認待ち・watcher回復確認のみ）。
 
+## 2026-06-15 heartbeat (111回目)
+
+**アクション**: `tmux-web-view-app` (ready_to_act) の Next.js `outputFileTracingRoot` 警告を修正。`tmp/tmux-web-view-source/next.config.ts` を新規作成し `outputFileTracingRoot: path.resolve(__dirname)` を設定。`npm run build` でビルド成功・警告消滅を確認。ops/message-quality-check.mjs + ops/shiro-loop-digest.mjs（並列セッション更新、秘密値なし）と state.json を commit。
+
+**検証**:
+- `npm run build` → Next.js 16.2.4 / Turbopack / 3 pages generated / 5 routes — "inferred workspace root" 警告なし ✅
+- ops diff: `message-quality-check.mjs` +16/-2（regex 追加、false-positive 除去、mislabeled check 3件追加）`shiro-loop-digest.mjs` +41/-4（nudgedActions 分離、workflow report passthrough 追加）— 秘密値なし ✅
+- state.json: 23:57Z snapshot、partial_error 継続、saved_count=98 — 秘密値なし ✅
+- `tmp/` は untracked — next.config.ts は dev 環境に残置、push 不要
+
+**状態**: RESULT_OBSERVED — tmux-web-view-app の Next.js 警告 fix 完了。food-dx DB接続待ち・disk cleanup承認待ち継続。
+
+**通知判断**: notify=false（修正完了、新規障害なし）。
+
 ## 2026-06-15 heartbeat (110回目)
 
 **アクション**: push 承認 `! git push origin shiro/cycle-tracker-app` を受け fetch で確認。workspace は remote と in-sync ✅。threads-watcher state.json が自動更新（23:27Z → 23:57Z、counts micro-変化、秘密値なし）のため commit。

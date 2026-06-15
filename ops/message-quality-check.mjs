@@ -14,7 +14,7 @@ if (numbered.length > 1) {
   }
 }
 
-const hasUserAction = /Yakonさんがやること|Ryoさんがやること|あなたがやること|確認だけ|なし/.test(text)
+const hasUserAction = /Yakonさんがやること|Yakonさんにお願いしたいこと|Ryoさんがやること|あなたがやること|確認だけ|なし/.test(text)
 const looksLikeReport = /報告|完了|ブロッカー|判断|承認|実装|検証|テスト|deploy|push/.test(text)
 if (looksLikeReport && !hasUserAction) failures.push('report lacks explicit user-action line')
 
@@ -27,8 +27,20 @@ if (/Yakon確認.*必須|Yakon confirmation.*required/i.test(text)) {
   if (!hasConcreteAsk) failures.push('required confirmation is not converted into a concrete Yakon action')
 }
 
-if (/再投入|安全な一手|管理アクション|原因分析→仮説→実装→テスト→結果報告/.test(text)) {
+if (/安全な一手|管理アクション|原因分析→仮説→実装→テスト→結果報告/.test(text)) {
   failures.push('contains generic keeper/template wording')
+}
+
+if (/実行したこと:[\s\S]*(セッションへ確認を送信|セッションへ再投入|確認を送信)/.test(text)) {
+  failures.push('nudge/check-send is mislabeled as completed execution')
+}
+
+if (/成果確認済み:[\s\S]*^\s*-\s+.*(❯|確認して|許可して|待ち|次回|次チェック|再投入)/m.test(text)) {
+  failures.push('unverified prompt/wait text is mislabeled as observed result')
+}
+
+if (/白がやること:[^\n]*実行後の結果確認/.test(text)) {
+  failures.push('pending follow-up is phrased as if execution already happened')
 }
 
 if (/^\s*[-*]\s*$/.test(text)) failures.push('empty bullet exists')
