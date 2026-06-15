@@ -299,3 +299,9 @@
 {"ts":"2026-06-15T11:27:54.791Z","id":"shiro-obsidian-second-brain","session":"shiro-obsidian-second-brain","threadId":"1512250378593370337","status":"active","decisionKind":"watch","resultObserved":false,"approvalReady":false}
 {"ts":"2026-06-15T11:27:54.791Z","id":"top3-goose","session":"top3-goose","threadId":"1505419396691267584","status":"pending_approval","decisionKind":"needs-yakon","resultObserved":false,"approvalReady":false}
 {"ts":"2026-06-15T11:27:54.791Z","id":"vast-ai-rtx5090-jp","session":"vast-ai-rtx5090-jp","threadId":"1504835837932732557","status":"pending_approval","decisionKind":"external-action","resultObserved":true,"approvalReady":false}
+{"ts":"2026-06-15T11:57:57.760Z","id":"daily-report-codex","session":"daily-report-codex","threadId":"1505429154215100507","status":"pending_approval","decisionKind":"external-action","resultObserved":true,"approvalReady":false}
+{"ts":"2026-06-15T11:57:57.760Z","id":"shiro-email-manager","session":"shiro-email-manager","threadId":null,"status":"blocked","decisionKind":"unblock","resultObserved":false,"approvalReady":false}
+{"ts":"2026-06-15T11:57:57.760Z","id":"shiro-feed-tunnel","session":"shiro-feed-tunnel","threadId":null,"status":"blocked","decisionKind":"unblock","resultObserved":false,"approvalReady":false}
+{"ts":"2026-06-15T11:57:57.760Z","id":"shiro-ledger-claude","session":"shiro-ledger-claude","threadId":"1506920712542355538","status":"pending_approval","decisionKind":"external-action","resultObserved":false,"approvalReady":false}
+{"ts":"2026-06-15T11:57:57.760Z","id":"shiro-paper-manager","session":"shiro-paper-manager","threadId":null,"status":"blocked","decisionKind":"unblock","resultObserved":false,"approvalReady":false}
+{"ts":"2026-06-15T11:57:57.760Z","id":"shiro-subsidy-research","session":"shiro-subsidy-research","threadId":"1506464983154819152","status":"blocked","decisionKind":"unblock","resultObserved":false,"approvalReady":false}

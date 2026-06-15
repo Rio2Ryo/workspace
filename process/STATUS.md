@@ -8,6 +8,8 @@
 
 | Agent | Task | Started | Status |
 |-------|------|---------|--------|
+| shiro | **cycle-tracker-app** — lint ✅ / test 34/34 ✅ / build ✅。local `0522e96`(feat: profile label customization, 2026-06-15) が remote より 24 commits 先行・未 push・未 deploy。承認パケット準備済み。 | 2026-06-15 | 🔴 Blocked: Yakon push+deploy 承認待ち |
+| shiro | **yosuke-matsuura-profile** — build ✅ lint ✅ / remote ff6916f = local HEAD (push 済み確認) / Vercel project prj_79FCkPc5rnW780zlzzk0OBu0yB98 存在。ワークフロー完了。 | 2026-06-15 | ✅ Done |
 | shiro | **second-brain** — deploy 完了 ✅ (2026-06-15): CF Workers `7f831188` + CF Pages `f3597f17`. smoke test 全6チェック PASS (`47b86c9`). | 2026-06-15 | ✅ Done |
 | shiro | **RAKUI** (Real Estate Investment Decision App) — bundle.js 内で修正コード確認済・open PR ゼロ・本番変更ゼロ・HEAD `d0bc983`(2026-06-14)。承認パケット: 「**A: [DONE] つける**」または「**B: Sora で生 Excel 確認を先に実施**」 | 2026-06-15 | 🔴 Blocked: Yakon A/B 判定待ち |
 | shiro | **food-dx** — Yakon A OK → brew install postgresql@15 実施。DB接続確認・20テーブル作成・seed完了(Users:3/Companies:2/Products:5/Orders:3)。a11y-contract PASS / handoff-contract PASS。次: GitHub push + Vercel deploy 承認待ち | 2026-06-15 | 🟡 In Progress: GitHub push 承認待ち |

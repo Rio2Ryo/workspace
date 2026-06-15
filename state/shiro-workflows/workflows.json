@@ -1,6 +1,6 @@
 {
   "version": 3,
-  "updatedAt": "2026-06-15T11:27:54.791Z",
+  "updatedAt": "2026-06-15T11:57:57.760Z",
   "workflows": [
     {
       "id": "thread:1505544095274238192",
@@ -35,7 +35,7 @@
       "legacy": null,
       "fingerprint": "296886ecf96e7d6439c7bbd00a219e92efd29a6bb7b6a8fccd5c0f9febbdbcec",
       "changed": false,
-      "lastSeenAt": 1781522874791,
+      "lastSeenAt": 1781524677760,
       "lastChangedAt": 1781482538778,
       "lastActionAt": null,
       "lastReportedAt": null,
@@ -75,7 +75,7 @@
       "legacy": null,
       "fingerprint": "7707dfe8dfe06aa96ce94071130e6d6e7e1f087d193e257f059175fb4fdf1751",
       "changed": false,
-      "lastSeenAt": 1781522874791,
+      "lastSeenAt": 1781524677760,
       "lastChangedAt": 1781482538778,
       "lastActionAt": null,
       "lastReportedAt": null,
@@ -115,7 +115,7 @@
       "legacy": null,
       "fingerprint": "44d213618eb2bd6858abb8fa5229df9d67db54952b5a433df2ffe2caeb75e517",
       "changed": false,
-      "lastSeenAt": 1781522874791,
+      "lastSeenAt": 1781524677760,
       "lastChangedAt": 1781482538778,
       "lastActionAt": null,
       "lastReportedAt": null,
@@ -128,8 +128,8 @@
       "threadId": "1505429154215100507",
       "title": "daily-report-codex",
       "source": "override",
-      "status": "blocked",
-      "decisionKind": "unblock",
+      "status": "pending_approval",
+      "decisionKind": "external-action",
       "risk": "high",
       "policy": {
         "kind": "implementation-agent",
@@ -141,30 +141,34 @@
       "doneThread": false,
       "resultObserved": true,
       "progressReportable": true,
-      "approvalPacket": null,
+      "approvalPacket": {
+        "ready": false,
+        "subject": "daily-report-codex の外部/高リスク操作を進めてよいか",
+        "recommendedDecision": "exact action と rollback が明確なものだけ承認",
+        "exactAction": "Yakon A OK",
+        "risk": "高: 外部公開/本番/秘密値/削除/課金の可能性",
+        "rollback": "実行前に現状を保持し、変更対象を限定して戻せる状態で行う",
+        "waitImpact": "承認がない間は外部反映・本番反映・秘密値操作が止まる",
+        "evidence": "❯ Yakon A OK"
+      },
       "verification": {
         "required": true,
         "resultObserved": true,
-        "evidence": "ローカルの PostgreSQL 版（4 コミット・DB seed 済み・handoff 契約通過）が",
+        "evidence": "- npm test → 34/34 pass（pwa.test.ts 5 / profiles.test.js 11 / cycle.test.ts",
         "urls": [],
         "executorSelfReportOnly": false
       },
-      "nextAutoAction": "秘密値/外部要因を切り分け、承認パケット化する",
-      "evidence": "BLOCKED_CONCRETE",
-      "recentExcerpt": "本番環境への影響 なし\n└ ┴ ┘\n放置した場合の影響\nローカルの PostgreSQL 版（4 コミット・DB seed 済み・handoff 契約通過）が\nGitHub に存在しないまま。他エージェント・CI からアクセス不可の状態が継続する。\nBLOCKED_CONCRETE\n✻ Worked for 4m 45s\n2% until auto-compact\n❯ …\n⏵⏵ auto mode on (shift+tab to cycle) · ← for agents",
+      "nextAutoAction": "承認パケットを exact action / rollback / risk / wait impact まで具体化する",
+      "evidence": "❯ Yakon A OK",
+      "recentExcerpt": "検証エビデンス（Shiro 独立確認済み）:\n- npm run lint → exit 0\n- npm test → 34/34 pass（pwa.test.ts 5 / profiles.test.js 11 / cycle.test.ts\n18）\n- npm run build → ✓ built in 702ms、dist 生成確認\n- git ls-remote --heads origin → 3d98fb7 refs/heads/main（local 0522e96 より\n24 commits 遅延）\n✻ Cooked for 8m 45s\n❯ Yakon A OK\n⏵⏵ auto mode on (shift+tab to cycle) · ← for agents",
       "legacy": null,
-      "fingerprint": "4a9a2aea3b748673b9ceb51603d7a29ff45726ce62aacb58d301a381b7477a9e",
-      "changed": false,
-      "lastSeenAt": 1781522874791,
-      "lastChangedAt": 1781521075132,
-      "lastActionAt": 1781522874791,
+      "fingerprint": "b11e7b9869f4f1e718540924740c6a44ee98808aa7ae6c1d0a7410be74a93f56",
+      "changed": true,
+      "lastSeenAt": 1781524677760,
+      "lastChangedAt": 1781524677760,
+      "lastActionAt": 1781524677760,
       "lastReportedAt": null,
       "actionHistory": [
-        {
-          "ts": "2026-06-15T04:57:57.904Z",
-          "status": "blocked",
-          "prompt": "Shiro workflow controller: Do not merely acknowledge this. Move the workflow to the next observable state. Low-risk local work is allowed. Do not push, deploy, change production/env/secrets, delete data, or spend money. End in Japanese with one of: RESULT_OBSERVED, APPROVAL_PACKET_READY, BLOCKED_CONCRETE, or STILL_RUNNING. Separate what Shiro can do locally from what truly requires Yakon. Perform one safe local check if possible; otherwise produce a concrete blocker packet. Current evidence: pus"
-        },
         {
           "ts": "2026-06-15T05:28:00.525Z",
           "status": "pending_approval",
@@ -209,6 +213,11 @@
           "ts": "2026-06-15T11:27:54.791Z",
           "status": "blocked",
           "prompt": "Shiro workflow controller: Do not merely acknowledge this. Move the workflow to the next observable state. Low-risk local work is allowed. Do not push, deploy, change production/env/secrets, delete data, or spend money. End in Japanese with one of: RESULT_OBSERVED, APPROVAL_PACKET_READY, BLOCKED_CONCRETE, or STILL_RUNNING. Separate what Shiro can do locally from what truly requires Yakon. Perform one safe local check if possible; otherwise produce a concrete blocker packet. Current evidence: BLO"
+        },
+        {
+          "ts": "2026-06-15T11:57:57.760Z",
+          "status": "pending_approval",
+          "prompt": "Shiro workflow controller: Do not merely acknowledge this. Move the workflow to the next observable state. Low-risk local work is allowed. Do not push, deploy, change production/env/secrets, delete data, or spend money. End in Japanese with one of: RESULT_OBSERVED, APPROVAL_PACKET_READY, BLOCKED_CONCRETE, or STILL_RUNNING. Create a concrete approval packet: subject, exact action/command, recommendation, rollback, risk, wait impact. Do not ask Yakon until it is answerable yes/no. Current evidence"
         }
       ],
       "captureError": null
@@ -246,7 +255,7 @@
       "legacy": null,
       "fingerprint": "26bb29c450c12f9bf01f401d37317e8e60c86bacc0155f530ee6889f5917334e",
       "changed": false,
-      "lastSeenAt": 1781522874791,
+      "lastSeenAt": 1781524677760,
       "lastChangedAt": 1781497674923,
       "lastActionAt": 1781495879852,
       "lastReportedAt": null,
@@ -326,7 +335,7 @@
       "legacy": null,
       "fingerprint": "e0a4dca19411c565fca0c6e5fa107acb1eef0357af2390e7213697145e8b40b2",
       "changed": false,
-      "lastSeenAt": 1781522874791,
+      "lastSeenAt": 1781524677760,
       "lastChangedAt": 1781512075121,
       "lastActionAt": 1781506674782,
       "lastReportedAt": null,
@@ -399,7 +408,7 @@
       },
       "fingerprint": "7cb9c9574a5e2707617fac52e4ca46254d2cb23197371be8c81bb15d483a694f",
       "changed": false,
-      "lastSeenAt": 1781522874791,
+      "lastSeenAt": 1781524677760,
       "lastChangedAt": 1781506674782,
       "lastActionAt": 1781499477904,
       "lastReportedAt": null,
@@ -489,7 +498,7 @@
       },
       "fingerprint": "69cbc76abf83d06803326089d43d6cc8e0e80e1c046f9d0b69dc19b557482205",
       "changed": false,
-      "lastSeenAt": 1781522874791,
+      "lastSeenAt": 1781524677760,
       "lastChangedAt": 1781501280525,
       "lastActionAt": 1781495879852,
       "lastReportedAt": null,
@@ -550,13 +559,13 @@
       "verification": {
         "required": false,
         "resultObserved": false,
-        "evidence": "❯ credentials.json 配置できた、sync 走らせて",
+        "evidence": "❯ credentials.json どこにダウンロードされたか確認して",
         "urls": [],
         "executorSelfReportOnly": false
       },
       "nextAutoAction": "秘密値/外部要因を切り分け、承認パケット化する",
-      "evidence": "❯ credentials.json 配置できた、sync 走らせて",
-      "recentExcerpt": "/Users/umi/.openclaw/workspace/projects/mail-manager/data/credentials.json\n- 現状: data/ に credentials.json なし\n- Finder: 配置先を開き済み\n- ユーザー操作: GCP ⬇ ダウンロード後、Finder\nドラッグ（リネーム必須）または上記 cp コマンド\n- Shiro 次手: OK 確認後、即 sync\n✻ Brewed for 21s\nshiro-email-manager\n❯ credentials.json 配置できた、sync 走らせて\n⏵⏵ auto mode on (shift+tab to cycle) · ← for agents",
+      "evidence": "❯ credentials.json どこにダウンロードされたか確認して",
+      "recentExcerpt": "BLOCKED_CONCRETE\n- 事実: credentials.json が Mac 上に存在しない（Spotlight 0件）\n- 「配置できた」が繰り返されているが物理的にファイルが届いていない\n- 必要なこと: ! find ~/Downloads ~/Desktop ~/Documents -name \"*.json\"\n2>/dev/null の出力を貼る\n- Yakon 不要: ファイルさえあれば Shiro が即コピー→sync 実行可能\n✻ Crunched for 31s\nshiro-email-manager\n❯ credentials.json どこにダウンロードされたか確認して\n⏵⏵ auto mode on (shift+tab to cycle) · ← for agents",
       "legacy": {
         "state": "permission-wait",
         "decisionKind": "external-action",
@@ -570,18 +579,13 @@
         "lastNudgedAt": 1781481474214,
         "lastNotifiedAt": 1781481820561
       },
-      "fingerprint": "54cccc868ecd3f67239f609e6dc6d2f4b92f9a513af02f0d86162f72c767f94c",
-      "changed": false,
-      "lastSeenAt": 1781522874791,
-      "lastChangedAt": 1781521075132,
-      "lastActionAt": 1781522874791,
+      "fingerprint": "776e9fbc034bd1a4f706d96cd3a6d0f412c7ab961abf58225f43d141e99fc014",
+      "changed": true,
+      "lastSeenAt": 1781524677760,
+      "lastChangedAt": 1781524677760,
+      "lastActionAt": 1781524677760,
       "lastReportedAt": null,
       "actionHistory": [
-        {
-          "ts": "2026-06-15T04:57:57.904Z",
-          "status": "blocked",
-          "prompt": "Shiro workflow controller: Do not merely acknowledge this. Move the workflow to the next observable state. Low-risk local work is allowed. Do not push, deploy, change production/env/secrets, delete data, or spend money. End in Japanese with one of: RESULT_OBSERVED, APPROVAL_PACKET_READY, BLOCKED_CONCRETE, or STILL_RUNNING. Separate what Shiro can do locally from what truly requires Yakon. Perform one safe local check if possible; otherwise produce a concrete blocker packet. Current evidence: ❯ c"
-        },
         {
           "ts": "2026-06-15T05:28:00.525Z",
           "status": "blocked",
@@ -626,6 +630,11 @@
           "ts": "2026-06-15T11:27:54.791Z",
           "status": "blocked",
           "prompt": "Shiro workflow controller: Do not merely acknowledge this. Move the workflow to the next observable state. Low-risk local work is allowed. Do not push, deploy, change production/env/secrets, delete data, or spend money. End in Japanese with one of: RESULT_OBSERVED, APPROVAL_PACKET_READY, BLOCKED_CONCRETE, or STILL_RUNNING. Separate what Shiro can do locally from what truly requires Yakon. Perform one safe local check if possible; otherwise produce a concrete blocker packet. Current evidence: ❯ c"
+        },
+        {
+          "ts": "2026-06-15T11:57:57.760Z",
+          "status": "blocked",
+          "prompt": "Shiro workflow controller: Do not merely acknowledge this. Move the workflow to the next observable state. Low-risk local work is allowed. Do not push, deploy, change production/env/secrets, delete data, or spend money. End in Japanese with one of: RESULT_OBSERVED, APPROVAL_PACKET_READY, BLOCKED_CONCRETE, or STILL_RUNNING. Separate what Shiro can do locally from what truly requires Yakon. Perform one safe local check if possible; otherwise produce a concrete blocker packet. Current evidence: ❯ c"
         }
       ],
       "captureError": null
@@ -647,21 +656,21 @@
       },
       "hasTmux": true,
       "doneThread": false,
-      "resultObserved": true,
+      "resultObserved": false,
       "progressReportable": true,
       "approvalPacket": null,
       "verification": {
-        "required": true,
-        "resultObserved": true,
-        "evidence": "ロールバック cloudflared tunnel --url http://127.0.0.1:3033",
+        "required": false,
+        "resultObserved": false,
+        "evidence": "BLOCKED_CONCRETE",
         "urls": [
           "http://127.0.0.1:3033"
         ],
-        "executorSelfReportOnly": true
+        "executorSelfReportOnly": false
       },
       "nextAutoAction": "秘密値/外部要因を切り分け、承認パケット化する",
-      "evidence": "❯ cloudflared token 発行してトークンを貼り付けて",
-      "recentExcerpt": "Quick tunnel は QUIC 断（約3日に1回）で URL\n待機コスト が変わる。Named Tunnel\nで恒久解決。現在は安定稼働中なので急ぎではない\n└ ┴ ┘\nYes/No: zero.trust.cloudflare.com でトンネルを作成してトークンを渡しますか？\nBLOCKED_CONCRETE\n✻ Brewed for 2m 40s\nshiro-feed-tunnel\n❯ cloudflared token 発行してトークンを貼り付けて\n⏵⏵ auto mode on (shift+tab to cycle) · ← for agents",
+      "evidence": "BLOCKED_CONCRETE",
+      "recentExcerpt": "ロールバック pkill -x cloudflared && cloudflared tunnel --url\nhttp://127.0.0.1:3033 --no-autoupdate &\n├ ┼ ┤\nリスク Low\n└ ┴ ┘\nBLOCKED_CONCRETE\n✻ Churned for 2m 52s\nshiro-feed-tunnel\n❯\n⏵⏵ auto mode on (shift+tab to cycle) · ← for agents",
       "legacy": {
         "state": "permission-wait",
         "decisionKind": "external-action",
@@ -675,18 +684,13 @@
         "lastNudgedAt": 1781481474214,
         "lastNotifiedAt": 1781481820561
       },
-      "fingerprint": "7dd495ce164f2e26fd6e80656e90195c919f0ae1439a0cb5884506a30e8a9883",
-      "changed": false,
-      "lastSeenAt": 1781522874791,
-      "lastChangedAt": 1781521075132,
-      "lastActionAt": 1781522874791,
+      "fingerprint": "a047e666d0abdfa06cbfc1035be0d39dc7f1d1135159129ee8b732c74b7eec33",
+      "changed": true,
+      "lastSeenAt": 1781524677760,
+      "lastChangedAt": 1781524677760,
+      "lastActionAt": 1781524677760,
       "lastReportedAt": null,
       "actionHistory": [
-        {
-          "ts": "2026-06-15T04:57:57.904Z",
-          "status": "blocked",
-          "prompt": "Shiro workflow controller: Do not merely acknowledge this. Move the workflow to the next observable state. Low-risk local work is allowed. Do not push, deploy, change production/env/secrets, delete data, or spend money. End in Japanese with one of: RESULT_OBSERVED, APPROVAL_PACKET_READY, BLOCKED_CONCRETE, or STILL_RUNNING. Separate what Shiro can do locally from what truly requires Yakon. Perform one safe local check if possible; otherwise produce a concrete blocker packet. Current evidence: BLO"
-        },
         {
           "ts": "2026-06-15T05:28:00.525Z",
           "status": "blocked",
@@ -731,6 +735,11 @@
           "ts": "2026-06-15T11:27:54.791Z",
           "status": "blocked",
           "prompt": "Shiro workflow controller: Do not merely acknowledge this. Move the workflow to the next observable state. Low-risk local work is allowed. Do not push, deploy, change production/env/secrets, delete data, or spend money. End in Japanese with one of: RESULT_OBSERVED, APPROVAL_PACKET_READY, BLOCKED_CONCRETE, or STILL_RUNNING. Separate what Shiro can do locally from what truly requires Yakon. Perform one safe local check if possible; otherwise produce a concrete blocker packet. Current evidence: ❯ c"
+        },
+        {
+          "ts": "2026-06-15T11:57:57.760Z",
+          "status": "blocked",
+          "prompt": "Shiro workflow controller: Do not merely acknowledge this. Move the workflow to the next observable state. Low-risk local work is allowed. Do not push, deploy, change production/env/secrets, delete data, or spend money. End in Japanese with one of: RESULT_OBSERVED, APPROVAL_PACKET_READY, BLOCKED_CONCRETE, or STILL_RUNNING. Separate what Shiro can do locally from what truly requires Yakon. Perform one safe local check if possible; otherwise produce a concrete blocker packet. Current evidence: BLO"
         }
       ],
       "captureError": null
@@ -782,7 +791,7 @@
       },
       "fingerprint": "e698e2217c9f5e3b87f7f2e4af11758c8cf3074b889ec2644d9c900957642dad",
       "changed": false,
-      "lastSeenAt": 1781522874791,
+      "lastSeenAt": 1781524677760,
       "lastChangedAt": 1781501280525,
       "lastActionAt": 1781495879852,
       "lastReportedAt": null,
@@ -858,7 +867,7 @@
       },
       "nextAutoAction": "承認パケットを exact action / rollback / risk / wait impact まで具体化する",
       "evidence": "❯ push it",
-      "recentExcerpt": "├ ┼ ┼ ┤\nPAT workflow github.com/settings/tokens → workflow 「workflow\nscope チェック scope OK」\n└ ┴ ┴ ┘\nAPPROVAL_PACKET_READY\n✻ Baked for 51s · 1 shell still running\n8% until auto-compact\nshiro-ledger-claude\n❯ push it\n⏵⏵ auto mode on · 1 shell · ← for agents · ↓ to manage",
+      "recentExcerpt": "├ ┼ ┼ ┤\nPAT workflow github.com/settings/tokens → workflow 「workflow\nscope チェック scope OK」\n└ ┴ ┴ ┘\nAPPROVAL_PACKET_READY\n✻ Churned for 1m 3s · 1 shell still running\n4% until auto-compact\nshiro-ledger-claude\n❯ push it\n⏵⏵ auto mode on · 1 shell · ← for agents · ↓ to manage",
       "legacy": {
         "state": "permission-wait",
         "decisionKind": "external-action",
@@ -872,18 +881,13 @@
         "lastNudgedAt": 1781481474214,
         "lastNotifiedAt": 1781481820561
       },
-      "fingerprint": "0928b2f5798d63309afdce13bb36a8063d6984895483db1214a46dd2ef1027f1",
-      "changed": false,
-      "lastSeenAt": 1781522874791,
-      "lastChangedAt": 1781521075132,
-      "lastActionAt": 1781522874791,
+      "fingerprint": "050b5e52980777cdd8597989bb4d60527a252b09c41fc081efdef86323cc9219",
+      "changed": true,
+      "lastSeenAt": 1781524677760,
+      "lastChangedAt": 1781524677760,
+      "lastActionAt": 1781524677760,
       "lastReportedAt": null,
       "actionHistory": [
-        {
-          "ts": "2026-06-15T04:57:57.904Z",
-          "status": "pending_approval",
-          "prompt": "Shiro workflow controller: Do not merely acknowledge this. Move the workflow to the next observable state. Low-risk local work is allowed. Do not push, deploy, change production/env/secrets, delete data, or spend money. End in Japanese with one of: RESULT_OBSERVED, APPROVAL_PACKET_READY, BLOCKED_CONCRETE, or STILL_RUNNING. Create a concrete approval packet: subject, exact action/command, recommendation, rollback, risk, wait impact. Do not ask Yakon until it is answerable yes/no. Current evidence"
-        },
         {
           "ts": "2026-06-15T05:28:00.525Z",
           "status": "pending_approval",
@@ -926,6 +930,11 @@
         },
         {
           "ts": "2026-06-15T11:27:54.791Z",
+          "status": "pending_approval",
+          "prompt": "Shiro workflow controller: Do not merely acknowledge this. Move the workflow to the next observable state. Low-risk local work is allowed. Do not push, deploy, change production/env/secrets, delete data, or spend money. End in Japanese with one of: RESULT_OBSERVED, APPROVAL_PACKET_READY, BLOCKED_CONCRETE, or STILL_RUNNING. Create a concrete approval packet: subject, exact action/command, recommendation, rollback, risk, wait impact. Do not ask Yakon until it is answerable yes/no. Current evidence"
+        },
+        {
+          "ts": "2026-06-15T11:57:57.760Z",
           "status": "pending_approval",
           "prompt": "Shiro workflow controller: Do not merely acknowledge this. Move the workflow to the next observable state. Low-risk local work is allowed. Do not push, deploy, change production/env/secrets, delete data, or spend money. End in Japanese with one of: RESULT_OBSERVED, APPROVAL_PACKET_READY, BLOCKED_CONCRETE, or STILL_RUNNING. Create a concrete approval packet: subject, exact action/command, recommendation, rollback, risk, wait impact. Do not ask Yakon until it is answerable yes/no. Current evidence"
         }
@@ -977,7 +986,7 @@
       },
       "fingerprint": "e3505d5dac6d15f780d51a0d597dde059d3595295286de3187c71861ec64b3d9",
       "changed": false,
-      "lastSeenAt": 1781522874791,
+      "lastSeenAt": 1781524677760,
       "lastChangedAt": 1781521075132,
       "lastActionAt": 1781501280525,
       "lastReportedAt": null,
@@ -1042,8 +1051,8 @@
       "recentExcerpt": "リスク\n低。 Discord 接続設定の変更のみ。本番DB・コード・サービスへの影響なし。\n放置時の影響\n- #白配下スレッドへの進捗報告ができない\n- Obsidianと繋げて第二の脳をつくる の [DONE] 確認を Yakon に届けられない\n- Shiro Loop digest の Discord 投稿も停止したまま\n✻ Crunched for 2m 6s\nnew task? /clear to save 108.1k tokens\n❯\n⏵⏵ auto mode on (shift+tab to cycle) · ← for agents",
       "legacy": null,
       "fingerprint": "8b49f4d9a154b9c68e823d8f272504ba65db96269f8b39a28fba2ffc760c35ea",
-      "changed": true,
-      "lastSeenAt": 1781522874791,
+      "changed": false,
+      "lastSeenAt": 1781524677760,
       "lastChangedAt": 1781522874791,
       "lastActionAt": 1781517475338,
       "lastReportedAt": null,
@@ -1128,7 +1137,7 @@
       },
       "fingerprint": "8947af035e68d3ced9573463395dda22c05c84a30b174f4e7ce9febb001e1e04",
       "changed": false,
-      "lastSeenAt": 1781522874791,
+      "lastSeenAt": 1781524677760,
       "lastChangedAt": 1781503076111,
       "lastActionAt": 1781497674923,
       "lastReportedAt": null,
@@ -1173,19 +1182,19 @@
       },
       "hasTmux": true,
       "doneThread": false,
-      "resultObserved": true,
+      "resultObserved": false,
       "progressReportable": true,
       "approvalPacket": null,
       "verification": {
-        "required": true,
-        "resultObserved": true,
-        "evidence": "1 recruit-ai-crm PR #1 merge Low — lint ✅ build ✅",
+        "required": false,
+        "resultObserved": false,
+        "evidence": "BLOCKED_CONCRETE",
         "urls": [],
         "executorSelfReportOnly": false
       },
       "nextAutoAction": "白が解けるローカル確認を1つ実行して詰まりを解消する",
       "evidence": "BLOCKED_CONCRETE",
-      "recentExcerpt": "4 cycle-tracker-app profile rename deploy Low — vercel --prod\n├ ┼ ┼ ┤\n5 second-brain git push origin main Medium — API 780/789\n✅\n└ ┴ ┴ ┘\nBLOCKED_CONCRETE\n✻ Sautéed for 1m 17s\nshiro-paper-manager\n❯ …\n⏵⏵ auto mode on (shift+tab to cycle) · ← for agents",
+      "recentExcerpt": "6 KATAOMOI-EC Str 手動 ENV Cloudflare Dashboard\nipe/reCAPTCHA\n└ ┴ ┴ ┴ ┘\n前回パケットの誤り訂正: second-brain は「push 承認待ち」ではなく「PR #2 merge\n待ち」が正確。\nBLOCKED_CONCRETE\n✻ Worked for 1m 54s\nshiro-paper-manager\n❯ threads-watcher 再起動して\n⏵⏵ auto mode on (shift+tab to cycle) · ← for agents",
       "legacy": {
         "state": "permission-wait",
         "decisionKind": "external-action",
@@ -1199,18 +1208,13 @@
         "lastNudgedAt": 1781479671246,
         "lastNotifiedAt": 1781481474214
       },
-      "fingerprint": "0a2d2901ccb297c68845475b46b269de2e1df895b7f889e05bc59afb04e178fc",
-      "changed": false,
-      "lastSeenAt": 1781522874791,
-      "lastChangedAt": 1781521075132,
-      "lastActionAt": 1781522874791,
+      "fingerprint": "2c00c241268291eed9bdafe9ac452d4d0651bac84616c09ac6c6aed21b56ae52",
+      "changed": true,
+      "lastSeenAt": 1781524677760,
+      "lastChangedAt": 1781524677760,
+      "lastActionAt": 1781524677760,
       "lastReportedAt": null,
       "actionHistory": [
-        {
-          "ts": "2026-06-15T01:57:53.028Z",
-          "status": "blocked",
-          "prompt": "Shiro workflow controller: Do not merely acknowledge this. Move the workflow to the next observable state. Low-risk local work is allowed. Do not push, deploy, change production/env/secrets, delete data, or spend money. End in Japanese with one of: RESULT_OBSERVED, APPROVAL_PACKET_READY, BLOCKED_CONCRETE, or STILL_RUNNING. Separate what Shiro can do locally from what truly requires Yakon. Perform one safe local check if possible; otherwise produce a concrete blocker packet. Current evidence: int"
-        },
         {
           "ts": "2026-06-15T02:57:56.382Z",
           "status": "blocked",
@@ -1253,6 +1257,11 @@
         },
         {
           "ts": "2026-06-15T11:27:54.791Z",
+          "status": "blocked",
+          "prompt": "Shiro workflow controller: Do not merely acknowledge this. Move the workflow to the next observable state. Low-risk local work is allowed. Do not push, deploy, change production/env/secrets, delete data, or spend money. End in Japanese with one of: RESULT_OBSERVED, APPROVAL_PACKET_READY, BLOCKED_CONCRETE, or STILL_RUNNING. Separate what Shiro can do locally from what truly requires Yakon. Perform one safe local check if possible; otherwise produce a concrete blocker packet. Current evidence: BLO"
+        },
+        {
+          "ts": "2026-06-15T11:57:57.760Z",
           "status": "blocked",
           "prompt": "Shiro workflow controller: Do not merely acknowledge this. Move the workflow to the next observable state. Low-risk local work is allowed. Do not push, deploy, change production/env/secrets, delete data, or spend money. End in Japanese with one of: RESULT_OBSERVED, APPROVAL_PACKET_READY, BLOCKED_CONCRETE, or STILL_RUNNING. Separate what Shiro can do locally from what truly requires Yakon. Perform one safe local check if possible; otherwise produce a concrete blocker packet. Current evidence: BLO"
         }
@@ -1313,7 +1322,7 @@
       },
       "fingerprint": "4ca6078b7e209283da717033af35784a7db451209457ab853132f868b9a3238a",
       "changed": false,
-      "lastSeenAt": 1781522874791,
+      "lastSeenAt": 1781524677760,
       "lastChangedAt": 1781517475338,
       "lastActionAt": 1781515675563,
       "lastReportedAt": null,
@@ -1398,7 +1407,7 @@
       "legacy": null,
       "fingerprint": "ba3223000851c8fd16dc556452ec023bcec3113dc7205dad55f20b53c7b3a087",
       "changed": false,
-      "lastSeenAt": 1781522874791,
+      "lastSeenAt": 1781524677760,
       "lastChangedAt": 1781515675563,
       "lastActionAt": 1781512075121,
       "lastReportedAt": null,
@@ -1461,7 +1470,7 @@
       },
       "fingerprint": "72ca8b56bb63360a8f23c662b0b227c2e178d3bc7b8f06e0ccd6928586702734",
       "changed": false,
-      "lastSeenAt": 1781522874791,
+      "lastSeenAt": 1781524677760,
       "lastChangedAt": 1781517475338,
       "lastActionAt": 1781515675563,
       "lastReportedAt": null,
@@ -1558,7 +1567,7 @@
       },
       "fingerprint": "d50e0b8007b42493b2e1dd7e052b12879068783359cf38741a617f918db6d452",
       "changed": false,
-      "lastSeenAt": 1781522874791,
+      "lastSeenAt": 1781524677760,
       "lastChangedAt": 1781498432939,
       "lastActionAt": 1781482845397,
       "lastReportedAt": null,
@@ -1625,7 +1634,7 @@
       },
       "fingerprint": "5da12c23c3574fd906cad48268b96cee1334de2790d95f55500d2aac8ac90a04",
       "changed": false,
-      "lastSeenAt": 1781522874791,
+      "lastSeenAt": 1781524677760,
       "lastChangedAt": 1781483271506,
       "lastActionAt": 1781482845397,
       "lastReportedAt": null,
@@ -1692,7 +1701,7 @@
       },
       "fingerprint": "844d3f23b4eac8320381f3cd41524d19afc7240c5fb4f5e111575ddd127c27a8",
       "changed": false,
-      "lastSeenAt": 1781522874791,
+      "lastSeenAt": 1781524677760,
       "lastChangedAt": 1781503209879,
       "lastActionAt": 1781503076111,
       "lastReportedAt": null,
@@ -1716,9 +1725,9 @@
       "threadId": "1506464983154819152",
       "title": "補助金・助成金リサーチ（最新）",
       "source": "tmux",
-      "status": "needs_verification",
-      "decisionKind": "verify-result",
-      "risk": "low",
+      "status": "blocked",
+      "decisionKind": "unblock",
+      "risk": "mid",
       "policy": {
         "kind": "implementation-agent",
         "normalIdle": "continue",
@@ -1728,24 +1737,24 @@
       "hasTmux": true,
       "doneThread": false,
       "resultObserved": false,
-      "progressReportable": false,
+      "progressReportable": true,
       "approvalPacket": null,
       "verification": {
-        "required": true,
+        "required": false,
         "resultObserved": false,
-        "evidence": "❯ 次回セッションで Discord 投稿を確認して",
+        "evidence": "BLOCKED_CONCRETE",
         "urls": [],
         "executorSelfReportOnly": false
       },
-      "nextAutoAction": "executorとは別視点でテスト/差分/URL/ログを検証する",
-      "evidence": "❯ 次回セッションで Discord 投稿を確認して",
-      "recentExcerpt": "テキストに持つため完全解除は不可能だが、新規セッションは旧テキストを持たない →\n次回 bootstrap から Discord reply が通過する見込み。\n残タスク（Shiro 不要、次回セッションで自動解決）\n次回 shiro-subsidy-research bootstrap 時:\n1. 新プロンプトで起動 → Discord reply 許可\n2. state/shiro-workflows/subsidy-research-2026-06-15.md の内容を投稿\nRESULT_OBSERVED\n✻ Cooked for 6m 1s\n❯ 次回セッションで Discord 投稿を確認して\n⏵⏵ auto mode on (shift+tab to cycle) · ← for agents",
+      "nextAutoAction": "白が解けるローカル確認を1つ実行して詰まりを解消する",
+      "evidence": "BLOCKED_CONCRETE",
+      "recentExcerpt": "/Users/umi/.openclaw/workspace/state/shiro-workflows/subsidy-research-2026-06-\n15.md\n新セッションは新しいブートストラッププロンプトで開始されるため、Discord reply\nが通過する見込み。\nこのセッションで Shiro が今後できること：ゼロ\nこれ以上の試行はすべて classifier の追加ブロックを招きます。\nBLOCKED_CONCRETE\n✻ Sautéed for 6m 59s\n❯ `shiro-subsidy-research` セッションを新規起動して\n⏵⏵ auto mode on (shift+tab to cycle) · ← for agents",
       "legacy": null,
-      "fingerprint": "cb983b0a3d4860796117f8046868be67b27d831fccedf2dd8c86f2eb6d32a2c2",
-      "changed": false,
-      "lastSeenAt": 1781522874791,
-      "lastChangedAt": 1781521075132,
-      "lastActionAt": 1781522874791,
+      "fingerprint": "688efb9d82f779c4f7f4b79b961ee2fb24d2b17cc088d75f74b75a62dc599a3b",
+      "changed": true,
+      "lastSeenAt": 1781524677760,
+      "lastChangedAt": 1781524677760,
+      "lastActionAt": 1781524677760,
       "lastReportedAt": null,
       "actionHistory": [
         {
@@ -1772,6 +1781,11 @@
           "ts": "2026-06-15T11:27:54.791Z",
           "status": "needs_verification",
           "prompt": "Shiro workflow controller: Do not merely acknowledge this. Move the workflow to the next observable state. Low-risk local work is allowed. Do not push, deploy, change production/env/secrets, delete data, or spend money. End in Japanese with one of: RESULT_OBSERVED, APPROVAL_PACKET_READY, BLOCKED_CONCRETE, or STILL_RUNNING. Verify the claimed result using commands/logs/files/URLs. Executor self-report is not enough. Current evidence: ❯ 次回セッションで Discord 投稿を確認して"
+        },
+        {
+          "ts": "2026-06-15T11:57:57.760Z",
+          "status": "blocked",
+          "prompt": "Shiro workflow controller: Do not merely acknowledge this. Move the workflow to the next observable state. Low-risk local work is allowed. Do not push, deploy, change production/env/secrets, delete data, or spend money. End in Japanese with one of: RESULT_OBSERVED, APPROVAL_PACKET_READY, BLOCKED_CONCRETE, or STILL_RUNNING. Separate what Shiro can do locally from what truly requires Yakon. Perform one safe local check if possible; otherwise produce a concrete blocker packet. Current evidence: BLO"
         }
       ],
       "captureError": null
@@ -1809,7 +1823,7 @@
       "legacy": null,
       "fingerprint": "8ca230f27419979a92f3f9fcbe3e024065c84463f83b7a1104b33858296b239a",
       "changed": false,
-      "lastSeenAt": 1781522874791,
+      "lastSeenAt": 1781524677760,
       "lastChangedAt": 1781499477904,
       "lastActionAt": null,
       "lastReportedAt": null,
@@ -1858,7 +1872,7 @@
       "legacy": null,
       "fingerprint": "6d771dcc4c9d3687d341a22f30a46cf718ea82114777960f620281198bc55a97",
       "changed": false,
-      "lastSeenAt": 1781522874791,
+      "lastSeenAt": 1781524677760,
       "lastChangedAt": 1781499477904,
       "lastActionAt": null,
       "lastReportedAt": null,
@@ -1903,7 +1917,7 @@
       "legacy": null,
       "fingerprint": "dff563ea985dc70595f15c863f5d55eb1dd9e8e9cb541a2051c018a6be6b91fd",
       "changed": false,
-      "lastSeenAt": 1781522874791,
+      "lastSeenAt": 1781524677760,
       "lastChangedAt": 1781513875915,
       "lastActionAt": 1781521075132,
       "lastReportedAt": null,
@@ -1972,8 +1986,8 @@
       "recentExcerpt": "└ ┴ ┘\n---\nAPPROVAL_PACKET_READY\nVERIFICATION_HANDOFF.md の全9項目を Playwright\nスクリーンショット・E2E・ビルドログで閉じました。Shiro\nのローカル作業はすべて完了。残りは Yakon\nの名前選定と次フェーズ方針決定の2件です。\n✻ Worked for 3m 6s\n❯\n⏵⏵ auto mode on (shift+tab to cycle) · ← for agents",
       "legacy": null,
       "fingerprint": "f6bcf6dd47043248b3f005fd27cc5517a2358a93bfe34555bac90dba041da18c",
-      "changed": true,
-      "lastSeenAt": 1781522874791,
+      "changed": false,
+      "lastSeenAt": 1781524677760,
       "lastChangedAt": 1781522874791,
       "lastActionAt": 1781521075132,
       "lastReportedAt": null,
@@ -2039,8 +2053,8 @@
       "recentExcerpt": "├ ┼ ┤\n待機影響 A-1・A-2が揃えばこの1コマンドでbot起動まで即完了\n└ ┴ ┘\n→ Yakonへ: DISCORD_TOKENを投入してdiscord botを起動しますか？ YES / NO\n---\nAPPROVAL_PACKET_READY — ローカルコードは全て検証済み。残りはYakon 3件（A-1承認\n/ A-2インスタンス状態 / A-3トークン投入）のみ。\n✻ Cogitated for 3m 46s\n❯\n⏵⏵ auto mode on (shift+tab to cycle) · ← for agents",
       "legacy": null,
       "fingerprint": "f4141d229bdf446640aafc7bb9c6f80e260c952833909f99b469e9baa761d739",
-      "changed": true,
-      "lastSeenAt": 1781522874791,
+      "changed": false,
+      "lastSeenAt": 1781524677760,
       "lastChangedAt": 1781522874791,
       "lastActionAt": 1781521075132,
       "lastReportedAt": null,
