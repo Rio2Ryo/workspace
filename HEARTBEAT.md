@@ -32,6 +32,22 @@ High Risk:
 - 削除系操作
 - 秘密情報の共有
 
+## 2026-06-15 heartbeat (125回目)
+
+**アクション**: `/Users/umi/.openclaw/workspace/HEARTBEAT.md` を指定パスで読み、`tasks/QUEUE.md` の Ready / In Progress を確認。Ready 未完了なし、In Progress は `food-dx-shiro` のみ。前回 124回目で disk が 100% / 243MiB まで低下していたため、削除は行わず、実行中プロセス・repo状態・再生成可能な容量候補を read-only で確認した。
+
+**検証**:
+- QUEUE Ready 未完了なし。In Progress = `food-dx-shiro`。
+- `food-dx-shiro`: repo `/Users/umi/.openclaw/workspace/food-dx-qwen/food-dx-system` は HEAD `b0e29da`。新規 tracked 変更なし。
+- `next dev` / API `tsx watch` / Playwright / Vite / Wrangler dev など、前回の検証由来のローカル dev/test プロセスは残っていない。
+- disk: `/System/Volumes/Data` は 99% 使用、空き 3.0GiB。前回の 243MiB / 100% から自然回復したが、まだ build / browser E2E / install が止まり得る水準。
+- 削除候補の read-only 計測: `/Users/umi/.npm` 6.9G、`~/Library/Developer/Xcode/DerivedData` 547M、`/Users/umi/.cache` 3.9G。いずれも削除系操作のため未実行。
+- `HEARTBEAT.md` / `tasks/QUEUE.md` は確認時点で未コミット差分なし。今回の記録以外の巻き戻しなし。
+
+**状態**: `food-dx-shiro` は担当=白。前回までに local DB seed / API dynamic smoke / Web runtime blocker修正 / 通常ゲート全passまで完了済み。次アクションは、disk余裕を確保したうえで local rate limit を避ける低速ルート別ブラウザE2Eを行い、console/network error と画面遷移を確認すること。詰まりは disk 空き不足による検証安定性リスク。push / deploy / 本番変更 / 秘密情報共有 / 削除系操作は未実行。
+
+**通知判断**: notify=false（前回すでに disk cleanup 承認を通知済みで、今回は 3.0GiB まで自然回復。依然リスクは高いが、新規の悪化ではないため重複割り込みはしない）。
+
 ## 2026-06-15 heartbeat (124回目)
 
 **アクション**: `/Users/umi/.openclaw/workspace/HEARTBEAT.md` を指定パスで読み、`tasks/QUEUE.md` の Ready / In Progress を確認。Ready 未完了なし、In Progress は `food-dx-shiro` のみ。前回の「ブラウザ実操作確認環境待ち」を待機で終えず、ローカル Chrome/Playwright 前段で seed 後日本語UIを踏み、Web runtime と API通信を確認した。
