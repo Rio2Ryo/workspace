@@ -321,3 +321,9 @@
 {"ts":"2026-06-15T13:27:54.413Z","id":"shiro-paper-manager","session":"shiro-paper-manager","threadId":null,"status":"blocked","decisionKind":"unblock","resultObserved":false,"approvalReady":false}
 {"ts":"2026-06-15T13:57:55.306Z","id":"top3-goose","session":"top3-goose","threadId":"1505419396691267584","status":"needs_verification","decisionKind":"verify-result","resultObserved":true,"approvalReady":false}
 {"ts":"2026-06-15T13:57:55.306Z","id":"vast-ai-rtx5090-jp","session":"vast-ai-rtx5090-jp","threadId":"1504835837932732557","status":"pending_approval","decisionKind":"external-action","resultObserved":true,"approvalReady":false}
+{"ts":"2026-06-15T14:27:54.101Z","id":"shiro-feed-tunnel","session":"shiro-feed-tunnel","threadId":null,"status":"pending_approval","decisionKind":"external-action","resultObserved":false,"approvalReady":false}
+{"ts":"2026-06-15T14:27:54.101Z","id":"shiro-ledger-claude","session":"shiro-ledger-claude","threadId":"1506920712542355538","status":"pending_approval","decisionKind":"external-action","resultObserved":false,"approvalReady":false}
+{"ts":"2026-06-15T14:27:54.101Z","id":"shiro-paper-manager","session":"shiro-paper-manager","threadId":null,"status":"blocked","decisionKind":"unblock","resultObserved":true,"approvalReady":false}
+{"ts":"2026-06-15T14:27:54.101Z","id":"top3-goose","session":"top3-goose","threadId":"1505419396691267584","status":"needs_verification","decisionKind":"verify-result","resultObserved":false,"approvalReady":false}
+{"ts":"2026-06-15T14:27:54.101Z","id":"vast-ai-rtx5090-jp","session":"vast-ai-rtx5090-jp","threadId":"1504835837932732557","status":"pending_approval","decisionKind":"needs-yakon","resultObserved":false,"approvalReady":false}
+{"ts":"2026-06-15T14:57:57.164Z","id":"shiro-personal-branding","session":"shiro-personal-branding","threadId":"1511633432239673385","status":"pending_approval","decisionKind":"external-action","resultObserved":false,"approvalReady":true}

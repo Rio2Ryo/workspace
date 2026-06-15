@@ -33,6 +33,17 @@ type ImportExcludedDetail = {
 
 const SYNC_BREAK_NOTICE = '手入力によりタグ連動を解除しました。'
 
+const DAILY_THEMES = [
+  '今日よかったもの Top3',
+  '最近よく行く場所 Top3',
+  '今食べたいもの Top3',
+  '作業が進む音楽 Top3',
+  '買ってよかったもの Top3',
+  'また行きたい店 Top3',
+  '人にすすめたいもの Top3',
+]
+const todayTheme = DAILY_THEMES[new Date().getDay()]
+
 type PendingImport = {
   items: FavoriteItem[]
   filename: string
@@ -1014,6 +1025,7 @@ export function App() {
         <div className="section-head">
           <div>
             <h2>登録する</h2>
+            <p className="hint" data-testid="daily-theme">今日のお題: {todayTheme}</p>
             <p className="hint">登録済みタグはポチッと選択。なければ入力すると新規タグになります。</p>
           </div>
           <span data-testid="db-persistence-status" className={isLoading ? 'status loading' : 'status'}>{isLoading ? 'DB読込中' : 'DB保存'}</span>
