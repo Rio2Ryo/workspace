@@ -1005,7 +1005,7 @@ export function App() {
   return (
     <main className="container">
       <header className="hero">
-        <p className="eyebrow">Top3 Favorites</p>
+        <p className="eyebrow">偏愛トップ3</p>
         <h1>好きな店を、タグ別Top3で残す</h1>
         <p className="sub">タグを選ぶ → いまの順位を見る → 店舗と場所を入れて保存。</p>
       </header>
