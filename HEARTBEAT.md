@@ -32,6 +32,32 @@ High Risk:
 - 削除系操作
 - 秘密情報の共有
 
+## 2026-06-15 heartbeat (121回目)
+
+**アクション**: `/Users/umi/.openclaw/workspace/HEARTBEAT.md` を指定パスで読み、`tasks/QUEUE.md` の Ready / In Progress を確認。Ready 未完了なし、In Progress は `food-dx-shiro` のみ。停止判定に従い、`food-dx-shiro` の tmux / repo / DB接続環境 / handoff契約を再確認したところ、localhost PostgreSQL が到達可能になっていたため、DB投入・seed・契約テスト・品質ゲートを実行。
+
+**検証**:
+- QUEUE Ready 未完了なし。In Progress = `food-dx-shiro`。
+- `food-dx-shiro`: tmux `food-dx-shiro` 存在。直近 pane の controller 文 shell 誤投入状態は前回から変化なし。今回のheartbeatでも自然文の tmux 直送は実施していない。
+- repo `/Users/umi/.openclaw/workspace/food-dx-qwen/food-dx-system`: branch `main`、HEAD `4c46739`、tracked 変更なし。
+- `.env.local` は存在。process env の `DATABASE_URL` は未設定だが、`.env.local` の localhost:5432 は到達可能。`psql` / `pg_ctl` / `initdb` は存在、`docker` は missing。
+- `npm run db:check` → pass（PostgreSQL endpoint reachable）。
+- `npm run db:generate` → pass。
+- `npm run db:push` → 初回は Prisma workspace が `.env.local` を自動読込せず `DATABASE_URL` missing で fail。`DATABASE_URL` のみをコマンド内注入して再実行 → pass（database already in sync）。
+- `npm run db:seed` → pass。Companies 2 / Users 3 / Warehouses 2 / Suppliers 2 / Categories 4 / Products 5 / Orders 3 を seed。
+- `npm run test:db-e2e-handoff-contract` → pass。
+- `npm run db:e2e:handoff` → 判断依頼サマリーは「Yakonさんにお願いしたいこと: なし」、引き継ぎパケットは `目的 / 現担当 / 現状 / 次アクション / 詰まり / 支援候補 / 期限` 形式を維持。
+- `npm run test:web:a11y-contract` → pass。
+- `npm run lint` → pass（Next.js plugin warning のみ）。
+- `npm run build` → `.env.local` を丸ごと source した場合は `NODE_ENV` 混入により Next.js prerender が `Cannot read properties of null (reading 'useContext')` で fail。`DATABASE_URL` のみを注入して再実行 → pass（Next.js plugin warning のみ、21 pages generated）。
+- `npm test` → fail。ただし原因は api/web に test file がなく Jest が `No tests found`、database/shared/ui に `test` script がない既存script設計で、コード失敗ではない。
+- disk: `/System/Volumes/Data` は 98% 使用、空き 4.9GiB。削除系操作は未実行。
+- workspace tracked 変更: `HEARTBEAT.md` の本記録、`process/STATUS.md`、`process/rakui-done-packet.md`、`projects/threads-watcher/threads-watcher-status/state.json`、`state/shiro-workflows/*` の既存差分を確認。今回のheartbeatでは既存差分の巻き戻しなし。
+
+**状態**: Ready 未完了なし。`food-dx-shiro` は担当=白。DB接続待ちは解消し、local DBで `db:push` / `db:seed` / 契約テスト / a11y contract / lint / build まで完了。次アクションは seed後の日本語UI実操作確認を、利用可能なブラウザE2E環境または手動QAで `目的 / 現担当 / 現状 / 次アクション / 詰まり / 支援候補 / 期限` 形式で回収すること。詰まりは日本語UI実操作確認環境待ち。disk cleanup / RAKUI [DONE] packet は既存承認待ちで、新規判断依頼なし。
+
+**通知判断**: notify=false（DB待ちは前進したが、ユーザーの即時判断は不要。削除・push・deploy・本番変更・秘密情報共有は実行していない）。
+
 ## 2026-06-15 heartbeat (120回目)
 
 **アクション**: `/Users/umi/.openclaw/workspace/HEARTBEAT.md` を指定パスで読み、`tasks/QUEUE.md` の Ready / In Progress を確認。Ready 未完了なし、In Progress は `food-dx-shiro` のみ。停止判定に従い、`food-dx-shiro` の tmux / repo / DB接続環境 / handoff契約を再確認し、DB待ち中の品質劣化がないか API lint / API build / Web build も確認。

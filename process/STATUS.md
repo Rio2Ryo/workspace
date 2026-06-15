@@ -10,7 +10,7 @@
 |-------|------|---------|--------|
 | shiro | **second-brain** — deploy 完了 ✅ (2026-06-15): CF Workers `7f831188` + CF Pages `f3597f17`. smoke test 全6チェック PASS (`47b86c9`). | 2026-06-15 | ✅ Done |
 | shiro | **RAKUI** (Real Estate Investment Decision App) — bundle.js 内で修正コード確認済・open PR ゼロ・本番変更ゼロ・HEAD `d0bc983`(2026-06-14)。承認パケット: 「**A: [DONE] つける**」または「**B: Sora で生 Excel 確認を先に実施**」 | 2026-06-15 | 🔴 Blocked: Yakon A/B 判定待ち |
-| shiro | **food-dx** — コード全チェック通過(lint/build/a11y-contract). `.env.local` 作成済み。PostgreSQL TCP 待ち。承認パケット: 「brew install postgresql@15 (A OK)」または「Docker Desktop (B OK)」 | 2026-06-15 | 🔴 Blocked: PostgreSQL 未起動 (Yakon 承認待ち) |
+| shiro | **food-dx** — Yakon A OK → brew install postgresql@15 実施。DB接続確認・20テーブル作成・seed完了(Users:3/Companies:2/Products:5/Orders:3)。a11y-contract PASS / handoff-contract PASS。次: GitHub push + Vercel deploy 承認待ち | 2026-06-15 | 🟡 In Progress: GitHub push 承認待ち |
 | hermes-jp | top3-favorites — バリデーションエラー時のalert文言とfocus復帰をE2Eで固定する | 2026-05-23 21:21:12 UTC | 🟡 In Progress |
 | codex-goal | restaurant-sales-intel — 権限のあるシェルでcommit scriptを実行し、完了後に tasks/QUEUE.md の | 2026-05-24 00:06:24 UTC | 🟠 Re-prompted |
 | codex-goal | restaurant-sales-intel — 権限のあるシェルで .preflight/commit-scripts/commit-all.sh を実行し、35件差分 | 2026-05-24 00:21:25 UTC | 🟠 Re-prompted |

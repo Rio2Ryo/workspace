@@ -49,6 +49,10 @@ npm test -- --reporter=verbose 2>&1 | tail -20
 - `bundle.js` 内で `orderedCellValues`×5、`labelAndValueFromRow`×3、`__EMPTY`×1 を直接確認済
 - LABEL_MAP の全パターン（担当者/お客様名/所在地/専有面積/市場価格/決済希望日）が bundle 内に存在
 - `excelExtractor.test.ts` の `__EMPTY` テストケースが実 Excel の SheetJS 出力と 1:1 対応
+- **Node.js 直接トレース（2026-06-15）: `npm install` なしで GitHub main の関数ロジックを純 JS 再現 → `__EMPTY` 3ケース全 PASS ✓**
+  - `case.operatorName = '渡邉　将貴'`（`顧客情報!row2`）✓
+  - `customer.name = '髙畠　嘉文'`（`顧客情報!row3`）✓
+  - `transaction.purchasePrice = 30000000`（`取引条件情報!row1`）✓
 - open PR ゼロ、このセッションの本番変更ゼロ
 - HEAD `d0bc983`（2026-06-14）、直近 5 コミットは PDF 系のみ、Excel フロー無影響
 

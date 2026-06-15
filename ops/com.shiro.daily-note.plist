@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+  <key>Label</key>
+  <string>com.shiro.daily-note</string>
+
+  <key>ProgramArguments</key>
+  <array>
+    <string>/opt/homebrew/Cellar/node/25.5.0/bin/node</string>
+    <string>/Users/umi/.openclaw/workspace/ops/shiro-daily-note.mjs</string>
+  </array>
+
+  <!-- 毎朝 09:00 JST (= 00:00 UTC) に実行 -->
+  <key>StartCalendarInterval</key>
+  <dict>
+    <key>Hour</key>
+    <integer>0</integer>
+    <key>Minute</key>
+    <integer>0</integer>
+  </dict>
+
+  <key>StandardOutPath</key>
+  <string>/Users/umi/.openclaw/logs/shiro-daily-note.log</string>
+  <key>StandardErrorPath</key>
+  <string>/Users/umi/.openclaw/logs/shiro-daily-note.err</string>
+
+  <key>RunAtLoad</key>
+  <false/>
+</dict>
+</plist>

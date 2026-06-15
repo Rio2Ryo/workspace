@@ -48,19 +48,26 @@
 
 ## 受け入れチェックリスト
 
-- [ ] JSONインポートが fail-closed である（不正入力時は既存データ保持）
-- [ ] 配列以外JSONは反映されない
-- [ ] 不正要素が1件でもある配列は全体反映しない
+- [x] JSONインポートが fail-closed である（不正入力時は既存データ保持）
+  - 証拠: `tests/import-fail-closed-matrix.e2e.spec.ts` — 全無効入力で既存データ保持・プレビュークリアを Playwright E2E で確認（qa-current 52/52 pass 内）
+- [x] 配列以外JSONは反映されない
+  - 証拠: `tests/api-import-validation.e2e.spec.ts` + `tests/import-fail-closed-matrix.e2e.spec.ts`
+- [x] 不正要素が1件でもある配列は全体反映しない
+  - 証拠: `tests/import-fail-closed-matrix.e2e.spec.ts`
 
-- [ ] コンセプトが「Top3で好きが見える」に絞られている
-- [ ] 初回ユーザーが何を入力すればよいか分かる
-- [ ] README/LPに転用できる短文がある
-- [ ] 実装変更なしでドキュメントだけ確認できる
-- [ ] `pnpm build` が成功している
-- [ ] 外部公開・本番反映・課金増が行われていない
+- [x] コンセプトが「Top3で好きが見える」に絞られている
+  - 証拠: `docs/CONCEPT_COPY.md` に「Top3で好きが見える」明記
+- [ ] 初回ユーザーが何を入力すればよいか分かる（実ブラウザ目視が必要 → Yakon判断）
+- [x] README/LPに転用できる短文がある
+  - 証拠: `docs/CONCEPT_COPY.md` L119「README/LP向け短文」セクションあり
+- [x] 実装変更なしでドキュメントだけ確認できる
+- [x] `pnpm build` が成功している
+  - 証拠: 2026-06-15 09:28 UTC `tsc -b && vite build` clean（dist/assets/index-BiIDhYbz.js 175.83 kB）
+- [x] 外部公開・本番反映・課金増が行われていない
 
 ## 残る未確認
 
-- 実ブラウザでの手動QA
-- コピー採用案の人間判断
-- README/LPへの実反映判断
+- 初回ユーザビリティ: 実ブラウザ目視（Yakon担当）
+- コピー採用案の人間判断: `docs/CONCEPT_COPY.md` の名前案から1つ選定（Yakon）
+- README/LPへの実反映: 採用案決定後（Yakon）
+- 次フェーズ機能方針: 日替わりお題・殿堂入り・週間レポートの採否（Yakon）
