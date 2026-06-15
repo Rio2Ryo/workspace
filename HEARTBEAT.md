@@ -32,6 +32,30 @@ High Risk:
 - 削除系操作
 - 秘密情報の共有
 
+## 2026-06-15 heartbeat (124回目)
+
+**アクション**: `/Users/umi/.openclaw/workspace/HEARTBEAT.md` を指定パスで読み、`tasks/QUEUE.md` の Ready / In Progress を確認。Ready 未完了なし、In Progress は `food-dx-shiro` のみ。前回の「ブラウザ実操作確認環境待ち」を待機で終えず、ローカル Chrome/Playwright 前段で seed 後日本語UIを踏み、Web runtime と API通信を確認した。
+
+**検証**:
+- QUEUE Ready 未完了なし。In Progress = `food-dx-shiro`。
+- `food-dx-shiro`: tmux `food-dx-shiro` 存在。ただし pane には過去の自然文誤投入が残っているため、今回も tmux へ自然文直送は行わなかった。
+- repo `/Users/umi/.openclaw/workspace/food-dx-qwen/food-dx-system`: branch `main`。今回 commit `b0e29da fix: align web API base and order mapping` を作成。
+- ローカルAPI/Web起動後の browser前段確認で、Web が `/api/api/...` を叩いていることを検出。原因は `NEXT_PUBLIC_API_URL` が `/api` 付きなのに、Web側呼び出しも `/api/...` を渡していたこと。`apps/web/src/lib/api.ts` の既定を同一origin相対に戻し、`.env.example` の `NEXT_PUBLIC_API_URL` を空にし、`PdfPreview` も同じ相対baseへ統一。ローカル `.env.local` の公開設定も空にしたが、`.env.local` はgitignore済みで本番秘密値には触れていない。
+- `/orders` 実表示で `Cannot read properties of undefined (reading 'toLocaleString')` を検出。原因は seed済みAPIの order が `total` string / uppercase `status` / `user` / `warehouse` / `_count.items` を返す一方、Web が `totalAmount` number / lowercase status / `customerName` 前提だったこと。`orders/page.tsx` に API order 正規化を追加し、`total`→`totalAmount`、uppercase status→UI status、warehouse/user/email→customerName、`_count.items`→items へ吸収。
+- 修正後のAPIログでは `/api/api` 二重化は消え、初期の auth/dashboard/products/orders/notifications 系APIは 200/304 応答を確認。rapid multi-route browser smoke の後半は local rate limit 429 に当たり、全ルート一括の console/network 完了判定までは未完了。
+- `npm run test:db-e2e-handoff-contract` → pass。
+- `npm run test:web:a11y-contract` → pass。
+- `npm run lint` → pass（Next.js plugin warning のみ）。
+- `npm run build:api` → pass。
+- `npm run build:web` → pass（21 pages generated）。
+- dev API/Web/Playwright session は停止済み。
+- disk: `/System/Volumes/Data` は 100% 使用、空き 243MiB。既存の disk cleanup 承認待ち範囲だが、現時点では build / test / install 失敗だけでなく常時運用にも影響し得る水準。削除系操作は未実行。
+- workspace tracked 変更: `tasks/QUEUE.md` に本件の進行記録を追記、`HEARTBEAT.md` の本記録、既存自動更新ファイル（`process/STATUS.md`、`projects/threads-watcher/threads-watcher-status/state.json`、`state/shiro-workflows/*` 等）を確認。今回のheartbeatでは既存差分の巻き戻しなし。
+
+**状態**: Ready 未完了なし。`food-dx-shiro` は担当=白。API dynamic smokeに続き、ブラウザ前段で実UI runtime blocker 2件を検出・修正し、通常ゲートは全pass。次アクションは local rate limit を避けて低速ルート別E2Eを行い、console/network error と画面遷移をスクリーンショット込みで確認すること。詰まりは rate limit を考慮したブラウザ実操作確認設計のみ。push / deploy / 本番変更 / 秘密情報共有は未実行。削除系操作も未実行。
+
+**通知判断**: notify=true（food-dx自体は前進し即時判断不要だが、ディスク空きが 243MiB / 100% 使用まで低下し、既存の `disk cleanup OK` 承認待ちが運用停止リスクに変わっているため）。
+
 ## 2026-06-15 heartbeat (123回目)
 
 **アクション**: `/Users/umi/.openclaw/workspace/HEARTBEAT.md` を指定パスで読み、`tasks/QUEUE.md` の Ready / In Progress を確認。Ready 未完了なし、In Progress は `food-dx-shiro` のみ。前回の「seed後日本語UIの実操作確認環境待ち」を待機で終えず、ブラウザなしで踏めるAPI dynamic smoke（注文追加、通知設定、承認一覧、PDF前段）を実行。新規注文作成でseed IDとvalidatorの不整合を検出し、低リスク修正してcommit。
