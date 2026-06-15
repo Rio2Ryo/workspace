@@ -32,6 +32,27 @@ High Risk:
 - 削除系操作
 - 秘密情報の共有
 
+## 2026-06-15 heartbeat (113回目)
+
+**アクション**: `tasks/QUEUE.md` の Ready / In Progress を確認。Ready 未完了なし、In Progress は `food-dx-shiro` のみ。停止判定に従い、`food-dx-shiro` の tmux / repo / DB接続環境 / handoff契約を再確認し、DB待ち中の品質劣化がないか API lint / API build / Web build も確認。
+
+**検証**:
+- QUEUE Ready 未完了なし。In Progress = `food-dx-shiro`。
+- `food-dx-shiro`: tmux `food-dx-shiro` 存在。repo `main` HEAD `4c46739`、tracked 変更なし。
+- `.env.local` / `.env` / `DATABASE_URL` / docker / psql / pg_ctl / initdb は missing。
+- `npm run test:db-e2e-handoff-contract` → pass。
+- `npm run db:check` → 想定通り `DATABASE_URL is not set` で fail。
+- `npm run db:e2e:handoff` → 判断依頼サマリーは「Yakonさんにお願いしたいこと: なし」、引き継ぎパケットは `目的 / 現担当 / 現状 / 次アクション / 詰まり / 支援候補 / 期限` 形式を維持。
+- `npm run lint --workspace=@food-dx/api` → pass。
+- `npm run build:api` → pass。
+- `npm run build:web` → pass（Next.js plugin warning のみ、21 pages generated）。
+- disk: `/System/Volumes/Data` は 97% 使用、空き 6.6GiB。既存の disk cleanup 承認待ち範囲内。削除系操作は未実行。
+- workspace tracked 変更: `process/rakui-done-packet.md` と `projects/threads-watcher/threads-watcher-status/state.json` の既存差分を確認。今回のheartbeatでは既存差分の巻き戻しなし。
+
+**状態**: Ready 未完了なし。`food-dx-shiro` は担当=白、次アクションは DB接続環境で `npm run db:e2e:handoff` の手順を実行し、seed後の日本語E2E結果を固定形式で回収すること。詰まりは技術環境待ち（DB接続）。disk cleanup / RAKUI [DONE] packet / food-dx DB は既存承認待ちで、新規判断依頼なし。
+
+**通知判断**: notify=false（新規障害なし。既知のDB待ち・disk cleanup承認待ち・品質ゲート再確認のみ）。
+
 ## 2026-06-15 heartbeat (112回目)
 
 **アクション**: `tasks/QUEUE.md` の Ready / In Progress を確認。Ready 未完了なし、In Progress は `food-dx-shiro` のみ。停止判定に従い、`food-dx-shiro` の tmux / repo / DB接続環境 / handoff契約を再確認し、DB待ち中の品質劣化がないか API lint / API build / Web build も確認。
@@ -2271,7 +2292,12 @@ npm run build:api && npm run build:web
 - **API live smoke**: `GET /health` → `{"status":"ok","timestamp":"2026-06-15T01:37:36.143Z"}` ✅
 - **Web live smoke**: HTML 200、`<title>Second Brain — ナレッジ管理</title>` ✅
 
-**状態**: second-brain ✅ 完全デプロイ完了。
+**Tick 91 (2026-06-15)**: `second-brain/apps/web/scripts/deploy-smoke.mjs` 修正 — smoke test 3件の定義誤り修正:
+- `web:shiro-daily` / `web:agent-command-center`: `expectedStatus: 200` → `308` (認証リダイレクト正常動作)
+- `api:health`: `{ok: boolean}` → `{status: string, equals: 'ok'}` (実際のAPIレスポンス形式に合わせた)
+- 全6チェック PASS → `47b86c9` コミット → `shiro/phase2-perf-metrics` プッシュ ✅
+
+**状態**: second-brain ✅ 完全デプロイ完了 + smoke test 全件パス。
 
 **注意**（migration-review 残件）:
 - `0055_task_source_links.sql` の `ON DELETE CASCADE` は Yakon の意図的な設計か要確認（機能には影響しないが、本番 DB apply 前にバックアップ推奨）
