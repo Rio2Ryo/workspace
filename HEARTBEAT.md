@@ -32,6 +32,27 @@ High Risk:
 - 削除系操作
 - 秘密情報の共有
 
+## 2026-06-15 heartbeat (120回目)
+
+**アクション**: `/Users/umi/.openclaw/workspace/HEARTBEAT.md` を指定パスで読み、`tasks/QUEUE.md` の Ready / In Progress を確認。Ready 未完了なし、In Progress は `food-dx-shiro` のみ。停止判定に従い、`food-dx-shiro` の tmux / repo / DB接続環境 / handoff契約を再確認し、DB待ち中の品質劣化がないか API lint / API build / Web build も確認。
+
+**検証**:
+- QUEUE Ready 未完了なし。In Progress = `food-dx-shiro`。
+- `food-dx-shiro`: tmux `food-dx-shiro` 存在。直近 pane の controller 文 shell 誤投入状態は前回から変化なし。今回のheartbeatでも自然文の tmux 直送は実施していない。
+- repo `/Users/umi/.openclaw/workspace/food-dx-qwen/food-dx-system`: branch `main`、HEAD `4c46739`、tracked 変更なし。
+- `.env.local` は存在するが、process env の `DATABASE_URL` は未設定。`npm run db:check` は `.env.local` の localhost:5432 を読み、TCP接続不能で想定通り fail。`docker` / `psql` / `pg_ctl` / `initdb` は missing。
+- `npm run test:db-e2e-handoff-contract` → pass。
+- `npm run db:e2e:handoff` → 判断依頼サマリーは「Yakonさんにお願いしたいこと: なし」、引き継ぎパケットは `目的 / 現担当 / 現状 / 次アクション / 詰まり / 支援候補 / 期限` 形式を維持。
+- `npm run lint --workspace=@food-dx/api` → pass。
+- `npm run build:api` → pass。
+- `npm run build:web` → pass（Next.js plugin warning のみ、21 pages generated）。
+- disk: `/System/Volumes/Data` は 97% 使用、空き 6.2GiB。既存の disk cleanup 承認待ち範囲内。削除系操作は未実行。
+- workspace tracked 変更: `HEARTBEAT.md` の本記録、`projects/threads-watcher/threads-watcher-status/state.json` の watcher 自動更新を確認。今回のheartbeatでは既存差分の巻き戻しなし。
+
+**状態**: Ready 未完了なし。`food-dx-shiro` は担当=白、次アクションは DB接続環境で `npm run db:e2e:handoff` の手順を実行し、seed後の日本語E2E結果を固定形式で回収すること。詰まりは技術環境待ち（PostgreSQL localhost:5432 未起動 / DB接続）。disk cleanup / RAKUI [DONE] packet / food-dx DB は既存承認待ちで、新規判断依頼なし。
+
+**通知判断**: notify=false（新規障害なし。既知のDB待ち・disk cleanup承認待ち・品質ゲート再確認のみ）。
+
 ## 2026-06-15 heartbeat (119回目)
 
 **アクション**: `/Users/umi/.openclaw/workspace/HEARTBEAT.md` を指定パスで読み、`tasks/QUEUE.md` の Ready / In Progress を確認。Ready 未完了なし、In Progress は `food-dx-shiro` のみ。停止判定に従い、`food-dx-shiro` の tmux / repo / DB接続環境 / handoff契約を再確認し、DB待ち中の品質劣化がないか API lint / API build / Web build も確認。
@@ -2440,5 +2461,22 @@ npm run build:api && npm run build:web
 - **food-dx DB**: Yakon 「docker OK」または URL 提供待ち
 - **disk cleanup**: `npm cache clean --force` 6.8G — Yakon 「disk cleanup OK」待ち
 - **RAKUI [DONE]**: `process/rakui-done-packet.md` の Discord 投稿文を `#白` にコピペ待ち
+
+## 2026-06-15 heartbeat — sub-repo push 承認パケット（2件）
+
+**スキャン結果**: 全 sub-repos を `origin/<current-branch>` 基準で確認。未 push は 2 repos のみ（mother-vegetable/recruit-ai-crm/second-brain は既に同期済み）。
+
+### パケット A — cycle-tracker-app (23 commits → main)
+**コマンド**: `git -C /Users/umi/.openclaw/workspace/cycle-tracker-app push origin main`
+**主要変更**: profile label カスタマイズ (double-click rename) / tsconfig build fix / e2e localStorage isolation fix / 33/33 pass ✅
+**deploy への影響**: push のみ。`vercel --prod` は別途必要（このコマンドでは deploy されない）
+**ロールバック**: force-with-lease で即時巻き戻し可
+**回答**: 「cycle-tracker push OK」
+
+### パケット B — KATAOMOI-EC2 (1 commit → master)
+**コマンド**: `git -C /Users/umi/.openclaw/workspace/repos/KATAOMOI-EC2 push origin master`
+**変更内容**: `docs: update SCOPE_AND_BLOCKERS to reflect deploy complete, Stripe pending`（docs のみ）
+**リスク**: なし
+**回答**: 「KATAOMOI push OK」
 
 **次アクション**: 承認待ち。
