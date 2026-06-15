@@ -1,6 +1,6 @@
 Yakonさんにお願いしたいこと: 7件
-白が実行/確認したこと: 7件 / controller投入 6件
-止まっているもの: 2件
+白が実行/確認したこと: 6件 / controller投入 6件
+止まっているもの: 4件
 報告しないもの: 10件（再投入・待機・未検証は進捗扱いしない）
 
 判断してほしいこと:
@@ -13,25 +13,26 @@ Yakonさんにお願いしたいこと: 7件
 - 他 1件
 
 成果確認済み:
-- shiro-feed-tunnel: ロールバック && cloudflared tunnel --url http://127.0.0.1:3033
-- shiro-ledger-claude: に記録しコミット。
+- shiro-feed-tunnel: tunnel --url http://127.0.0.1:3033
 - shiro-mother-domain: 放置の影響: 306コミット分の作業が GitHub に存在しない状態が継続。CI/CD・Ao
 - shiro-paper-manager: 5 recruit-ai-crm PR #1 GitHub merge
 - shiro-real-estate: 根拠 bundle.js 確認済 + Node.js トレース 3 ケース全 PASS +
 - shiro-restaurant-sales: 2ファイル（並列セッション更新）+ state.json 併せて commit 1771511。
-- 他 1件
+- shiro-sefs-lp: 未マージ変更 7 files, +27/-36 lines
 
 具体ブロッカー:
-- shiro-email-manager: credentials.json ここにドラッグした
+- daily-report-codex: Yakon A OK
+- shiro-email-manager: credentials.json のパスを教えて
+- shiro-feed-tunnel: BLOCKED_CONCRETE
 - tmux-web-view-app: one safe local check if possible; otherwise produce a concrete blocker packet. C
 
 controllerが投入した次アクション:
-- daily-report-codex: needs_verification -> executorとは別視点でテスト/差分/URL/ログを検証する
+- daily-report-codex: blocked -> 白が解けるローカル確認を1つ実行して詰まりを解消する
 - shiro-email-manager: blocked -> 秘密値/外部要因を切り分け、承認パケット化する
-- shiro-feed-tunnel: pending_approval -> 承認パケットを exact action / rollback / risk / wait impact まで具体化する
+- shiro-feed-tunnel: blocked -> 秘密値/外部要因を切り分け、承認パケット化する
 - shiro-ledger-claude: pending_approval -> 承認パケットを exact action / rollback / risk / wait impact まで具体化する
-- shiro-obsidian-second-brain: pending_approval -> 承認パケットを exact action / rollback / risk / wait impact まで具体化する
-- shiro-paper-manager: pending_approval -> 承認パケットを exact action / rollback / risk / wait impact まで具体化する
+- shiro-paper-manager: needs_verification -> executorとは別視点でテスト/差分/URL/ログを検証する
+- shiro-subsidy-research: needs_verification -> executorとは別視点でテスト/差分/URL/ログを検証する
 
-事実: workflow 28 / approvalReady 7 / resultObserved 8 / actionsSent 6
+事実: workflow 28 / approvalReady 7 / resultObserved 7 / actionsSent 6
 次: 次回tickで resultObserved または approvalPacket.ready になったものだけ報告します。
