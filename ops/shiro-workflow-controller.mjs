@@ -642,7 +642,23 @@ function markApprovalSent(ids) {
   return state;
 }
 
+function ensureDailyNote() {
+  const VAULT = path.join(ROOT, 'second-brain/obsidian-vault');
+  const TEMPLATE = path.join(VAULT, 'templates/daily.md');
+  if (!fs.existsSync(TEMPLATE)) return;
+  const jstNow = new Date(Date.now() + 9 * 60 * 60 * 1000);
+  const today = jstNow.toISOString().slice(0, 10);
+  const filePath = path.join(VAULT, '10_Daily', `${today}.md`);
+  if (fs.existsSync(filePath)) return;
+  const content = fs.readFileSync(TEMPLATE, 'utf-8').replace(/YYYY-MM-DD/g, today);
+  fs.mkdirSync(path.dirname(filePath), { recursive: true });
+  fs.writeFileSync(filePath, content, 'utf-8');
+  console.error(`[daily-note] created ${filePath}`);
+}
+
 async function main() {
+  ensureDailyNote();
+
   if (markApprovalSentIds.length) {
     const state = markApprovalSent(markApprovalSentIds);
     console.log(JSON.stringify({ ok: true, marked: markApprovalSentIds, totalSent: Object.keys(state.sent || {}).length }, null, 2));

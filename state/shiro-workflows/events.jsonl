@@ -252,3 +252,9 @@
 {"ts":"2026-06-15T07:09:48.315Z","id":"goose","session":"goose","threadId":"1501556320048906301","status":"pending_approval","decisionKind":"watch","resultObserved":false,"approvalReady":true}
 {"ts":"2026-06-15T07:27:55.561Z","id":"goose","session":"goose","threadId":"1501556320048906301","status":"pending_approval","decisionKind":"watch","resultObserved":false,"approvalReady":true}
 {"ts":"2026-06-15T07:27:55.561Z","id":"shiro-personal-branding","session":"shiro-personal-branding","threadId":"1511633432239673385","status":"blocked","decisionKind":"unblock","resultObserved":false,"approvalReady":false}
+{"ts":"2026-06-15T07:57:56.233Z","id":"daily-report-codex","session":"daily-report-codex","threadId":"1505429154215100507","status":"needs_verification","decisionKind":"verify-result","resultObserved":false,"approvalReady":false}
+{"ts":"2026-06-15T07:57:56.233Z","id":"shiro-email-manager","session":"shiro-email-manager","threadId":null,"status":"blocked","decisionKind":"unblock","resultObserved":true,"approvalReady":false}
+{"ts":"2026-06-15T07:57:56.233Z","id":"shiro-feed-tunnel","session":"shiro-feed-tunnel","threadId":null,"status":"pending_approval","decisionKind":"external-action","resultObserved":false,"approvalReady":false}
+{"ts":"2026-06-15T07:57:56.233Z","id":"shiro-ledger-claude","session":"shiro-ledger-claude","threadId":"1506920712542355538","status":"pending_approval","decisionKind":"external-action","resultObserved":false,"approvalReady":false}
+{"ts":"2026-06-15T07:57:56.233Z","id":"shiro-obsidian-second-brain","session":"shiro-obsidian-second-brain","threadId":"1512250378593370337","status":"pending_approval","decisionKind":"needs-yakon","resultObserved":false,"approvalReady":false}
+{"ts":"2026-06-15T07:57:56.233Z","id":"shiro-paper-manager","session":"shiro-paper-manager","threadId":null,"status":"pending_approval","decisionKind":"external-action","resultObserved":false,"approvalReady":false}

@@ -75,6 +75,7 @@
 | Agent | Task | Completed |
 |-------|------|-----------|
 | daily-report-codex | daily-report-app — `POST /api/agent-command/daily-report/preview` 実装 + builder 11テスト追加 (472/472 pass, tsc clean, build ✅) | 2026-06-15 |
+| daily-report-codex | daily-report-app — curl E2E: 投稿/管理/AI再生成/sent/Second Brain sync/preview 全通過。QA_CHECKLIST 14/18 ✅。commit 776008e。GitHub push + Vercel deploy 承認待ち | 2026-06-15 |
 
 ---
 
