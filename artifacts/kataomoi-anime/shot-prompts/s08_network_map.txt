@@ -1,0 +1,16 @@
+[STYLE PREFIX — all shots]
+Anime cinematic style, premium Japanese animation quality (Makoto Shinkai / CoMix Wave level),
+night city atmosphere, warm gold and deep navy color palette,
+sharp character design with soft edges, volumetric lighting,
+16:9 widescreen composition, highly detailed backgrounds,
+no text in image, no logos in image, photorealistic but stylized
+
+---
+
+S08 — ネットワークマップ (5s)
+
+Abstract network visualization: two glowing golden nodes connecting with a bright beam,
+then secondary connections spreading to nearby nodes,
+dark space background, nodes pulse with warm light,
+beautiful data visualization aesthetic, no text labels,
+top-down view of the expanding network

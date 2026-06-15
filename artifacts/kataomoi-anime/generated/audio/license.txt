@@ -1,0 +1,12 @@
+# BGMライセンス記録
+# 著作権フリー素材のみ使用可。記録必須。
+
+# TRACK        | TOOL  | LICENSE        | DOWNLOAD_URL | DATE
+# -------------|-------|----------------|--------------|-----
+# bgm_act1     | Suno  | (Suno利用規約) |              |
+# bgm_act2     | Suno  | (Suno利用規約) |              |
+# bgm_act3     | Suno  | (Suno利用規約) |              |
+
+# Suno生成音楽のライセンス: https://suno.com/terms
+# CC0素材を使う場合はCC0であることを明記すること
+# 著作権不明BGMの使用禁止（停止条件）

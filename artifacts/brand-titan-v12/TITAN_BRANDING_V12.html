@@ -1,0 +1,1005 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>KATAOMOI Brand Strategy V12</title>
+  <style>
+    :root {
+      --bg: #070806;
+      --panel: #10120f;
+      --panel-2: #171913;
+      --ink: #f4f0e7;
+      --muted: #aaa391;
+      --line: rgba(244, 240, 231, .14);
+      --gold: #d6b25e;
+      --gold-2: #f1d98a;
+      --green: #66d6a5;
+      --cyan: #78c8d8;
+      --red: #e27d72;
+      --shadow: 0 28px 90px rgba(0,0,0,.48);
+      --radius: 8px;
+    }
+
+    * { box-sizing: border-box; }
+    html, body { margin: 0; height: 100%; background: var(--bg); color: var(--ink); font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; }
+    body { overflow: hidden; }
+    .deck {
+      width: 100vw;
+      height: 100vh;
+      position: relative;
+      background:
+        linear-gradient(90deg, rgba(214,178,94,.08) 1px, transparent 1px) 0 0 / 96px 96px,
+        linear-gradient(0deg, rgba(214,178,94,.06) 1px, transparent 1px) 0 0 / 96px 96px,
+        radial-gradient(circle at 76% 18%, rgba(102,214,165,.16), transparent 30%),
+        radial-gradient(circle at 18% 78%, rgba(214,178,94,.14), transparent 28%),
+        var(--bg);
+    }
+    .slide {
+      position: absolute;
+      inset: 0;
+      display: none;
+      padding: 52px 68px;
+    }
+    .slide.active { display: grid; }
+    .frame {
+      height: 100%;
+      display: grid;
+      grid-template-rows: auto 1fr auto;
+      gap: 26px;
+      position: relative;
+    }
+    .frame:before {
+      content: "";
+      position: absolute;
+      inset: -18px;
+      border: 1px solid rgba(244,240,231,.10);
+      border-radius: 18px;
+      pointer-events: none;
+    }
+    .topline, .footer {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      color: var(--muted);
+      font-size: 12px;
+      letter-spacing: .08em;
+      text-transform: uppercase;
+    }
+    .mark { color: var(--gold-2); font-weight: 700; }
+    .page { color: rgba(244,240,231,.54); }
+    .content { display: grid; gap: 28px; min-height: 0; }
+    .two { grid-template-columns: 1fr 1fr; align-items: stretch; }
+    .wide-left { grid-template-columns: 1.18fr .82fr; align-items: stretch; }
+    .wide-right { grid-template-columns: .82fr 1.18fr; align-items: stretch; }
+    h1, h2, h3, p { margin: 0; }
+    h1 {
+      font-size: 74px;
+      line-height: .95;
+      letter-spacing: 0;
+      max-width: 1040px;
+    }
+    h2 {
+      font-size: 52px;
+      line-height: 1.02;
+      letter-spacing: 0;
+      max-width: 1040px;
+    }
+    h3 {
+      font-size: 22px;
+      line-height: 1.2;
+      color: var(--ink);
+    }
+    .lead {
+      font-size: 23px;
+      line-height: 1.58;
+      color: #ddd6c8;
+      max-width: 880px;
+    }
+    .accent { color: var(--gold-2); }
+    .muted { color: var(--muted); }
+    .panel {
+      background: linear-gradient(180deg, rgba(255,255,255,.045), rgba(255,255,255,.015));
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      padding: 28px;
+      position: relative;
+      overflow: hidden;
+      min-height: 0;
+    }
+    .panel.flat { box-shadow: none; background: rgba(255,255,255,.025); }
+    .kicker {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      color: var(--gold-2);
+      font-size: 13px;
+      font-weight: 800;
+      letter-spacing: .12em;
+      text-transform: uppercase;
+      margin-bottom: 16px;
+    }
+    .kicker:before {
+      content: "";
+      width: 28px;
+      height: 1px;
+      background: var(--gold);
+    }
+    .hero-grid {
+      display: grid;
+      grid-template-columns: 1.05fr .95fr;
+      gap: 38px;
+      align-items: center;
+    }
+    .tagline {
+      margin-top: 28px;
+      padding: 18px 20px;
+      border-left: 3px solid var(--gold);
+      background: rgba(214,178,94,.08);
+      color: #efe5cd;
+      font-size: 21px;
+      line-height: 1.45;
+      max-width: 760px;
+    }
+    .orbital {
+      height: 540px;
+      border-radius: 50%;
+      border: 1px solid rgba(214,178,94,.30);
+      position: relative;
+      background:
+        radial-gradient(circle at 50% 50%, rgba(214,178,94,.18), rgba(214,178,94,.04) 34%, transparent 35%),
+        conic-gradient(from 220deg, rgba(214,178,94,.02), rgba(214,178,94,.26), rgba(102,214,165,.18), rgba(214,178,94,.02));
+    }
+    .orbital:before, .orbital:after {
+      content: "";
+      position: absolute;
+      inset: 64px;
+      border-radius: 50%;
+      border: 1px dashed rgba(244,240,231,.20);
+    }
+    .orbital:after { inset: 138px; border-style: solid; border-color: rgba(102,214,165,.35); }
+    .center-label {
+      position: absolute;
+      inset: 50%;
+      transform: translate(-50%, -50%);
+      width: 210px;
+      height: 210px;
+      border-radius: 50%;
+      display: grid;
+      place-items: center;
+      text-align: center;
+      border: 1px solid rgba(241,217,138,.55);
+      background: #0d0f0b;
+      font-size: 18px;
+      font-weight: 800;
+      line-height: 1.35;
+      color: var(--gold-2);
+    }
+    .node {
+      position: absolute;
+      width: 128px;
+      padding: 12px 10px;
+      border: 1px solid var(--line);
+      background: rgba(7,8,6,.88);
+      color: var(--ink);
+      border-radius: var(--radius);
+      text-align: center;
+      font-size: 13px;
+      line-height: 1.25;
+    }
+    .n1 { left: 34px; top: 86px; }
+    .n2 { right: 30px; top: 112px; }
+    .n3 { left: 60px; bottom: 98px; }
+    .n4 { right: 70px; bottom: 74px; }
+    .split {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 22px;
+    }
+    .old, .new { min-height: 420px; display: grid; grid-template-rows: auto 1fr; gap: 18px; }
+    .old { border-color: rgba(226,125,114,.32); }
+    .new { border-color: rgba(102,214,165,.38); }
+    .label {
+      display: inline-flex;
+      width: fit-content;
+      padding: 8px 10px;
+      border-radius: 999px;
+      font-size: 12px;
+      text-transform: uppercase;
+      letter-spacing: .10em;
+      font-weight: 800;
+      border: 1px solid var(--line);
+      color: var(--muted);
+    }
+    .old .label { color: #f3aaa2; border-color: rgba(226,125,114,.35); }
+    .new .label { color: #a5f0cb; border-color: rgba(102,214,165,.38); }
+    .big-word {
+      font-size: 46px;
+      line-height: 1.05;
+      font-weight: 850;
+      letter-spacing: 0;
+    }
+    .body {
+      color: #d7d0c2;
+      font-size: 18px;
+      line-height: 1.55;
+    }
+    .funnel {
+      display: grid;
+      gap: 14px;
+      align-content: center;
+      height: 100%;
+    }
+    .funnel-step {
+      display: grid;
+      grid-template-columns: 150px 1fr;
+      align-items: center;
+      gap: 14px;
+    }
+    .bar {
+      height: 48px;
+      border: 1px solid var(--line);
+      border-radius: 4px;
+      background: linear-gradient(90deg, rgba(226,125,114,.35), rgba(226,125,114,.06));
+      display: flex;
+      align-items: center;
+      padding: 0 16px;
+      color: #ffd0cb;
+      font-weight: 750;
+    }
+    .w100 { width: 100%; }
+    .w72 { width: 72%; }
+    .w44 { width: 44%; }
+    .w18 { width: 18%; min-width: 150px; }
+    .process {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 18px;
+      align-items: stretch;
+    }
+    .step {
+      min-height: 342px;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: rgba(255,255,255,.028);
+      padding: 22px;
+      position: relative;
+    }
+    .num {
+      font-size: 13px;
+      color: var(--gold-2);
+      letter-spacing: .12em;
+      text-transform: uppercase;
+      margin-bottom: 42px;
+    }
+    .step h3 { margin-bottom: 14px; }
+    .arrow {
+      position: absolute;
+      right: -26px;
+      top: 50%;
+      width: 34px;
+      height: 1px;
+      background: rgba(214,178,94,.55);
+      z-index: 2;
+    }
+    .arrow:after {
+      content: "";
+      position: absolute;
+      right: -1px;
+      top: -4px;
+      border-left: 8px solid rgba(214,178,94,.70);
+      border-top: 4px solid transparent;
+      border-bottom: 4px solid transparent;
+    }
+    .step:last-child .arrow { display: none; }
+    .metric-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 18px;
+    }
+    .metric {
+      padding: 24px;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: rgba(255,255,255,.026);
+      min-height: 230px;
+    }
+    .metric .value {
+      font-size: 42px;
+      line-height: 1;
+      font-weight: 850;
+      color: var(--gold-2);
+      margin-bottom: 14px;
+    }
+    .metric p { font-size: 16px; line-height: 1.45; color: #d7d0c2; }
+    .note {
+      margin-top: 16px;
+      padding: 14px 16px;
+      border: 1px solid rgba(120,200,216,.30);
+      background: rgba(120,200,216,.08);
+      color: #cfeff4;
+      border-radius: var(--radius);
+      font-size: 15px;
+      line-height: 1.42;
+    }
+    .timeline {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 22px;
+      align-items: stretch;
+    }
+    .phase {
+      border-top: 2px solid var(--gold);
+      padding-top: 20px;
+    }
+    .phase h3 { font-size: 24px; margin-bottom: 14px; }
+    .phase ul, .proof ul {
+      margin: 0;
+      padding-left: 20px;
+      color: #d7d0c2;
+      font-size: 17px;
+      line-height: 1.6;
+    }
+    .quote {
+      font-size: 44px;
+      line-height: 1.18;
+      font-weight: 850;
+      letter-spacing: 0;
+      max-width: 980px;
+    }
+    .cta-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 18px;
+    }
+    .cta {
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      padding: 24px;
+      background: rgba(255,255,255,.025);
+      min-height: 210px;
+    }
+    .cta h3 { color: var(--gold-2); margin-bottom: 14px; }
+    .controls {
+      position: fixed;
+      left: 50%;
+      bottom: 20px;
+      transform: translateX(-50%);
+      display: flex;
+      gap: 10px;
+      z-index: 20;
+      background: rgba(7,8,6,.76);
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      padding: 8px;
+      backdrop-filter: blur(16px);
+    }
+    button {
+      background: rgba(255,255,255,.06);
+      color: var(--ink);
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      height: 36px;
+      min-width: 80px;
+      padding: 0 14px;
+      font-weight: 750;
+      cursor: pointer;
+    }
+    button:hover { border-color: rgba(241,217,138,.55); }
+    .madness-board {
+      display: grid;
+      grid-template-columns: .92fr 1.08fr;
+      gap: 22px;
+      align-items: stretch;
+    }
+    .dial-stack {
+      display: grid;
+      gap: 18px;
+    }
+    .dial {
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      padding: 20px;
+      background: rgba(255,255,255,.026);
+    }
+    .dial-head {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      gap: 18px;
+      margin-bottom: 14px;
+    }
+    .dial strong {
+      color: var(--gold-2);
+      font-size: 16px;
+      letter-spacing: .10em;
+    }
+    .dial output {
+      color: #d7d0c2;
+      font-size: 14px;
+      font-weight: 800;
+    }
+    input[type="range"] {
+      width: 100%;
+      accent-color: var(--gold);
+    }
+    .terminal {
+      display: grid;
+      grid-template-rows: auto 1fr auto;
+      min-height: 448px;
+      border-color: rgba(102,214,165,.34);
+      background: linear-gradient(180deg, rgba(102,214,165,.07), rgba(255,255,255,.018));
+    }
+    .scoreline {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 18px;
+      margin-bottom: 18px;
+    }
+    .score {
+      font-size: 54px;
+      line-height: 1;
+      font-weight: 900;
+      color: var(--green);
+    }
+    .signal {
+      display: grid;
+      grid-template-columns: repeat(18, 1fr);
+      gap: 6px;
+      align-items: end;
+      height: 86px;
+      margin: 22px 0;
+    }
+    .signal i {
+      display: block;
+      min-height: 10px;
+      border-radius: 3px 3px 0 0;
+      background: linear-gradient(180deg, var(--gold-2), var(--green));
+      opacity: .84;
+      transform-origin: bottom;
+      animation: pulse 1.35s ease-in-out infinite;
+    }
+    .log {
+      display: grid;
+      gap: 10px;
+      color: #d7d0c2;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+      font-size: 14px;
+      line-height: 1.4;
+    }
+    .log span:before {
+      content: ">";
+      color: var(--green);
+      margin-right: 8px;
+    }
+    @keyframes pulse {
+      0%, 100% { transform: scaleY(.72); opacity: .58; }
+      50% { transform: scaleY(1); opacity: 1; }
+    }
+
+    @media screen and (max-width: 700px) {
+      html, body {
+        height: auto;
+        min-height: 100%;
+      }
+      body {
+        overflow: auto;
+        overflow-x: hidden;
+      }
+      .deck {
+        width: 100%;
+        max-width: 100vw;
+        height: auto;
+        min-height: 100svh;
+        overflow-x: hidden;
+      }
+      .slide {
+        position: relative;
+        inset: auto;
+        width: 100%;
+        max-width: 100vw;
+        overflow-x: hidden;
+        min-height: 100svh;
+        padding: 22px 16px 124px;
+      }
+      .slide.active {
+        display: block;
+      }
+      .frame {
+        min-height: calc(100svh - 108px);
+        display: grid;
+        grid-template-rows: auto 1fr auto;
+        gap: 18px;
+      }
+      .frame:before {
+        inset: -8px;
+        border-radius: 12px;
+      }
+      .topline, .footer {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 4px;
+        align-items: flex-start;
+        font-size: 10px;
+        line-height: 1.35;
+      }
+      .topline span:last-child,
+      .footer span:first-child {
+        max-width: 100%;
+        text-align: left;
+      }
+      .topline span,
+      .footer span,
+      h1, h2, h3, p,
+      .content,
+      .panel,
+      .metric,
+      .cta,
+      .step {
+        min-width: 0;
+        max-width: 100%;
+        overflow-wrap: anywhere;
+      }
+      .content,
+      .hero-grid,
+      .two,
+      .wide-left,
+      .wide-right,
+      .split,
+      .process,
+      .metric-grid,
+      .cta-grid,
+      .madness-board {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 16px;
+      }
+      h1 {
+        font-size: 34px;
+        line-height: 1.08;
+      }
+      h2 {
+        font-size: 28px;
+        line-height: 1.08;
+      }
+      h3 {
+        font-size: 18px;
+      }
+      .lead,
+      .body {
+        font-size: 16px;
+        line-height: 1.52;
+      }
+      .kicker {
+        font-size: 11px;
+        margin-bottom: 10px;
+      }
+      .tagline {
+        margin-top: 18px;
+        padding: 14px 14px;
+        font-size: 16px;
+        line-height: 1.45;
+      }
+      .panel,
+      .metric,
+      .cta,
+      .step,
+      .dial {
+        padding: 16px;
+        min-height: auto;
+      }
+      .orbital {
+        width: min(70vw, 270px);
+        height: min(70vw, 270px);
+        margin: 2px auto 0;
+      }
+      .orbital:before { inset: 34px; }
+      .orbital:after { inset: 78px; }
+      .center-label {
+        width: 118px;
+        height: 118px;
+        font-size: 13px;
+      }
+      .node {
+        width: 76px;
+        padding: 8px 6px;
+        font-size: 10px;
+      }
+      .n1 { left: 4px; top: 54px; }
+      .n2 { right: 2px; top: 66px; }
+      .n3 { left: 20px; bottom: 46px; }
+      .n4 { right: 20px; bottom: 36px; }
+      .old, .new {
+        min-height: auto;
+      }
+      .big-word {
+        font-size: 28px;
+      }
+      .quote {
+        font-size: 25px;
+        line-height: 1.16;
+      }
+      .funnel-step {
+        grid-template-columns: 104px 1fr;
+        gap: 10px;
+      }
+      .bar {
+        height: 38px;
+        padding: 0 10px;
+        font-size: 13px;
+      }
+      .w18 {
+        min-width: 112px;
+      }
+      .num {
+        margin-bottom: 18px;
+      }
+      .arrow {
+        display: none;
+      }
+      .metric .value {
+        font-size: 34px;
+      }
+      .phase ul, .proof ul {
+        font-size: 15px;
+        line-height: 1.55;
+      }
+      .terminal {
+        min-height: auto;
+      }
+      .scoreline {
+        align-items: flex-start;
+      }
+      .score {
+        font-size: 42px;
+      }
+      .signal {
+        height: 58px;
+        gap: 4px;
+        margin: 16px 0;
+      }
+      .log {
+        font-size: 12px;
+      }
+      .controls {
+        left: 14px;
+        right: 14px;
+        bottom: max(10px, env(safe-area-inset-bottom));
+        transform: none;
+        justify-content: stretch;
+        max-width: calc(100vw - 28px);
+      }
+      button {
+        flex: 1;
+        min-width: 0;
+        height: 40px;
+      }
+    }
+
+    @media print {
+      body { overflow: visible; background: var(--bg); }
+      .deck { height: auto; background: var(--bg); }
+      .slide {
+        display: grid !important;
+        position: relative;
+        width: 1600px;
+        height: 900px;
+        page-break-after: always;
+        break-after: page;
+      }
+      .controls { display: none; }
+    }
+  </style>
+</head>
+<body>
+  <main class="deck" id="deck">
+    <section class="slide active">
+      <div class="frame">
+        <div class="topline"><span class="mark">KATAOMOI Brand Strategy V12</span><span>High-fidelity presenter material</span></div>
+        <div class="content hero-grid">
+          <div>
+            <div class="kicker">Category thesis</div>
+            <h1>名刺交換は、保存した時点ではまだ未完了。</h1>
+            <p class="tagline">KATAOMOIは、出会いの24時間以内に文脈・信頼・次の接点をログ化し、名刺交換を関係資産へ変えるシステム。</p>
+          </div>
+          <div class="orbital" aria-label="Relationship asset system diagram">
+            <div class="center-label">Relationship<br>Asset OS</div>
+            <div class="node n1">Context<br>文脈</div>
+            <div class="node n2">Trust<br>信頼</div>
+            <div class="node n3">Recontact<br>次接点</div>
+            <div class="node n4">Asset Log<br>資産ログ</div>
+          </div>
+        </div>
+        <div class="footer"><span>Yakon / KATAOMOI</span><span class="page">01 / 09</span></div>
+      </div>
+    </section>
+
+    <section class="slide">
+      <div class="frame">
+        <div class="topline"><span class="mark">Problem</span><span>Business-card exchange leakage</span></div>
+        <div class="content wide-left">
+          <div>
+            <div class="kicker">Current failure</div>
+            <h2>名刺管理は「保存」を完了にしてしまう。</h2>
+            <p class="lead">しかし、出会いの価値は保存後に決まる。文脈が残らず、次の接点が設計されなければ、名刺は資産ではなく未回収の機会になる。</p>
+          </div>
+          <div class="panel">
+            <div class="funnel">
+              <div class="funnel-step"><span class="muted">交換</span><div class="bar w100">接点が発生</div></div>
+              <div class="funnel-step"><span class="muted">保存</span><div class="bar w72">情報だけ残る</div></div>
+              <div class="funnel-step"><span class="muted">24h後</span><div class="bar w44">文脈が薄れる</div></div>
+              <div class="funnel-step"><span class="muted">数日後</span><div class="bar w18">次接点が消える</div></div>
+            </div>
+          </div>
+        </div>
+        <div class="footer"><span>Claim: 保存は終点ではない</span><span class="page">02 / 09</span></div>
+      </div>
+    </section>
+
+    <section class="slide">
+      <div class="frame">
+        <div class="topline"><span class="mark">Binary Frame</span><span>Old category vs new category</span></div>
+        <div class="content">
+          <div>
+            <div class="kicker">Reframe the category</div>
+            <h2>「名刺を保存する」と「関係を資産化する」は、別の仕事である。</h2>
+          </div>
+          <div class="split">
+            <div class="panel old">
+              <span class="label">OLD / Name-card management</span>
+              <div>
+                <p class="big-word">保存して完了</p>
+                <p class="body" style="margin-top: 18px;">情報を失わないための仕組み。文脈・信頼・次の接点は、担当者の記憶と手作業に残される。</p>
+              </div>
+            </div>
+            <div class="panel new">
+              <span class="label">NEW / Relationship asset system</span>
+              <div>
+                <p class="big-word">未完了へ差し戻す</p>
+                <p class="body" style="margin-top: 18px;">名刺交換を終点にせず、文脈・信頼・再接触のログが残るまで関係資産化のプロセスを進める。</p>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="footer"><span>Choice: 保存完了 vs 関係資産化</span><span class="page">03 / 09</span></div>
+      </div>
+    </section>
+
+    <section class="slide">
+      <div class="frame">
+        <div class="topline"><span class="mark">Founder / Product Definition</span><span>Sword without overclaim</span></div>
+        <div class="content wide-right">
+          <div class="panel flat">
+            <div class="kicker">Yakon</div>
+            <p class="quote">名刺交換を「未完了」へ差し戻し、人脈を関係資産へ再建築する 0-100 アーキテクト。</p>
+          </div>
+          <div class="panel">
+            <div class="kicker">KATAOMOI</div>
+            <p class="quote">出会いの24時間を、文脈・信頼・再接触ログへ変換する関係資産化システム。</p>
+            <p class="note">外部向け表現では、未検証の実績値や攻撃的な内部語を避け、カテゴリの違いと設計原則を明確に示す。</p>
+          </div>
+        </div>
+        <div class="footer"><span>Definition: reusable for LP / pitch / sales</span><span class="page">04 / 09</span></div>
+      </div>
+    </section>
+
+    <section class="slide">
+      <div class="frame">
+        <div class="topline"><span class="mark">24h Assetization Flow</span><span>One claim, one diagram</span></div>
+        <div class="content">
+          <div>
+            <div class="kicker">How it works</div>
+            <h2>交換直後の24時間で、関係の初期ログを固定する。</h2>
+          </div>
+          <div class="process">
+            <div class="step">
+              <div class="num">01 / Encounter</div>
+              <h3>出会いを記録する</h3>
+              <p class="body">誰と、どこで、何について話したか。保存ではなく文脈の起点を残す。</p>
+              <div class="arrow"></div>
+            </div>
+            <div class="step">
+              <div class="num">02 / Context</div>
+              <h3>文脈を固定する</h3>
+              <p class="body">相手の関心、課題、次に触れるべき話題をログ化する。</p>
+              <div class="arrow"></div>
+            </div>
+            <div class="step">
+              <div class="num">03 / Trust</div>
+              <h3>信頼の根拠を残す</h3>
+              <p class="body">紹介、実績、約束、送付物など、関係を進める証拠を紐づける。</p>
+              <div class="arrow"></div>
+            </div>
+            <div class="step">
+              <div class="num">04 / Recontact</div>
+              <h3>次の接点を設計する</h3>
+              <p class="body">関係が薄れる前に、次のアクションと期限を決める。</p>
+            </div>
+          </div>
+        </div>
+        <div class="footer"><span>Outcome: lost contacts become managed relationship assets</span><span class="page">05 / 09</span></div>
+      </div>
+    </section>
+
+    <section class="slide">
+      <div class="frame">
+        <div class="topline"><span class="mark">Standards / Principles</span><span>Not historical performance claims</span></div>
+        <div class="content">
+          <div>
+            <div class="kicker">Engineering standards</div>
+            <h2>数値は実績ではなく、プロダクトが守るべき設計基準として扱う。</h2>
+          </div>
+          <div class="metric-grid">
+            <div class="metric">
+              <div class="value">24h</div>
+              <h3>Context Capture Principle</h3>
+              <p>出会い直後の文脈を、記憶が薄れる前にログ化する設計原則。</p>
+            </div>
+            <div class="metric">
+              <div class="value">10d</div>
+              <h3>Initial Path Standard</h3>
+              <p>初期導線を短期間で組み、関係資産化の仮説検証を始める設計基準。</p>
+            </div>
+            <div class="metric">
+              <div class="value">100%</div>
+              <h3>Recontact Design Principle</h3>
+              <p>重要接点に対して、次の接触理由と期限を残すことを目指す運用原則。</p>
+            </div>
+          </div>
+          <p class="note">これらは実績値ではなく、資料内で Standard / Principle と明記する。実績化した段階で Dashboard 指標へ移行する。</p>
+        </div>
+        <div class="footer"><span>Guardrail: no misleading metrics</span><span class="page">06 / 09</span></div>
+      </div>
+    </section>
+
+    <section class="slide">
+      <div class="frame">
+        <div class="topline"><span class="mark">MADNESS PARAMETER</span><span>Chaos / Logic / Speed</span></div>
+        <div class="content madness-board">
+          <div>
+            <div class="kicker">Operator console</div>
+            <h2>混沌を受け取り、論理で圧縮し、速度で資産化する。</h2>
+            <p class="lead">V12では、ブランドの強度を「綺麗さ」ではなく、混沌入力をどれだけ速く証拠ログへ変換できるかで見る。</p>
+            <div class="dial-stack" aria-label="Madness parameter controls">
+              <label class="dial">
+                <span class="dial-head"><strong>CHAOS INTAKE</strong><output id="chaosOut">72</output></span>
+                <input id="chaos" type="range" min="0" max="100" value="72">
+              </label>
+              <label class="dial">
+                <span class="dial-head"><strong>LOGIC COMPRESS</strong><output id="logicOut">84</output></span>
+                <input id="logic" type="range" min="0" max="100" value="84">
+              </label>
+              <label class="dial">
+                <span class="dial-head"><strong>SPEED TO ASSET</strong><output id="speedOut">76</output></span>
+                <input id="speed" type="range" min="0" max="100" value="76">
+              </label>
+            </div>
+          </div>
+          <div class="panel terminal">
+            <div class="scoreline">
+              <div>
+                <div class="kicker">Execution pressure</div>
+                <h3 id="madnessState">再建築モード</h3>
+              </div>
+              <div class="score" id="madnessScore">79</div>
+            </div>
+            <div class="signal" id="signal" aria-label="Live signal bars"></div>
+            <div class="log" id="madnessLog">
+              <span>encounter context captured within 24h</span>
+              <span>trust proof attached to relationship asset</span>
+              <span>next contact reason and deadline generated</span>
+            </div>
+          </div>
+        </div>
+        <div class="footer"><span>Simulation: madness becomes proof architecture</span><span class="page">07 / 09</span></div>
+      </div>
+    </section>
+
+    <section class="slide">
+      <div class="frame">
+        <div class="topline"><span class="mark">Proof Architecture</span><span>Armor layers</span></div>
+        <div class="content two">
+          <div>
+            <div class="kicker">Proof, not adjectives</div>
+            <h2>「便利」ではなく、実行・反応・資産ログで語る。</h2>
+            <p class="lead">KATAOMOIの資料は、感情的な強さよりも証拠の構造を前面に出す。顧客が見たいのは、言葉の鋭さではなく、関係がどう残り、どう次に進むか。</p>
+          </div>
+          <div class="panel proof">
+            <ul>
+              <li><strong>Execution Log:</strong> 出会い後に実際に残した文脈、送付物、次アクション。</li>
+              <li><strong>Reaction Log:</strong> 返信、紹介、商談化、再訪など、相手の行動変化。</li>
+              <li><strong>Asset Log:</strong> 次回以降も使える関係履歴、紹介経路、提案材料。</li>
+              <li><strong>Dashboard:</strong> ログ化率、再接触設計率、返信率、商談化率。</li>
+            </ul>
+          </div>
+        </div>
+        <div class="footer"><span>Armor: execution / reaction / asset</span><span class="page">08 / 09</span></div>
+      </div>
+    </section>
+
+    <section class="slide">
+      <div class="frame">
+        <div class="topline"><span class="mark">Activation Plan</span><span>From strategy to execution</span></div>
+        <div class="content">
+          <div>
+            <div class="kicker">Next use</div>
+            <h2>この資料は、LP・営業資料・投資家向けピッチの核として使う。</h2>
+          </div>
+          <div class="cta-grid">
+            <div class="cta">
+              <h3>LP</h3>
+              <p class="body">冒頭コピーは「名刺交換は、保存した時点ではまだ未完了。」で固定。以降は24hフローと証拠ログへつなげる。</p>
+            </div>
+            <div class="cta">
+              <h3>Sales</h3>
+              <p class="body">既存の名刺管理との比較ではなく、保存完了と関係資産化の違いを説明する。</p>
+            </div>
+            <div class="cta">
+              <h3>Product</h3>
+              <p class="body">初期機能は文脈ログ、信頼根拠、次接点設計、Dashboard 指標の4点に絞る。</p>
+            </div>
+          </div>
+          <p class="tagline">Final statement: KATAOMOI is not a place to store business cards. It is a system that turns encounters into relationship assets.</p>
+        </div>
+        <div class="footer"><span>Ready for presentation / PDF export</span><span class="page">09 / 09</span></div>
+      </div>
+    </section>
+  </main>
+
+  <nav class="controls" aria-label="Slide controls">
+    <button id="prev" type="button">Prev</button>
+    <button id="next" type="button">Next</button>
+    <button id="print" type="button">PDF</button>
+  </nav>
+
+  <script>
+    const slides = [...document.querySelectorAll('.slide')];
+    let index = 0;
+    function show(nextIndex) {
+      index = (nextIndex + slides.length) % slides.length;
+      slides.forEach((slide, i) => slide.classList.toggle('active', i === index));
+    }
+    document.getElementById('prev').addEventListener('click', () => show(index - 1));
+    document.getElementById('next').addEventListener('click', () => show(index + 1));
+    document.getElementById('print').addEventListener('click', () => window.print());
+    const controls = ['chaos', 'logic', 'speed'].map((id) => document.getElementById(id));
+    const signal = document.getElementById('signal');
+    const log = document.getElementById('madnessLog');
+    const states = ['保存を破壊中', '再建築モード', '資産化ドライブ'];
+    if (signal) {
+      for (let i = 0; i < 18; i += 1) {
+        const bar = document.createElement('i');
+        bar.style.height = `${18 + ((i * 11) % 68)}px`;
+        bar.style.animationDelay = `${i * 70}ms`;
+        signal.appendChild(bar);
+      }
+    }
+    function updateMadness() {
+      const [chaos, logic, speed] = controls.map((control) => Number(control.value));
+      const score = Math.round((chaos * .28) + (logic * .38) + (speed * .34));
+      document.getElementById('chaosOut').value = chaos;
+      document.getElementById('logicOut').value = logic;
+      document.getElementById('speedOut').value = speed;
+      document.getElementById('madnessScore').textContent = score;
+      document.getElementById('madnessState').textContent = states[Math.min(2, Math.floor(score / 34))];
+      [...signal.children].forEach((bar, i) => {
+        bar.style.height = `${12 + ((score + i * 13) % 74)}px`;
+      });
+      log.innerHTML = [
+        `chaos input accepted: ${chaos}%`,
+        `logic compression stable: ${logic}%`,
+        `asset velocity armed: ${speed}%`
+      ].map((line) => `<span>${line}</span>`).join('');
+    }
+    controls.forEach((control) => control && control.addEventListener('input', updateMadness));
+    updateMadness();
+    window.addEventListener('keydown', (event) => {
+      if (event.key === 'ArrowRight' || event.key === ' ') show(index + 1);
+      if (event.key === 'ArrowLeft') show(index - 1);
+      if (event.key.toLowerCase() === 'p') window.print();
+    });
+  </script>
+</body>
+</html>

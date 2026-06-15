@@ -1,0 +1,18 @@
+[STYLE PREFIX — all shots]
+Anime cinematic style, premium Japanese animation quality (Makoto Shinkai / CoMix Wave level),
+night city atmosphere, warm gold and deep navy color palette,
+sharp character design with soft edges, volumetric lighting,
+16:9 widescreen composition, highly detailed backgrounds,
+no text in image, no logos in image, photorealistic but stylized
+
+---
+
+S10 — タイムラプス コラージュ (6s)
+
+Time-lapse collage panel: multiple small anime-style frames showing:
+smartphone notification bubbles, coffee meeting, video call screen, handshake,
+calendar pages flipping, all in a dynamic vertical scroll layout,
+warm gold tones, dates floating "3日後" "1週間後",
+energetic motion blur, business relationship growing montage
+
+推奨ツール: Pika 2.0（コラージュ + モーション）

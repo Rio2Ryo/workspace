@@ -1,0 +1,10 @@
+# BGM Track 3 — Act 3 Resolution (S11–S15, 約24秒)
+# 推奨ツール: Suno Pro / Udio
+
+Uplifting Japanese pop orchestral, warm strings,
+business success feeling, forward-looking, clean resolution,
+Japanese anime ending theme style, 120 BPM, 26 seconds
+
+# 用途: 分割スクリーン → 再会 → 人脈全景 → ロゴ → エンドカード
+# トーン: 「両思い」の達成感、前向きな未来
+# フェードアウト: ラスト4秒（S15）でBGMをフェード → 静寂 → ロゴ音SE

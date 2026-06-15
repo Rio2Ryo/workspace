@@ -1,0 +1,17 @@
+[STYLE PREFIX — all shots]
+Anime cinematic style, premium Japanese animation quality (Makoto Shinkai / CoMix Wave level),
+night city atmosphere, warm gold and deep navy color palette,
+sharp character design with soft edges, volumetric lighting,
+16:9 widescreen composition, highly detailed backgrounds,
+no text in image, no logos in image, photorealistic but stylized
+
+---
+
+S06 — NFCタッチ スローモーション【最重要ショット】 (6s)
+
+Extreme close-up of a smartphone being tapped against a premium paper NFC business card,
+slow motion, golden light particles bursting from the contact point,
+warm bokeh glow, card shows subtle circuit pattern in gold,
+magical technology moment, hands partially visible, cinematic macro lens
+
+Runway Gen-3 推奨設定: Motion Level 7/10, Duration 5s, record seed for consistency

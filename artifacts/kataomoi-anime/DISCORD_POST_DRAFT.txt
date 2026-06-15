@@ -1,0 +1,36 @@
+━━━━━━━━━━━━━━━━━━━━━━━━━━━
+AIアニメ — 白より進捗報告
+━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+ローカル成果物が揃いました。Discord Missing Accessのため当セッションから投稿できず、Yakonに転送依頼しています。
+
+■ 完成済み（有料APIコール・外部公開なし）
+・package.md — コンセプト / 15ショットSB / 全プロンプト / コスト試算 / 停止条件
+・shot-prompts/ — S01〜S15 個別プロンプトファイル（15本）
+・music-prompts/ — BGM 3トラック（Act1/2/3）
+・narration-script.txt — ナレーション全文 + 収録仕様
+・subtitles.srt / subtitles_en.srt — 字幕SRT
+・GENERATION_GUIDE.md — Ao向け7フェーズ実行手順（停止ゲート付き）
+・generated/ — 出力ディレクトリ構築済み（budget.txt/seeds.txt/s01〜s15フォルダ）
+・STATUS.md — 現状スナップショット（コールドリード用）
+
+※ Phase 0（準備）は完了済みのため、Phase 1（S06 NFCタッチ生成）から即開始可
+
+■ Yakon確認事項（1点のみ）
+生成API実行を承認しますか？
+
+【推奨: Option A — 全量生成実行】
+実行者: <@1467862100310364243>（Ao-VPS）
+実行先: このスレッド（#kataomoi-ao › AIアニメ）
+手順: GENERATION_GUIDE.md の Phase 1〜7 に従い実行
+予算上限: $30 USD（超過で自動停止・Yakon報告）
+外部公開: なし（最終レビュー後にYakon承認で初めて可）
+ロールバック: 生成ファイル削除のみ（本番・SNS未公開のためゼロリスク）
+
+【待機コスト】
+KATAOMOIピッチ/展示会用素材が未完成のまま。承認が遅れるほど活用機会が減ります。
+
+<@797097185098858508> 承認をいただけますか？
+
+格納場所: /Users/umi/.openclaw/workspace/artifacts/kataomoi-anime/
+━━━━━━━━━━━━━━━━━━━━━━━━━━━

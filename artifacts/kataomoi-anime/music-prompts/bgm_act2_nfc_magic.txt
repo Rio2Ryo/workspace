@@ -1,0 +1,11 @@
+# BGM Track 2 — Act 2 NFC Magic Moment (S06–S10, 約28秒)
+# 推奨ツール: Suno Pro / Udio
+
+Electronic orchestral swell, NFC touch magic moment,
+golden shimmer sound design, building excitement,
+arpeggiated strings + synth, 140 BPM, 25 seconds,
+climax at 10 seconds
+
+# 用途: NFCタッチ → ホログラム展開 → ネットワーク広がり → タイムラプス
+# トーン: 「つながった」感動、テクノロジーの高揚感
+# 注意: SE（電子音：NFC接触音、通知音×3）とのミックスを考慮

@@ -1,0 +1,17 @@
+[STYLE PREFIX — all shots]
+Anime cinematic style, premium Japanese animation quality (Makoto Shinkai / CoMix Wave level),
+night city atmosphere, warm gold and deep navy color palette,
+sharp character design with soft edges, volumetric lighting,
+16:9 widescreen composition, highly detailed backgrounds,
+no text in image, no logos in image, photorealistic but stylized
+
+---
+
+S13 — 人脈マップ 全体俯瞰 (5s)
+
+Grand bird's eye view of an entire network visualization:
+two central bright golden nodes connected at the center,
+waves of light spreading to dozens of surrounding nodes,
+beautiful galaxy-like network constellation,
+dark background, warm gold with teal accent nodes,
+cinematic zoom-out reveal, inspiring scale
