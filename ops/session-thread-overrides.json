@@ -1,0 +1,56 @@
+{
+  "sessions": {
+    "daily-report-codex": {
+      "threadId": "1505429154215100507",
+      "title": "daily-report-codex"
+    },
+    "goose": {
+      "threadId": "1501556320048906301",
+      "title": "goose"
+    },
+    "shiro-obsidian-second-brain": {
+      "threadId": "1512250378593370337",
+      "title": "Obsidianと繋げて第二の脳をつくる"
+    },
+    "slide-tool-codex": {
+      "threadId": "1505385904825696317",
+      "title": "slide-tool-codex"
+    },
+    "top3-goose": {
+      "threadId": "1505419396691267584",
+      "title": "top3-goose"
+    },
+    "vast-ai-rtx5090-jp": {
+      "threadId": "1504835837932732557",
+      "title": "vast-ai-rtx5090-jp"
+    },
+    "shiro-x-research": {
+      "threadId": "1501537995918938253",
+      "title": "X-research"
+    },
+    "shiro-profile-page": {
+      "threadId": "1511633432239673385",
+      "title": "プロフィール紹介ページ制作"
+    },
+    "shiro-subsidy-research": {
+      "threadId": "1506464983154819152",
+      "title": "補助金・助成金リサーチ（最新）"
+    },
+    "shiro-citta-build9": {
+      "threadId": "1507900090742870097",
+      "title": "[DONE]cycle-tracker-app",
+      "doneThread": true,
+      "reason": "cycle-tracker-app is already marked [DONE]; do not emit duplicate [DONE] approval from stale tmux session."
+    },
+    "shiro-recruit-handover": {
+      "threadId": "1505846990355828847",
+      "title": "採用管理ツール引き継ぎ",
+      "reason": "Observed Yakon approval discussion in ontrust-gohan thread."
+    },
+    "shiro-personal-branding": {
+      "threadId": "1511633432239673385",
+      "title": "プロフィール紹介ページ制作",
+      "reason": "Thread registry shows this as the profile page work item."
+    }
+  }
+}

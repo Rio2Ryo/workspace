@@ -1,0 +1,342 @@
+{
+  "url": "https://interaugh-homepage.vercel.app/",
+  "viewport": "390x844 mobile DPR3",
+  "durationMs": 35715,
+  "summary": {
+    "passed": true,
+    "checksPassed": 12,
+    "checksTotal": 12,
+    "failures": []
+  },
+  "initial": {
+    "title": "Interaugh | スマート名刺で、ビジネスの可能性を最大化する",
+    "vw": 390,
+    "sw": 390,
+    "overflow": 0,
+    "hasHero": true,
+    "hasCTA": true,
+    "navVisible": "fixed",
+    "sections": [
+      {
+        "label": "01 Hero",
+        "id": "top"
+      },
+      {
+        "label": "02 Touch",
+        "id": "touch"
+      },
+      {
+        "label": "03 Order-made",
+        "id": "ordermade"
+      },
+      {
+        "label": "04 Scenes",
+        "id": "scenes"
+      },
+      {
+        "label": "05 Points",
+        "id": "points"
+      },
+      {
+        "label": "05B Pricing",
+        "id": "pricing"
+      },
+      {
+        "label": "06 Continued",
+        "id": "continued"
+      },
+      {
+        "label": "07 Avatar AI",
+        "id": "ai"
+      },
+      {
+        "label": "08 Usage",
+        "id": "usage"
+      },
+      {
+        "label": "09 Partners",
+        "id": "partner"
+      },
+      {
+        "label": "Steps",
+        "id": null
+      },
+      {
+        "label": "FAQ",
+        "id": "faq"
+      },
+      {
+        "label": "10 Final",
+        "id": null
+      },
+      {
+        "label": "Contact",
+        "id": "contact"
+      }
+    ],
+    "offenders": [],
+    "lcpEntries": [],
+    "cls": 0,
+    "resourceCount": 9
+  },
+  "anchorResults": [
+    {
+      "index": 0,
+      "href": "#top",
+      "text": "Interaugh",
+      "ok": true,
+      "top": 0,
+      "bottom": 1265
+    },
+    {
+      "index": 1,
+      "href": "#contact",
+      "text": "お問い合わせ",
+      "ok": true,
+      "top": 145,
+      "bottom": 1101
+    },
+    {
+      "index": 2,
+      "href": "#contact",
+      "text": "無料で相談する\n→",
+      "ok": true,
+      "top": 80,
+      "bottom": 1036
+    },
+    {
+      "index": 3,
+      "href": "#touch",
+      "text": "仕組みを見る",
+      "ok": true,
+      "top": 15,
+      "bottom": 3153
+    },
+    {
+      "index": 4,
+      "href": "#contact",
+      "text": "このプランで申し込む\n→",
+      "ok": true,
+      "top": 118,
+      "bottom": 1074
+    },
+    {
+      "index": 5,
+      "href": "#contact",
+      "text": "相談する\n→",
+      "ok": true,
+      "top": 80,
+      "bottom": 1036
+    },
+    {
+      "index": 6,
+      "href": "#contact",
+      "text": "お問い合わせ\n→",
+      "ok": true,
+      "top": 80,
+      "bottom": 1036
+    },
+    {
+      "index": 7,
+      "href": "#contact",
+      "text": "資料請求",
+      "ok": true,
+      "top": 80,
+      "bottom": 1036
+    },
+    {
+      "index": 8,
+      "href": "#contact",
+      "text": "スマート名刺を申し込む\n→",
+      "ok": true,
+      "top": 80,
+      "bottom": 1036
+    },
+    {
+      "index": 9,
+      "href": "#contact",
+      "text": "資料をダウンロード",
+      "ok": true,
+      "top": 80,
+      "bottom": 1036
+    },
+    {
+      "index": 10,
+      "href": "#touch",
+      "text": "スマート名刺",
+      "ok": true,
+      "top": 16,
+      "bottom": 3154
+    },
+    {
+      "index": 11,
+      "href": "#points",
+      "text": "ポイント還元",
+      "ok": true,
+      "top": 92,
+      "bottom": 1511
+    },
+    {
+      "index": 12,
+      "href": "#ai",
+      "text": "分身AI",
+      "ok": true,
+      "top": 92,
+      "bottom": 1197
+    },
+    {
+      "index": 13,
+      "href": "#partner",
+      "text": "パートナー",
+      "ok": true,
+      "top": 80,
+      "bottom": 1772
+    },
+    {
+      "index": 14,
+      "href": "#",
+      "text": "会社概要",
+      "ok": true,
+      "top": 0,
+      "bottom": 21383
+    },
+    {
+      "index": 15,
+      "href": "#",
+      "text": "採用情報",
+      "ok": true,
+      "top": 0,
+      "bottom": 21383
+    },
+    {
+      "index": 16,
+      "href": "#",
+      "text": "ニュース",
+      "ok": true,
+      "top": 0,
+      "bottom": 21383
+    },
+    {
+      "index": 17,
+      "href": "#contact",
+      "text": "お問い合わせ",
+      "ok": true,
+      "top": 135,
+      "bottom": 1091
+    },
+    {
+      "index": 18,
+      "href": "#",
+      "text": "プライバシーポリシー",
+      "ok": true,
+      "top": -19216,
+      "bottom": 2167
+    },
+    {
+      "index": 19,
+      "href": "#",
+      "text": "利用規約",
+      "ok": true,
+      "top": 0,
+      "bottom": 21383
+    },
+    {
+      "index": 20,
+      "href": "#",
+      "text": "特定商取引法",
+      "ok": true,
+      "top": 0,
+      "bottom": 21383
+    },
+    {
+      "index": 21,
+      "href": "#",
+      "text": "サイトマップ",
+      "ok": true,
+      "top": 0,
+      "bottom": 21383
+    }
+  ],
+  "internalHrefAudit": [
+    {
+      "href": "#top",
+      "exists": true,
+      "visibleCount": 1
+    },
+    {
+      "href": "#touch",
+      "exists": true,
+      "visibleCount": 2
+    },
+    {
+      "href": "#scenes",
+      "exists": true,
+      "visibleCount": 0
+    },
+    {
+      "href": "#points",
+      "exists": true,
+      "visibleCount": 1
+    },
+    {
+      "href": "#ai",
+      "exists": true,
+      "visibleCount": 1
+    },
+    {
+      "href": "#partner",
+      "exists": true,
+      "visibleCount": 1
+    },
+    {
+      "href": "#company",
+      "exists": false,
+      "visibleCount": 0
+    },
+    {
+      "href": "#contact",
+      "exists": true,
+      "visibleCount": 9
+    }
+  ],
+  "faqResult": {
+    "count": 6,
+    "secondToggled": true
+  },
+  "invalidForm": {
+    "browserValid": false,
+    "emailValid": false
+  },
+  "validForm": {
+    "submitted": true,
+    "valid": true
+  },
+  "dialogs": [
+    {
+      "type": "alert",
+      "message": "お問い合わせありがとうございます。"
+    }
+  ],
+  "consoleEntries": [
+    {
+      "type": "warning",
+      "text": "Deprecated API for given entry type."
+    },
+    {
+      "type": "warning",
+      "text": "Deprecated API for given entry type."
+    }
+  ],
+  "criticalConsole": [],
+  "networkFailures": [],
+  "final": {
+    "vw": 390,
+    "sw": 390,
+    "overflow": 0,
+    "atContactVisible": false
+  },
+  "screenshots": [
+    "mobile-390-first-view.png",
+    "mobile-390-contact.png"
+  ]
+}
