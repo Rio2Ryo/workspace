@@ -1,0 +1,720 @@
+{
+  "ts": "2026-06-14T23:57:54.537Z",
+  "sessions": 14,
+  "summary": {
+    "external-action": 12,
+    "needs-yakon": 2
+  },
+  "verdictSummary": {
+    "needs-refine": 13,
+    "verified": 1
+  },
+  "distillation": {
+    "rules": [
+      {
+        "id": "no-raw-permission-wait",
+        "rule": "Never present raw permission-wait counts without decisionKind, risk, reason, and next action.",
+        "evidence": "12 external-action / 0 done-signoff in latest verifier run"
+      },
+      {
+        "id": "verify-before-consult",
+        "rule": "Before asking Yakon, verifier must confirm the item is external-action, needs-yakon, or done-signoff.",
+        "evidence": "13 sessions need classification refinement"
+      },
+      {
+        "id": "self-action-without-yakon",
+        "rule": "If verifier marks canProceedWithoutYakon=true, Shiro should run one low-risk local action before reporting.",
+        "evidence": "0 sessions are currently self-action/delegate candidates"
+      }
+    ],
+    "summary": {
+      "external": 12,
+      "done": 0,
+      "refine": 13,
+      "self": 0
+    }
+  },
+  "consultItems": [
+    {
+      "session": "shiro-ai-anime",
+      "verdict": "needs-refine",
+      "score": 78,
+      "state": "permission-wait",
+      "decisionKind": "external-action",
+      "risk": "high",
+      "consultRequired": true,
+      "canProceedWithoutYakon": false,
+      "reason": "of waiting. Do not ask Yakon yet unless the packet is concrete enough to",
+      "recommendedAction": "Prepare one approval packet: scope, exact command/action, rollback, risk, recommended option.",
+      "findings": [
+        "next action is too generic or missing"
+      ],
+      "outputHash": "f942cdf171588c31c014a6ef38ec2a38844e1b668af448921be7a01bb07edffb"
+    },
+    {
+      "session": "shiro-citta-build9",
+      "verdict": "needs-refine",
+      "score": 36,
+      "state": "running",
+      "decisionKind": "external-action",
+      "risk": "high",
+      "consultRequired": true,
+      "canProceedWithoutYakon": false,
+      "reason": "として再アーカイブ。手順は citta-ios/TESTFLIGHT_NOTES.md に記載済み。",
+      "recommendedAction": "Prepare one approval packet: scope, exact command/action, rollback, risk, recommended option.",
+      "findings": [
+        "decisionKind mismatch: state=watch verifier=external-action",
+        "risk mismatch: state=low verifier=high"
+      ],
+      "outputHash": "ad9bf841bdad1d5d67ec040e66e3607e0d57fe05e5fcb420954e5d161acccfe2"
+    },
+    {
+      "session": "shiro-email-manager",
+      "verdict": "needs-refine",
+      "score": 78,
+      "state": "permission-wait",
+      "decisionKind": "external-action",
+      "risk": "high",
+      "consultRequired": true,
+      "canProceedWithoutYakon": false,
+      "reason": "not ask Yakon yet unless the packet is concrete enough to answer with yes/no.",
+      "recommendedAction": "Prepare one approval packet: scope, exact command/action, rollback, risk, recommended option.",
+      "findings": [
+        "next action is too generic or missing"
+      ],
+      "outputHash": "2d41d7ad3ede282724dbd8e9808aa5c8e746e8c6441a17db041798b570645ea1"
+    },
+    {
+      "session": "shiro-feed-tunnel",
+      "verdict": "needs-refine",
+      "score": 56,
+      "state": "permission-wait",
+      "decisionKind": "external-action",
+      "risk": "high",
+      "consultRequired": true,
+      "canProceedWithoutYakon": false,
+      "reason": "shiro-feed-tunnel",
+      "recommendedAction": "Prepare one approval packet: scope, exact command/action, rollback, risk, recommended option.",
+      "findings": [
+        "reason is too generic or missing",
+        "next action is too generic or missing"
+      ],
+      "outputHash": "2d6901615904a8782d469cb12065bcef9b169c521546858ac92a218a1f7ec19d"
+    },
+    {
+      "session": "shiro-kataomoi-ec",
+      "verdict": "needs-refine",
+      "score": 78,
+      "state": "permission-wait",
+      "decisionKind": "external-action",
+      "risk": "high",
+      "consultRequired": true,
+      "canProceedWithoutYakon": false,
+      "reason": "of waiting. Do not ask Yakon yet unless the packet is concrete enough to",
+      "recommendedAction": "Prepare one approval packet: scope, exact command/action, rollback, risk, recommended option.",
+      "findings": [
+        "next action is too generic or missing"
+      ],
+      "outputHash": "c3681aae210230463f177565ae3337fee541ed93e03e76b789b06f6c2660f31a"
+    },
+    {
+      "session": "shiro-ledger-claude",
+      "verdict": "needs-refine",
+      "score": 78,
+      "state": "permission-wait",
+      "decisionKind": "external-action",
+      "risk": "high",
+      "consultRequired": true,
+      "canProceedWithoutYakon": false,
+      "reason": "not ask Yakon yet unless the packet is concrete enough to answer with yes/no.",
+      "recommendedAction": "Prepare one approval packet: scope, exact command/action, rollback, risk, recommended option.",
+      "findings": [
+        "next action is too generic or missing"
+      ],
+      "outputHash": "747e1090df481ccc6b02c251b7e2cb752bc094fcdf4027ea3c2e408878b40caf"
+    },
+    {
+      "session": "shiro-mother-domain",
+      "verdict": "needs-refine",
+      "score": 36,
+      "state": "running",
+      "decisionKind": "needs-yakon",
+      "risk": "mid",
+      "consultRequired": true,
+      "canProceedWithoutYakon": false,
+      "reason": "▎ が残る。DB ブロッカーは seed/E2E だけに影響し、UI 整理には関係しない。",
+      "recommendedAction": "Ask one concrete decision question with a recommended answer.",
+      "findings": [
+        "decisionKind mismatch: state=self-action verifier=needs-yakon",
+        "risk mismatch: state=low verifier=mid"
+      ],
+      "outputHash": "eaabc31d485cc7f05540223e926d32aee131a24e1775b532e9767c38454b3b87"
+    },
+    {
+      "session": "shiro-omikuji",
+      "verdict": "needs-refine",
+      "score": 56,
+      "state": "permission-wait",
+      "decisionKind": "external-action",
+      "risk": "high",
+      "consultRequired": true,
+      "canProceedWithoutYakon": false,
+      "reason": "❯ push できた確認して",
+      "recommendedAction": "Prepare one approval packet: scope, exact command/action, rollback, risk, recommended option.",
+      "findings": [
+        "reason is too generic or missing",
+        "next action is too generic or missing"
+      ],
+      "outputHash": "8df5b5bee9457dd934e197f7e53ccc557183e30bc81e94371ab7c14cd0179739"
+    },
+    {
+      "session": "shiro-paper-manager",
+      "verdict": "needs-refine",
+      "score": 56,
+      "state": "permission-wait",
+      "decisionKind": "external-action",
+      "risk": "high",
+      "consultRequired": true,
+      "canProceedWithoutYakon": false,
+      "reason": "実行があれば即座に検証に移行。",
+      "recommendedAction": "Prepare one approval packet: scope, exact command/action, rollback, risk, recommended option.",
+      "findings": [
+        "reason is too generic or missing",
+        "next action is too generic or missing"
+      ],
+      "outputHash": "4cb2f66ae7f2c0b3da1d5694903adb07536c1e29bca968964ac9ff4cf32ba8dc"
+    },
+    {
+      "session": "shiro-personal-branding",
+      "verdict": "needs-refine",
+      "score": 14,
+      "state": "permission-wait",
+      "decisionKind": "external-action",
+      "risk": "high",
+      "consultRequired": true,
+      "canProceedWithoutYakon": false,
+      "reason": "push 承認が必要。それ以外はYakon返答待ちで自律前進不可。Yakon承認なければ次",
+      "recommendedAction": "Prepare one approval packet: scope, exact command/action, rollback, risk, recommended option.",
+      "findings": [
+        "decisionKind mismatch: state=done-signoff verifier=external-action",
+        "risk mismatch: state=low verifier=high",
+        "next action is too generic or missing"
+      ],
+      "outputHash": "fffcb77677b2df6522c3c4ea89e945f79f126c8cdc77b3c137966b8fd5e36da0"
+    },
+    {
+      "session": "shiro-real-estate",
+      "verdict": "verified",
+      "score": 100,
+      "state": "permission-wait",
+      "decisionKind": "needs-yakon",
+      "risk": "mid",
+      "consultRequired": true,
+      "canProceedWithoutYakon": false,
+      "reason": "を返す、③ 次の shiro tmux session が Discord 権限付きで起動した時に投稿 —",
+      "recommendedAction": "Ask one concrete decision question with a recommended answer.",
+      "findings": [],
+      "outputHash": "92972c07678af7235045546fc1a192a25f3210e7f9838912147c4003b05ed00e"
+    },
+    {
+      "session": "shiro-recruit-handover",
+      "verdict": "needs-refine",
+      "score": 78,
+      "state": "permission-wait",
+      "decisionKind": "external-action",
+      "risk": "high",
+      "consultRequired": true,
+      "canProceedWithoutYakon": false,
+      "reason": "Yakon yet unless the packet is concrete enough to answer with yes/no.",
+      "recommendedAction": "Prepare one approval packet: scope, exact command/action, rollback, risk, recommended option.",
+      "findings": [
+        "next action is too generic or missing"
+      ],
+      "outputHash": "9a8f853d3c59742e665b471cf5919e1d51d1f95ca76b564eaaa1665e0f358df1"
+    },
+    {
+      "session": "shiro-restaurant-sales",
+      "verdict": "needs-refine",
+      "score": 78,
+      "state": "permission-wait",
+      "decisionKind": "external-action",
+      "risk": "high",
+      "consultRequired": true,
+      "canProceedWithoutYakon": false,
+      "reason": "not ask Yakon yet unless the packet is concrete enough to answer with yes/no.",
+      "recommendedAction": "Prepare one approval packet: scope, exact command/action, rollback, risk, recommended option.",
+      "findings": [
+        "next action is too generic or missing"
+      ],
+      "outputHash": "1f64ec564588dedd51c10af36acef8d6113c7f8699caa8fbc70ac2db4c0b34a5"
+    },
+    {
+      "session": "shiro-sefs-lp",
+      "verdict": "needs-refine",
+      "score": 56,
+      "state": "permission-wait",
+      "decisionKind": "external-action",
+      "risk": "high",
+      "consultRequired": true,
+      "canProceedWithoutYakon": false,
+      "reason": "option, deadline, and consequence of waiting. Do not ask Yakon yet unless",
+      "recommendedAction": "Prepare one approval packet: scope, exact command/action, rollback, risk, recommended option.",
+      "findings": [
+        "reason is too generic or missing",
+        "next action is too generic or missing"
+      ],
+      "outputHash": "c263ae75aea7b1c82fed5ae9dff17175d5ceed73d76a4aa81ee92bf8bf380f75"
+    }
+  ],
+  "selfActionItems": [],
+  "refineItems": [
+    {
+      "session": "shiro-ai-anime",
+      "verdict": "needs-refine",
+      "score": 78,
+      "state": "permission-wait",
+      "decisionKind": "external-action",
+      "risk": "high",
+      "consultRequired": true,
+      "canProceedWithoutYakon": false,
+      "reason": "of waiting. Do not ask Yakon yet unless the packet is concrete enough to",
+      "recommendedAction": "Prepare one approval packet: scope, exact command/action, rollback, risk, recommended option.",
+      "findings": [
+        "next action is too generic or missing"
+      ],
+      "outputHash": "f942cdf171588c31c014a6ef38ec2a38844e1b668af448921be7a01bb07edffb"
+    },
+    {
+      "session": "shiro-citta-build9",
+      "verdict": "needs-refine",
+      "score": 36,
+      "state": "running",
+      "decisionKind": "external-action",
+      "risk": "high",
+      "consultRequired": true,
+      "canProceedWithoutYakon": false,
+      "reason": "として再アーカイブ。手順は citta-ios/TESTFLIGHT_NOTES.md に記載済み。",
+      "recommendedAction": "Prepare one approval packet: scope, exact command/action, rollback, risk, recommended option.",
+      "findings": [
+        "decisionKind mismatch: state=watch verifier=external-action",
+        "risk mismatch: state=low verifier=high"
+      ],
+      "outputHash": "ad9bf841bdad1d5d67ec040e66e3607e0d57fe05e5fcb420954e5d161acccfe2"
+    },
+    {
+      "session": "shiro-email-manager",
+      "verdict": "needs-refine",
+      "score": 78,
+      "state": "permission-wait",
+      "decisionKind": "external-action",
+      "risk": "high",
+      "consultRequired": true,
+      "canProceedWithoutYakon": false,
+      "reason": "not ask Yakon yet unless the packet is concrete enough to answer with yes/no.",
+      "recommendedAction": "Prepare one approval packet: scope, exact command/action, rollback, risk, recommended option.",
+      "findings": [
+        "next action is too generic or missing"
+      ],
+      "outputHash": "2d41d7ad3ede282724dbd8e9808aa5c8e746e8c6441a17db041798b570645ea1"
+    },
+    {
+      "session": "shiro-feed-tunnel",
+      "verdict": "needs-refine",
+      "score": 56,
+      "state": "permission-wait",
+      "decisionKind": "external-action",
+      "risk": "high",
+      "consultRequired": true,
+      "canProceedWithoutYakon": false,
+      "reason": "shiro-feed-tunnel",
+      "recommendedAction": "Prepare one approval packet: scope, exact command/action, rollback, risk, recommended option.",
+      "findings": [
+        "reason is too generic or missing",
+        "next action is too generic or missing"
+      ],
+      "outputHash": "2d6901615904a8782d469cb12065bcef9b169c521546858ac92a218a1f7ec19d"
+    },
+    {
+      "session": "shiro-kataomoi-ec",
+      "verdict": "needs-refine",
+      "score": 78,
+      "state": "permission-wait",
+      "decisionKind": "external-action",
+      "risk": "high",
+      "consultRequired": true,
+      "canProceedWithoutYakon": false,
+      "reason": "of waiting. Do not ask Yakon yet unless the packet is concrete enough to",
+      "recommendedAction": "Prepare one approval packet: scope, exact command/action, rollback, risk, recommended option.",
+      "findings": [
+        "next action is too generic or missing"
+      ],
+      "outputHash": "c3681aae210230463f177565ae3337fee541ed93e03e76b789b06f6c2660f31a"
+    },
+    {
+      "session": "shiro-ledger-claude",
+      "verdict": "needs-refine",
+      "score": 78,
+      "state": "permission-wait",
+      "decisionKind": "external-action",
+      "risk": "high",
+      "consultRequired": true,
+      "canProceedWithoutYakon": false,
+      "reason": "not ask Yakon yet unless the packet is concrete enough to answer with yes/no.",
+      "recommendedAction": "Prepare one approval packet: scope, exact command/action, rollback, risk, recommended option.",
+      "findings": [
+        "next action is too generic or missing"
+      ],
+      "outputHash": "747e1090df481ccc6b02c251b7e2cb752bc094fcdf4027ea3c2e408878b40caf"
+    },
+    {
+      "session": "shiro-mother-domain",
+      "verdict": "needs-refine",
+      "score": 36,
+      "state": "running",
+      "decisionKind": "needs-yakon",
+      "risk": "mid",
+      "consultRequired": true,
+      "canProceedWithoutYakon": false,
+      "reason": "▎ が残る。DB ブロッカーは seed/E2E だけに影響し、UI 整理には関係しない。",
+      "recommendedAction": "Ask one concrete decision question with a recommended answer.",
+      "findings": [
+        "decisionKind mismatch: state=self-action verifier=needs-yakon",
+        "risk mismatch: state=low verifier=mid"
+      ],
+      "outputHash": "eaabc31d485cc7f05540223e926d32aee131a24e1775b532e9767c38454b3b87"
+    },
+    {
+      "session": "shiro-omikuji",
+      "verdict": "needs-refine",
+      "score": 56,
+      "state": "permission-wait",
+      "decisionKind": "external-action",
+      "risk": "high",
+      "consultRequired": true,
+      "canProceedWithoutYakon": false,
+      "reason": "❯ push できた確認して",
+      "recommendedAction": "Prepare one approval packet: scope, exact command/action, rollback, risk, recommended option.",
+      "findings": [
+        "reason is too generic or missing",
+        "next action is too generic or missing"
+      ],
+      "outputHash": "8df5b5bee9457dd934e197f7e53ccc557183e30bc81e94371ab7c14cd0179739"
+    },
+    {
+      "session": "shiro-paper-manager",
+      "verdict": "needs-refine",
+      "score": 56,
+      "state": "permission-wait",
+      "decisionKind": "external-action",
+      "risk": "high",
+      "consultRequired": true,
+      "canProceedWithoutYakon": false,
+      "reason": "実行があれば即座に検証に移行。",
+      "recommendedAction": "Prepare one approval packet: scope, exact command/action, rollback, risk, recommended option.",
+      "findings": [
+        "reason is too generic or missing",
+        "next action is too generic or missing"
+      ],
+      "outputHash": "4cb2f66ae7f2c0b3da1d5694903adb07536c1e29bca968964ac9ff4cf32ba8dc"
+    },
+    {
+      "session": "shiro-personal-branding",
+      "verdict": "needs-refine",
+      "score": 14,
+      "state": "permission-wait",
+      "decisionKind": "external-action",
+      "risk": "high",
+      "consultRequired": true,
+      "canProceedWithoutYakon": false,
+      "reason": "push 承認が必要。それ以外はYakon返答待ちで自律前進不可。Yakon承認なければ次",
+      "recommendedAction": "Prepare one approval packet: scope, exact command/action, rollback, risk, recommended option.",
+      "findings": [
+        "decisionKind mismatch: state=done-signoff verifier=external-action",
+        "risk mismatch: state=low verifier=high",
+        "next action is too generic or missing"
+      ],
+      "outputHash": "fffcb77677b2df6522c3c4ea89e945f79f126c8cdc77b3c137966b8fd5e36da0"
+    },
+    {
+      "session": "shiro-recruit-handover",
+      "verdict": "needs-refine",
+      "score": 78,
+      "state": "permission-wait",
+      "decisionKind": "external-action",
+      "risk": "high",
+      "consultRequired": true,
+      "canProceedWithoutYakon": false,
+      "reason": "Yakon yet unless the packet is concrete enough to answer with yes/no.",
+      "recommendedAction": "Prepare one approval packet: scope, exact command/action, rollback, risk, recommended option.",
+      "findings": [
+        "next action is too generic or missing"
+      ],
+      "outputHash": "9a8f853d3c59742e665b471cf5919e1d51d1f95ca76b564eaaa1665e0f358df1"
+    },
+    {
+      "session": "shiro-restaurant-sales",
+      "verdict": "needs-refine",
+      "score": 78,
+      "state": "permission-wait",
+      "decisionKind": "external-action",
+      "risk": "high",
+      "consultRequired": true,
+      "canProceedWithoutYakon": false,
+      "reason": "not ask Yakon yet unless the packet is concrete enough to answer with yes/no.",
+      "recommendedAction": "Prepare one approval packet: scope, exact command/action, rollback, risk, recommended option.",
+      "findings": [
+        "next action is too generic or missing"
+      ],
+      "outputHash": "1f64ec564588dedd51c10af36acef8d6113c7f8699caa8fbc70ac2db4c0b34a5"
+    },
+    {
+      "session": "shiro-sefs-lp",
+      "verdict": "needs-refine",
+      "score": 56,
+      "state": "permission-wait",
+      "decisionKind": "external-action",
+      "risk": "high",
+      "consultRequired": true,
+      "canProceedWithoutYakon": false,
+      "reason": "option, deadline, and consequence of waiting. Do not ask Yakon yet unless",
+      "recommendedAction": "Prepare one approval packet: scope, exact command/action, rollback, risk, recommended option.",
+      "findings": [
+        "reason is too generic or missing",
+        "next action is too generic or missing"
+      ],
+      "outputHash": "c263ae75aea7b1c82fed5ae9dff17175d5ceed73d76a4aa81ee92bf8bf380f75"
+    }
+  ],
+  "results": [
+    {
+      "session": "shiro-ai-anime",
+      "verdict": "needs-refine",
+      "score": 78,
+      "state": "permission-wait",
+      "decisionKind": "external-action",
+      "risk": "high",
+      "consultRequired": true,
+      "canProceedWithoutYakon": false,
+      "reason": "of waiting. Do not ask Yakon yet unless the packet is concrete enough to",
+      "recommendedAction": "Prepare one approval packet: scope, exact command/action, rollback, risk, recommended option.",
+      "findings": [
+        "next action is too generic or missing"
+      ],
+      "outputHash": "f942cdf171588c31c014a6ef38ec2a38844e1b668af448921be7a01bb07edffb"
+    },
+    {
+      "session": "shiro-citta-build9",
+      "verdict": "needs-refine",
+      "score": 36,
+      "state": "running",
+      "decisionKind": "external-action",
+      "risk": "high",
+      "consultRequired": true,
+      "canProceedWithoutYakon": false,
+      "reason": "として再アーカイブ。手順は citta-ios/TESTFLIGHT_NOTES.md に記載済み。",
+      "recommendedAction": "Prepare one approval packet: scope, exact command/action, rollback, risk, recommended option.",
+      "findings": [
+        "decisionKind mismatch: state=watch verifier=external-action",
+        "risk mismatch: state=low verifier=high"
+      ],
+      "outputHash": "ad9bf841bdad1d5d67ec040e66e3607e0d57fe05e5fcb420954e5d161acccfe2"
+    },
+    {
+      "session": "shiro-email-manager",
+      "verdict": "needs-refine",
+      "score": 78,
+      "state": "permission-wait",
+      "decisionKind": "external-action",
+      "risk": "high",
+      "consultRequired": true,
+      "canProceedWithoutYakon": false,
+      "reason": "not ask Yakon yet unless the packet is concrete enough to answer with yes/no.",
+      "recommendedAction": "Prepare one approval packet: scope, exact command/action, rollback, risk, recommended option.",
+      "findings": [
+        "next action is too generic or missing"
+      ],
+      "outputHash": "2d41d7ad3ede282724dbd8e9808aa5c8e746e8c6441a17db041798b570645ea1"
+    },
+    {
+      "session": "shiro-feed-tunnel",
+      "verdict": "needs-refine",
+      "score": 56,
+      "state": "permission-wait",
+      "decisionKind": "external-action",
+      "risk": "high",
+      "consultRequired": true,
+      "canProceedWithoutYakon": false,
+      "reason": "shiro-feed-tunnel",
+      "recommendedAction": "Prepare one approval packet: scope, exact command/action, rollback, risk, recommended option.",
+      "findings": [
+        "reason is too generic or missing",
+        "next action is too generic or missing"
+      ],
+      "outputHash": "2d6901615904a8782d469cb12065bcef9b169c521546858ac92a218a1f7ec19d"
+    },
+    {
+      "session": "shiro-kataomoi-ec",
+      "verdict": "needs-refine",
+      "score": 78,
+      "state": "permission-wait",
+      "decisionKind": "external-action",
+      "risk": "high",
+      "consultRequired": true,
+      "canProceedWithoutYakon": false,
+      "reason": "of waiting. Do not ask Yakon yet unless the packet is concrete enough to",
+      "recommendedAction": "Prepare one approval packet: scope, exact command/action, rollback, risk, recommended option.",
+      "findings": [
+        "next action is too generic or missing"
+      ],
+      "outputHash": "c3681aae210230463f177565ae3337fee541ed93e03e76b789b06f6c2660f31a"
+    },
+    {
+      "session": "shiro-ledger-claude",
+      "verdict": "needs-refine",
+      "score": 78,
+      "state": "permission-wait",
+      "decisionKind": "external-action",
+      "risk": "high",
+      "consultRequired": true,
+      "canProceedWithoutYakon": false,
+      "reason": "not ask Yakon yet unless the packet is concrete enough to answer with yes/no.",
+      "recommendedAction": "Prepare one approval packet: scope, exact command/action, rollback, risk, recommended option.",
+      "findings": [
+        "next action is too generic or missing"
+      ],
+      "outputHash": "747e1090df481ccc6b02c251b7e2cb752bc094fcdf4027ea3c2e408878b40caf"
+    },
+    {
+      "session": "shiro-mother-domain",
+      "verdict": "needs-refine",
+      "score": 36,
+      "state": "running",
+      "decisionKind": "needs-yakon",
+      "risk": "mid",
+      "consultRequired": true,
+      "canProceedWithoutYakon": false,
+      "reason": "▎ が残る。DB ブロッカーは seed/E2E だけに影響し、UI 整理には関係しない。",
+      "recommendedAction": "Ask one concrete decision question with a recommended answer.",
+      "findings": [
+        "decisionKind mismatch: state=self-action verifier=needs-yakon",
+        "risk mismatch: state=low verifier=mid"
+      ],
+      "outputHash": "eaabc31d485cc7f05540223e926d32aee131a24e1775b532e9767c38454b3b87"
+    },
+    {
+      "session": "shiro-omikuji",
+      "verdict": "needs-refine",
+      "score": 56,
+      "state": "permission-wait",
+      "decisionKind": "external-action",
+      "risk": "high",
+      "consultRequired": true,
+      "canProceedWithoutYakon": false,
+      "reason": "❯ push できた確認して",
+      "recommendedAction": "Prepare one approval packet: scope, exact command/action, rollback, risk, recommended option.",
+      "findings": [
+        "reason is too generic or missing",
+        "next action is too generic or missing"
+      ],
+      "outputHash": "8df5b5bee9457dd934e197f7e53ccc557183e30bc81e94371ab7c14cd0179739"
+    },
+    {
+      "session": "shiro-paper-manager",
+      "verdict": "needs-refine",
+      "score": 56,
+      "state": "permission-wait",
+      "decisionKind": "external-action",
+      "risk": "high",
+      "consultRequired": true,
+      "canProceedWithoutYakon": false,
+      "reason": "実行があれば即座に検証に移行。",
+      "recommendedAction": "Prepare one approval packet: scope, exact command/action, rollback, risk, recommended option.",
+      "findings": [
+        "reason is too generic or missing",
+        "next action is too generic or missing"
+      ],
+      "outputHash": "4cb2f66ae7f2c0b3da1d5694903adb07536c1e29bca968964ac9ff4cf32ba8dc"
+    },
+    {
+      "session": "shiro-personal-branding",
+      "verdict": "needs-refine",
+      "score": 14,
+      "state": "permission-wait",
+      "decisionKind": "external-action",
+      "risk": "high",
+      "consultRequired": true,
+      "canProceedWithoutYakon": false,
+      "reason": "push 承認が必要。それ以外はYakon返答待ちで自律前進不可。Yakon承認なければ次",
+      "recommendedAction": "Prepare one approval packet: scope, exact command/action, rollback, risk, recommended option.",
+      "findings": [
+        "decisionKind mismatch: state=done-signoff verifier=external-action",
+        "risk mismatch: state=low verifier=high",
+        "next action is too generic or missing"
+      ],
+      "outputHash": "fffcb77677b2df6522c3c4ea89e945f79f126c8cdc77b3c137966b8fd5e36da0"
+    },
+    {
+      "session": "shiro-real-estate",
+      "verdict": "verified",
+      "score": 100,
+      "state": "permission-wait",
+      "decisionKind": "needs-yakon",
+      "risk": "mid",
+      "consultRequired": true,
+      "canProceedWithoutYakon": false,
+      "reason": "を返す、③ 次の shiro tmux session が Discord 権限付きで起動した時に投稿 —",
+      "recommendedAction": "Ask one concrete decision question with a recommended answer.",
+      "findings": [],
+      "outputHash": "92972c07678af7235045546fc1a192a25f3210e7f9838912147c4003b05ed00e"
+    },
+    {
+      "session": "shiro-recruit-handover",
+      "verdict": "needs-refine",
+      "score": 78,
+      "state": "permission-wait",
+      "decisionKind": "external-action",
+      "risk": "high",
+      "consultRequired": true,
+      "canProceedWithoutYakon": false,
+      "reason": "Yakon yet unless the packet is concrete enough to answer with yes/no.",
+      "recommendedAction": "Prepare one approval packet: scope, exact command/action, rollback, risk, recommended option.",
+      "findings": [
+        "next action is too generic or missing"
+      ],
+      "outputHash": "9a8f853d3c59742e665b471cf5919e1d51d1f95ca76b564eaaa1665e0f358df1"
+    },
+    {
+      "session": "shiro-restaurant-sales",
+      "verdict": "needs-refine",
+      "score": 78,
+      "state": "permission-wait",
+      "decisionKind": "external-action",
+      "risk": "high",
+      "consultRequired": true,
+      "canProceedWithoutYakon": false,
+      "reason": "not ask Yakon yet unless the packet is concrete enough to answer with yes/no.",
+      "recommendedAction": "Prepare one approval packet: scope, exact command/action, rollback, risk, recommended option.",
+      "findings": [
+        "next action is too generic or missing"
+      ],
+      "outputHash": "1f64ec564588dedd51c10af36acef8d6113c7f8699caa8fbc70ac2db4c0b34a5"
+    },
+    {
+      "session": "shiro-sefs-lp",
+      "verdict": "needs-refine",
+      "score": 56,
+      "state": "permission-wait",
+      "decisionKind": "external-action",
+      "risk": "high",
+      "consultRequired": true,
+      "canProceedWithoutYakon": false,
+      "reason": "option, deadline, and consequence of waiting. Do not ask Yakon yet unless",
+      "recommendedAction": "Prepare one approval packet: scope, exact command/action, rollback, risk, recommended option.",
+      "findings": [
+        "reason is too generic or missing",
+        "next action is too generic or missing"
+      ],
+      "outputHash": "c263ae75aea7b1c82fed5ae9dff17175d5ceed73d76a4aa81ee92bf8bf380f75"
+    }
+  ]
+}

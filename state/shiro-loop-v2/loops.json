@@ -1,0 +1,773 @@
+{
+  "version": 2,
+  "generatedAt": "2026-06-14T14:24:40.268Z",
+  "scheduler": {
+    "mode": "manual",
+    "cronEnabled": false,
+    "note": "Yakon instructed Shiro to stop all current cron jobs before moving to Loop v2."
+  },
+  "summary": {
+    "total": 14,
+    "consultRequired": 14,
+    "canAutoProceed": 0,
+    "needsRefine": 14
+  },
+  "loops": [
+    {
+      "session": "shiro-ai-anime",
+      "title": "shiro-ai-anime",
+      "threadId": null,
+      "host": "shiro",
+      "assigneeId": null,
+      "project": null,
+      "goal": "shiro-ai-anime: unresolved thread work",
+      "loop": {
+        "discover": "Read thread context, tmux output, repo status, and prior memory before acting.",
+        "plan": "Choose one next action that moves toward the goal without mixing risk levels.",
+        "execute": "Do not execute high-risk work. Prepare a concrete approval packet or done sign-off.",
+        "verify": "Use a separate verifier pass. The executor is not allowed to mark itself complete.",
+        "iterate": "If verification fails, refine the packet/action. If it passes, update state and report only changed, decision-ready items."
+      },
+      "passCriteria": [
+        "Goal-specific output or code change exists.",
+        "Relevant tests, build, smoke test, or manual check are recorded.",
+        "Working tree, deploy/push status, and production/external-change status are explicit.",
+        "Residual risks are written in user-facing Japanese.",
+        "[DONE] is never applied before Yakon approval."
+      ],
+      "autonomousAllowed": [
+        "Read files, logs, tmux panes, and thread context.",
+        "Run local tests, builds, lint, typecheck, and read-only diagnostics.",
+        "Edit local code/docs for scoped fixes.",
+        "Prepare approval packets and [DONE] sign-off drafts."
+      ],
+      "confirmationRequired": [
+        "push / deploy / production or public-state change",
+        "production DB migration or data deletion",
+        "secret, token, OAuth, env, credential, billing, or paid API change",
+        "external messages not already requested in the relevant thread",
+        "[DONE] thread marking"
+      ],
+      "current": {
+        "state": "permission-wait",
+        "decisionKind": "external-action",
+        "risk": "high",
+        "verifierVerdict": "needs-refine",
+        "reason": "❯ citta-ios push OK",
+        "recommendedAction": "Prepare one approval packet: scope, exact command/action, rollback, risk, recommended option.",
+        "canAutoProceed": false,
+        "consultRequired": true,
+        "lastSeenAt": 1781445486340,
+        "lastChangedAt": 1781445486340
+      },
+      "policy": {
+        "kind": "implementation-agent",
+        "normalIdle": "continue",
+        "reportMode": "concrete-results-only",
+        "userActionRule": "only-real-risk-or-environment-blocker"
+      }
+    },
+    {
+      "session": "shiro-citta-build9",
+      "title": "shiro-citta-build9",
+      "threadId": null,
+      "host": "shiro",
+      "assigneeId": null,
+      "project": null,
+      "goal": "shiro-citta-build9: unresolved thread work",
+      "loop": {
+        "discover": "Read thread context, tmux output, repo status, and prior memory before acting.",
+        "plan": "Choose one next action that moves toward the goal without mixing risk levels.",
+        "execute": "Do not execute high-risk work. Prepare a concrete approval packet or done sign-off.",
+        "verify": "Use a separate verifier pass. The executor is not allowed to mark itself complete.",
+        "iterate": "If verification fails, refine the packet/action. If it passes, update state and report only changed, decision-ready items."
+      },
+      "passCriteria": [
+        "Goal-specific output or code change exists.",
+        "Relevant tests, build, smoke test, or manual check are recorded.",
+        "Working tree, deploy/push status, and production/external-change status are explicit.",
+        "Residual risks are written in user-facing Japanese.",
+        "[DONE] is never applied before Yakon approval."
+      ],
+      "autonomousAllowed": [
+        "Read files, logs, tmux panes, and thread context.",
+        "Run local tests, builds, lint, typecheck, and read-only diagnostics.",
+        "Edit local code/docs for scoped fixes.",
+        "Prepare approval packets and [DONE] sign-off drafts."
+      ],
+      "confirmationRequired": [
+        "push / deploy / production or public-state change",
+        "production DB migration or data deletion",
+        "secret, token, OAuth, env, credential, billing, or paid API change",
+        "external messages not already requested in the relevant thread",
+        "[DONE] thread marking"
+      ],
+      "current": {
+        "state": "running",
+        "decisionKind": "external-action",
+        "risk": "high",
+        "verifierVerdict": "needs-refine",
+        "reason": "として再アーカイブ。手順は citta-ios/TESTFLIGHT_NOTES.md に記載済み。",
+        "recommendedAction": "Prepare one approval packet: scope, exact command/action, rollback, risk, recommended option.",
+        "canAutoProceed": false,
+        "consultRequired": true,
+        "lastSeenAt": 1781445486340,
+        "lastChangedAt": 1781283477155
+      },
+      "policy": {
+        "kind": "implementation-agent",
+        "normalIdle": "continue",
+        "reportMode": "concrete-results-only",
+        "userActionRule": "only-real-risk-or-environment-blocker"
+      }
+    },
+    {
+      "session": "shiro-email-manager",
+      "title": "shiro-email-manager",
+      "threadId": null,
+      "host": "shiro",
+      "assigneeId": null,
+      "project": null,
+      "goal": "shiro-email-manager: unresolved thread work",
+      "loop": {
+        "discover": "Read thread context, tmux output, repo status, and prior memory before acting.",
+        "plan": "Choose one next action that moves toward the goal without mixing risk levels.",
+        "execute": "Do not execute high-risk work. Prepare a concrete approval packet or done sign-off.",
+        "verify": "Use a separate verifier pass. The executor is not allowed to mark itself complete.",
+        "iterate": "If verification fails, refine the packet/action. If it passes, update state and report only changed, decision-ready items."
+      },
+      "passCriteria": [
+        "Goal-specific output or code change exists.",
+        "Relevant tests, build, smoke test, or manual check are recorded.",
+        "Working tree, deploy/push status, and production/external-change status are explicit.",
+        "Residual risks are written in user-facing Japanese.",
+        "[DONE] is never applied before Yakon approval."
+      ],
+      "autonomousAllowed": [
+        "Read files, logs, tmux panes, and thread context.",
+        "Run local tests, builds, lint, typecheck, and read-only diagnostics.",
+        "Edit local code/docs for scoped fixes.",
+        "Prepare approval packets and [DONE] sign-off drafts."
+      ],
+      "confirmationRequired": [
+        "push / deploy / production or public-state change",
+        "production DB migration or data deletion",
+        "secret, token, OAuth, env, credential, billing, or paid API change",
+        "external messages not already requested in the relevant thread",
+        "[DONE] thread marking"
+      ],
+      "current": {
+        "state": "permission-wait",
+        "decisionKind": "external-action",
+        "risk": "high",
+        "verifierVerdict": "needs-refine",
+        "reason": "❯ credentials.json どこにあるか一緒に確認して",
+        "recommendedAction": "Prepare one approval packet: scope, exact command/action, rollback, risk, recommended option.",
+        "canAutoProceed": false,
+        "consultRequired": true,
+        "lastSeenAt": 1781445486340,
+        "lastChangedAt": 1781445486340
+      },
+      "policy": {
+        "kind": "implementation-agent",
+        "normalIdle": "continue",
+        "reportMode": "concrete-results-only",
+        "userActionRule": "only-real-risk-or-environment-blocker"
+      }
+    },
+    {
+      "session": "shiro-feed-tunnel",
+      "title": "shiro-feed-tunnel",
+      "threadId": null,
+      "host": "shiro",
+      "assigneeId": null,
+      "project": null,
+      "goal": "shiro-feed-tunnel: unresolved thread work",
+      "loop": {
+        "discover": "Read thread context, tmux output, repo status, and prior memory before acting.",
+        "plan": "Choose one next action that moves toward the goal without mixing risk levels.",
+        "execute": "Do not execute high-risk work. Prepare a concrete approval packet or done sign-off.",
+        "verify": "Use a separate verifier pass. The executor is not allowed to mark itself complete.",
+        "iterate": "If verification fails, refine the packet/action. If it passes, update state and report only changed, decision-ready items."
+      },
+      "passCriteria": [
+        "Goal-specific output or code change exists.",
+        "Relevant tests, build, smoke test, or manual check are recorded.",
+        "Working tree, deploy/push status, and production/external-change status are explicit.",
+        "Residual risks are written in user-facing Japanese.",
+        "[DONE] is never applied before Yakon approval."
+      ],
+      "autonomousAllowed": [
+        "Read files, logs, tmux panes, and thread context.",
+        "Run local tests, builds, lint, typecheck, and read-only diagnostics.",
+        "Edit local code/docs for scoped fixes.",
+        "Prepare approval packets and [DONE] sign-off drafts."
+      ],
+      "confirmationRequired": [
+        "push / deploy / production or public-state change",
+        "production DB migration or data deletion",
+        "secret, token, OAuth, env, credential, billing, or paid API change",
+        "external messages not already requested in the relevant thread",
+        "[DONE] thread marking"
+      ],
+      "current": {
+        "state": "blocked",
+        "decisionKind": "external-action",
+        "risk": "high",
+        "verifierVerdict": "needs-refine",
+        "reason": "❯ check the context canceled count dropped in tunnel logs",
+        "recommendedAction": "Prepare one approval packet: scope, exact command/action, rollback, risk, recommended option.",
+        "canAutoProceed": false,
+        "consultRequired": true,
+        "lastSeenAt": 1781445486340,
+        "lastChangedAt": 1781225872282
+      },
+      "policy": {
+        "kind": "implementation-agent",
+        "normalIdle": "continue",
+        "reportMode": "concrete-results-only",
+        "userActionRule": "only-real-risk-or-environment-blocker"
+      }
+    },
+    {
+      "session": "shiro-kataomoi-ec",
+      "title": "shiro-kataomoi-ec",
+      "threadId": null,
+      "host": "shiro",
+      "assigneeId": null,
+      "project": null,
+      "goal": "shiro-kataomoi-ec: unresolved thread work",
+      "loop": {
+        "discover": "Read thread context, tmux output, repo status, and prior memory before acting.",
+        "plan": "Choose one next action that moves toward the goal without mixing risk levels.",
+        "execute": "Do not execute high-risk work. Prepare a concrete approval packet or done sign-off.",
+        "verify": "Use a separate verifier pass. The executor is not allowed to mark itself complete.",
+        "iterate": "If verification fails, refine the packet/action. If it passes, update state and report only changed, decision-ready items."
+      },
+      "passCriteria": [
+        "Goal-specific output or code change exists.",
+        "Relevant tests, build, smoke test, or manual check are recorded.",
+        "Working tree, deploy/push status, and production/external-change status are explicit.",
+        "Residual risks are written in user-facing Japanese.",
+        "[DONE] is never applied before Yakon approval."
+      ],
+      "autonomousAllowed": [
+        "Read files, logs, tmux panes, and thread context.",
+        "Run local tests, builds, lint, typecheck, and read-only diagnostics.",
+        "Edit local code/docs for scoped fixes.",
+        "Prepare approval packets and [DONE] sign-off drafts."
+      ],
+      "confirmationRequired": [
+        "push / deploy / production or public-state change",
+        "production DB migration or data deletion",
+        "secret, token, OAuth, env, credential, billing, or paid API change",
+        "external messages not already requested in the relevant thread",
+        "[DONE] thread marking"
+      ],
+      "current": {
+        "state": "permission-wait",
+        "decisionKind": "external-action",
+        "risk": "high",
+        "verifierVerdict": "needs-refine",
+        "reason": "deadline, and consequence of waiting. Do not ask Yakon yet unless the packet",
+        "recommendedAction": "Prepare one approval packet: scope, exact command/action, rollback, risk, recommended option.",
+        "canAutoProceed": false,
+        "consultRequired": true,
+        "lastSeenAt": 1781445486340,
+        "lastChangedAt": 1781443687918
+      },
+      "policy": {
+        "kind": "implementation-agent",
+        "normalIdle": "continue",
+        "reportMode": "concrete-results-only",
+        "userActionRule": "only-real-risk-or-environment-blocker"
+      }
+    },
+    {
+      "session": "shiro-ledger-claude",
+      "title": "shiro-ledger-claude",
+      "threadId": null,
+      "host": "shiro",
+      "assigneeId": null,
+      "project": null,
+      "goal": "shiro-ledger-claude: unresolved thread work",
+      "loop": {
+        "discover": "Read thread context, tmux output, repo status, and prior memory before acting.",
+        "plan": "Choose one next action that moves toward the goal without mixing risk levels.",
+        "execute": "Do not execute high-risk work. Prepare a concrete approval packet or done sign-off.",
+        "verify": "Use a separate verifier pass. The executor is not allowed to mark itself complete.",
+        "iterate": "If verification fails, refine the packet/action. If it passes, update state and report only changed, decision-ready items."
+      },
+      "passCriteria": [
+        "Goal-specific output or code change exists.",
+        "Relevant tests, build, smoke test, or manual check are recorded.",
+        "Working tree, deploy/push status, and production/external-change status are explicit.",
+        "Residual risks are written in user-facing Japanese.",
+        "[DONE] is never applied before Yakon approval."
+      ],
+      "autonomousAllowed": [
+        "Read files, logs, tmux panes, and thread context.",
+        "Run local tests, builds, lint, typecheck, and read-only diagnostics.",
+        "Edit local code/docs for scoped fixes.",
+        "Prepare approval packets and [DONE] sign-off drafts."
+      ],
+      "confirmationRequired": [
+        "push / deploy / production or public-state change",
+        "production DB migration or data deletion",
+        "secret, token, OAuth, env, credential, billing, or paid API change",
+        "external messages not already requested in the relevant thread",
+        "[DONE] thread marking"
+      ],
+      "current": {
+        "state": "permission-wait",
+        "decisionKind": "external-action",
+        "risk": "high",
+        "verifierVerdict": "needs-refine",
+        "reason": "- telegram_ollama_bot.py — hardcoded token、コミット禁止",
+        "recommendedAction": "Prepare one approval packet: scope, exact command/action, rollback, risk, recommended option.",
+        "canAutoProceed": false,
+        "consultRequired": true,
+        "lastSeenAt": 1781445486340,
+        "lastChangedAt": 1781445486340
+      },
+      "policy": {
+        "kind": "implementation-agent",
+        "normalIdle": "continue",
+        "reportMode": "concrete-results-only",
+        "userActionRule": "only-real-risk-or-environment-blocker"
+      }
+    },
+    {
+      "session": "shiro-mother-domain",
+      "title": "shiro-mother-domain",
+      "threadId": null,
+      "host": "shiro",
+      "assigneeId": null,
+      "project": null,
+      "goal": "shiro-mother-domain: unresolved thread work",
+      "loop": {
+        "discover": "Read thread context, tmux output, repo status, and prior memory before acting.",
+        "plan": "Choose one next action that moves toward the goal without mixing risk levels.",
+        "execute": "Do not execute high-risk work. Prepare a concrete approval packet or done sign-off.",
+        "verify": "Use a separate verifier pass. The executor is not allowed to mark itself complete.",
+        "iterate": "If verification fails, refine the packet/action. If it passes, update state and report only changed, decision-ready items."
+      },
+      "passCriteria": [
+        "Goal-specific output or code change exists.",
+        "Relevant tests, build, smoke test, or manual check are recorded.",
+        "Working tree, deploy/push status, and production/external-change status are explicit.",
+        "Residual risks are written in user-facing Japanese.",
+        "[DONE] is never applied before Yakon approval."
+      ],
+      "autonomousAllowed": [
+        "Read files, logs, tmux panes, and thread context.",
+        "Run local tests, builds, lint, typecheck, and read-only diagnostics.",
+        "Edit local code/docs for scoped fixes.",
+        "Prepare approval packets and [DONE] sign-off drafts."
+      ],
+      "confirmationRequired": [
+        "push / deploy / production or public-state change",
+        "production DB migration or data deletion",
+        "secret, token, OAuth, env, credential, billing, or paid API change",
+        "external messages not already requested in the relevant thread",
+        "[DONE] thread marking"
+      ],
+      "current": {
+        "state": "permission-wait",
+        "decisionKind": "external-action",
+        "risk": "high",
+        "verifierVerdict": "needs-refine",
+        "reason": "Stripe webhook ✅ mothervegetable.co.jp",
+        "recommendedAction": "Prepare one approval packet: scope, exact command/action, rollback, risk, recommended option.",
+        "canAutoProceed": false,
+        "consultRequired": true,
+        "lastSeenAt": 1781445486340,
+        "lastChangedAt": 1781445486340
+      },
+      "policy": {
+        "kind": "implementation-agent",
+        "normalIdle": "continue",
+        "reportMode": "concrete-results-only",
+        "userActionRule": "only-real-risk-or-environment-blocker"
+      }
+    },
+    {
+      "session": "shiro-omikuji",
+      "title": "shiro-omikuji",
+      "threadId": null,
+      "host": "shiro",
+      "assigneeId": null,
+      "project": null,
+      "goal": "shiro-omikuji: unresolved thread work",
+      "loop": {
+        "discover": "Read thread context, tmux output, repo status, and prior memory before acting.",
+        "plan": "Choose one next action that moves toward the goal without mixing risk levels.",
+        "execute": "Do not execute high-risk work. Prepare a concrete approval packet or done sign-off.",
+        "verify": "Use a separate verifier pass. The executor is not allowed to mark itself complete.",
+        "iterate": "If verification fails, refine the packet/action. If it passes, update state and report only changed, decision-ready items."
+      },
+      "passCriteria": [
+        "Goal-specific output or code change exists.",
+        "Relevant tests, build, smoke test, or manual check are recorded.",
+        "Working tree, deploy/push status, and production/external-change status are explicit.",
+        "Residual risks are written in user-facing Japanese.",
+        "[DONE] is never applied before Yakon approval."
+      ],
+      "autonomousAllowed": [
+        "Read files, logs, tmux panes, and thread context.",
+        "Run local tests, builds, lint, typecheck, and read-only diagnostics.",
+        "Edit local code/docs for scoped fixes.",
+        "Prepare approval packets and [DONE] sign-off drafts."
+      ],
+      "confirmationRequired": [
+        "push / deploy / production or public-state change",
+        "production DB migration or data deletion",
+        "secret, token, OAuth, env, credential, billing, or paid API change",
+        "external messages not already requested in the relevant thread",
+        "[DONE] thread marking"
+      ],
+      "current": {
+        "state": "permission-wait",
+        "decisionKind": "external-action",
+        "risk": "high",
+        "verifierVerdict": "needs-refine",
+        "reason": "deadline, and consequence of waiting. Do not ask Yakon yet unless the packet",
+        "recommendedAction": "Prepare one approval packet: scope, exact command/action, rollback, risk, recommended option.",
+        "canAutoProceed": false,
+        "consultRequired": true,
+        "lastSeenAt": 1781445486340,
+        "lastChangedAt": 1781443687918
+      },
+      "policy": {
+        "kind": "implementation-agent",
+        "normalIdle": "continue",
+        "reportMode": "concrete-results-only",
+        "userActionRule": "only-real-risk-or-environment-blocker"
+      }
+    },
+    {
+      "session": "shiro-paper-manager",
+      "title": "shiro-paper-manager",
+      "threadId": null,
+      "host": "shiro",
+      "assigneeId": null,
+      "project": null,
+      "goal": "shiro-paper-manager: unresolved thread work",
+      "loop": {
+        "discover": "Read thread context, tmux output, repo status, and prior memory before acting.",
+        "plan": "Choose one next action that moves toward the goal without mixing risk levels.",
+        "execute": "Do not execute high-risk work. Prepare a concrete approval packet or done sign-off.",
+        "verify": "Use a separate verifier pass. The executor is not allowed to mark itself complete.",
+        "iterate": "If verification fails, refine the packet/action. If it passes, update state and report only changed, decision-ready items."
+      },
+      "passCriteria": [
+        "Goal-specific output or code change exists.",
+        "Relevant tests, build, smoke test, or manual check are recorded.",
+        "Working tree, deploy/push status, and production/external-change status are explicit.",
+        "Residual risks are written in user-facing Japanese.",
+        "[DONE] is never applied before Yakon approval."
+      ],
+      "autonomousAllowed": [
+        "Read files, logs, tmux panes, and thread context.",
+        "Run local tests, builds, lint, typecheck, and read-only diagnostics.",
+        "Edit local code/docs for scoped fixes.",
+        "Prepare approval packets and [DONE] sign-off drafts."
+      ],
+      "confirmationRequired": [
+        "push / deploy / production or public-state change",
+        "production DB migration or data deletion",
+        "secret, token, OAuth, env, credential, billing, or paid API change",
+        "external messages not already requested in the relevant thread",
+        "[DONE] thread marking"
+      ],
+      "current": {
+        "state": "permission-wait",
+        "decisionKind": "external-action",
+        "risk": "high",
+        "verifierVerdict": "needs-refine",
+        "reason": "option, deadline, and consequence of waiting. Do not ask Yakon yet unless",
+        "recommendedAction": "Prepare one approval packet: scope, exact command/action, rollback, risk, recommended option.",
+        "canAutoProceed": false,
+        "consultRequired": true,
+        "lastSeenAt": 1781445486340,
+        "lastChangedAt": 1781443687918
+      },
+      "policy": {
+        "kind": "implementation-agent",
+        "normalIdle": "continue",
+        "reportMode": "concrete-results-only",
+        "userActionRule": "only-real-risk-or-environment-blocker"
+      }
+    },
+    {
+      "session": "shiro-personal-branding",
+      "title": "shiro-personal-branding",
+      "threadId": null,
+      "host": "shiro",
+      "assigneeId": null,
+      "project": null,
+      "goal": "shiro-personal-branding: unresolved thread work",
+      "loop": {
+        "discover": "Read thread context, tmux output, repo status, and prior memory before acting.",
+        "plan": "Choose one next action that moves toward the goal without mixing risk levels.",
+        "execute": "Do not execute high-risk work. Prepare a concrete approval packet or done sign-off.",
+        "verify": "Use a separate verifier pass. The executor is not allowed to mark itself complete.",
+        "iterate": "If verification fails, refine the packet/action. If it passes, update state and report only changed, decision-ready items."
+      },
+      "passCriteria": [
+        "Goal-specific output or code change exists.",
+        "Relevant tests, build, smoke test, or manual check are recorded.",
+        "Working tree, deploy/push status, and production/external-change status are explicit.",
+        "Residual risks are written in user-facing Japanese.",
+        "[DONE] is never applied before Yakon approval."
+      ],
+      "autonomousAllowed": [
+        "Read files, logs, tmux panes, and thread context.",
+        "Run local tests, builds, lint, typecheck, and read-only diagnostics.",
+        "Edit local code/docs for scoped fixes.",
+        "Prepare approval packets and [DONE] sign-off drafts."
+      ],
+      "confirmationRequired": [
+        "push / deploy / production or public-state change",
+        "production DB migration or data deletion",
+        "secret, token, OAuth, env, credential, billing, or paid API change",
+        "external messages not already requested in the relevant thread",
+        "[DONE] thread marking"
+      ],
+      "current": {
+        "state": "permission-wait",
+        "decisionKind": "external-action",
+        "risk": "high",
+        "verifierVerdict": "needs-refine",
+        "reason": "new task? /clear to save 102.3k tokens",
+        "recommendedAction": "Prepare one approval packet: scope, exact command/action, rollback, risk, recommended option.",
+        "canAutoProceed": false,
+        "consultRequired": true,
+        "lastSeenAt": 1781445486340,
+        "lastChangedAt": 1781319475968
+      },
+      "policy": {
+        "kind": "implementation-agent",
+        "normalIdle": "continue",
+        "reportMode": "concrete-results-only",
+        "userActionRule": "only-real-risk-or-environment-blocker"
+      }
+    },
+    {
+      "session": "shiro-real-estate",
+      "title": "shiro-real-estate",
+      "threadId": null,
+      "host": "shiro",
+      "assigneeId": null,
+      "project": null,
+      "goal": "shiro-real-estate: unresolved thread work",
+      "loop": {
+        "discover": "Read thread context, tmux output, repo status, and prior memory before acting.",
+        "plan": "Choose one next action that moves toward the goal without mixing risk levels.",
+        "execute": "Do not execute high-risk work. Prepare a concrete approval packet or done sign-off.",
+        "verify": "Use a separate verifier pass. The executor is not allowed to mark itself complete.",
+        "iterate": "If verification fails, refine the packet/action. If it passes, update state and report only changed, decision-ready items."
+      },
+      "passCriteria": [
+        "Goal-specific output or code change exists.",
+        "Relevant tests, build, smoke test, or manual check are recorded.",
+        "Working tree, deploy/push status, and production/external-change status are explicit.",
+        "Residual risks are written in user-facing Japanese.",
+        "[DONE] is never applied before Yakon approval."
+      ],
+      "autonomousAllowed": [
+        "Read files, logs, tmux panes, and thread context.",
+        "Run local tests, builds, lint, typecheck, and read-only diagnostics.",
+        "Edit local code/docs for scoped fixes.",
+        "Prepare approval packets and [DONE] sign-off drafts."
+      ],
+      "confirmationRequired": [
+        "push / deploy / production or public-state change",
+        "production DB migration or data deletion",
+        "secret, token, OAuth, env, credential, billing, or paid API change",
+        "external messages not already requested in the relevant thread",
+        "[DONE] thread marking"
+      ],
+      "current": {
+        "state": "permission-wait",
+        "decisionKind": "external-action",
+        "risk": "high",
+        "verifierVerdict": "needs-refine",
+        "reason": "new task? /clear to save 130.9k tokens",
+        "recommendedAction": "Prepare one approval packet: scope, exact command/action, rollback, risk, recommended option.",
+        "canAutoProceed": false,
+        "consultRequired": true,
+        "lastSeenAt": 1781445486340,
+        "lastChangedAt": 1781321281969
+      },
+      "policy": {
+        "kind": "implementation-agent",
+        "normalIdle": "continue",
+        "reportMode": "concrete-results-only",
+        "userActionRule": "only-real-risk-or-environment-blocker"
+      }
+    },
+    {
+      "session": "shiro-recruit-handover",
+      "title": "shiro-recruit-handover",
+      "threadId": null,
+      "host": "shiro",
+      "assigneeId": null,
+      "project": null,
+      "goal": "shiro-recruit-handover: unresolved thread work",
+      "loop": {
+        "discover": "Read thread context, tmux output, repo status, and prior memory before acting.",
+        "plan": "Choose one next action that moves toward the goal without mixing risk levels.",
+        "execute": "Do not execute high-risk work. Prepare a concrete approval packet or done sign-off.",
+        "verify": "Use a separate verifier pass. The executor is not allowed to mark itself complete.",
+        "iterate": "If verification fails, refine the packet/action. If it passes, update state and report only changed, decision-ready items."
+      },
+      "passCriteria": [
+        "Goal-specific output or code change exists.",
+        "Relevant tests, build, smoke test, or manual check are recorded.",
+        "Working tree, deploy/push status, and production/external-change status are explicit.",
+        "Residual risks are written in user-facing Japanese.",
+        "[DONE] is never applied before Yakon approval."
+      ],
+      "autonomousAllowed": [
+        "Read files, logs, tmux panes, and thread context.",
+        "Run local tests, builds, lint, typecheck, and read-only diagnostics.",
+        "Edit local code/docs for scoped fixes.",
+        "Prepare approval packets and [DONE] sign-off drafts."
+      ],
+      "confirmationRequired": [
+        "push / deploy / production or public-state change",
+        "production DB migration or data deletion",
+        "secret, token, OAuth, env, credential, billing, or paid API change",
+        "external messages not already requested in the relevant thread",
+        "[DONE] thread marking"
+      ],
+      "current": {
+        "state": "permission-wait",
+        "decisionKind": "external-action",
+        "risk": "high",
+        "verifierVerdict": "needs-refine",
+        "reason": "deadline, and consequence of waiting. Do not ask Yakon yet unless the packet",
+        "recommendedAction": "Prepare one approval packet: scope, exact command/action, rollback, risk, recommended option.",
+        "canAutoProceed": false,
+        "consultRequired": true,
+        "lastSeenAt": 1781445486340,
+        "lastChangedAt": 1781443687918
+      },
+      "policy": {
+        "kind": "implementation-agent",
+        "normalIdle": "continue",
+        "reportMode": "concrete-results-only",
+        "userActionRule": "only-real-risk-or-environment-blocker"
+      }
+    },
+    {
+      "session": "shiro-restaurant-sales",
+      "title": "shiro-restaurant-sales",
+      "threadId": null,
+      "host": "shiro",
+      "assigneeId": null,
+      "project": null,
+      "goal": "shiro-restaurant-sales: unresolved thread work",
+      "loop": {
+        "discover": "Read thread context, tmux output, repo status, and prior memory before acting.",
+        "plan": "Choose one next action that moves toward the goal without mixing risk levels.",
+        "execute": "Do not execute high-risk work. Prepare a concrete approval packet or done sign-off.",
+        "verify": "Use a separate verifier pass. The executor is not allowed to mark itself complete.",
+        "iterate": "If verification fails, refine the packet/action. If it passes, update state and report only changed, decision-ready items."
+      },
+      "passCriteria": [
+        "Goal-specific output or code change exists.",
+        "Relevant tests, build, smoke test, or manual check are recorded.",
+        "Working tree, deploy/push status, and production/external-change status are explicit.",
+        "Residual risks are written in user-facing Japanese.",
+        "[DONE] is never applied before Yakon approval."
+      ],
+      "autonomousAllowed": [
+        "Read files, logs, tmux panes, and thread context.",
+        "Run local tests, builds, lint, typecheck, and read-only diagnostics.",
+        "Edit local code/docs for scoped fixes.",
+        "Prepare approval packets and [DONE] sign-off drafts."
+      ],
+      "confirmationRequired": [
+        "push / deploy / production or public-state change",
+        "production DB migration or data deletion",
+        "secret, token, OAuth, env, credential, billing, or paid API change",
+        "external messages not already requested in the relevant thread",
+        "[DONE] thread marking"
+      ],
+      "current": {
+        "state": "permission-wait",
+        "decisionKind": "external-action",
+        "risk": "high",
+        "verifierVerdict": "needs-refine",
+        "reason": "not ask Yakon yet unless the packet is concrete enough to answer with yes/no.",
+        "recommendedAction": "Prepare one approval packet: scope, exact command/action, rollback, risk, recommended option.",
+        "canAutoProceed": false,
+        "consultRequired": true,
+        "lastSeenAt": 1781445486340,
+        "lastChangedAt": 1781443687918
+      },
+      "policy": {
+        "kind": "implementation-agent",
+        "normalIdle": "continue",
+        "reportMode": "concrete-results-only",
+        "userActionRule": "only-real-risk-or-environment-blocker"
+      }
+    },
+    {
+      "session": "shiro-sefs-lp",
+      "title": "shiro-sefs-lp",
+      "threadId": null,
+      "host": "shiro",
+      "assigneeId": null,
+      "project": null,
+      "goal": "shiro-sefs-lp: unresolved thread work",
+      "loop": {
+        "discover": "Read thread context, tmux output, repo status, and prior memory before acting.",
+        "plan": "Choose one next action that moves toward the goal without mixing risk levels.",
+        "execute": "Do not execute high-risk work. Prepare a concrete approval packet or done sign-off.",
+        "verify": "Use a separate verifier pass. The executor is not allowed to mark itself complete.",
+        "iterate": "If verification fails, refine the packet/action. If it passes, update state and report only changed, decision-ready items."
+      },
+      "passCriteria": [
+        "Goal-specific output or code change exists.",
+        "Relevant tests, build, smoke test, or manual check are recorded.",
+        "Working tree, deploy/push status, and production/external-change status are explicit.",
+        "Residual risks are written in user-facing Japanese.",
+        "[DONE] is never applied before Yakon approval."
+      ],
+      "autonomousAllowed": [
+        "Read files, logs, tmux panes, and thread context.",
+        "Run local tests, builds, lint, typecheck, and read-only diagnostics.",
+        "Edit local code/docs for scoped fixes.",
+        "Prepare approval packets and [DONE] sign-off drafts."
+      ],
+      "confirmationRequired": [
+        "push / deploy / production or public-state change",
+        "production DB migration or data deletion",
+        "secret, token, OAuth, env, credential, billing, or paid API change",
+        "external messages not already requested in the relevant thread",
+        "[DONE] thread marking"
+      ],
+      "current": {
+        "state": "permission-wait",
+        "decisionKind": "external-action",
+        "risk": "high",
+        "verifierVerdict": "needs-refine",
+        "reason": "deadline, and consequence of waiting. Do not ask Yakon yet unless the packet",
+        "recommendedAction": "Prepare one approval packet: scope, exact command/action, rollback, risk, recommended option.",
+        "canAutoProceed": false,
+        "consultRequired": true,
+        "lastSeenAt": 1781445486340,
+        "lastChangedAt": 1781443687918
+      },
+      "policy": {
+        "kind": "implementation-agent",
+        "normalIdle": "continue",
+        "reportMode": "concrete-results-only",
+        "userActionRule": "only-real-risk-or-environment-blocker"
+      }
+    }
+  ]
+}

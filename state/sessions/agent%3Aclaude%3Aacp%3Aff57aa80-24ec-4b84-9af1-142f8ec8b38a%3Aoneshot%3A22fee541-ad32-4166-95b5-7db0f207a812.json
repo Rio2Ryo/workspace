@@ -1,0 +1,164 @@
+{
+  "schema": "acpx.session.v1",
+  "acpx_record_id": "agent:claude:acp:ff57aa80-24ec-4b84-9af1-142f8ec8b38a:oneshot:22fee541-ad32-4166-95b5-7db0f207a812",
+  "acp_session_id": "65a1a8ce-e752-462a-b650-ec7fd43cccf5",
+  "agent_command": "\"/opt/homebrew/Cellar/node/25.5.0/bin/node\" \"/Users/umi/.openclaw/acpx/claude-agent-acp-wrapper.mjs\"",
+  "cwd": "/Users/umi/.openclaw/workspace/projects/restaurant-sales-intel",
+  "name": "agent:claude:acp:ff57aa80-24ec-4b84-9af1-142f8ec8b38a",
+  "created_at": "2026-06-15T06:24:27.740Z",
+  "last_used_at": "2026-06-15T06:24:27.740Z",
+  "last_seq": 0,
+  "event_log": {
+    "active_path": "/Users/umi/.acpx/sessions/agent%3Aclaude%3Aacp%3Aff57aa80-24ec-4b84-9af1-142f8ec8b38a%3Aoneshot%3A22fee541-ad32-4166-95b5-7db0f207a812.stream.ndjson",
+    "segment_count": 5,
+    "max_segment_bytes": 67108864,
+    "max_segments": 5,
+    "last_write_error": null
+  },
+  "closed": true,
+  "closed_at": "2026-06-15T06:24:27.968Z",
+  "pid": 19747,
+  "agent_started_at": "2026-06-15T06:24:26.195Z",
+  "protocol_version": 1,
+  "agent_capabilities": {
+    "_meta": {
+      "claudeCode": {
+        "promptQueueing": true
+      }
+    },
+    "promptCapabilities": {
+      "image": true,
+      "embeddedContext": true
+    },
+    "mcpCapabilities": {
+      "http": true,
+      "sse": true
+    },
+    "loadSession": true,
+    "sessionCapabilities": {
+      "additionalDirectories": {},
+      "close": {},
+      "delete": {},
+      "fork": {},
+      "list": {},
+      "resume": {}
+    }
+  },
+  "title": null,
+  "messages": [],
+  "updated_at": "2026-06-15T06:24:27.740Z",
+  "cumulative_token_usage": {},
+  "request_token_usage": {},
+  "acpx": {
+    "current_model_id": "default",
+    "available_models": [
+      "default",
+      "sonnet[1m]",
+      "opus",
+      "haiku"
+    ],
+    "config_options": [
+      {
+        "id": "mode",
+        "name": "Mode",
+        "description": "Session permission mode",
+        "category": "mode",
+        "type": "select",
+        "currentValue": "auto",
+        "options": [
+          {
+            "value": "auto",
+            "name": "Auto",
+            "description": "Use a model classifier to approve/deny permission prompts"
+          },
+          {
+            "value": "default",
+            "name": "Default",
+            "description": "Standard behavior, prompts for dangerous operations"
+          },
+          {
+            "value": "acceptEdits",
+            "name": "Accept Edits",
+            "description": "Auto-accept file edit operations"
+          },
+          {
+            "value": "plan",
+            "name": "Plan Mode",
+            "description": "Planning mode, no actual tool execution"
+          },
+          {
+            "value": "dontAsk",
+            "name": "Don't Ask",
+            "description": "Don't prompt for permissions, deny if not pre-approved"
+          },
+          {
+            "value": "bypassPermissions",
+            "name": "Bypass Permissions",
+            "description": "Bypass all permission checks"
+          }
+        ]
+      },
+      {
+        "id": "model",
+        "name": "Model",
+        "description": "AI model to use",
+        "category": "model",
+        "type": "select",
+        "currentValue": "default",
+        "options": [
+          {
+            "value": "default",
+            "name": "Default (recommended)",
+            "description": "Sonnet 4.6 · Best for everyday tasks"
+          },
+          {
+            "value": "sonnet[1m]",
+            "name": "Sonnet (1M context)",
+            "description": "Sonnet 4.6 with 1M context · Draws from usage credits · $3/$15 per Mtok"
+          },
+          {
+            "value": "opus",
+            "name": "Opus",
+            "description": "Opus 4.8 · Most capable for complex work"
+          },
+          {
+            "value": "haiku",
+            "name": "Haiku",
+            "description": "Haiku 4.5 · Fastest for quick answers"
+          }
+        ]
+      },
+      {
+        "id": "effort",
+        "name": "Effort",
+        "description": "Available effort levels for this model",
+        "category": "thought_level",
+        "type": "select",
+        "currentValue": "default",
+        "options": [
+          {
+            "value": "default",
+            "name": "Default"
+          },
+          {
+            "value": "low",
+            "name": "Low"
+          },
+          {
+            "value": "medium",
+            "name": "Medium"
+          },
+          {
+            "value": "high",
+            "name": "High"
+          },
+          {
+            "value": "max",
+            "name": "Max"
+          }
+        ]
+      }
+    ],
+    "reset_on_next_ensure": true
+  }
+}

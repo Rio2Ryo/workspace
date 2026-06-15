@@ -1,0 +1,21 @@
+{
+  "ts": "2026-06-15T00:18:07.936Z",
+  "shouldSend": true,
+  "reportLabel": "Shiro workflow controller",
+  "source": "state/shiro-workflows/last-report.json",
+  "humanMessage": "Yakonさんにお願いしたいこと: なし\n白が実行/確認したこと: 1件\n止まっているもの: 14件\n報告しないもの: 10件（再投入・待機・未検証は進捗扱いしない）\n\n成果確認済み:\n- shiro-restaurant-sales: と併せて commit ff4a38f。\n\n具体ブロッカー:\n- daily-report-codex: Claude Code tmux sessionを作成し、スレッド目標を投入する\n- goose: Claude Code tmux sessionを作成し、スレッド目標を投入する\n- Obsidianと繋げて第二の脳をつくる: Claude Code tmux sessionを作成し、スレッド目標を投入する\n- slide-tool-codex: Claude Code tmux sessionを作成し、スレッド目標を投入する\n- top3-goose: Claude Code tmux sessionを作成し、スレッド目標を投入する\n- vast-ai-rtx5090-jp: Claude Code tmux sessionを作成し、スレッド目標を投入する\n- 他 8件\n\n事実: workflow 29 / approvalReady 0 / resultObserved 1 / actionsSent 0\n次: 次回tickで resultObserved または approvalPacket.ready になったものだけ報告します。",
+  "workflowSummary": {
+    "total": 29,
+    "byStatus": {
+      "done_excluded": 4,
+      "needs_session": 9,
+      "blocked": 5,
+      "pending_approval": 10,
+      "ready_to_act": 1
+    },
+    "resultObserved": 1,
+    "approvalReady": 0,
+    "progressReportable": 15,
+    "actionsSent": 0
+  }
+}

@@ -1,0 +1,27 @@
+{
+  "updatedAt": "2026-06-14T23:57:54.537Z",
+  "sourceReport": "/Users/umi/.openclaw/workspace/state/shiro-loop/last-verifier-report.json",
+  "rules": [
+    {
+      "id": "no-raw-permission-wait",
+      "rule": "Never present raw permission-wait counts without decisionKind, risk, reason, and next action.",
+      "evidence": "12 external-action / 0 done-signoff in latest verifier run"
+    },
+    {
+      "id": "verify-before-consult",
+      "rule": "Before asking Yakon, verifier must confirm the item is external-action, needs-yakon, or done-signoff.",
+      "evidence": "13 sessions need classification refinement"
+    },
+    {
+      "id": "self-action-without-yakon",
+      "rule": "If verifier marks canProceedWithoutYakon=true, Shiro should run one low-risk local action before reporting.",
+      "evidence": "0 sessions are currently self-action/delegate candidates"
+    }
+  ],
+  "summary": {
+    "external": 12,
+    "done": 0,
+    "refine": 13,
+    "self": 0
+  }
+}

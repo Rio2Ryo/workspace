@@ -1,0 +1,1831 @@
+{
+  "version": 3,
+  "updatedAt": "2026-06-15T06:27:54.289Z",
+  "workflows": [
+    {
+      "id": "thread:1505544095274238192",
+      "session": null,
+      "threadId": "1505544095274238192",
+      "title": "[DONE]threads-watcher",
+      "source": "thread",
+      "status": "done_excluded",
+      "decisionKind": "done-approved",
+      "risk": "low",
+      "policy": {
+        "kind": "implementation-agent",
+        "normalIdle": "continue",
+        "reportMode": "concrete-results-only",
+        "userActionRule": "only-real-risk-or-environment-blocker"
+      },
+      "hasTmux": false,
+      "doneThread": true,
+      "resultObserved": false,
+      "progressReportable": false,
+      "approvalPacket": null,
+      "verification": {
+        "required": false,
+        "resultObserved": false,
+        "evidence": "",
+        "urls": [],
+        "executorSelfReportOnly": false
+      },
+      "nextAutoAction": "Claude Code tmux sessionを作成し、スレッド目標を投入する",
+      "evidence": "",
+      "recentExcerpt": "",
+      "legacy": null,
+      "fingerprint": "296886ecf96e7d6439c7bbd00a219e92efd29a6bb7b6a8fccd5c0f9febbdbcec",
+      "changed": false,
+      "lastSeenAt": 1781504874289,
+      "lastChangedAt": 1781482538778,
+      "lastActionAt": null,
+      "lastReportedAt": null,
+      "actionHistory": [],
+      "captureError": null
+    },
+    {
+      "id": "thread:1504720363215654983",
+      "session": null,
+      "threadId": "1504720363215654983",
+      "title": "[DONE]たこおきMap メンテナンス",
+      "source": "thread",
+      "status": "done_excluded",
+      "decisionKind": "done-approved",
+      "risk": "low",
+      "policy": {
+        "kind": "implementation-agent",
+        "normalIdle": "continue",
+        "reportMode": "concrete-results-only",
+        "userActionRule": "only-real-risk-or-environment-blocker"
+      },
+      "hasTmux": false,
+      "doneThread": true,
+      "resultObserved": false,
+      "progressReportable": false,
+      "approvalPacket": null,
+      "verification": {
+        "required": false,
+        "resultObserved": false,
+        "evidence": "",
+        "urls": [],
+        "executorSelfReportOnly": false
+      },
+      "nextAutoAction": "Claude Code tmux sessionを作成し、スレッド目標を投入する",
+      "evidence": "",
+      "recentExcerpt": "",
+      "legacy": null,
+      "fingerprint": "7707dfe8dfe06aa96ce94071130e6d6e7e1f087d193e257f059175fb4fdf1751",
+      "changed": false,
+      "lastSeenAt": 1781504874289,
+      "lastChangedAt": 1781482538778,
+      "lastActionAt": null,
+      "lastReportedAt": null,
+      "actionHistory": [],
+      "captureError": null
+    },
+    {
+      "id": "thread:1505767328271306902",
+      "session": null,
+      "threadId": "1505767328271306902",
+      "title": "[DONE]職務経歴書作成-Claude",
+      "source": "thread",
+      "status": "done_excluded",
+      "decisionKind": "done-approved",
+      "risk": "low",
+      "policy": {
+        "kind": "implementation-agent",
+        "normalIdle": "continue",
+        "reportMode": "concrete-results-only",
+        "userActionRule": "only-real-risk-or-environment-blocker"
+      },
+      "hasTmux": false,
+      "doneThread": true,
+      "resultObserved": false,
+      "progressReportable": false,
+      "approvalPacket": null,
+      "verification": {
+        "required": false,
+        "resultObserved": false,
+        "evidence": "",
+        "urls": [],
+        "executorSelfReportOnly": false
+      },
+      "nextAutoAction": "Claude Code tmux sessionを作成し、スレッド目標を投入する",
+      "evidence": "",
+      "recentExcerpt": "",
+      "legacy": null,
+      "fingerprint": "44d213618eb2bd6858abb8fa5229df9d67db54952b5a433df2ffe2caeb75e517",
+      "changed": false,
+      "lastSeenAt": 1781504874289,
+      "lastChangedAt": 1781482538778,
+      "lastActionAt": null,
+      "lastReportedAt": null,
+      "actionHistory": [],
+      "captureError": null
+    },
+    {
+      "id": "daily-report-codex",
+      "session": "daily-report-codex",
+      "threadId": "1505429154215100507",
+      "title": "daily-report-codex",
+      "source": "override",
+      "status": "blocked",
+      "decisionKind": "unblock",
+      "risk": "high",
+      "policy": {
+        "kind": "implementation-agent",
+        "normalIdle": "continue",
+        "reportMode": "concrete-results-only",
+        "userActionRule": "only-secret-env-prod-config-delete-cost"
+      },
+      "hasTmux": true,
+      "doneThread": false,
+      "resultObserved": false,
+      "progressReportable": true,
+      "approvalPacket": null,
+      "verification": {
+        "required": false,
+        "resultObserved": false,
+        "evidence": "APPROVAL_PACKET_READY",
+        "urls": [],
+        "executorSelfReportOnly": false
+      },
+      "nextAutoAction": "秘密値/外部要因を切り分け、承認パケット化する",
+      "evidence": "APPROVAL_PACKET_READY",
+      "recentExcerpt": "証が全て止まり続ける。HEARTBEAT で継続ブロックとして記録中。\n---\nYakon へのアクション\nA OK → Docker Desktop インストール後 docker compose up -d postgres\nを実行します\nB OK → brew install postgresql@15 を実行します\nAPPROVAL_PACKET_READY\n✻ Baked for 4m 15s\n❯ A OK\n⏵⏵ auto mode on (shift+tab to cycle) · ← for agents",
+      "legacy": null,
+      "fingerprint": "77a48f995ba3ac2c87d848490eaa3174f8cafc71ce7e4161fabebf7fb11f4e96",
+      "changed": false,
+      "lastSeenAt": 1781504874289,
+      "lastChangedAt": 1781503076111,
+      "lastActionAt": 1781504874289,
+      "lastReportedAt": null,
+      "actionHistory": [
+        {
+          "ts": "2026-06-15T04:57:57.904Z",
+          "status": "blocked",
+          "prompt": "Shiro workflow controller: Do not merely acknowledge this. Move the workflow to the next observable state. Low-risk local work is allowed. Do not push, deploy, change production/env/secrets, delete data, or spend money. End in Japanese with one of: RESULT_OBSERVED, APPROVAL_PACKET_READY, BLOCKED_CONCRETE, or STILL_RUNNING. Separate what Shiro can do locally from what truly requires Yakon. Perform one safe local check if possible; otherwise produce a concrete blocker packet. Current evidence: pus"
+        },
+        {
+          "ts": "2026-06-15T05:28:00.525Z",
+          "status": "pending_approval",
+          "prompt": "Shiro workflow controller: Do not merely acknowledge this. Move the workflow to the next observable state. Low-risk local work is allowed. Do not push, deploy, change production/env/secrets, delete data, or spend money. End in Japanese with one of: RESULT_OBSERVED, APPROVAL_PACKET_READY, BLOCKED_CONCRETE, or STILL_RUNNING. Create a concrete approval packet: subject, exact action/command, recommendation, rollback, risk, wait impact. Do not ask Yakon until it is answerable yes/no. Current evidence"
+        },
+        {
+          "ts": "2026-06-15T06:27:54.289Z",
+          "status": "blocked",
+          "prompt": "Shiro workflow controller: Do not merely acknowledge this. Move the workflow to the next observable state. Low-risk local work is allowed. Do not push, deploy, change production/env/secrets, delete data, or spend money. End in Japanese with one of: RESULT_OBSERVED, APPROVAL_PACKET_READY, BLOCKED_CONCRETE, or STILL_RUNNING. Separate what Shiro can do locally from what truly requires Yakon. Perform one safe local check if possible; otherwise produce a concrete blocker packet. Current evidence: APP"
+        }
+      ],
+      "captureError": null
+    },
+    {
+      "id": "food-dx-shiro",
+      "session": "food-dx-shiro",
+      "threadId": "1508278506281369610",
+      "title": "food-dx-shiro",
+      "source": "thread+tmux-guess",
+      "status": "active",
+      "decisionKind": "watch",
+      "risk": "low",
+      "policy": {
+        "kind": "implementation-agent",
+        "normalIdle": "continue",
+        "reportMode": "concrete-results-only",
+        "userActionRule": "only-real-risk-or-environment-blocker"
+      },
+      "hasTmux": true,
+      "doneThread": false,
+      "resultObserved": false,
+      "progressReportable": false,
+      "approvalPacket": null,
+      "verification": {
+        "required": false,
+        "resultObserved": false,
+        "evidence": "zsh: command not found: otherwise",
+        "urls": [],
+        "executorSelfReportOnly": false
+      },
+      "nextAutoAction": "実行中として次tickで成果またはブロッカーを確認する",
+      "evidence": "zsh: command not found: otherwise",
+      "recentExcerpt": "owledge this. Move the workflow to the next observable state. Low-risk local wor\nk is allowed. Do not push, deploy, change production/env/secrets, delete data, o\nr spend money. End in Japanese with one of: RESULT_OBSERVED, APPROVAL_PACKET_REA\nDY, BLOCKED_CONCRETE, or STILL_RUNNING. Separate what Shiro can do locally from\nwhat truly requires Yakon. Perform one safe local check if possible; otherwise p\nroduce a concrete blocker packet. Current evidence: zsh: command not found: othe\nrwise\nzsh: command not found: Shiro\nzsh: command not found: otherwise\numi@uminoMac-mini food-dx-system %",
+      "legacy": null,
+      "fingerprint": "26bb29c450c12f9bf01f401d37317e8e60c86bacc0155f530ee6889f5917334e",
+      "changed": false,
+      "lastSeenAt": 1781504874289,
+      "lastChangedAt": 1781497674923,
+      "lastActionAt": 1781495879852,
+      "lastReportedAt": null,
+      "actionHistory": [
+        {
+          "ts": "2026-06-15T00:16:38.707Z",
+          "status": "pending_approval",
+          "prompt": "Shiro workflow controller: Do not merely acknowledge this. Move the workflow to the next observable state. Low-risk local work is allowed. Do not push, deploy, change production/env/secrets, delete data, or spend money. End in Japanese with one of: RESULT_OBSERVED, APPROVAL_PACKET_READY, BLOCKED_CONCRETE, or STILL_RUNNING. Create a concrete approval packet: subject, exact action/command, recommendation, rollback, risk, wait impact. Do not ask Yakon until it is answerable yes/no. Current evidence"
+        },
+        {
+          "ts": "2026-06-15T00:57:51.431Z",
+          "status": "blocked",
+          "prompt": "Shiro workflow controller: Do not merely acknowledge this. Move the workflow to the next observable state. Low-risk local work is allowed. Do not push, deploy, change production/env/secrets, delete data, or spend money. End in Japanese with one of: RESULT_OBSERVED, APPROVAL_PACKET_READY, BLOCKED_CONCRETE, or STILL_RUNNING. Separate what Shiro can do locally from what truly requires Yakon. Perform one safe local check if possible; otherwise produce a concrete blocker packet. Current evidence: zsh"
+        },
+        {
+          "ts": "2026-06-15T01:27:55.940Z",
+          "status": "blocked",
+          "prompt": "Shiro workflow controller: Do not merely acknowledge this. Move the workflow to the next observable state. Low-risk local work is allowed. Do not push, deploy, change production/env/secrets, delete data, or spend money. End in Japanese with one of: RESULT_OBSERVED, APPROVAL_PACKET_READY, BLOCKED_CONCRETE, or STILL_RUNNING. Separate what Shiro can do locally from what truly requires Yakon. Perform one safe local check if possible; otherwise produce a concrete blocker packet. Current evidence: zsh"
+        },
+        {
+          "ts": "2026-06-15T02:28:02.666Z",
+          "status": "blocked",
+          "prompt": "Shiro workflow controller: Do not merely acknowledge this. Move the workflow to the next observable state. Low-risk local work is allowed. Do not push, deploy, change production/env/secrets, delete data, or spend money. End in Japanese with one of: RESULT_OBSERVED, APPROVAL_PACKET_READY, BLOCKED_CONCRETE, or STILL_RUNNING. Separate what Shiro can do locally from what truly requires Yakon. Perform one safe local check if possible; otherwise produce a concrete blocker packet. Current evidence: zsh"
+        },
+        {
+          "ts": "2026-06-15T03:27:55.743Z",
+          "status": "blocked",
+          "prompt": "Shiro workflow controller: Do not merely acknowledge this. Move the workflow to the next observable state. Low-risk local work is allowed. Do not push, deploy, change production/env/secrets, delete data, or spend money. End in Japanese with one of: RESULT_OBSERVED, APPROVAL_PACKET_READY, BLOCKED_CONCRETE, or STILL_RUNNING. Separate what Shiro can do locally from what truly requires Yakon. Perform one safe local check if possible; otherwise produce a concrete blocker packet. Current evidence: zsh"
+        },
+        {
+          "ts": "2026-06-15T03:57:59.852Z",
+          "status": "blocked",
+          "prompt": "Shiro workflow controller: Do not merely acknowledge this. Move the workflow to the next observable state. Low-risk local work is allowed. Do not push, deploy, change production/env/secrets, delete data, or spend money. End in Japanese with one of: RESULT_OBSERVED, APPROVAL_PACKET_READY, BLOCKED_CONCRETE, or STILL_RUNNING. Separate what Shiro can do locally from what truly requires Yakon. Perform one safe local check if possible; otherwise produce a concrete blocker packet. Current evidence: zsh"
+        }
+      ],
+      "captureError": null
+    },
+    {
+      "id": "goose",
+      "session": "goose",
+      "threadId": "1501556320048906301",
+      "title": "goose",
+      "source": "override",
+      "status": "pending_approval",
+      "decisionKind": "external-action",
+      "risk": "high",
+      "policy": {
+        "kind": "implementation-agent",
+        "normalIdle": "continue",
+        "reportMode": "concrete-results-only",
+        "userActionRule": "only-real-risk-or-environment-blocker"
+      },
+      "hasTmux": true,
+      "doneThread": false,
+      "resultObserved": false,
+      "progressReportable": false,
+      "approvalPacket": {
+        "ready": false,
+        "subject": "goose の外部/高リスク操作を進めてよいか",
+        "recommendedDecision": "exact action と rollback が明確なものだけ承認",
+        "exactAction": "",
+        "risk": "高: 外部公開/本番/秘密値/削除/課金の可能性",
+        "rollback": "実行前に現状を保持し、変更対象を限定して戻せる状態で行う",
+        "waitImpact": "承認がない間は外部反映・本番反映・秘密値操作が止まる",
+        "evidence": "APPROVAL_PACKET_READY"
+      },
+      "verification": {
+        "required": false,
+        "resultObserved": false,
+        "evidence": "APPROVAL_PACKET_READY",
+        "urls": [],
+        "executorSelfReportOnly": false
+      },
+      "nextAutoAction": "承認パケットを exact action / rollback / risk / wait impact まで具体化する",
+      "evidence": "APPROVAL_PACKET_READY",
+      "recentExcerpt": "添付予定ファイル（確認済み）:\n- white_cat_storybook.png — 1280×720 / 284KB\n- white_cat_storybook_square_720.png — 720×720 / 152KB\n- white_cat_storybook_square_1080.png — 1080×1080 / 309KB\nワークフロー: status=pending_approval / approvalPacket.ready=true —\nshiro-loop-digest の次回 tick で自動的に Yakon 宛に届きます。\nAPPROVAL_PACKET_READY\n✻ Sautéed for 4m 19s\n❯\n⏵⏵ auto mode on (shift+tab to cycle) · ← for agents",
+      "legacy": null,
+      "fingerprint": "98059f36080bbd3d684e324ac4281b6a45bf20a1c861f756d68f37f43451c169",
+      "changed": false,
+      "lastSeenAt": 1781504874289,
+      "lastChangedAt": 1781503076111,
+      "lastActionAt": 1781504874289,
+      "lastReportedAt": null,
+      "actionHistory": [
+        {
+          "ts": "2026-06-15T04:57:57.904Z",
+          "status": "pending_approval",
+          "prompt": "Shiro workflow controller: Do not merely acknowledge this. Move the workflow to the next observable state. Low-risk local work is allowed. Do not push, deploy, change production/env/secrets, delete data, or spend money. End in Japanese with one of: RESULT_OBSERVED, APPROVAL_PACKET_READY, BLOCKED_CONCRETE, or STILL_RUNNING. Create a concrete approval packet: subject, exact action/command, recommendation, rollback, risk, wait impact. Do not ask Yakon until it is answerable yes/no. Current evidence"
+        },
+        {
+          "ts": "2026-06-15T05:28:00.525Z",
+          "status": "pending_approval",
+          "prompt": "Shiro workflow controller: Do not merely acknowledge this. Move the workflow to the next observable state. Low-risk local work is allowed. Do not push, deploy, change production/env/secrets, delete data, or spend money. End in Japanese with one of: RESULT_OBSERVED, APPROVAL_PACKET_READY, BLOCKED_CONCRETE, or STILL_RUNNING. Create a concrete approval packet: subject, exact action/command, recommendation, rollback, risk, wait impact. Do not ask Yakon until it is answerable yes/no. Current evidence"
+        },
+        {
+          "ts": "2026-06-15T06:27:54.289Z",
+          "status": "pending_approval",
+          "prompt": "Shiro workflow controller: Do not merely acknowledge this. Move the workflow to the next observable state. Low-risk local work is allowed. Do not push, deploy, change production/env/secrets, delete data, or spend money. End in Japanese with one of: RESULT_OBSERVED, APPROVAL_PACKET_READY, BLOCKED_CONCRETE, or STILL_RUNNING. Create a concrete approval packet: subject, exact action/command, recommendation, rollback, risk, wait impact. Do not ask Yakon until it is answerable yes/no. Current evidence"
+        }
+      ],
+      "captureError": null
+    },
+    {
+      "id": "shiro-ai-anime",
+      "session": "shiro-ai-anime",
+      "threadId": null,
+      "title": "shiro-ai-anime",
+      "source": "tmux",
+      "status": "active",
+      "decisionKind": "watch",
+      "risk": "low",
+      "policy": {
+        "kind": "implementation-agent",
+        "normalIdle": "continue",
+        "reportMode": "concrete-results-only",
+        "userActionRule": "only-real-risk-or-environment-blocker"
+      },
+      "hasTmux": true,
+      "doneThread": false,
+      "resultObserved": false,
+      "progressReportable": false,
+      "approvalPacket": null,
+      "verification": {
+        "required": false,
+        "resultObserved": false,
+        "evidence": "⏺ 空。yakon-rakui の package.json もローカル不在。前 tick の結論変わらず。待機。",
+        "urls": [],
+        "executorSelfReportOnly": false
+      },
+      "nextAutoAction": "実行中として次tickで成果またはブロッカーを確認する",
+      "evidence": "⏺ 空。yakon-rakui の package.json もローカル不在。前 tick の結論変わらず。待機。",
+      "recentExcerpt": "✻ Churned for 15s · 1 shell still running\n⏺ Background command \"find /Users/umi -maxdepth 6 -name \"package.json\"\n2&gt;/dev/null | xargs grep -l \"rakui\\|yakon-rakui\" 2&gt;/dev/null | head -5\"\ncompleted (exit code 0)\nRead 1 file\n⏺ 空。yakon-rakui の package.json もローカル不在。前 tick の結論変わらず。待機。\n✻ Worked for 4s\nshiro-ai-anime\n❯ A OK\n⏵⏵ auto mode on (shift+tab to cycle) · ← for agents",
+      "legacy": {
+        "state": "permission-wait",
+        "decisionKind": "external-action",
+        "risk": "high",
+        "reason": "- food-dx DB環境 — Yakon 提供待ち",
+        "next": "Prepare approval packet with scope, rollback, risk, and recommended action.",
+        "fingerprint": "953b00f1a6cb3f2bd0c27b0005104408fdb50a7df0b8cb9983f011113d4e1623",
+        "blockerHash": "4d096f263c093505e69bc19d06d671fb9d66ff4f1ac60d46cdf6767d31c69b68",
+        "lastSeenAt": 1781481820561,
+        "lastChangedAt": 1781481820561,
+        "lastNudgedAt": 1781481474214,
+        "lastNotifiedAt": 1781481820561
+      },
+      "fingerprint": "3621486364fe4fc3fb040fc3f8eb5c4c6ba4df8aca25fdea7e1410358209ee6f",
+      "changed": false,
+      "lastSeenAt": 1781504874289,
+      "lastChangedAt": 1781501280525,
+      "lastActionAt": 1781499477904,
+      "lastReportedAt": null,
+      "actionHistory": [
+        {
+          "ts": "2026-06-15T00:16:38.707Z",
+          "status": "pending_approval",
+          "prompt": "Shiro workflow controller: Do not merely acknowledge this. Move the workflow to the next observable state. Low-risk local work is allowed. Do not push, deploy, change production/env/secrets, delete data, or spend money. End in Japanese with one of: RESULT_OBSERVED, APPROVAL_PACKET_READY, BLOCKED_CONCRETE, or STILL_RUNNING. Create a concrete approval packet: subject, exact action/command, recommendation, rollback, risk, wait impact. Do not ask Yakon until it is answerable yes/no. Current evidence"
+        },
+        {
+          "ts": "2026-06-15T00:57:51.431Z",
+          "status": "pending_approval",
+          "prompt": "Shiro workflow controller: Do not merely acknowledge this. Move the workflow to the next observable state. Low-risk local work is allowed. Do not push, deploy, change production/env/secrets, delete data, or spend money. End in Japanese with one of: RESULT_OBSERVED, APPROVAL_PACKET_READY, BLOCKED_CONCRETE, or STILL_RUNNING. Create a concrete approval packet: subject, exact action/command, recommendation, rollback, risk, wait impact. Do not ask Yakon until it is answerable yes/no. Current evidence"
+        },
+        {
+          "ts": "2026-06-15T01:27:55.940Z",
+          "status": "blocked",
+          "prompt": "Shiro workflow controller: Do not merely acknowledge this. Move the workflow to the next observable state. Low-risk local work is allowed. Do not push, deploy, change production/env/secrets, delete data, or spend money. End in Japanese with one of: RESULT_OBSERVED, APPROVAL_PACKET_READY, BLOCKED_CONCRETE, or STILL_RUNNING. Separate what Shiro can do locally from what truly requires Yakon. Perform one safe local check if possible; otherwise produce a concrete blocker packet. Current evidence: sec"
+        },
+        {
+          "ts": "2026-06-15T02:28:02.666Z",
+          "status": "blocked",
+          "prompt": "Shiro workflow controller: Do not merely acknowledge this. Move the workflow to the next observable state. Low-risk local work is allowed. Do not push, deploy, change production/env/secrets, delete data, or spend money. End in Japanese with one of: RESULT_OBSERVED, APPROVAL_PACKET_READY, BLOCKED_CONCRETE, or STILL_RUNNING. Separate what Shiro can do locally from what truly requires Yakon. Perform one safe local check if possible; otherwise produce a concrete blocker packet. Current evidence: 残承認"
+        },
+        {
+          "ts": "2026-06-15T03:27:55.743Z",
+          "status": "blocked",
+          "prompt": "Shiro workflow controller: Do not merely acknowledge this. Move the workflow to the next observable state. Low-risk local work is allowed. Do not push, deploy, change production/env/secrets, delete data, or spend money. End in Japanese with one of: RESULT_OBSERVED, APPROVAL_PACKET_READY, BLOCKED_CONCRETE, or STILL_RUNNING. Separate what Shiro can do locally from what truly requires Yakon. Perform one safe local check if possible; otherwise produce a concrete blocker packet. Current evidence: 次チェ"
+        },
+        {
+          "ts": "2026-06-15T03:57:59.852Z",
+          "status": "pending_approval",
+          "prompt": "Shiro workflow controller: Do not merely acknowledge this. Move the workflow to the next observable state. Low-risk local work is allowed. Do not push, deploy, change production/env/secrets, delete data, or spend money. End in Japanese with one of: RESULT_OBSERVED, APPROVAL_PACKET_READY, BLOCKED_CONCRETE, or STILL_RUNNING. Create a concrete approval packet: subject, exact action/command, recommendation, rollback, risk, wait impact. Do not ask Yakon until it is answerable yes/no. Current evidence"
+        },
+        {
+          "ts": "2026-06-15T04:57:57.904Z",
+          "status": "blocked",
+          "prompt": "Shiro workflow controller: Do not merely acknowledge this. Move the workflow to the next observable state. Low-risk local work is allowed. Do not push, deploy, change production/env/secrets, delete data, or spend money. End in Japanese with one of: RESULT_OBSERVED, APPROVAL_PACKET_READY, BLOCKED_CONCRETE, or STILL_RUNNING. Separate what Shiro can do locally from what truly requires Yakon. Perform one safe local check if possible; otherwise produce a concrete blocker packet. Current evidence: APP"
+        }
+      ],
+      "captureError": null
+    },
+    {
+      "id": "shiro-citta-build9",
+      "session": "shiro-citta-build9",
+      "threadId": "1507900090742870097",
+      "title": "[DONE]cycle-tracker-app",
+      "source": "tmux",
+      "status": "done_excluded",
+      "decisionKind": "done-approved",
+      "risk": "low",
+      "policy": {
+        "kind": "implementation-agent",
+        "normalIdle": "continue",
+        "reportMode": "concrete-results-only",
+        "userActionRule": "only-real-risk-or-environment-blocker"
+      },
+      "hasTmux": true,
+      "doneThread": true,
+      "resultObserved": true,
+      "progressReportable": true,
+      "approvalPacket": null,
+      "verification": {
+        "required": true,
+        "resultObserved": true,
+        "evidence": "✓ Production: https://cycle-tracker-app-six.vercel.app",
+        "urls": [
+          "https://cycle-tracker-app-six.vercel.app"
+        ],
+        "executorSelfReportOnly": false
+      },
+      "nextAutoAction": "変化待ち",
+      "evidence": "❯ `vercel --prod` 完了した",
+      "recentExcerpt": "---\nAPPROVAL_PACKET_READY — 原因は workspace\nプロジェクトへの誤デプロイ（3回連続確認済み）。cd\n/Users/umi/.openclaw/workspace/cycle-tracker-app && vercel --prod\nの1コマンドで解決。\n✻ Crunched for 47s\nnew task? /clear to save 105.2k tokens\nshiro-citta-build9\n❯ `vercel --prod` 完了した\n⏵⏵ auto mode on (shift+tab to cycle) · ← for agents",
+      "legacy": {
+        "state": "running",
+        "decisionKind": "watch",
+        "risk": "low",
+        "reason": "として再アーカイブ。手順は citta-ios/TESTFLIGHT_NOTES.md に記載済み。",
+        "next": "Keep watching for a state change.",
+        "fingerprint": "a46a52ca61dbbd45f150186375ee60b0dd30174ad25a6fab898281df3451c8c2",
+        "blockerHash": null,
+        "lastSeenAt": 1781481820561,
+        "lastChangedAt": 1781283477155,
+        "lastNudgedAt": 1781281678925,
+        "lastNotifiedAt": 1781281678925
+      },
+      "fingerprint": "69cbc76abf83d06803326089d43d6cc8e0e80e1c046f9d0b69dc19b557482205",
+      "changed": false,
+      "lastSeenAt": 1781504874289,
+      "lastChangedAt": 1781501280525,
+      "lastActionAt": 1781495879852,
+      "lastReportedAt": null,
+      "actionHistory": [
+        {
+          "ts": "2026-06-15T00:16:38.707Z",
+          "status": "pending_approval",
+          "prompt": "Shiro workflow controller: Do not merely acknowledge this. Move the workflow to the next observable state. Low-risk local work is allowed. Do not push, deploy, change production/env/secrets, delete data, or spend money. End in Japanese with one of: RESULT_OBSERVED, APPROVAL_PACKET_READY, BLOCKED_CONCRETE, or STILL_RUNNING. Create a concrete approval packet: subject, exact action/command, recommendation, rollback, risk, wait impact. Do not ask Yakon until it is answerable yes/no. Current evidence"
+        },
+        {
+          "ts": "2026-06-15T00:57:51.431Z",
+          "status": "pending_approval",
+          "prompt": "Shiro workflow controller: Do not merely acknowledge this. Move the workflow to the next observable state. Low-risk local work is allowed. Do not push, deploy, change production/env/secrets, delete data, or spend money. End in Japanese with one of: RESULT_OBSERVED, APPROVAL_PACKET_READY, BLOCKED_CONCRETE, or STILL_RUNNING. Create a concrete approval packet: subject, exact action/command, recommendation, rollback, risk, wait impact. Do not ask Yakon until it is answerable yes/no. Current evidence"
+        },
+        {
+          "ts": "2026-06-15T01:27:55.940Z",
+          "status": "pending_approval",
+          "prompt": "Shiro workflow controller: Do not merely acknowledge this. Move the workflow to the next observable state. Low-risk local work is allowed. Do not push, deploy, change production/env/secrets, delete data, or spend money. End in Japanese with one of: RESULT_OBSERVED, APPROVAL_PACKET_READY, BLOCKED_CONCRETE, or STILL_RUNNING. Create a concrete approval packet: subject, exact action/command, recommendation, rollback, risk, wait impact. Do not ask Yakon until it is answerable yes/no. Current evidence"
+        },
+        {
+          "ts": "2026-06-15T02:28:02.666Z",
+          "status": "pending_approval",
+          "prompt": "Shiro workflow controller: Do not merely acknowledge this. Move the workflow to the next observable state. Low-risk local work is allowed. Do not push, deploy, change production/env/secrets, delete data, or spend money. End in Japanese with one of: RESULT_OBSERVED, APPROVAL_PACKET_READY, BLOCKED_CONCRETE, or STILL_RUNNING. Create a concrete approval packet: subject, exact action/command, recommendation, rollback, risk, wait impact. Do not ask Yakon until it is answerable yes/no. Current evidence"
+        },
+        {
+          "ts": "2026-06-15T03:27:55.743Z",
+          "status": "pending_approval",
+          "prompt": "Shiro workflow controller: Do not merely acknowledge this. Move the workflow to the next observable state. Low-risk local work is allowed. Do not push, deploy, change production/env/secrets, delete data, or spend money. End in Japanese with one of: RESULT_OBSERVED, APPROVAL_PACKET_READY, BLOCKED_CONCRETE, or STILL_RUNNING. Create a concrete approval packet: subject, exact action/command, recommendation, rollback, risk, wait impact. Do not ask Yakon until it is answerable yes/no. Current evidence"
+        },
+        {
+          "ts": "2026-06-15T03:57:59.852Z",
+          "status": "pending_approval",
+          "prompt": "Shiro workflow controller: Do not merely acknowledge this. Move the workflow to the next observable state. Low-risk local work is allowed. Do not push, deploy, change production/env/secrets, delete data, or spend money. End in Japanese with one of: RESULT_OBSERVED, APPROVAL_PACKET_READY, BLOCKED_CONCRETE, or STILL_RUNNING. Create a concrete approval packet: subject, exact action/command, recommendation, rollback, risk, wait impact. Do not ask Yakon until it is answerable yes/no. Current evidence"
+        }
+      ],
+      "captureError": null
+    },
+    {
+      "id": "shiro-email-manager",
+      "session": "shiro-email-manager",
+      "threadId": null,
+      "title": "shiro-email-manager",
+      "source": "tmux",
+      "status": "blocked",
+      "decisionKind": "unblock",
+      "risk": "high",
+      "policy": {
+        "kind": "implementation-agent",
+        "normalIdle": "continue",
+        "reportMode": "concrete-results-only",
+        "userActionRule": "only-real-risk-or-environment-blocker"
+      },
+      "hasTmux": true,
+      "doneThread": false,
+      "resultObserved": false,
+      "progressReportable": true,
+      "approvalPacket": null,
+      "verification": {
+        "required": false,
+        "resultObserved": false,
+        "evidence": "❯ credentials.json ダウンロードできた",
+        "urls": [],
+        "executorSelfReportOnly": false
+      },
+      "nextAutoAction": "秘密値/外部要因を切り分け、承認パケット化する",
+      "evidence": "❯ credentials.json ダウンロードできた",
+      "recentExcerpt": "もし Q1 で「テーブルに行がない」なら、まず OAuth\nクライアントを作成する必要があります。作成手順をお伝えします。\nBLOCKED_CONCRETE\n- 現状: Mac 全域検索・Chrome DL履歴 — credentials.json 0件確定\n- ユーザーへの質問: 上記 Q1〜Q3 に答えてください\n- Shiro 次手: 状況確認後、適切なステップに進む\n✻ Sautéed for 54s\nshiro-email-manager\n❯ credentials.json ダウンロードできた\n⏵⏵ auto mode on (shift+tab to cycle) · ← for agents",
+      "legacy": {
+        "state": "permission-wait",
+        "decisionKind": "external-action",
+        "risk": "high",
+        "reason": "❯ credentials.json まだ見つからないから一緒に確認して",
+        "next": "Prepare approval packet with scope, rollback, risk, and recommended action.",
+        "fingerprint": "a74a0bb8bc88c3f5a6cb51d50635adf6e8a7ed3dadb299d0e50527aaa7dd8a3b",
+        "blockerHash": "99bd8a62309f81ff536dcc7c62fdff1d827260c227dbafdecbbfd67ddac40479",
+        "lastSeenAt": 1781481820561,
+        "lastChangedAt": 1781481820561,
+        "lastNudgedAt": 1781481474214,
+        "lastNotifiedAt": 1781481820561
+      },
+      "fingerprint": "36824cd69105712cb5691e6d58e755a0e052c172e9ff3ca77e862a171de17e57",
+      "changed": false,
+      "lastSeenAt": 1781504874289,
+      "lastChangedAt": 1781503076111,
+      "lastActionAt": 1781504874289,
+      "lastReportedAt": null,
+      "actionHistory": [
+        {
+          "ts": "2026-06-15T00:16:38.707Z",
+          "status": "blocked",
+          "prompt": "Shiro workflow controller: Do not merely acknowledge this. Move the workflow to the next observable state. Low-risk local work is allowed. Do not push, deploy, change production/env/secrets, delete data, or spend money. End in Japanese with one of: RESULT_OBSERVED, APPROVAL_PACKET_READY, BLOCKED_CONCRETE, or STILL_RUNNING. Separate what Shiro can do locally from what truly requires Yakon. Perform one safe local check if possible; otherwise produce a concrete blocker packet. Current evidence: ❯ c"
+        },
+        {
+          "ts": "2026-06-15T00:57:51.431Z",
+          "status": "blocked",
+          "prompt": "Shiro workflow controller: Do not merely acknowledge this. Move the workflow to the next observable state. Low-risk local work is allowed. Do not push, deploy, change production/env/secrets, delete data, or spend money. End in Japanese with one of: RESULT_OBSERVED, APPROVAL_PACKET_READY, BLOCKED_CONCRETE, or STILL_RUNNING. Separate what Shiro can do locally from what truly requires Yakon. Perform one safe local check if possible; otherwise produce a concrete blocker packet. Current evidence: - S"
+        },
+        {
+          "ts": "2026-06-15T01:27:55.940Z",
+          "status": "blocked",
+          "prompt": "Shiro workflow controller: Do not merely acknowledge this. Move the workflow to the next observable state. Low-risk local work is allowed. Do not push, deploy, change production/env/secrets, delete data, or spend money. End in Japanese with one of: RESULT_OBSERVED, APPROVAL_PACKET_READY, BLOCKED_CONCRETE, or STILL_RUNNING. Separate what Shiro can do locally from what truly requires Yakon. Perform one safe local check if possible; otherwise produce a concrete blocker packet. Current evidence: ❯ c"
+        },
+        {
+          "ts": "2026-06-15T02:28:02.666Z",
+          "status": "blocked",
+          "prompt": "Shiro workflow controller: Do not merely acknowledge this. Move the workflow to the next observable state. Low-risk local work is allowed. Do not push, deploy, change production/env/secrets, delete data, or spend money. End in Japanese with one of: RESULT_OBSERVED, APPROVAL_PACKET_READY, BLOCKED_CONCRETE, or STILL_RUNNING. Separate what Shiro can do locally from what truly requires Yakon. Perform one safe local check if possible; otherwise produce a concrete blocker packet. Current evidence: ❯ c"
+        },
+        {
+          "ts": "2026-06-15T03:27:55.743Z",
+          "status": "blocked",
+          "prompt": "Shiro workflow controller: Do not merely acknowledge this. Move the workflow to the next observable state. Low-risk local work is allowed. Do not push, deploy, change production/env/secrets, delete data, or spend money. End in Japanese with one of: RESULT_OBSERVED, APPROVAL_PACKET_READY, BLOCKED_CONCRETE, or STILL_RUNNING. Separate what Shiro can do locally from what truly requires Yakon. Perform one safe local check if possible; otherwise produce a concrete blocker packet. Current evidence: ❯ c"
+        },
+        {
+          "ts": "2026-06-15T03:57:59.852Z",
+          "status": "blocked",
+          "prompt": "Shiro workflow controller: Do not merely acknowledge this. Move the workflow to the next observable state. Low-risk local work is allowed. Do not push, deploy, change production/env/secrets, delete data, or spend money. End in Japanese with one of: RESULT_OBSERVED, APPROVAL_PACKET_READY, BLOCKED_CONCRETE, or STILL_RUNNING. Separate what Shiro can do locally from what truly requires Yakon. Perform one safe local check if possible; otherwise produce a concrete blocker packet. Current evidence: ❯ c"
+        },
+        {
+          "ts": "2026-06-15T04:57:57.904Z",
+          "status": "blocked",
+          "prompt": "Shiro workflow controller: Do not merely acknowledge this. Move the workflow to the next observable state. Low-risk local work is allowed. Do not push, deploy, change production/env/secrets, delete data, or spend money. End in Japanese with one of: RESULT_OBSERVED, APPROVAL_PACKET_READY, BLOCKED_CONCRETE, or STILL_RUNNING. Separate what Shiro can do locally from what truly requires Yakon. Perform one safe local check if possible; otherwise produce a concrete blocker packet. Current evidence: ❯ c"
+        },
+        {
+          "ts": "2026-06-15T05:28:00.525Z",
+          "status": "blocked",
+          "prompt": "Shiro workflow controller: Do not merely acknowledge this. Move the workflow to the next observable state. Low-risk local work is allowed. Do not push, deploy, change production/env/secrets, delete data, or spend money. End in Japanese with one of: RESULT_OBSERVED, APPROVAL_PACKET_READY, BLOCKED_CONCRETE, or STILL_RUNNING. Separate what Shiro can do locally from what truly requires Yakon. Perform one safe local check if possible; otherwise produce a concrete blocker packet. Current evidence: ❯ c"
+        },
+        {
+          "ts": "2026-06-15T06:27:54.289Z",
+          "status": "blocked",
+          "prompt": "Shiro workflow controller: Do not merely acknowledge this. Move the workflow to the next observable state. Low-risk local work is allowed. Do not push, deploy, change production/env/secrets, delete data, or spend money. End in Japanese with one of: RESULT_OBSERVED, APPROVAL_PACKET_READY, BLOCKED_CONCRETE, or STILL_RUNNING. Separate what Shiro can do locally from what truly requires Yakon. Perform one safe local check if possible; otherwise produce a concrete blocker packet. Current evidence: ❯ c"
+        }
+      ],
+      "captureError": null
+    },
+    {
+      "id": "shiro-feed-tunnel",
+      "session": "shiro-feed-tunnel",
+      "threadId": null,
+      "title": "shiro-feed-tunnel",
+      "source": "tmux",
+      "status": "blocked",
+      "decisionKind": "unblock",
+      "risk": "mid",
+      "policy": {
+        "kind": "implementation-agent",
+        "normalIdle": "continue",
+        "reportMode": "concrete-results-only",
+        "userActionRule": "only-real-risk-or-environment-blocker"
+      },
+      "hasTmux": true,
+      "doneThread": false,
+      "resultObserved": false,
+      "progressReportable": true,
+      "approvalPacket": null,
+      "verification": {
+        "required": false,
+        "resultObserved": false,
+        "evidence": "❯ cloudflared tunnel login して Named Tunnel に切り替えて",
+        "urls": [],
+        "executorSelfReportOnly": false
+      },
+      "nextAutoAction": "白が解けるローカル確認を1つ実行して詰まりを解消する",
+      "evidence": "❯ cloudflared tunnel login して Named Tunnel に切り替えて",
+      "recentExcerpt": "warn: none ✅ 確認済み\n└ ┴ ┘\n残り唯一のブロッカー: Named Tunnel（cloudflared tunnel login ブラウザ認証）—\nquick tunnel が安定している間は緊急度低。\nRESULT_OBSERVED\n✻ Worked for 4m 46s\n5% until auto-compact\nshiro-feed-tunnel\n❯ cloudflared tunnel login して Named Tunnel に切り替えて\n⏵⏵ auto mode on (shift+tab to cycle) · ← for agents",
+      "legacy": {
+        "state": "permission-wait",
+        "decisionKind": "external-action",
+        "risk": "high",
+        "reason": "shiro-feed-tunnel",
+        "next": "Prepare approval packet with scope, rollback, risk, and recommended action.",
+        "fingerprint": "59d757d73145653ac75304a40f9bd6d7dbda3f0bae68f4df9122ed8700444b35",
+        "blockerHash": "7747cab5b8ee6ffdb4bb410c0be64a0cbf30f0ea75da7632460a63a88b9667bf",
+        "lastSeenAt": 1781481820561,
+        "lastChangedAt": 1781481820561,
+        "lastNudgedAt": 1781481474214,
+        "lastNotifiedAt": 1781481820561
+      },
+      "fingerprint": "6da9d8bc0bd6aab2bee7be4172ea860f5e69dde7ebc67c1492c53ce361bfe642",
+      "changed": false,
+      "lastSeenAt": 1781504874289,
+      "lastChangedAt": 1781503076111,
+      "lastActionAt": 1781504874289,
+      "lastReportedAt": null,
+      "actionHistory": [
+        {
+          "ts": "2026-06-15T00:16:38.707Z",
+          "status": "pending_approval",
+          "prompt": "Shiro workflow controller: Do not merely acknowledge this. Move the workflow to the next observable state. Low-risk local work is allowed. Do not push, deploy, change production/env/secrets, delete data, or spend money. End in Japanese with one of: RESULT_OBSERVED, APPROVAL_PACKET_READY, BLOCKED_CONCRETE, or STILL_RUNNING. Create a concrete approval packet: subject, exact action/command, recommendation, rollback, risk, wait impact. Do not ask Yakon until it is answerable yes/no. Current evidence"
+        },
+        {
+          "ts": "2026-06-15T00:57:51.431Z",
+          "status": "pending_approval",
+          "prompt": "Shiro workflow controller: Do not merely acknowledge this. Move the workflow to the next observable state. Low-risk local work is allowed. Do not push, deploy, change production/env/secrets, delete data, or spend money. End in Japanese with one of: RESULT_OBSERVED, APPROVAL_PACKET_READY, BLOCKED_CONCRETE, or STILL_RUNNING. Create a concrete approval packet: subject, exact action/command, recommendation, rollback, risk, wait impact. Do not ask Yakon until it is answerable yes/no. Current evidence"
+        },
+        {
+          "ts": "2026-06-15T01:27:55.940Z",
+          "status": "pending_approval",
+          "prompt": "Shiro workflow controller: Do not merely acknowledge this. Move the workflow to the next observable state. Low-risk local work is allowed. Do not push, deploy, change production/env/secrets, delete data, or spend money. End in Japanese with one of: RESULT_OBSERVED, APPROVAL_PACKET_READY, BLOCKED_CONCRETE, or STILL_RUNNING. Create a concrete approval packet: subject, exact action/command, recommendation, rollback, risk, wait impact. Do not ask Yakon until it is answerable yes/no. Current evidence"
+        },
+        {
+          "ts": "2026-06-15T02:28:02.666Z",
+          "status": "blocked",
+          "prompt": "Shiro workflow controller: Do not merely acknowledge this. Move the workflow to the next observable state. Low-risk local work is allowed. Do not push, deploy, change production/env/secrets, delete data, or spend money. End in Japanese with one of: RESULT_OBSERVED, APPROVAL_PACKET_READY, BLOCKED_CONCRETE, or STILL_RUNNING. Separate what Shiro can do locally from what truly requires Yakon. Perform one safe local check if possible; otherwise produce a concrete blocker packet. Current evidence: ❯ c"
+        },
+        {
+          "ts": "2026-06-15T03:27:55.743Z",
+          "status": "blocked",
+          "prompt": "Shiro workflow controller: Do not merely acknowledge this. Move the workflow to the next observable state. Low-risk local work is allowed. Do not push, deploy, change production/env/secrets, delete data, or spend money. End in Japanese with one of: RESULT_OBSERVED, APPROVAL_PACKET_READY, BLOCKED_CONCRETE, or STILL_RUNNING. Separate what Shiro can do locally from what truly requires Yakon. Perform one safe local check if possible; otherwise produce a concrete blocker packet. Current evidence: ❯ c"
+        },
+        {
+          "ts": "2026-06-15T03:57:59.852Z",
+          "status": "blocked",
+          "prompt": "Shiro workflow controller: Do not merely acknowledge this. Move the workflow to the next observable state. Low-risk local work is allowed. Do not push, deploy, change production/env/secrets, delete data, or spend money. End in Japanese with one of: RESULT_OBSERVED, APPROVAL_PACKET_READY, BLOCKED_CONCRETE, or STILL_RUNNING. Separate what Shiro can do locally from what truly requires Yakon. Perform one safe local check if possible; otherwise produce a concrete blocker packet. Current evidence: BLO"
+        },
+        {
+          "ts": "2026-06-15T04:57:57.904Z",
+          "status": "blocked",
+          "prompt": "Shiro workflow controller: Do not merely acknowledge this. Move the workflow to the next observable state. Low-risk local work is allowed. Do not push, deploy, change production/env/secrets, delete data, or spend money. End in Japanese with one of: RESULT_OBSERVED, APPROVAL_PACKET_READY, BLOCKED_CONCRETE, or STILL_RUNNING. Separate what Shiro can do locally from what truly requires Yakon. Perform one safe local check if possible; otherwise produce a concrete blocker packet. Current evidence: BLO"
+        },
+        {
+          "ts": "2026-06-15T05:28:00.525Z",
+          "status": "blocked",
+          "prompt": "Shiro workflow controller: Do not merely acknowledge this. Move the workflow to the next observable state. Low-risk local work is allowed. Do not push, deploy, change production/env/secrets, delete data, or spend money. End in Japanese with one of: RESULT_OBSERVED, APPROVAL_PACKET_READY, BLOCKED_CONCRETE, or STILL_RUNNING. Separate what Shiro can do locally from what truly requires Yakon. Perform one safe local check if possible; otherwise produce a concrete blocker packet. Current evidence: ❯ w"
+        },
+        {
+          "ts": "2026-06-15T06:27:54.289Z",
+          "status": "blocked",
+          "prompt": "Shiro workflow controller: Do not merely acknowledge this. Move the workflow to the next observable state. Low-risk local work is allowed. Do not push, deploy, change production/env/secrets, delete data, or spend money. End in Japanese with one of: RESULT_OBSERVED, APPROVAL_PACKET_READY, BLOCKED_CONCRETE, or STILL_RUNNING. Separate what Shiro can do locally from what truly requires Yakon. Perform one safe local check if possible; otherwise produce a concrete blocker packet. Current evidence: ❯ c"
+        }
+      ],
+      "captureError": null
+    },
+    {
+      "id": "shiro-kataomoi-ec",
+      "session": "shiro-kataomoi-ec",
+      "threadId": "1512260655787282563",
+      "title": "🤖 claude-obsidian-second-brain",
+      "source": "tmux",
+      "status": "active",
+      "decisionKind": "watch",
+      "risk": "low",
+      "policy": {
+        "kind": "implementation-agent",
+        "normalIdle": "continue",
+        "reportMode": "concrete-results-only",
+        "userActionRule": "only-real-risk-or-environment-blocker"
+      },
+      "hasTmux": true,
+      "doneThread": false,
+      "resultObserved": false,
+      "progressReportable": false,
+      "approvalPacket": null,
+      "verification": {
+        "required": false,
+        "resultObserved": false,
+        "evidence": "new task? /clear to save 123k tokens",
+        "urls": [
+          "https://kataomoi.common-gifted-tokyo.workers.dev/api/stripe/webhook"
+        ],
+        "executorSelfReportOnly": false
+      },
+      "nextAutoAction": "実行中として次tickで成果またはブロッカーを確認する",
+      "evidence": "new task? /clear to save 123k tokens",
+      "recentExcerpt": "Cloudflare Dashboard → kataomoi → Variables and Secrets\nSTRIPE_SECRET_KEY = sk_live_...\nSTRIPE_WEBHOOK_SECRET = whsec_...\nWebhook: https://kataomoi.common-gifted-tokyo.workers.dev/api/stripe/webhook\nイベント: checkout.session.completed\n✻ Churned for 2m 32s\nnew task? /clear to save 123k tokens\nshiro-kataomoi-ec\n❯\n⏵⏵ auto mode on (shift+tab to cycle) · ← for agents",
+      "legacy": {
+        "state": "permission-wait",
+        "decisionKind": "external-action",
+        "risk": "high",
+        "reason": "次回チェック: Yakonから「設定した」の連絡待ち。",
+        "next": "Prepare approval packet with scope, rollback, risk, and recommended action.",
+        "fingerprint": "837e2ad57bf55c7acb1a5fb2f933392bd0da5635183817f35ce48505071d4482",
+        "blockerHash": "42715279539927ea67f18722babb7ae21e369d21592f3f117fbbd5252ae0031d",
+        "lastSeenAt": 1781481820561,
+        "lastChangedAt": 1781481820561,
+        "lastNudgedAt": 1781481474214,
+        "lastNotifiedAt": 1781481820561
+      },
+      "fingerprint": "e698e2217c9f5e3b87f7f2e4af11758c8cf3074b889ec2644d9c900957642dad",
+      "changed": false,
+      "lastSeenAt": 1781504874289,
+      "lastChangedAt": 1781501280525,
+      "lastActionAt": 1781495879852,
+      "lastReportedAt": null,
+      "actionHistory": [
+        {
+          "ts": "2026-06-15T00:16:38.707Z",
+          "status": "pending_approval",
+          "prompt": "Shiro workflow controller: Do not merely acknowledge this. Move the workflow to the next observable state. Low-risk local work is allowed. Do not push, deploy, change production/env/secrets, delete data, or spend money. End in Japanese with one of: RESULT_OBSERVED, APPROVAL_PACKET_READY, BLOCKED_CONCRETE, or STILL_RUNNING. Create a concrete approval packet: subject, exact action/command, recommendation, rollback, risk, wait impact. Do not ask Yakon until it is answerable yes/no. Current evidence"
+        },
+        {
+          "ts": "2026-06-15T00:57:51.431Z",
+          "status": "pending_approval",
+          "prompt": "Shiro workflow controller: Do not merely acknowledge this. Move the workflow to the next observable state. Low-risk local work is allowed. Do not push, deploy, change production/env/secrets, delete data, or spend money. End in Japanese with one of: RESULT_OBSERVED, APPROVAL_PACKET_READY, BLOCKED_CONCRETE, or STILL_RUNNING. Create a concrete approval packet: subject, exact action/command, recommendation, rollback, risk, wait impact. Do not ask Yakon until it is answerable yes/no. Current evidence"
+        },
+        {
+          "ts": "2026-06-15T01:27:55.940Z",
+          "status": "pending_approval",
+          "prompt": "Shiro workflow controller: Do not merely acknowledge this. Move the workflow to the next observable state. Low-risk local work is allowed. Do not push, deploy, change production/env/secrets, delete data, or spend money. End in Japanese with one of: RESULT_OBSERVED, APPROVAL_PACKET_READY, BLOCKED_CONCRETE, or STILL_RUNNING. Create a concrete approval packet: subject, exact action/command, recommendation, rollback, risk, wait impact. Do not ask Yakon until it is answerable yes/no. Current evidence"
+        },
+        {
+          "ts": "2026-06-15T02:28:02.666Z",
+          "status": "pending_approval",
+          "prompt": "Shiro workflow controller: Do not merely acknowledge this. Move the workflow to the next observable state. Low-risk local work is allowed. Do not push, deploy, change production/env/secrets, delete data, or spend money. End in Japanese with one of: RESULT_OBSERVED, APPROVAL_PACKET_READY, BLOCKED_CONCRETE, or STILL_RUNNING. Create a concrete approval packet: subject, exact action/command, recommendation, rollback, risk, wait impact. Do not ask Yakon until it is answerable yes/no. Current evidence"
+        },
+        {
+          "ts": "2026-06-15T03:27:55.743Z",
+          "status": "pending_approval",
+          "prompt": "Shiro workflow controller: Do not merely acknowledge this. Move the workflow to the next observable state. Low-risk local work is allowed. Do not push, deploy, change production/env/secrets, delete data, or spend money. End in Japanese with one of: RESULT_OBSERVED, APPROVAL_PACKET_READY, BLOCKED_CONCRETE, or STILL_RUNNING. Create a concrete approval packet: subject, exact action/command, recommendation, rollback, risk, wait impact. Do not ask Yakon until it is answerable yes/no. Current evidence"
+        },
+        {
+          "ts": "2026-06-15T03:57:59.852Z",
+          "status": "pending_approval",
+          "prompt": "Shiro workflow controller: Do not merely acknowledge this. Move the workflow to the next observable state. Low-risk local work is allowed. Do not push, deploy, change production/env/secrets, delete data, or spend money. End in Japanese with one of: RESULT_OBSERVED, APPROVAL_PACKET_READY, BLOCKED_CONCRETE, or STILL_RUNNING. Create a concrete approval packet: subject, exact action/command, recommendation, rollback, risk, wait impact. Do not ask Yakon until it is answerable yes/no. Current evidence"
+        }
+      ],
+      "captureError": null
+    },
+    {
+      "id": "shiro-ledger-claude",
+      "session": "shiro-ledger-claude",
+      "threadId": "1506920712542355538",
+      "title": "interaugh-homepage",
+      "source": "tmux",
+      "status": "pending_approval",
+      "decisionKind": "external-action",
+      "risk": "high",
+      "policy": {
+        "kind": "implementation-agent",
+        "normalIdle": "continue",
+        "reportMode": "concrete-results-only",
+        "userActionRule": "only-real-risk-or-environment-blocker"
+      },
+      "hasTmux": true,
+      "doneThread": false,
+      "resultObserved": false,
+      "progressReportable": false,
+      "approvalPacket": {
+        "ready": false,
+        "subject": "interaugh-homepage の外部/高リスク操作を進めてよいか",
+        "recommendedDecision": "exact action と rollback が明確なものだけ承認",
+        "exactAction": "push it",
+        "risk": "高: 外部公開/本番/秘密値/削除/課金の可能性",
+        "rollback": "push/deploy前の現在commit/設定へ戻す。必要ならrevertまたは再deployで戻す",
+        "waitImpact": "承認がない間は外部反映・本番反映・秘密値操作が止まる",
+        "evidence": "❯ push it"
+      },
+      "verification": {
+        "required": false,
+        "resultObserved": false,
+        "evidence": "❯ push it",
+        "urls": [],
+        "executorSelfReportOnly": false
+      },
+      "nextAutoAction": "承認パケットを exact action / rollback / risk / wait impact まで具体化する",
+      "evidence": "❯ push it",
+      "recentExcerpt": "├ ┼ ┼ ┤\nDiscord Discord Dev Portal → Bot Regenerate（.env に\nbot token live token あり） 手動対応\n再生成\n└ ┴ ┴ ┘\nAPPROVAL_PACKET_READY\n✻ Churned for 1m 11s · 1 shell still running\nshiro-ledger-claude\n❯ push it\n⏵⏵ auto mode on · 1 shell · ← for agents · ↓ to manage",
+      "legacy": {
+        "state": "permission-wait",
+        "decisionKind": "external-action",
+        "risk": "high",
+        "reason": "ロールバック: キャッシュのみ削除、ソースコード・データベース・設定ファイルは一",
+        "next": "Prepare approval packet with scope, rollback, risk, and recommended action.",
+        "fingerprint": "19ab3081c1a6edf3df2c8bc9420b24c8edb7ff0d954ff553ff7b829a1e334e46",
+        "blockerHash": "b5174b5dccd66106e0a175b98792a0dcb2f732b267d205358f13968476038d10",
+        "lastSeenAt": 1781481820561,
+        "lastChangedAt": 1781481820561,
+        "lastNudgedAt": 1781481474214,
+        "lastNotifiedAt": 1781481820561
+      },
+      "fingerprint": "06569b3ceef3d34d5d83d041dad33eebdb7c8c15122700111412074d44c19e9e",
+      "changed": false,
+      "lastSeenAt": 1781504874289,
+      "lastChangedAt": 1781503076111,
+      "lastActionAt": 1781504874289,
+      "lastReportedAt": null,
+      "actionHistory": [
+        {
+          "ts": "2026-06-15T00:20:20.630Z",
+          "status": "pending_approval",
+          "prompt": "Shiro workflow controller: Do not merely acknowledge this. Move the workflow to the next observable state. Low-risk local work is allowed. Do not push, deploy, change production/env/secrets, delete data, or spend money. End in Japanese with one of: RESULT_OBSERVED, APPROVAL_PACKET_READY, BLOCKED_CONCRETE, or STILL_RUNNING. Create a concrete approval packet: subject, exact action/command, recommendation, rollback, risk, wait impact. Do not ask Yakon until it is answerable yes/no. Current evidence"
+        },
+        {
+          "ts": "2026-06-15T01:57:53.028Z",
+          "status": "blocked",
+          "prompt": "Shiro workflow controller: Do not merely acknowledge this. Move the workflow to the next observable state. Low-risk local work is allowed. Do not push, deploy, change production/env/secrets, delete data, or spend money. End in Japanese with one of: RESULT_OBSERVED, APPROVAL_PACKET_READY, BLOCKED_CONCRETE, or STILL_RUNNING. Separate what Shiro can do locally from what truly requires Yakon. Perform one safe local check if possible; otherwise produce a concrete blocker packet. Current evidence: new"
+        },
+        {
+          "ts": "2026-06-15T02:57:56.382Z",
+          "status": "pending_approval",
+          "prompt": "Shiro workflow controller: Do not merely acknowledge this. Move the workflow to the next observable state. Low-risk local work is allowed. Do not push, deploy, change production/env/secrets, delete data, or spend money. End in Japanese with one of: RESULT_OBSERVED, APPROVAL_PACKET_READY, BLOCKED_CONCRETE, or STILL_RUNNING. Create a concrete approval packet: subject, exact action/command, recommendation, rollback, risk, wait impact. Do not ask Yakon until it is answerable yes/no. Current evidence"
+        },
+        {
+          "ts": "2026-06-15T04:27:54.923Z",
+          "status": "pending_approval",
+          "prompt": "Shiro workflow controller: Do not merely acknowledge this. Move the workflow to the next observable state. Low-risk local work is allowed. Do not push, deploy, change production/env/secrets, delete data, or spend money. End in Japanese with one of: RESULT_OBSERVED, APPROVAL_PACKET_READY, BLOCKED_CONCRETE, or STILL_RUNNING. Create a concrete approval packet: subject, exact action/command, recommendation, rollback, risk, wait impact. Do not ask Yakon until it is answerable yes/no. Current evidence"
+        },
+        {
+          "ts": "2026-06-15T04:57:57.904Z",
+          "status": "pending_approval",
+          "prompt": "Shiro workflow controller: Do not merely acknowledge this. Move the workflow to the next observable state. Low-risk local work is allowed. Do not push, deploy, change production/env/secrets, delete data, or spend money. End in Japanese with one of: RESULT_OBSERVED, APPROVAL_PACKET_READY, BLOCKED_CONCRETE, or STILL_RUNNING. Create a concrete approval packet: subject, exact action/command, recommendation, rollback, risk, wait impact. Do not ask Yakon until it is answerable yes/no. Current evidence"
+        },
+        {
+          "ts": "2026-06-15T05:28:00.525Z",
+          "status": "pending_approval",
+          "prompt": "Shiro workflow controller: Do not merely acknowledge this. Move the workflow to the next observable state. Low-risk local work is allowed. Do not push, deploy, change production/env/secrets, delete data, or spend money. End in Japanese with one of: RESULT_OBSERVED, APPROVAL_PACKET_READY, BLOCKED_CONCRETE, or STILL_RUNNING. Create a concrete approval packet: subject, exact action/command, recommendation, rollback, risk, wait impact. Do not ask Yakon until it is answerable yes/no. Current evidence"
+        },
+        {
+          "ts": "2026-06-15T06:27:54.289Z",
+          "status": "pending_approval",
+          "prompt": "Shiro workflow controller: Do not merely acknowledge this. Move the workflow to the next observable state. Low-risk local work is allowed. Do not push, deploy, change production/env/secrets, delete data, or spend money. End in Japanese with one of: RESULT_OBSERVED, APPROVAL_PACKET_READY, BLOCKED_CONCRETE, or STILL_RUNNING. Create a concrete approval packet: subject, exact action/command, recommendation, rollback, risk, wait impact. Do not ask Yakon until it is answerable yes/no. Current evidence"
+        }
+      ],
+      "captureError": null
+    },
+    {
+      "id": "shiro-mother-domain",
+      "session": "shiro-mother-domain",
+      "threadId": null,
+      "title": "shiro-mother-domain",
+      "source": "tmux",
+      "status": "active",
+      "decisionKind": "watch",
+      "risk": "low",
+      "policy": {
+        "kind": "implementation-agent",
+        "normalIdle": "continue",
+        "reportMode": "concrete-results-only",
+        "userActionRule": "only-real-risk-or-environment-blocker"
+      },
+      "hasTmux": true,
+      "doneThread": false,
+      "resultObserved": true,
+      "progressReportable": true,
+      "approvalPacket": null,
+      "verification": {
+        "required": true,
+        "resultObserved": true,
+        "evidence": "放置の影響: 306コミット分の作業が GitHub に存在しない状態が継続。CI/CD・Ao",
+        "urls": [],
+        "executorSelfReportOnly": false
+      },
+      "nextAutoAction": "実行中として次tickで成果またはブロッカーを確認する",
+      "evidence": "❯ `! git push origin main`",
+      "recentExcerpt": "リスク: Low — コード変更は全てローカル検証済み。本番デプロイは別コマンド（push\nだけでは本番影響ゼロ）\n放置の影響: 306コミット分の作業が GitHub に存在しない状態が継続。CI/CD・Ao\nとの協業・バックアップが機能しない。\nYakon: YES か NO か答えてください。\n✻ Cogitated for 30s\n11% until auto-compact\nshiro-mother-domain\n❯ `! git push origin main`\n⏵⏵ auto mode on (shift+tab to cycle) · ← for agents",
+      "legacy": {
+        "state": "running",
+        "decisionKind": "self-action",
+        "risk": "low",
+        "reason": "▎ が残る。DB ブロッカーは seed/E2E だけに影響し、UI 整理には関係しない。",
+        "next": "Continue local verification, cleanup, or re-nudge without asking Yakon.",
+        "fingerprint": "5a9be0fb9bbbac62aaa6fb1891aaf54a3d47845aab21ca31b9269bc77b818ff9",
+        "blockerHash": null,
+        "lastSeenAt": 1781481820561,
+        "lastChangedAt": 1781477870335,
+        "lastNudgedAt": 1781477340941,
+        "lastNotifiedAt": 1781477340941
+      },
+      "fingerprint": "73ed4b16416fc934fa4ed3f4c0f320779874cad5aec4ba0d1c32aa78385c339f",
+      "changed": false,
+      "lastSeenAt": 1781504874289,
+      "lastChangedAt": 1781503076111,
+      "lastActionAt": 1781501280525,
+      "lastReportedAt": null,
+      "actionHistory": [
+        {
+          "ts": "2026-06-15T00:20:20.630Z",
+          "status": "pending_approval",
+          "prompt": "Shiro workflow controller: Do not merely acknowledge this. Move the workflow to the next observable state. Low-risk local work is allowed. Do not push, deploy, change production/env/secrets, delete data, or spend money. End in Japanese with one of: RESULT_OBSERVED, APPROVAL_PACKET_READY, BLOCKED_CONCRETE, or STILL_RUNNING. Create a concrete approval packet: subject, exact action/command, recommendation, rollback, risk, wait impact. Do not ask Yakon until it is answerable yes/no. Current evidence"
+        },
+        {
+          "ts": "2026-06-15T01:57:53.028Z",
+          "status": "pending_approval",
+          "prompt": "Shiro workflow controller: Do not merely acknowledge this. Move the workflow to the next observable state. Low-risk local work is allowed. Do not push, deploy, change production/env/secrets, delete data, or spend money. End in Japanese with one of: RESULT_OBSERVED, APPROVAL_PACKET_READY, BLOCKED_CONCRETE, or STILL_RUNNING. Create a concrete approval packet: subject, exact action/command, recommendation, rollback, risk, wait impact. Do not ask Yakon until it is answerable yes/no. Current evidence"
+        },
+        {
+          "ts": "2026-06-15T02:57:56.382Z",
+          "status": "blocked",
+          "prompt": "Shiro workflow controller: Do not merely acknowledge this. Move the workflow to the next observable state. Low-risk local work is allowed. Do not push, deploy, change production/env/secrets, delete data, or spend money. End in Japanese with one of: RESULT_OBSERVED, APPROVAL_PACKET_READY, BLOCKED_CONCRETE, or STILL_RUNNING. Separate what Shiro can do locally from what truly requires Yakon. Perform one safe local check if possible; otherwise produce a concrete blocker packet. Current evidence: ブロッ"
+        },
+        {
+          "ts": "2026-06-15T04:27:54.923Z",
+          "status": "blocked",
+          "prompt": "Shiro workflow controller: Do not merely acknowledge this. Move the workflow to the next observable state. Low-risk local work is allowed. Do not push, deploy, change production/env/secrets, delete data, or spend money. End in Japanese with one of: RESULT_OBSERVED, APPROVAL_PACKET_READY, BLOCKED_CONCRETE, or STILL_RUNNING. Separate what Shiro can do locally from what truly requires Yakon. Perform one safe local check if possible; otherwise produce a concrete blocker packet. Current evidence: new"
+        },
+        {
+          "ts": "2026-06-15T05:28:00.525Z",
+          "status": "pending_approval",
+          "prompt": "Shiro workflow controller: Do not merely acknowledge this. Move the workflow to the next observable state. Low-risk local work is allowed. Do not push, deploy, change production/env/secrets, delete data, or spend money. End in Japanese with one of: RESULT_OBSERVED, APPROVAL_PACKET_READY, BLOCKED_CONCRETE, or STILL_RUNNING. Create a concrete approval packet: subject, exact action/command, recommendation, rollback, risk, wait impact. Do not ask Yakon until it is answerable yes/no. Current evidence"
+        }
+      ],
+      "captureError": null
+    },
+    {
+      "id": "shiro-obsidian-second-brain",
+      "session": "shiro-obsidian-second-brain",
+      "threadId": "1512250378593370337",
+      "title": "Obsidianと繋げて第二の脳をつくる",
+      "source": "tmux",
+      "status": "pending_approval",
+      "decisionKind": "needs-yakon",
+      "risk": "mid",
+      "policy": {
+        "kind": "implementation-agent",
+        "normalIdle": "continue",
+        "reportMode": "concrete-results-only",
+        "userActionRule": "only-real-risk-or-environment-blocker"
+      },
+      "hasTmux": true,
+      "doneThread": false,
+      "resultObserved": false,
+      "progressReportable": false,
+      "approvalPacket": {
+        "ready": false,
+        "subject": "Obsidianと繋げて第二の脳をつくる の外部/高リスク操作を進めてよいか",
+        "recommendedDecision": "exact action と rollback が明確なものだけ承認",
+        "exactAction": "`80_Agents/` にエージェント台帳を作成して",
+        "risk": "中: Yakon判断が必要",
+        "rollback": "実行前に現状を保持し、変更対象を限定して戻せる状態で行う",
+        "waitImpact": "承認がない間は外部反映・本番反映・秘密値操作が止まる",
+        "evidence": "Yakonさんへのお願い: なし"
+      },
+      "verification": {
+        "required": false,
+        "resultObserved": false,
+        "evidence": "Yakonさんへのお願い: なし",
+        "urls": [],
+        "executorSelfReportOnly": false
+      },
+      "nextAutoAction": "承認パケットを exact action / rollback / risk / wait impact まで具体化する",
+      "evidence": "Yakonさんへのお願い: なし",
+      "recentExcerpt": "進捗の定義）\n└ ┴ ┘\n今日のデイリーノート (10_Daily/2026-06-15.md) を完了実績で更新済み。\n残タスク（すべてローカル・Yakon確認不要）\n- 80_Agents/ にエージェント台帳を作成（白・青・黒 等9名）\n- 50_Knowledge/ に日次ログ自動化の設計メモを残す\nYakonさんへのお願い: なし\n✻ Worked for 2m 24s\n❯ `80_Agents/` にエージェント台帳を作成して\n⏵⏵ auto mode on (shift+tab to cycle) · ← for agents",
+      "legacy": null,
+      "fingerprint": "5ae0195a2fcb28bb04f75461d45ebf1ccaaf367b73a418e5980c8778f811922d",
+      "changed": true,
+      "lastSeenAt": 1781504874289,
+      "lastChangedAt": 1781504874289,
+      "lastActionAt": 1781503076111,
+      "lastReportedAt": null,
+      "actionHistory": [
+        {
+          "ts": "2026-06-15T05:57:56.111Z",
+          "status": "blocked",
+          "prompt": "Shiro workflow controller: Do not merely acknowledge this. Move the workflow to the next observable state. Low-risk local work is allowed. Do not push, deploy, change production/env/secrets, delete data, or spend money. End in Japanese with one of: RESULT_OBSERVED, APPROVAL_PACKET_READY, BLOCKED_CONCRETE, or STILL_RUNNING. Separate what Shiro can do locally from what truly requires Yakon. Perform one safe local check if possible; otherwise produce a concrete blocker packet. Current evidence: ❯ M"
+        }
+      ],
+      "captureError": null
+    },
+    {
+      "id": "shiro-omikuji",
+      "session": "shiro-omikuji",
+      "threadId": "1506165292181491864",
+      "title": "おみくじアプリ引き継ぎ",
+      "source": "tmux",
+      "status": "active",
+      "decisionKind": "watch",
+      "risk": "low",
+      "policy": {
+        "kind": "implementation-agent",
+        "normalIdle": "continue",
+        "reportMode": "concrete-results-only",
+        "userActionRule": "only-real-risk-or-environment-blocker"
+      },
+      "hasTmux": true,
+      "doneThread": false,
+      "resultObserved": false,
+      "progressReportable": false,
+      "approvalPacket": null,
+      "verification": {
+        "required": false,
+        "resultObserved": false,
+        "evidence": "new task? /clear to save 128k tokens",
+        "urls": [
+          "https://Rio2Ryo:ghp_PASTE_HERE@github.com/Rio2Ryo/cycle-tracker-app.git\""
+        ],
+        "executorSelfReportOnly": false
+      },
+      "nextAutoAction": "実行中として次tickで成果またはブロッカーを確認する",
+      "evidence": "new task? /clear to save 128k tokens",
+      "recentExcerpt": "\"https://Rio2Ryo:ghp_PASTE_HERE@github.com/Rio2Ryo/cycle-tracker-app.git\" \\\nmain --force\n⚠️ なお、このトークン全文が会話に表示されました。気になる場合は上記操作後に\ngithub.com/settings/personal-access-tokens からこのトークンを revoke\nしてください。\n✻ Worked for 1m 12s · 1 shell still running\nnew task? /clear to save 128k tokens\nshiro-omikuji\n❯\n⏵⏵ auto mode on · 1 shell · ← for agents · ↓ to manage",
+      "legacy": {
+        "state": "permission-wait",
+        "decisionKind": "external-action",
+        "risk": "high",
+        "reason": "❯ push できた確認して",
+        "next": "Prepare approval packet with scope, rollback, risk, and recommended action.",
+        "fingerprint": "5a0e94b112b675ae477686949836fc6c599920585ecd470112c256dd6a558949",
+        "blockerHash": "6d540d42e3495d11ff1afdcc1d02f5621b09e72c87c79964197fda8adb931a2b",
+        "lastSeenAt": 1781481820561,
+        "lastChangedAt": 1781481474214,
+        "lastNudgedAt": 1781479671246,
+        "lastNotifiedAt": 1781481474214
+      },
+      "fingerprint": "8947af035e68d3ced9573463395dda22c05c84a30b174f4e7ce9febb001e1e04",
+      "changed": false,
+      "lastSeenAt": 1781504874289,
+      "lastChangedAt": 1781503076111,
+      "lastActionAt": 1781497674923,
+      "lastReportedAt": null,
+      "actionHistory": [
+        {
+          "ts": "2026-06-15T00:20:20.630Z",
+          "status": "pending_approval",
+          "prompt": "Shiro workflow controller: Do not merely acknowledge this. Move the workflow to the next observable state. Low-risk local work is allowed. Do not push, deploy, change production/env/secrets, delete data, or spend money. End in Japanese with one of: RESULT_OBSERVED, APPROVAL_PACKET_READY, BLOCKED_CONCRETE, or STILL_RUNNING. Create a concrete approval packet: subject, exact action/command, recommendation, rollback, risk, wait impact. Do not ask Yakon until it is answerable yes/no. Current evidence"
+        },
+        {
+          "ts": "2026-06-15T01:57:53.028Z",
+          "status": "blocked",
+          "prompt": "Shiro workflow controller: Do not merely acknowledge this. Move the workflow to the next observable state. Low-risk local work is allowed. Do not push, deploy, change production/env/secrets, delete data, or spend money. End in Japanese with one of: RESULT_OBSERVED, APPROVAL_PACKET_READY, BLOCKED_CONCRETE, or STILL_RUNNING. Separate what Shiro can do locally from what truly requires Yakon. Perform one safe local check if possible; otherwise produce a concrete blocker packet. Current evidence: ❯ p"
+        },
+        {
+          "ts": "2026-06-15T02:57:56.382Z",
+          "status": "blocked",
+          "prompt": "Shiro workflow controller: Do not merely acknowledge this. Move the workflow to the next observable state. Low-risk local work is allowed. Do not push, deploy, change production/env/secrets, delete data, or spend money. End in Japanese with one of: RESULT_OBSERVED, APPROVAL_PACKET_READY, BLOCKED_CONCRETE, or STILL_RUNNING. Separate what Shiro can do locally from what truly requires Yakon. Perform one safe local check if possible; otherwise produce a concrete blocker packet. Current evidence: ❯ p"
+        },
+        {
+          "ts": "2026-06-15T04:27:54.923Z",
+          "status": "blocked",
+          "prompt": "Shiro workflow controller: Do not merely acknowledge this. Move the workflow to the next observable state. Low-risk local work is allowed. Do not push, deploy, change production/env/secrets, delete data, or spend money. End in Japanese with one of: RESULT_OBSERVED, APPROVAL_PACKET_READY, BLOCKED_CONCRETE, or STILL_RUNNING. Separate what Shiro can do locally from what truly requires Yakon. Perform one safe local check if possible; otherwise produce a concrete blocker packet. Current evidence: ❯ g"
+        }
+      ],
+      "captureError": null
+    },
+    {
+      "id": "shiro-paper-manager",
+      "session": "shiro-paper-manager",
+      "threadId": null,
+      "title": "shiro-paper-manager",
+      "source": "tmux",
+      "status": "blocked",
+      "decisionKind": "unblock",
+      "risk": "high",
+      "policy": {
+        "kind": "implementation-agent",
+        "normalIdle": "continue",
+        "reportMode": "concrete-results-only",
+        "userActionRule": "only-real-risk-or-environment-blocker"
+      },
+      "hasTmux": true,
+      "doneThread": false,
+      "resultObserved": false,
+      "progressReportable": true,
+      "approvalPacket": null,
+      "verification": {
+        "required": false,
+        "resultObserved": false,
+        "evidence": "❯ threads-watcher のエラー調査して",
+        "urls": [],
+        "executorSelfReportOnly": false
+      },
+      "nextAutoAction": "秘密値/外部要因を切り分け、承認パケット化する",
+      "evidence": "❯ threads-watcher のエラー調査して",
+      "recentExcerpt": "🟠 KATAOMOI-EC Stripe/reCAPTCHA Cloudflare Dashboard 待ち\n├ ┼ ┼ ┤\n🔍 threads-watcher partial_error 100% 調査可・修正は外部依存\n└ ┴ ┴ ┘\n次ティック: threads-watcher run-watcher.sh 調査（ローカル安全）またはYakon !\n実行後の検証。BLOCKED_CONCRETE\n✻ Worked for 48s\nshiro-paper-manager\n❯ threads-watcher のエラー調査して\n⏵⏵ auto mode on (shift+tab to cycle) · ← for agents",
+      "legacy": {
+        "state": "permission-wait",
+        "decisionKind": "external-action",
+        "risk": "high",
+        "reason": "実行があれば即座に検証に移行。",
+        "next": "Prepare approval packet with scope, rollback, risk, and recommended action.",
+        "fingerprint": "f0a5b327fc67a0e5b27e15f54849df589f41bc15d2da10e0bf6df578c1636a1d",
+        "blockerHash": "f8c7e86e8942d353b382d319e9bdcef6caec9e9798ae5a2c0188fec03b3ae606",
+        "lastSeenAt": 1781481820561,
+        "lastChangedAt": 1781481474214,
+        "lastNudgedAt": 1781479671246,
+        "lastNotifiedAt": 1781481474214
+      },
+      "fingerprint": "368a634f4dd3d6075367065350abee2f49fb64303705212221921c2ef88be8e5",
+      "changed": false,
+      "lastSeenAt": 1781504874289,
+      "lastChangedAt": 1781503209879,
+      "lastActionAt": 1781503076111,
+      "lastReportedAt": null,
+      "actionHistory": [
+        {
+          "ts": "2026-06-15T00:20:20.630Z",
+          "status": "blocked",
+          "prompt": "Shiro workflow controller: Do not merely acknowledge this. Move the workflow to the next observable state. Low-risk local work is allowed. Do not push, deploy, change production/env/secrets, delete data, or spend money. End in Japanese with one of: RESULT_OBSERVED, APPROVAL_PACKET_READY, BLOCKED_CONCRETE, or STILL_RUNNING. Separate what Shiro can do locally from what truly requires Yakon. Perform one safe local check if possible; otherwise produce a concrete blocker packet. Current evidence: 実行が"
+        },
+        {
+          "ts": "2026-06-15T01:57:53.028Z",
+          "status": "blocked",
+          "prompt": "Shiro workflow controller: Do not merely acknowledge this. Move the workflow to the next observable state. Low-risk local work is allowed. Do not push, deploy, change production/env/secrets, delete data, or spend money. End in Japanese with one of: RESULT_OBSERVED, APPROVAL_PACKET_READY, BLOCKED_CONCRETE, or STILL_RUNNING. Separate what Shiro can do locally from what truly requires Yakon. Perform one safe local check if possible; otherwise produce a concrete blocker packet. Current evidence: int"
+        },
+        {
+          "ts": "2026-06-15T02:57:56.382Z",
+          "status": "blocked",
+          "prompt": "Shiro workflow controller: Do not merely acknowledge this. Move the workflow to the next observable state. Low-risk local work is allowed. Do not push, deploy, change production/env/secrets, delete data, or spend money. End in Japanese with one of: RESULT_OBSERVED, APPROVAL_PACKET_READY, BLOCKED_CONCRETE, or STILL_RUNNING. Separate what Shiro can do locally from what truly requires Yakon. Perform one safe local check if possible; otherwise produce a concrete blocker packet. Current evidence: ❯ t"
+        },
+        {
+          "ts": "2026-06-15T04:27:54.923Z",
+          "status": "blocked",
+          "prompt": "Shiro workflow controller: Do not merely acknowledge this. Move the workflow to the next observable state. Low-risk local work is allowed. Do not push, deploy, change production/env/secrets, delete data, or spend money. End in Japanese with one of: RESULT_OBSERVED, APPROVAL_PACKET_READY, BLOCKED_CONCRETE, or STILL_RUNNING. Separate what Shiro can do locally from what truly requires Yakon. Perform one safe local check if possible; otherwise produce a concrete blocker packet. Current evidence: BLO"
+        },
+        {
+          "ts": "2026-06-15T05:57:56.111Z",
+          "status": "blocked",
+          "prompt": "Shiro workflow controller: Do not merely acknowledge this. Move the workflow to the next observable state. Low-risk local work is allowed. Do not push, deploy, change production/env/secrets, delete data, or spend money. End in Japanese with one of: RESULT_OBSERVED, APPROVAL_PACKET_READY, BLOCKED_CONCRETE, or STILL_RUNNING. Separate what Shiro can do locally from what truly requires Yakon. Perform one safe local check if possible; otherwise produce a concrete blocker packet. Current evidence: BLO"
+        }
+      ],
+      "captureError": null
+    },
+    {
+      "id": "shiro-personal-branding",
+      "session": "shiro-personal-branding",
+      "threadId": "1511633432239673385",
+      "title": "プロフィール紹介ページ制作",
+      "source": "tmux",
+      "status": "blocked",
+      "decisionKind": "unblock",
+      "risk": "mid",
+      "policy": {
+        "kind": "implementation-agent",
+        "normalIdle": "continue",
+        "reportMode": "concrete-results-only",
+        "userActionRule": "only-real-risk-or-environment-blocker"
+      },
+      "hasTmux": true,
+      "doneThread": false,
+      "resultObserved": false,
+      "progressReportable": true,
+      "approvalPacket": null,
+      "verification": {
+        "required": false,
+        "resultObserved": false,
+        "evidence": "❯ `git push origin main` を実行して",
+        "urls": [],
+        "executorSelfReportOnly": false
+      },
+      "nextAutoAction": "白が解けるローカル確認を1つ実行して詰まりを解消する",
+      "evidence": "❯ `git push origin main` を実行して",
+      "recentExcerpt": "なし）を初検査。manifest 未登録は意図的（別管理）と確認。Shiro\n側で実施可能なローカル検証が 今 tick をもって完全に尽きた。\n残ブロッカー: git push origin main と [DONE] 付与のみ。どちらも Yakon\nまたは白担当者の直接実行が必要。Shiro の再検証は新 commit\nが来るまで追加情報を生まない。\nBLOCKED_CONCRETE\n✻ Worked for 2m 33s\nshiro-personal-branding\n❯ `git push origin main` を実行して\n⏵⏵ auto mode on (shift+tab to cycle) · ← for agents",
+      "legacy": {
+        "state": "permission-wait",
+        "decisionKind": "done-signoff",
+        "risk": "low",
+        "reason": "push 承認が必要。それ以外はYakon返答待ちで自律前進不可。Yakon承認なければ次",
+        "next": "Report completion evidence, residual risk, and external-change status for [DONE] confirmation.",
+        "fingerprint": "9e3c921c242c23054821e1d04e5beab0936475878e7dbab2f48ca6833e785a6e",
+        "blockerHash": "80732a125356987ab960cb9479aea5464100e9cba0140be9d474a2f659834f34",
+        "lastSeenAt": 1781481820561,
+        "lastChangedAt": 1781481474214,
+        "lastNudgedAt": 1781479671246,
+        "lastNotifiedAt": 1781481474214
+      },
+      "fingerprint": "74c19064eb621ca2a56466c262d49b966bc94369ac2eadf34b2aea6b5977317b",
+      "changed": true,
+      "lastSeenAt": 1781504874289,
+      "lastChangedAt": 1781504874289,
+      "lastActionAt": 1781503076111,
+      "lastReportedAt": null,
+      "actionHistory": [
+        {
+          "ts": "2026-06-15T00:20:20.630Z",
+          "status": "pending_approval",
+          "prompt": "Shiro workflow controller: Do not merely acknowledge this. Move the workflow to the next observable state. Low-risk local work is allowed. Do not push, deploy, change production/env/secrets, delete data, or spend money. End in Japanese with one of: RESULT_OBSERVED, APPROVAL_PACKET_READY, BLOCKED_CONCRETE, or STILL_RUNNING. Create a concrete approval packet: subject, exact action/command, recommendation, rollback, risk, wait impact. Do not ask Yakon until it is answerable yes/no. Current evidence"
+        },
+        {
+          "ts": "2026-06-15T01:57:53.028Z",
+          "status": "pending_approval",
+          "prompt": "Shiro workflow controller: Do not merely acknowledge this. Move the workflow to the next observable state. Low-risk local work is allowed. Do not push, deploy, change production/env/secrets, delete data, or spend money. End in Japanese with one of: RESULT_OBSERVED, APPROVAL_PACKET_READY, BLOCKED_CONCRETE, or STILL_RUNNING. Create a concrete approval packet: subject, exact action/command, recommendation, rollback, risk, wait impact. Do not ask Yakon until it is answerable yes/no. Current evidence"
+        },
+        {
+          "ts": "2026-06-15T02:57:56.382Z",
+          "status": "pending_approval",
+          "prompt": "Shiro workflow controller: Do not merely acknowledge this. Move the workflow to the next observable state. Low-risk local work is allowed. Do not push, deploy, change production/env/secrets, delete data, or spend money. End in Japanese with one of: RESULT_OBSERVED, APPROVAL_PACKET_READY, BLOCKED_CONCRETE, or STILL_RUNNING. Create a concrete approval packet: subject, exact action/command, recommendation, rollback, risk, wait impact. Do not ask Yakon until it is answerable yes/no. Current evidence"
+        },
+        {
+          "ts": "2026-06-15T04:27:54.923Z",
+          "status": "blocked",
+          "prompt": "Shiro workflow controller: Do not merely acknowledge this. Move the workflow to the next observable state. Low-risk local work is allowed. Do not push, deploy, change production/env/secrets, delete data, or spend money. End in Japanese with one of: RESULT_OBSERVED, APPROVAL_PACKET_READY, BLOCKED_CONCRETE, or STILL_RUNNING. Separate what Shiro can do locally from what truly requires Yakon. Perform one safe local check if possible; otherwise produce a concrete blocker packet. Current evidence: ❯ `"
+        },
+        {
+          "ts": "2026-06-15T05:57:56.111Z",
+          "status": "blocked",
+          "prompt": "Shiro workflow controller: Do not merely acknowledge this. Move the workflow to the next observable state. Low-risk local work is allowed. Do not push, deploy, change production/env/secrets, delete data, or spend money. End in Japanese with one of: RESULT_OBSERVED, APPROVAL_PACKET_READY, BLOCKED_CONCRETE, or STILL_RUNNING. Separate what Shiro can do locally from what truly requires Yakon. Perform one safe local check if possible; otherwise produce a concrete blocker packet. Current evidence: ❯ `"
+        }
+      ],
+      "captureError": null
+    },
+    {
+      "id": "shiro-profile-page",
+      "session": "shiro-profile-page",
+      "threadId": "1511633432239673385",
+      "title": "プロフィール紹介ページ制作",
+      "source": "tmux",
+      "status": "blocked",
+      "decisionKind": "unblock",
+      "risk": "mid",
+      "policy": {
+        "kind": "implementation-agent",
+        "normalIdle": "continue",
+        "reportMode": "concrete-results-only",
+        "userActionRule": "only-real-risk-or-environment-blocker"
+      },
+      "hasTmux": true,
+      "doneThread": false,
+      "resultObserved": false,
+      "progressReportable": true,
+      "approvalPacket": null,
+      "verification": {
+        "required": false,
+        "resultObserved": false,
+        "evidence": "により引き続き読み取り不可。Yakon がスレッドへ bot",
+        "urls": [],
+        "executorSelfReportOnly": false
+      },
+      "nextAutoAction": "白が解けるローカル確認を1つ実行して詰まりを解消する",
+      "evidence": "により引き続き読み取り不可。Yakon がスレッドへ bot",
+      "recentExcerpt": "補足確認事項（Yakon 判断）\n- Sources セクションに「公開情報は『松浦亮介』名義が中心」旨の注記を入れている\n。松浦さんへの説明が必要か？ → はい / いいえ で答えられる状態\n---\nDiscord スレッド (1511633432239673385) は bot の Missing Access\nにより引き続き読み取り不可。Yakon がスレッドへ bot\nを追加するか、別チャンネルで対応が必要。\n✻ Worked for 1m 25s\n❯ Discord スレッドに bot を追加して\n⏵⏵ auto mode on (shift+tab to cycle) · ← for agents",
+      "legacy": null,
+      "fingerprint": "9bf45fa9f1ba47216d31df593406d32001b6d83938fed9fcec0c5d6fa1ab8fc2",
+      "changed": false,
+      "lastSeenAt": 1781504874289,
+      "lastChangedAt": 1781503209879,
+      "lastActionAt": 1781503076111,
+      "lastReportedAt": null,
+      "actionHistory": [
+        {
+          "ts": "2026-06-15T05:57:56.111Z",
+          "status": "pending_approval",
+          "prompt": "Shiro workflow controller: Do not merely acknowledge this. Move the workflow to the next observable state. Low-risk local work is allowed. Do not push, deploy, change production/env/secrets, delete data, or spend money. End in Japanese with one of: RESULT_OBSERVED, APPROVAL_PACKET_READY, BLOCKED_CONCRETE, or STILL_RUNNING. Create a concrete approval packet: subject, exact action/command, recommendation, rollback, risk, wait impact. Do not ask Yakon until it is answerable yes/no. Current evidence"
+        }
+      ],
+      "captureError": null
+    },
+    {
+      "id": "shiro-real-estate",
+      "session": "shiro-real-estate",
+      "threadId": "1510430269822468166",
+      "title": "shiro-real-estate",
+      "source": "tmux",
+      "status": "blocked",
+      "decisionKind": "unblock",
+      "risk": "mid",
+      "policy": {
+        "kind": "implementation-agent",
+        "normalIdle": "continue",
+        "reportMode": "concrete-results-only",
+        "userActionRule": "only-real-risk-or-environment-blocker"
+      },
+      "hasTmux": true,
+      "doneThread": false,
+      "resultObserved": false,
+      "progressReportable": true,
+      "approvalPacket": null,
+      "verification": {
+        "required": false,
+        "resultObserved": false,
+        "evidence": "--reporter=verbose、その後 https://yakon-rakui-app.pages.dev/ に実 Excel",
+        "urls": [
+          "https://yakon-rakui-app.pages.dev/"
+        ],
+        "executorSelfReportOnly": false
+      },
+      "nextAutoAction": "白が解けるローカル確認を1つ実行して詰まりを解消する",
+      "evidence": "--reporter=verbose、その後 https://yakon-rakui-app.pages.dev/ に実 Excel",
+      "recentExcerpt": "Sora で生 Excel 確認を先に実施」と答えること。回答が届き次第:\n- A → Discord スレッド名を [DONE]Real Estate Investment Decision App\nにリネーム（Sora-VPS2 経由）\n- B → Sora-VPS2 で cd /root/projects/real-estate-app && npm test --\n--reporter=verbose、その後 https://yakon-rakui-app.pages.dev/ に実 Excel\nアップロード\n✻ Sautéed for 4m 31s\nshiro-real-estate\n❯\n⏵⏵ auto mode on (shift+tab to cycle) · ← for agents",
+      "legacy": {
+        "state": "permission-wait",
+        "decisionKind": "needs-yakon",
+        "risk": "mid",
+        "reason": "を返す、③ 次の shiro tmux session が Discord 権限付きで起動した時に投稿 —",
+        "next": "Reduce choices to one recommendation and ask Yakon for the decision.",
+        "fingerprint": "f3c5e65c7bc6145ee5dbbea2c2df7d936f80d1c689cdc064a9de3c363cfb14d3",
+        "blockerHash": "bc3c3832d70a898958e371ce1a88409a2a21e1bc3b8bce19c4aafd9c99bae75f",
+        "lastSeenAt": 1781481820561,
+        "lastChangedAt": 1781481474214,
+        "lastNudgedAt": 1781479671246,
+        "lastNotifiedAt": 1781481474214
+      },
+      "fingerprint": "94af4ab4837984f596f5c3a764df99d63dba519d7d47f81e6a54a084a0ff696e",
+      "changed": true,
+      "lastSeenAt": 1781504874289,
+      "lastChangedAt": 1781504874289,
+      "lastActionAt": 1781503076111,
+      "lastReportedAt": null,
+      "actionHistory": [
+        {
+          "ts": "2026-06-15T00:20:20.630Z",
+          "status": "blocked",
+          "prompt": "Shiro workflow controller: Do not merely acknowledge this. Move the workflow to the next observable state. Low-risk local work is allowed. Do not push, deploy, change production/env/secrets, delete data, or spend money. End in Japanese with one of: RESULT_OBSERVED, APPROVAL_PACKET_READY, BLOCKED_CONCRETE, or STILL_RUNNING. Separate what Shiro can do locally from what truly requires Yakon. Perform one safe local check if possible; otherwise produce a concrete blocker packet. Current evidence: セッシ"
+        },
+        {
+          "ts": "2026-06-15T01:57:53.028Z",
+          "status": "pending_approval",
+          "prompt": "Shiro workflow controller: Do not merely acknowledge this. Move the workflow to the next observable state. Low-risk local work is allowed. Do not push, deploy, change production/env/secrets, delete data, or spend money. End in Japanese with one of: RESULT_OBSERVED, APPROVAL_PACKET_READY, BLOCKED_CONCRETE, or STILL_RUNNING. Create a concrete approval packet: subject, exact action/command, recommendation, rollback, risk, wait impact. Do not ask Yakon until it is answerable yes/no. Current evidence"
+        },
+        {
+          "ts": "2026-06-15T02:57:56.382Z",
+          "status": "pending_approval",
+          "prompt": "Shiro workflow controller: Do not merely acknowledge this. Move the workflow to the next observable state. Low-risk local work is allowed. Do not push, deploy, change production/env/secrets, delete data, or spend money. End in Japanese with one of: RESULT_OBSERVED, APPROVAL_PACKET_READY, BLOCKED_CONCRETE, or STILL_RUNNING. Create a concrete approval packet: subject, exact action/command, recommendation, rollback, risk, wait impact. Do not ask Yakon until it is answerable yes/no. Current evidence"
+        },
+        {
+          "ts": "2026-06-15T04:27:54.923Z",
+          "status": "blocked",
+          "prompt": "Shiro workflow controller: Do not merely acknowledge this. Move the workflow to the next observable state. Low-risk local work is allowed. Do not push, deploy, change production/env/secrets, delete data, or spend money. End in Japanese with one of: RESULT_OBSERVED, APPROVAL_PACKET_READY, BLOCKED_CONCRETE, or STILL_RUNNING. Separate what Shiro can do locally from what truly requires Yakon. Perform one safe local check if possible; otherwise produce a concrete blocker packet. Current evidence: BLO"
+        },
+        {
+          "ts": "2026-06-15T05:57:56.111Z",
+          "status": "blocked",
+          "prompt": "Shiro workflow controller: Do not merely acknowledge this. Move the workflow to the next observable state. Low-risk local work is allowed. Do not push, deploy, change production/env/secrets, delete data, or spend money. End in Japanese with one of: RESULT_OBSERVED, APPROVAL_PACKET_READY, BLOCKED_CONCRETE, or STILL_RUNNING. Separate what Shiro can do locally from what truly requires Yakon. Perform one safe local check if possible; otherwise produce a concrete blocker packet. Current evidence: APP"
+        }
+      ],
+      "captureError": null
+    },
+    {
+      "id": "shiro-recruit-handover",
+      "session": "shiro-recruit-handover",
+      "threadId": "1505846990355828847",
+      "title": "採用管理ツール引き継ぎ",
+      "source": "tmux",
+      "status": "pending_approval",
+      "decisionKind": "external-action",
+      "risk": "high",
+      "policy": {
+        "kind": "implementation-agent",
+        "normalIdle": "continue",
+        "reportMode": "concrete-results-only",
+        "userActionRule": "only-real-risk-or-environment-blocker"
+      },
+      "hasTmux": true,
+      "doneThread": false,
+      "resultObserved": false,
+      "progressReportable": true,
+      "approvalPacket": {
+        "ready": true,
+        "subject": "採用管理ツール引き継ぎ の外部/高リスク操作を進めてよいか",
+        "recommendedDecision": "exact action と rollback が明確なものだけ承認",
+        "exactAction": "merge the PR",
+        "risk": "高: 外部公開/本番/秘密値/削除/課金の可能性",
+        "rollback": "実行前に現状を保持し、変更対象を限定して戻せる状態で行う",
+        "waitImpact": "承認がない間は外部反映・本番反映・秘密値操作が止まる",
+        "evidence": "❯ merge the PR"
+      },
+      "verification": {
+        "required": false,
+        "resultObserved": false,
+        "evidence": "❯ merge the PR",
+        "urls": [],
+        "executorSelfReportOnly": false
+      },
+      "nextAutoAction": "YakonさんへYes/Noで判断できる形で提示する",
+      "evidence": "❯ merge the PR",
+      "recentExcerpt": "SUPABASE_SERVICE_ROLE_KEY = <Supabase Project Settings → API → service_role>\n---\nPR #1 現状: OPEN（マージ待ち）、40コミット、全チェック ✓\nローカル残作業: なし\nAPPROVAL_PACKET_READY\n✻ Cogitated for 54s\nnew task? /clear to save 121.4k tokens\nshiro-recruit-handover\n❯ merge the PR\n⏵⏵ auto mode on (shift+tab to cycle) · ← for agents",
+      "legacy": {
+        "state": "permission-wait",
+        "decisionKind": "needs-yakon",
+        "risk": "mid",
+        "reason": "マージ状態の確認と B1 手順のガイドに移行。",
+        "next": "Reduce choices to one recommendation and ask Yakon for the decision.",
+        "fingerprint": "9c6a6650c5ea0107ca6f2e78c5aaaae0c73fdad106abcf708d4f23102af0bef4",
+        "blockerHash": "caa6dc467dbf6883c2ced1365c42f8b9d9241fa924846f4229f90ccefa03d8d9",
+        "lastSeenAt": 1781481820561,
+        "lastChangedAt": 1781481820561,
+        "lastNudgedAt": 1781481474214,
+        "lastNotifiedAt": 1781481820561
+      },
+      "fingerprint": "d50e0b8007b42493b2e1dd7e052b12879068783359cf38741a617f918db6d452",
+      "changed": false,
+      "lastSeenAt": 1781504874289,
+      "lastChangedAt": 1781498432939,
+      "lastActionAt": 1781482845397,
+      "lastReportedAt": null,
+      "actionHistory": [
+        {
+          "ts": "2026-06-15T00:20:45.397Z",
+          "status": "pending_approval",
+          "prompt": "Shiro workflow controller: Do not merely acknowledge this. Move the workflow to the next observable state. Low-risk local work is allowed. Do not push, deploy, change production/env/secrets, delete data, or spend money. End in Japanese with one of: RESULT_OBSERVED, APPROVAL_PACKET_READY, BLOCKED_CONCRETE, or STILL_RUNNING. Create a concrete approval packet: subject, exact action/command, recommendation, rollback, risk, wait impact. Do not ask Yakon until it is answerable yes/no. Current evidence"
+        }
+      ],
+      "captureError": null
+    },
+    {
+      "id": "shiro-restaurant-sales",
+      "session": "shiro-restaurant-sales",
+      "threadId": "1501399826397532231",
+      "title": "restaurant-sales-intel",
+      "source": "tmux",
+      "status": "pending_approval",
+      "decisionKind": "done-signoff",
+      "risk": "high",
+      "policy": {
+        "kind": "implementation-agent",
+        "normalIdle": "continue",
+        "reportMode": "concrete-results-only",
+        "userActionRule": "only-real-risk-or-environment-blocker"
+      },
+      "hasTmux": true,
+      "doneThread": false,
+      "resultObserved": true,
+      "progressReportable": true,
+      "approvalPacket": {
+        "ready": true,
+        "subject": "restaurant-sales-intel を [DONE] にしてよいか",
+        "recommendedDecision": "完了根拠と残リスクを確認できるなら承認",
+        "exactAction": "`! git push origin shiro/cycle-tracker-app`",
+        "risk": "高: 外部公開/本番/秘密値/削除/課金の可能性",
+        "rollback": "[DONE] 付与前なので、未承認なら進行対象へ戻せる",
+        "waitImpact": "承認がない間は完了除外できず、監視対象に残る",
+        "evidence": "❯ `! git push origin shiro/cycle-tracker-app`"
+      },
+      "verification": {
+        "required": true,
+        "resultObserved": true,
+        "evidence": "2ファイル（並列セッション更新）+ state.json 併せて commit 1771511。",
+        "urls": [],
+        "executorSelfReportOnly": false
+      },
+      "nextAutoAction": "YakonさんへYes/Noで判断できる形で提示する",
+      "evidence": "❯ `! git push origin shiro/cycle-tracker-app`",
+      "recentExcerpt": "root\" 警告を tmp/tmux-web-view-source/next.config.ts 新規作成で修正。npm run\nbuild → 3 pages / 5 routes / 警告なし ✅ で RESULT_OBSERVED 確定。ops\n2ファイル（並列セッション更新）+ state.json 併せて commit 1771511。\n残りブロッカー: food-dx DB接続環境待ち / disk cleanup\n承認待ち（変化なし）。workspace は remote [ahead 1]。\n次チェック: push 承認 or 新タスク待ち。 RESULT_OBSERVED\n✻ Worked for 2m 26s\nshiro-restaurant-sales\n❯ `! git push origin shiro/cycle-tracker-app`\n⏵⏵ auto mode on (shift+tab to cycle) · ← for agents",
+      "legacy": {
+        "state": "permission-wait",
+        "decisionKind": "external-action",
+        "risk": "high",
+        "reason": "❯ `! git push origin shiro/cycle-tracker-app`",
+        "next": "Prepare approval packet with scope, rollback, risk, and recommended action.",
+        "fingerprint": "4d85f7f790dca4a15f3b6e383d1b2f38f696258935100215d8b0c45239e640ee",
+        "blockerHash": "e13c7b3d94a67178152eae7ddd1d3104a8c6b2d7ee9d9ee9306f90e6d98f089b",
+        "lastSeenAt": 1781481820561,
+        "lastChangedAt": 1781481820561,
+        "lastNudgedAt": 1781481474214,
+        "lastNotifiedAt": 1781481820561
+      },
+      "fingerprint": "5da12c23c3574fd906cad48268b96cee1334de2790d95f55500d2aac8ac90a04",
+      "changed": false,
+      "lastSeenAt": 1781504874289,
+      "lastChangedAt": 1781483271506,
+      "lastActionAt": 1781482845397,
+      "lastReportedAt": null,
+      "actionHistory": [
+        {
+          "ts": "2026-06-15T00:20:45.397Z",
+          "status": "pending_approval",
+          "prompt": "Shiro workflow controller: Do not merely acknowledge this. Move the workflow to the next observable state. Low-risk local work is allowed. Do not push, deploy, change production/env/secrets, delete data, or spend money. End in Japanese with one of: RESULT_OBSERVED, APPROVAL_PACKET_READY, BLOCKED_CONCRETE, or STILL_RUNNING. Create a concrete approval packet: subject, exact action/command, recommendation, rollback, risk, wait impact. Do not ask Yakon until it is answerable yes/no. Current evidence"
+        }
+      ],
+      "captureError": null
+    },
+    {
+      "id": "shiro-sefs-lp",
+      "session": "shiro-sefs-lp",
+      "threadId": null,
+      "title": "shiro-sefs-lp",
+      "source": "tmux",
+      "status": "pending_approval",
+      "decisionKind": "done-signoff",
+      "risk": "high",
+      "policy": {
+        "kind": "implementation-agent",
+        "normalIdle": "continue",
+        "reportMode": "concrete-results-only",
+        "userActionRule": "only-real-risk-or-environment-blocker"
+      },
+      "hasTmux": true,
+      "doneThread": false,
+      "resultObserved": true,
+      "progressReportable": true,
+      "approvalPacket": {
+        "ready": true,
+        "subject": "shiro-sefs-lp を [DONE] にしてよいか",
+        "recommendedDecision": "完了根拠と残リスクを確認できるなら承認",
+        "exactAction": "`! git push origin chore/domain-switch:main`",
+        "risk": "高: 外部公開/本番/秘密値/削除/課金の可能性",
+        "rollback": "[DONE] 付与前なので、未承認なら進行対象へ戻せる",
+        "waitImpact": "承認がない間は完了除外できず、監視対象に残る",
+        "evidence": "❯ `! git push origin chore/domain-switch:main`"
+      },
+      "verification": {
+        "required": true,
+        "resultObserved": true,
+        "evidence": "未マージ変更 7 files, +27/-36 lines",
+        "urls": [],
+        "executorSelfReportOnly": false
+      },
+      "nextAutoAction": "YakonさんへYes/Noで判断できる形で提示する",
+      "evidence": "❯ `! git push origin chore/domain-switch:main`",
+      "recentExcerpt": "├ ┼ ┤\nGoogle OAuth ✅\n├ ┼ ┤\nStripe ✅\n└ ┴ ┘\nShiroがやれること: すべて完了。残タスクはYakonによるこのpush 1コマンドのみ。\n✻ Crunched for 23s\nshiro-sefs-lp\n❯ `! git push origin chore/domain-switch:main`\n⏵⏵ auto mode on (shift+tab to cycle) · ← for agents",
+      "legacy": {
+        "state": "permission-wait",
+        "decisionKind": "external-action",
+        "risk": "high",
+        "reason": "❯ push the remaining 7 commits",
+        "next": "Prepare approval packet with scope, rollback, risk, and recommended action.",
+        "fingerprint": "d3f3a9d689a098117b94966e69e5a212761efb928902501d41b8e5f74c474f79",
+        "blockerHash": "5352ba9dc0475129375c2060003683f2a35539acf2d6cf58257f19a90a1b8505",
+        "lastSeenAt": 1781481820561,
+        "lastChangedAt": 1781481820561,
+        "lastNudgedAt": 1781481474214,
+        "lastNotifiedAt": 1781481820561
+      },
+      "fingerprint": "844d3f23b4eac8320381f3cd41524d19afc7240c5fb4f5e111575ddd127c27a8",
+      "changed": false,
+      "lastSeenAt": 1781504874289,
+      "lastChangedAt": 1781503209879,
+      "lastActionAt": 1781503076111,
+      "lastReportedAt": null,
+      "actionHistory": [
+        {
+          "ts": "2026-06-15T00:20:45.397Z",
+          "status": "blocked",
+          "prompt": "Shiro workflow controller: Do not merely acknowledge this. Move the workflow to the next observable state. Low-risk local work is allowed. Do not push, deploy, change production/env/secrets, delete data, or spend money. End in Japanese with one of: RESULT_OBSERVED, APPROVAL_PACKET_READY, BLOCKED_CONCRETE, or STILL_RUNNING. Separate what Shiro can do locally from what truly requires Yakon. Perform one safe local check if possible; otherwise produce a concrete blocker packet. Current evidence: ❯ p"
+        },
+        {
+          "ts": "2026-06-15T05:57:56.111Z",
+          "status": "blocked",
+          "prompt": "Shiro workflow controller: Do not merely acknowledge this. Move the workflow to the next observable state. Low-risk local work is allowed. Do not push, deploy, change production/env/secrets, delete data, or spend money. End in Japanese with one of: RESULT_OBSERVED, APPROVAL_PACKET_READY, BLOCKED_CONCRETE, or STILL_RUNNING. Separate what Shiro can do locally from what truly requires Yakon. Perform one safe local check if possible; otherwise produce a concrete blocker packet. Current evidence: ❯ `"
+        }
+      ],
+      "captureError": null
+    },
+    {
+      "id": "shiro-subsidy-research",
+      "session": "shiro-subsidy-research",
+      "threadId": "1506464983154819152",
+      "title": "補助金・助成金リサーチ（最新）",
+      "source": "tmux",
+      "status": "blocked",
+      "decisionKind": "unblock",
+      "risk": "mid",
+      "policy": {
+        "kind": "implementation-agent",
+        "normalIdle": "continue",
+        "reportMode": "concrete-results-only",
+        "userActionRule": "only-real-risk-or-environment-blocker"
+      },
+      "hasTmux": true,
+      "doneThread": false,
+      "resultObserved": false,
+      "progressReportable": true,
+      "approvalPacket": null,
+      "verification": {
+        "required": false,
+        "resultObserved": false,
+        "evidence": "っている可能性があるため、上記の最新調査結果をYakonへ共有推奨。Discord",
+        "urls": [],
+        "executorSelfReportOnly": false
+      },
+      "nextAutoAction": "白が解けるローカル確認を1つ実行して詰まりを解消する",
+      "evidence": "っている可能性があるため、上記の最新調査結果をYakonへ共有推奨。Discord",
+      "recentExcerpt": "- Yakon 側でスレッドの権限設定を確認\n---\n所見\n元のリサーチ（2026-05-20）は完了・投稿済み。スレッドは dormant で\nneeds-review。特段の追加アクションは不要と判断。ただし 26日経過で情報が古くな\nっている可能性があるため、上記の最新調査結果をYakonへ共有推奨。Discord\nアクセスが回復次第、新情報をスレッドに追記することが可能。\n✻ Churned for 3m 43s\n❯\n⏵⏵ auto mode on (shift+tab to cycle) · ← for agents",
+      "legacy": null,
+      "fingerprint": "2d2ebed66edb296455b88c5b8e45e2527cc26efe8b1a452e1c688df8181ec7af",
+      "changed": false,
+      "lastSeenAt": 1781504874289,
+      "lastChangedAt": 1781499477904,
+      "lastActionAt": 1781504874289,
+      "lastReportedAt": null,
+      "actionHistory": [
+        {
+          "ts": "2026-06-15T06:27:54.289Z",
+          "status": "blocked",
+          "prompt": "Shiro workflow controller: Do not merely acknowledge this. Move the workflow to the next observable state. Low-risk local work is allowed. Do not push, deploy, change production/env/secrets, delete data, or spend money. End in Japanese with one of: RESULT_OBSERVED, APPROVAL_PACKET_READY, BLOCKED_CONCRETE, or STILL_RUNNING. Separate what Shiro can do locally from what truly requires Yakon. Perform one safe local check if possible; otherwise produce a concrete blocker packet. Current evidence: ってい"
+        }
+      ],
+      "captureError": null
+    },
+    {
+      "id": "shiro-x-research",
+      "session": "shiro-x-research",
+      "threadId": "1501537995918938253",
+      "title": "X-research",
+      "source": "tmux",
+      "status": "active",
+      "decisionKind": "watch",
+      "risk": "low",
+      "policy": {
+        "kind": "implementation-agent",
+        "normalIdle": "continue",
+        "reportMode": "concrete-results-only",
+        "userActionRule": "only-real-risk-or-environment-blocker"
+      },
+      "hasTmux": true,
+      "doneThread": false,
+      "resultObserved": false,
+      "progressReportable": false,
+      "approvalPacket": null,
+      "verification": {
+        "required": false,
+        "resultObserved": false,
+        "evidence": "- A: 認証情報を設定 → X確認と投稿再開 ← 推奨",
+        "urls": [],
+        "executorSelfReportOnly": false
+      },
+      "nextAutoAction": "実行中として次tickで成果またはブロッカーを確認する",
+      "evidence": "- A: 認証情報を設定 → X確認と投稿再開 ← 推奨",
+      "recentExcerpt": "根拠 実行→認証エラー確認済み。Handover_X_Operation.md\nに投稿済み2件・プロフィール更新案準備済みを確認済み\n└ ┴ ┘\nYakon 判断肢:\n- A: 認証情報を設定 → X確認と投稿再開 ← 推奨\n- B: スコープを「リサーチのみ(投稿なし)」に変更 →\n外部API不要でリサーチ文書化作業のみ継続可能\n✻ Brewed for 4m 42s\n❯\n⏵⏵ auto mode on (shift+tab to cycle) · ← for agents",
+      "legacy": null,
+      "fingerprint": "8ca230f27419979a92f3f9fcbe3e024065c84463f83b7a1104b33858296b239a",
+      "changed": false,
+      "lastSeenAt": 1781504874289,
+      "lastChangedAt": 1781499477904,
+      "lastActionAt": null,
+      "lastReportedAt": null,
+      "actionHistory": [],
+      "captureError": null
+    },
+    {
+      "id": "slide-tool-codex",
+      "session": "slide-tool-codex",
+      "threadId": "1505385904825696317",
+      "title": "slide-tool-codex",
+      "source": "override",
+      "status": "pending_approval",
+      "decisionKind": "needs-yakon",
+      "risk": "mid",
+      "policy": {
+        "kind": "implementation-agent",
+        "normalIdle": "continue",
+        "reportMode": "concrete-results-only",
+        "userActionRule": "only-secret-prod-config-delete-cost"
+      },
+      "hasTmux": true,
+      "doneThread": false,
+      "resultObserved": false,
+      "progressReportable": true,
+      "approvalPacket": {
+        "ready": true,
+        "subject": "slide-tool-codex の外部/高リスク操作を進めてよいか",
+        "recommendedDecision": "exact action と rollback が明確なものだけ承認",
+        "exactAction": "`/discord:access` でこのスレッドを追加して",
+        "risk": "中: Yakon判断が必要",
+        "rollback": "実行前に現状を保持し、変更対象を限定して戻せる状態で行う",
+        "waitImpact": "承認がない間は外部反映・本番反映・秘密値操作が止まる",
+        "evidence": "Yakon 判断待ち事項はなし（Discord アクセスはユーザー側の操作のみで解決可能）。"
+      },
+      "verification": {
+        "required": false,
+        "resultObserved": false,
+        "evidence": "Yakon 判断待ち事項はなし（Discord アクセスはユーザー側の操作のみで解決可能）。",
+        "urls": [],
+        "executorSelfReportOnly": false
+      },
+      "nextAutoAction": "YakonさんへYes/Noで判断できる形で提示する",
+      "evidence": "Yakon 判断待ち事項はなし（Discord アクセスはユーザー側の操作のみで解決可能）。",
+      "recentExcerpt": "1. Discord スレッドへのアクセス付与が必要 — ! /discord:access\nを実行してこのスレッドをアクセス許可リストに追加するか、Yakon\nにスレッドへの招待/権限付与を依頼してください。\n2. IDENTITY.md / USER.md が未初期化 — slide-tool\nエージェントとして正式に動かすなら、テンプレートを埋める必要あり。ただし現状の\nShiro operations フローに支障はない。\nYakon 判断待ち事項はなし（Discord アクセスはユーザー側の操作のみで解決可能）。\n✻ Sautéed for 2m 46s\n❯ `/discord:access` でこのスレッドを追加して\n⏵⏵ auto mode on (shift+tab to cycle) · ← for agents",
+      "legacy": null,
+      "fingerprint": "6d771dcc4c9d3687d341a22f30a46cf718ea82114777960f620281198bc55a97",
+      "changed": false,
+      "lastSeenAt": 1781504874289,
+      "lastChangedAt": 1781499477904,
+      "lastActionAt": null,
+      "lastReportedAt": null,
+      "actionHistory": [],
+      "captureError": null
+    },
+    {
+      "id": "tmux-web-view-app",
+      "session": "tmux-web-view-app",
+      "threadId": "1501400748427051029",
+      "title": "tmux-web-view",
+      "source": "thread+tmux-guess",
+      "status": "blocked",
+      "decisionKind": "unblock",
+      "risk": "high",
+      "policy": {
+        "kind": "implementation-agent",
+        "normalIdle": "continue",
+        "reportMode": "concrete-results-only",
+        "userActionRule": "only-real-risk-or-environment-blocker"
+      },
+      "hasTmux": true,
+      "doneThread": false,
+      "resultObserved": false,
+      "progressReportable": true,
+      "approvalPacket": null,
+      "verification": {
+        "required": false,
+        "resultObserved": false,
+        "evidence": "nce. Current evidence: See https://nextjs.org/docs/app/api-reference/config/next",
+        "urls": [
+          "http://localhost:3033",
+          "http://192.168.0.3:3033",
+          "https://nextjs.org/docs/app/api-reference/config/next-config-js/output#ca",
+          "https://nextjs.org/docs/app/api-reference/config/next"
+        ],
+        "executorSelfReportOnly": false
+      },
+      "nextAutoAction": "秘密値/外部要因を切り分け、承認パケット化する",
+      "evidence": "nce. Current evidence: See https://nextjs.org/docs/app/api-reference/config/next",
+      "recentExcerpt": "veats for more information.\nDetected additional lockfiles:\n* /Users/umi/.openclaw/workspace/tmp/tmux-web-view-source/package-lock.json\nShiro workflow controller: Do not merely acknowledge this. Move the workflow to\nthe next observable state. Low-risk local work is allowed. Do not push, deploy,\nchange production/env/secrets, delete data, or spend money. End in Japanese with\none of: RESULT_OBSERVED, APPROVAL_PACKET_READY, BLOCKED_CONCRETE, or STILL_RUNN\nING. Take exactly one safe local action, then verify and report observable evide\nnce. Current evidence: See https://nextjs.org/docs/app/api-reference/config/next\n-config-js/output#ca",
+      "legacy": null,
+      "fingerprint": "bfe8a5d3200cc3f065cc20cc3f9fa78175f37d97b5f326d37fb51f949f56ba1d",
+      "changed": false,
+      "lastSeenAt": 1781504874289,
+      "lastChangedAt": 1781483271506,
+      "lastActionAt": 1781482845397,
+      "lastReportedAt": null,
+      "actionHistory": [
+        {
+          "ts": "2026-06-15T00:20:45.397Z",
+          "status": "ready_to_act",
+          "prompt": "Shiro workflow controller: Do not merely acknowledge this. Move the workflow to the next observable state. Low-risk local work is allowed. Do not push, deploy, change production/env/secrets, delete data, or spend money. End in Japanese with one of: RESULT_OBSERVED, APPROVAL_PACKET_READY, BLOCKED_CONCRETE, or STILL_RUNNING. Take exactly one safe local action, then verify and report observable evidence. Current evidence: See https://nextjs.org/docs/app/api-reference/config/next-config-js/output#ca"
+        }
+      ],
+      "captureError": null
+    },
+    {
+      "id": "top3-goose",
+      "session": "top3-goose",
+      "threadId": "1505419396691267584",
+      "title": "top3-goose",
+      "source": "override",
+      "status": "blocked",
+      "decisionKind": "unblock",
+      "risk": "mid",
+      "policy": {
+        "kind": "implementation-agent",
+        "normalIdle": "continue",
+        "reportMode": "concrete-results-only",
+        "userActionRule": "only-secret-prod-config-delete-cost"
+      },
+      "hasTmux": true,
+      "doneThread": false,
+      "resultObserved": true,
+      "progressReportable": true,
+      "approvalPacket": null,
+      "verification": {
+        "required": true,
+        "resultObserved": true,
+        "evidence": "- ローカルプロジェクトは今この瞬間も 5/5 pass、build clean。",
+        "urls": [],
+        "executorSelfReportOnly": false
+      },
+      "nextAutoAction": "白が解けるローカル確認を1つ実行して詰まりを解消する",
+      "evidence": "これはShiroの自律作業範囲外。Yakon が Discord サーバー設定またはボット権限を確",
+      "recentExcerpt": "ボットがスレッド 1505419396691267584 を Missing Access\nで読めない状態。原因候補:\n1. スレッドがアーカイブ or ロックされた\n2. ボットのチャンネル権限が変更された\nこれはShiroの自律作業範囲外。Yakon が Discord サーバー設定またはボット権限を確\n認する必要があります。ただしプロジェクト自体の作業は QUEUE.md\nから把握できており、現時点では未完了タスクなし・介入不要。\n✻ Brewed for 2m 9s\n❯\n⏵⏵ auto mode on (shift+tab to cycle) · ← for agents",
+      "legacy": null,
+      "fingerprint": "ab0e6ebb4d2c491e3aa7a04fbb8e5bec00f1db00d4693e3e7599dcb4c60fe140",
+      "changed": false,
+      "lastSeenAt": 1781504874289,
+      "lastChangedAt": 1781498779443,
+      "lastActionAt": null,
+      "lastReportedAt": null,
+      "actionHistory": [],
+      "captureError": null
+    },
+    {
+      "id": "vast-ai-rtx5090-jp",
+      "session": "vast-ai-rtx5090-jp",
+      "threadId": "1504835837932732557",
+      "title": "vast-ai-rtx5090-jp",
+      "source": "override",
+      "status": "blocked",
+      "decisionKind": "unblock",
+      "risk": "high",
+      "policy": {
+        "kind": "implementation-agent",
+        "normalIdle": "continue",
+        "reportMode": "concrete-results-only",
+        "userActionRule": "only-real-risk-or-environment-blocker"
+      },
+      "hasTmux": true,
+      "doneThread": false,
+      "resultObserved": false,
+      "progressReportable": true,
+      "approvalPacket": null,
+      "verification": {
+        "required": false,
+        "resultObserved": false,
+        "evidence": "JP拠点での計算タスク」ですか？課金承認は出ていますか？",
+        "urls": [],
+        "executorSelfReportOnly": false
+      },
+      "nextAutoAction": "秘密値/外部要因を切り分け、承認パケット化する",
+      "evidence": "JP拠点での計算タスク」ですか？課金承認は出ていますか？",
+      "recentExcerpt": "Missing Access\n└ ┴ ┘\nYakonへの確認事項:\n1. #白 配下スレッドへのDiscordボットアクセスを回復できますか？\n2. このスレッドは「Vast.ai RTX 5090\nJP拠点での計算タスク」ですか？課金承認は出ていますか？\n3. スレッドを1ヶ月ルール除外扱い（保留）にしますか？それとも再開ですか？\n✻ Sautéed for 4m 0s\n❯\n⏵⏵ auto mode on (shift+tab to cycle) · ← for agents",
+      "legacy": null,
+      "fingerprint": "266b6ca9138db956faa62d8635db87076ce3057c8c9732abb9957926b14f1f7e",
+      "changed": false,
+      "lastSeenAt": 1781504874289,
+      "lastChangedAt": 1781499477904,
+      "lastActionAt": null,
+      "lastReportedAt": null,
+      "actionHistory": [],
+      "captureError": null
+    }
+  ]
+}

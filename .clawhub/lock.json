@@ -1,0 +1,21 @@
+{
+  "version": 1,
+  "skills": {
+    "clawatar": {
+      "version": "0.2.0",
+      "installedAt": 1774748161248
+    },
+    "browser-qa": {
+      "version": "1.0.1",
+      "installedAt": 1779018189381
+    },
+    "agent-autonomy-kit": {
+      "version": "1.0.0",
+      "installedAt": 1779021072107
+    },
+    "agent-team-kit": {
+      "version": "1.0.0",
+      "installedAt": 1779084175673
+    }
+  }
+}
