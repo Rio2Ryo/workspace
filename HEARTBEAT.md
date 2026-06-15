@@ -32,6 +32,25 @@ High Risk:
 - 削除系操作
 - 秘密情報の共有
 
+## 2026-06-15 heartbeat (111回目)
+
+**アクション**: `tasks/QUEUE.md` の Ready / In Progress を確認。Ready 未完了なし、In Progress は `food-dx-shiro` のみ。停止判定に従い、`food-dx-shiro` の tmux / repo / DB接続環境 / handoff契約を再確認し、disk と workspace tracked 変更も確認。
+
+**検証**:
+- QUEUE Ready 未完了なし。In Progress = `food-dx-shiro`。
+- `food-dx-shiro`: tmux `food-dx-shiro` 存在。repo `main` HEAD `4c46739`、tracked 変更なし。
+- `.env.local` / `.env` / `DATABASE_URL` / docker / psql / pg_ctl / initdb は missing。
+- `npm run test:db-e2e-handoff-contract` → pass。
+- `npm run db:check` → 想定通り `DATABASE_URL is not set` で fail。
+- `npm run db:e2e:handoff` → 判断依頼サマリーは「Yakonさんにお願いしたいこと: なし」、引き継ぎパケットは `目的 / 現担当 / 現状 / 次アクション / 詰まり / 支援候補 / 期限` 形式を維持。
+- disk: `/System/Volumes/Data` は 97% 使用、空き 6.5GiB。既存の disk cleanup 承認待ち範囲内。削除系操作は未実行。
+- workspace branch `shiro/cycle-tracker-app` は origin より 1 commit ahead（`d86fbcb chore: tick 85 — sync watcher state; disk cleanup packet prepared`）。push は外部反映のため未実行。
+- workspace tracked 変更: `ops/message-quality-check.mjs` と `ops/shiro-loop-digest.mjs` は「再投入/確認送信を実行済み成果として報告しない」ための文言ガード変更、`projects/threads-watcher/threads-watcher-status/state.json` は watcher 自動 snapshot の timestamp 更新のみ。`node --check` と `ops/message-quality-check.mjs` のサンプル検査は pass。今回のheartbeatでは既存差分の巻き戻しなし。
+
+**状態**: Ready 未完了なし。`food-dx-shiro` は担当=白、次アクションは DB接続環境で `npm run db:e2e:handoff` の手順を実行し、seed後の日本語E2E結果を固定形式で回収すること。詰まりは技術環境待ち（DB接続）。disk cleanup / KATAOMOI-EC ENV VAR / second-brain push-deploy は既存承認待ちで、新規判断依頼なし。
+
+**通知判断**: notify=false（新規障害なし。既知のDB待ち・disk cleanup承認待ち・workspace差分確認のみ）。
+
 ## 2026-06-15 heartbeat (110回目)
 
 **アクション**: `tasks/QUEUE.md` の Ready / In Progress を確認。Ready 未完了なし、In Progress は `food-dx-shiro` のみ。停止判定に従い、`food-dx-shiro` の tmux / repo / DB接続環境 / handoff契約を再確認し、disk と workspace tracked 変更も確認。
@@ -2111,3 +2130,71 @@ GitHub Settings → Developer settings → Personal access tokens
 - food-dx-shiro: DB接続環境待ち
 
 **次アクション**: 外部承認待ち。ローカル品質維持継続。
+
+## 2026-06-15 heartbeat (tick 88)
+
+**アクション**: food-dx 全品質ゲート再確認 + DB 環境承認パケット作成。
+
+**検証**:
+- `npm run lint --workspace=@food-dx/api`: exit 0 / 出力なし（errors 0 / warnings 0）✅
+- `npm run build:api`: tsc clean ✅
+- `npm run build:web`: static/dynamic pages 生成 ✅
+- Prisma schema: 20 models / 31 relations / 784 lines — push ready
+
+---
+
+### 🗂️ Yakon 承認パケット — food-dx DB 環境
+
+**現状**: API lint/build clean、seed ファイル upsert 対応済み。`DATABASE_URL` が未設定のため `db:push` / `db:seed` / E2E 未実施。
+
+**必要なもの**: PostgreSQL 接続 URL（1 件のみ）
+
+```
+DATABASE_URL="postgresql://USER:PASS@HOST:5432/food_dx?schema=public"
+```
+
+---
+
+**Option A（推奨）— ローカル Docker（Yakon が `docker` を持っている場合）**
+
+```bash
+docker run -d --name food-dx-pg \
+  -e POSTGRES_PASSWORD=postgres \
+  -e POSTGRES_DB=food_dx \
+  -p 5432:5432 postgres:16
+```
+
+その後 `.env.local` に以下を追加:
+```
+DATABASE_URL="postgresql://postgres:postgres@localhost:5432/food_dx?schema=public"
+```
+
+Shiro 実行コマンド（承認後）:
+```bash
+npm run db:push --workspace=@food-dx/database
+npm run db:seed --workspace=@food-dx/database
+npm run build:api && npm run build:web
+```
+
+---
+
+**Option B — Yakon が既存 PostgreSQL URL を提供**
+
+`.env.local` に URL を置くか、直接 Shiro に伝える。
+
+---
+
+**ロールバック**: `docker stop food-dx-pg && docker rm food-dx-pg` でコンテナ削除。データは揮発（開発用）。  
+**リスク**: ゼロ。ローカル開発 DB のみ。本番・外部サービスへの影響なし。  
+**待機コスト**: DB 環境なしでは E2E・日本語 UI 検証・ハンドオフが未完了のまま。
+
+**Yakon への質問**: 「docker OK」または「URL: postgresql://...」で回答してください。
+
+---
+
+**残ブロッカー（外部承認待ち）**:
+- **food-dx DB**: Yakon 「docker OK」or URL 提供待ち
+- **disk cleanup**: `npm cache clean --force` 6.8G — Yakon 「disk cleanup OK」待ち
+- second-brain: Ao/Yakon 「second-brain deploy OK」待ち
+
+**次アクション**: 承認待ち。
