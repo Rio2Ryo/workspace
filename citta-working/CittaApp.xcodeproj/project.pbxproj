@@ -1,0 +1,202 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 56;
+	objects = {
+		000000000000000000000001 /* Project object */ = {
+			isa = PBXProject;
+			attributes = {BuildIndependentTargetsInParallel = 1; LastSwiftUpdateCheck = 1500; LastUpgradeCheck = 1500;};
+			buildConfigurationList = 000000000000000000000040;
+			compatibilityVersion = "Xcode 14.0";
+			developmentRegion = en;
+			hasScannedForEncodings = 0;
+			knownRegions = (en, Base, ja);
+			mainGroup = 000000000000000000000002;
+			productRefGroup = 000000000000000000000003;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (000000000000000000000010,);
+		};
+		000000000000000000000002 = {
+			isa = PBXGroup;
+			children = (000000000000000000000004, 000000000000000000000003,);
+			sourceTree = "<group>";
+		};
+		000000000000000000000003 = {
+			isa = PBXGroup;
+			children = (000000000000000000000011,);
+			name = Products;
+			sourceTree = "<group>";
+		};
+		000000000000000000000004 = {
+			isa = PBXGroup;
+			children = (
+				000000000000000000000100,
+				000000000000000000000101,
+				000000000000000000000102,
+				000000000000000000000103,
+				000000000000000000000104,
+				000000000000000000000105,
+				000000000000000000000106,
+				000000000000000000000107,
+				000000000000000000000108,
+				000000000000000000000109,
+				00000000000000000000010A,
+				00000000000000000000010B,
+				00000000000000000000010C,
+				00000000000000000000010D,
+				00000000000000000000010E,
+				00000000000000000000010F,
+				000000000000000000000110,
+				000000000000000000000111,
+				000000000000000000000112,
+				000000000000000000000113,
+				000000000000000000000114,
+				000000000000000000000115,
+				000000000000000000000116,
+				000000000000000000000117,
+				000000000000000000000118,
+				000000000000000000000119,
+				00000000000000000000011A,
+			);
+			path = CittaApp;
+			sourceTree = "<group>";
+		};
+		000000000000000000000010 = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 000000000000000000000050;
+			buildPhases = (000000000000000000000012, 000000000000000000000013, 000000000000000000000014,);
+			buildRules = ();
+			dependencies = ();
+			name = CittaApp;
+			productName = CittaApp;
+			productReference = 000000000000000000000011;
+			productType = "com.apple.product-type.application";
+		};
+		000000000000000000000011 = {
+			isa = PBXFileReference;
+			explicitFileType = wrapper.application;
+			includeInIndex = 0;
+			path = CittaApp.app;
+			sourceTree = BUILT_PRODUCTS_DIR;
+		};
+		000000000000000000000012 = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				000000000000000000000200,
+				000000000000000000000201,
+				000000000000000000000202,
+				000000000000000000000203,
+				000000000000000000000204,
+				000000000000000000000205,
+				000000000000000000000206,
+				000000000000000000000207,
+				000000000000000000000208,
+				000000000000000000000209,
+				00000000000000000000020A,
+				00000000000000000000020B,
+				00000000000000000000020C,
+				00000000000000000000020D,
+				00000000000000000000020E,
+				00000000000000000000020F,
+				000000000000000000000210,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		000000000000000000000013 = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = ();
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		000000000000000000000014 = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				000000000000000000000300,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		000000000000000000000040 = {
+			isa = XCConfigurationList;
+			buildConfigurations = (000000000000000000000041, 000000000000000000000042,);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		000000000000000000000041 = {
+			isa = XCBuildConfiguration;
+			buildSettings = {CODE_SIGN_STYLE = Automatic; IPHONEOS_DEPLOYMENT_TARGET = 17.0; SDKROOT = iphoneos; SWIFT_VERSION = 5.0; TARGETED_DEVICE_FAMILY = "1,2";};
+			name = Release;
+		};
+		000000000000000000000042 = {
+			isa = XCBuildConfiguration;
+			buildSettings = {CODE_SIGN_STYLE = Automatic; IPHONEOS_DEPLOYMENT_TARGET = 17.0; SDKROOT = iphonesimulator; SWIFT_VERSION = 5.0; TARGETED_DEVICE_FAMILY = "1,2";};
+			name = Debug;
+		};
+		000000000000000000000050 = {
+			isa = XCConfigurationList;
+			buildConfigurations = (000000000000000000000051, 000000000000000000000052,);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		000000000000000000000051 = {
+			isa = XCBuildConfiguration;
+			buildSettings = {ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon; CODE_SIGN_STYLE = Automatic; CURRENT_PROJECT_VERSION = 1; GENERATE_INFOPLIST_FILE = YES; INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES; INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES; INFOPLIST_KEY_UILaunchScreen_Generation = YES; IPHONEOS_DEPLOYMENT_TARGET = 17.0; LD_RUNPATH_SEARCH_PATHS = ("$(inherited)", "@executable_path/Frameworks"); MARKETING_VERSION = 1.0; PRODUCT_BUNDLE_IDENTIFIER = com.ryo.CittaApp; PRODUCT_NAME = "$(TARGET_NAME)"; SWIFT_EMIT_LOC_STRINGS = YES; SWIFT_VERSION = 5.0; TARGETED_DEVICE_FAMILY = "1,2";};
+			name = Release;
+		};
+		000000000000000000000052 = {
+			isa = XCBuildConfiguration;
+			buildSettings = {ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon; CODE_SIGN_STYLE = Automatic; CURRENT_PROJECT_VERSION = 1; GENERATE_INFOPLIST_FILE = YES; INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES; INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES; INFOPLIST_KEY_UILaunchScreen_Generation = YES; IPHONEOS_DEPLOYMENT_TARGET = 17.0; LD_RUNPATH_SEARCH_PATHS = ("$(inherited)", "@executable_path/Frameworks"); MARKETING_VERSION = 1.0; PRODUCT_BUNDLE_IDENTIFIER = com.ryo.CittaApp; PRODUCT_NAME = "$(TARGET_NAME)"; SWIFT_EMIT_LOC_STRINGS = YES; SWIFT_VERSION = 5.0; TARGETED_DEVICE_FAMILY = "1,2";};
+			name = Debug;
+		};
+		000000000000000000000100 = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CittaApp.swift; sourceTree = "<group>";};
+		000000000000000000000101 = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>";};
+		000000000000000000000102 = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WeeklyView.swift; sourceTree = "<group>";};
+		000000000000000000000103 = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WakuwakuListView.swift; sourceTree = "<group>";};
+		000000000000000000000104 = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HandwritingView.swift; sourceTree = "<group>";};
+		000000000000000000000105 = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsView.swift; sourceTree = "<group>";};
+		000000000000000000000106 = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ScheduleItem.swift; sourceTree = "<group>";};
+		000000000000000000000107 = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WakuwakuItem.swift; sourceTree = "<group>";};
+		000000000000000000000108 = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HandwritingNote.swift; sourceTree = "<group>";};
+		000000000000000000000109 = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CloudflareService.swift; sourceTree = "<group>";};
+		00000000000000000000010A = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ShareService.swift; sourceTree = "<group>";};
+		00000000000000000000010B = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CloudKitService.swift; sourceTree = "<group>";};
+		00000000000000000000010C = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ImageRenderer.swift; sourceTree = "<group>";};
+		00000000000000000000010D = {isa = PBXFileReference; lastKnownFileType = public.mpeg-4; path = launch_video.mp4; sourceTree = "<group>";};
+		00000000000000000000010E = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WeeklyViewModel.swift; sourceTree = "<group>";};
+		00000000000000000000010F = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WakuwakuViewModel.swift; sourceTree = "<group>";};
+		000000000000000000000110 = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HandwritingViewModel.swift; sourceTree = "<group>";};
+		000000000000000000000111 = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Models; sourceTree = "<group>";};
+		000000000000000000000112 = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Views; sourceTree = "<group>";};
+		000000000000000000000113 = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ViewModels; sourceTree = "<group>";};
+		000000000000000000000114 = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Services; sourceTree = "<group>";};
+		000000000000000000000115 = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Utils; sourceTree = "<group>";};
+		000000000000000000000116 = {isa = PBXFileReference; lastKnownFileType = folder; path = Models; sourceTree = "<group>";};
+		000000000000000000000117 = {isa = PBXFileReference; lastKnownFileType = folder; path = Views; sourceTree = "<group>";};
+		000000000000000000000118 = {isa = PBXFileReference; lastKnownFileType = folder; path = ViewModels; sourceTree = "<group>";};
+		000000000000000000000119 = {isa = PBXFileReference; lastKnownFileType = folder; path = Services; sourceTree = "<group>";};
+		00000000000000000000011A = {isa = PBXFileReference; lastKnownFileType = folder; path = Utils; sourceTree = "<group>";};
+		000000000000000000000200 = {isa = PBXBuildFile; fileRef = 000000000000000000000100;};
+		000000000000000000000201 = {isa = PBXBuildFile; fileRef = 000000000000000000000101;};
+		000000000000000000000202 = {isa = PBXBuildFile; fileRef = 000000000000000000000102;};
+		000000000000000000000203 = {isa = PBXBuildFile; fileRef = 000000000000000000000103;};
+		000000000000000000000204 = {isa = PBXBuildFile; fileRef = 000000000000000000000104;};
+		000000000000000000000205 = {isa = PBXBuildFile; fileRef = 000000000000000000000105;};
+		000000000000000000000206 = {isa = PBXBuildFile; fileRef = 000000000000000000000106;};
+		000000000000000000000207 = {isa = PBXBuildFile; fileRef = 000000000000000000000107;};
+		000000000000000000000208 = {isa = PBXBuildFile; fileRef = 000000000000000000000108;};
+		000000000000000000000209 = {isa = PBXBuildFile; fileRef = 000000000000000000000109;};
+		00000000000000000000020A = {isa = PBXBuildFile; fileRef = 00000000000000000000010A;};
+		00000000000000000000020B = {isa = PBXBuildFile; fileRef = 00000000000000000000010B;};
+		00000000000000000000020C = {isa = PBXBuildFile; fileRef = 00000000000000000000010C;};
+		00000000000000000000020D = {isa = PBXBuildFile; fileRef = 00000000000000000000010D;};
+		00000000000000000000020E = {isa = PBXBuildFile; fileRef = 00000000000000000000010E;};
+		00000000000000000000020F = {isa = PBXBuildFile; fileRef = 00000000000000000000010F;};
+		000000000000000000000210 = {isa = PBXBuildFile; fileRef = 000000000000000000000110;};
+		000000000000000000000300 = {isa = PBXBuildFile; fileRef = 00000000000000000000010D;};
+	};
+	rootObject = 000000000000000000000001;
+}
