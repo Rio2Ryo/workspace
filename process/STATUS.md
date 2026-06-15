@@ -8,6 +8,7 @@
 
 | Agent | Task | Started | Status |
 |-------|------|---------|--------|
+| shiro | **RAKUI** (Real Estate Investment Decision App) — bundle.js 検証済・open PR ゼロ・本番変更ゼロ。**Yakon [DONE] 承認待ち**。承認文: `process/rakui-done-packet.md` | 2026-06-15 | 🔴 Blocked: Yakon [DONE] 判定待ち |
 | hermes-jp | top3-favorites — バリデーションエラー時のalert文言とfocus復帰をE2Eで固定する | 2026-05-23 21:21:12 UTC | 🟡 In Progress |
 | codex-goal | restaurant-sales-intel — 権限のあるシェルでcommit scriptを実行し、完了後に tasks/QUEUE.md の | 2026-05-24 00:06:24 UTC | 🟠 Re-prompted |
 | codex-goal | restaurant-sales-intel — 権限のあるシェルで .preflight/commit-scripts/commit-all.sh を実行し、35件差分 | 2026-05-24 00:21:25 UTC | 🟠 Re-prompted |
