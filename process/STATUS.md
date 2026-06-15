@@ -8,6 +8,7 @@
 
 | Agent | Task | Started | Status |
 |-------|------|---------|--------|
+| shiro | **vast-ai-rtx5090-jp** — Ollama稼働(PID 47600)・モデル確認済み・discord `.env` DISCORD_TOKEN設定済み(72文字)・python-telegram-bot 22.5インストール済み。**D-1**: `cd projects/discord-ollama-agent && node src/index.js` で即起動可。**D-2**: BotFatherでTELEGRAM_TOKEN再発行後 `TELEGRAM_TOKEN=<token> python3 telegram_ollama_bot.py`。Vast.ai RTX5090不要。 | 2026-06-16 | 🔴 Blocked: Yakon D-1(discord bot起動) / D-2(TelegramトークンBotFather再発行) 待ち |
 | shiro | **cycle-tracker-app** — lint ✅ / test 34/34 ✅ / build ✅。local `0522e96`(feat: profile label customization, 2026-06-15) が remote より 24 commits 先行・未 push・未 deploy。承認パケット準備済み。 | 2026-06-15 | 🔴 Blocked: Yakon push+deploy 承認待ち |
 | shiro | **yosuke-matsuura-profile** — build ✅ lint ✅ / remote ff6916f = local HEAD (push 済み確認) / Vercel project prj_79FCkPc5rnW780zlzzk0OBu0yB98 存在。ワークフロー完了。 | 2026-06-15 | ✅ Done |
 | shiro | **second-brain** — deploy 完了 ✅ (2026-06-15): CF Workers `7f831188` + CF Pages `f3597f17`. smoke test 全6チェック PASS (`47b86c9`). | 2026-06-15 | ✅ Done |
