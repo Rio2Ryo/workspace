@@ -59,6 +59,22 @@ git -C /Users/umi/.openclaw/workspace/cycle-tracker-app push --force origin main
 
 ---
 
+## 2026-06-16 heartbeat (135回目)
+
+**アクション**: `/Users/umi/.openclaw/workspace/HEARTBEAT.md` を指定パスで読み、`tasks/QUEUE.md` の Ready / In Progress を確認。Ready 未完了なし、In Progress は `food-dx-shiro` のみ。`cycle-tracker-app force push` 承認パケットは承認サインなしのため未実行。disk / 実行中プロセス / cycle-tracker local/remote を read-only で確認した。disk が 964MiB / 100% まで悪化していたため、削除候補のみ read-only で再計測した。
+
+**検証**:
+- QUEUE Ready 未完了なし。In Progress = `food-dx-shiro`。
+- `cycle-tracker-app`: local `HEAD` は `0522e96`、`origin/main` は `3d98fb7`。`git merge-base HEAD origin/main` は空で、共通祖先なし。working tree は tracked 変更なし。
+- `next dev` / API `tsx watch` / Playwright / Vite / Wrangler dev など、前回検証由来のローカル dev/test プロセスは残っていない。
+- disk: `/System/Volumes/Data` は 100% 使用、空き 964MiB。前回 3.0GiB / 99% から悪化し、build / browser E2E / install だけでなく通常運用も止まり得る水準。
+- 削除候補の read-only 計測: `/Users/umi/.npm` 6.9G、`~/Library/Developer/Xcode/DerivedData` 547M、`/Users/umi/.cache` 3.9G。いずれも削除系操作のため未実行。
+- push / force push / deploy / 本番変更 / 秘密情報共有 / 削除系操作は未実行。
+
+**状態**: `food-dx-shiro` は担当=白。前回までに local DB seed / API dynamic smoke / Web runtime blocker修正 / 通常ゲート全passまで完了済み。現在の詰まりは disk 空き不足による検証不能リスク。`cycle-tracker-app` は force push 承認待ちで、承認サインは `cycle-tracker force push OK`。disk cleanup は削除系操作のため、承認サイン `disk cleanup OK` なしでは実行しない。
+
+**通知判断**: notify=true（disk が 964MiB / 100% まで悪化。既存承認待ちだが、前回 3.0GiB から明確に悪化し、通常運用・検証が止まる水準のため割り込み通知が必要）。
+
 ## 2026-06-16 heartbeat (134回目)
 
 **アクション**: `/Users/umi/.openclaw/workspace/HEARTBEAT.md` を指定パスで読み、`tasks/QUEUE.md` の Ready / In Progress を確認。Ready 未完了なし、In Progress は `food-dx-shiro` のみ。`cycle-tracker-app force push` 承認パケットは承認サインなしのため未実行。disk / 実行中プロセス / cycle-tracker local/remote を read-only で確認した。
