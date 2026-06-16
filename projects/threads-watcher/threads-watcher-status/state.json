@@ -5,14 +5,27 @@
     "@bmw_intokyo"
   ],
   "last_check": {
-    "checked_at": "2026-06-16T23:48:33Z",
+    "checked_at": "2026-06-16T23:58:48Z",
     "found_count": 4,
-    "new_count": 1,
+    "new_count": 0,
     "status": "partial_error",
     "error": "profile extraction returned partial result: found=4 previous_max=15"
   },
-  "saved_count": 100,
+  "saved_count": 101,
   "posts": [
+    {
+      "handle": "@hal.lifedesign",
+      "post_id": "DZqnhd1kkRa",
+      "post_url": "https://www.threads.com/@hal.lifedesign/post/DZqnhd1kkRa",
+      "first_seen_at": "2026-06-16T23:54:13Z",
+      "captured_at": "2026-06-16T23:54:19Z",
+      "screenshot_size_bytes": 184777,
+      "screenshot_width": 1280,
+      "screenshot_height": 1800,
+      "post_text": "毎日行ってるジムがほぼ外国人で、トレーニング中時々話しかけられるんだけど、脳停止状態かつ急だとほんとテンパるねw でも、瞬時に言葉が出た時は最高に気持ちいい。 これもまたトレーニングだな。 英会話って続けないとほんと忘れるし…",
+      "posted_at": "2026-06-16T23:53:00.000Z",
+      "screenshot_path": "screenshots/hal.lifedesign/DZqnhd1kkRa.png"
+    },
     {
       "handle": "@hal.lifedesign",
       "post_id": "DZqm3-gkqAA",
@@ -1325,19 +1338,19 @@
     "partial_error_rate": 0.8891820580474934,
     "top_partial_error_reason": {
       "reason": "profile extraction returned partial result: found=4 previous_max=16",
-      "count": 334
+      "count": 329
     }
   },
   "recent_stats_by_window": {
     "1": {
       "window_hours": 1,
-      "total": 43,
-      "ok": 3,
+      "total": 42,
+      "ok": 2,
       "partial_error": 40,
       "error": 0,
       "other": 0,
-      "success_rate": 0.06976744186046512,
-      "partial_error_rate": 0.9302325581395349,
+      "success_rate": 0.047619047619047616,
+      "partial_error_rate": 0.9523809523809523,
       "top_partial_error_reason": {
         "reason": "profile extraction returned partial result: found=4 previous_max=15",
         "count": 40
@@ -1354,7 +1367,7 @@
       "partial_error_rate": 0.8891820580474934,
       "top_partial_error_reason": {
         "reason": "profile extraction returned partial result: found=4 previous_max=16",
-        "count": 334
+        "count": 329
       }
     },
     "168": {
@@ -1368,13 +1381,13 @@
       "partial_error_rate": 0.9874926427310182,
       "top_partial_error_reason": {
         "reason": "profile extraction returned partial result: found=4 previous_max=16",
-        "count": 4578
+        "count": 4573
       }
     }
   },
   "sync_state": {
-    "cursor": 122,
-    "db_max": 123,
+    "cursor": 123,
+    "db_max": 124,
     "delta": 1,
     "cursor_file_exists": true
   },
@@ -1409,5 +1422,5 @@
       "current_bucket": 0.9
     }
   ],
-  "snapshot_generated_at": "2026-06-16T23:48:33Z"
+  "snapshot_generated_at": "2026-06-16T23:58:48Z"
 }
