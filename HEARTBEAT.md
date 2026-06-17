@@ -59,6 +59,31 @@ git -C /Users/umi/.openclaw/workspace/cycle-tracker-app push --force origin main
 
 ---
 
+## 2026-06-17 heartbeat (165回目)
+
+**アクション**: `/Users/umi/.openclaw/workspace/HEARTBEAT.md` を指定パスで読み、`tasks/QUEUE.md` の Ready / In Progress を確認。Ready 未完了なし、In Progress は `food-dx-shiro` のみ。古い会話由来の別タスクは広げず、前回の次アクションだった GitHub 反映方針整理を実施した。`git fetch origin main` 後に local `main` と `origin/main` を比較し、共通祖先がない別root履歴であることを確認したため、force push ではなく review branch 反映を推奨する方針を `docs/GITHUB_REFLECTION_PLAN.md` に明文化した。低リスク記録として local commit `acdbcbd docs: add GitHub reflection plan` を作成した。
+
+**検証**:
+- QUEUE Ready 未完了なし。In Progress = `food-dx-shiro`。
+- `food-dx-shiro`: repo `/Users/umi/.openclaw/workspace/food-dx-qwen/food-dx-system` は HEAD `acdbcbd`、tracked 変更なし。
+- `origin/main` は `dff0b5f Improve task-first UX for food DX demo`。local HEAD は `acdbcbd docs: add GitHub reflection plan`。
+- `git merge-base HEAD origin/main` は共通祖先なし。remote は単一 Next.js app (`src/`, `prisma/`) 構成、local は npm workspace (`apps/api`, `apps/web`, `packages/*`) 構成。
+- `git rev-list --left-right --count origin/main...HEAD` は remote 側12 / local側14。通常 push / 単純PRでは扱えない。
+- 推奨案: `git push origin main:shiro/food-dx-system-workspace` で review branch を作る。これは `origin/main` を上書きせず、deploy / 本番変更も発生しない。
+- High Risk案: `git push --force origin main` は `origin/main` を上書きするため、承認サイン `food-dx force push OK` なしでは実行しない。
+- `npm run test:web:pdf-auth-contract` → pass。
+- `git diff --check` → pass。
+- 常駐 `next dev` / API `tsx watch` / Playwright / Vite / Wrangler dev は残っていない。
+- `cycle-tracker-app`: force push 承認サインなしのため未実行。承認サインは `cycle-tracker force push OK`。
+- disk: `/System/Volumes/Data` は 94% 使用、空き 12GiB。通常の記録・品質確認は可能。
+- push / force push / deploy / 本番変更 / 秘密情報共有 / 削除系操作は未実行。
+
+**状態**: `food-dx-shiro` は担当=白。PDF UI/API auth の修正・静的契約・将来Playwright spec化に続き、GitHub反映方針まで整理済み。次アクションは review branch push の承認が来れば `shiro/food-dx-system-workspace` へ反映、または Playwright runner 導入を別判断として扱うこと。`cycle-tracker-app` は force push 承認待ちで、承認サインは `cycle-tracker force push OK`。disk cleanup は削除系操作のため、承認サイン `disk cleanup OK` なしでは実行しない。
+
+**通知判断**: notify=false（food-dx は自走で前進し、force push / deploy / 本番変更など新規のHigh Risk実行はしていない。review branch案は次の判断材料として記録済みで、即時割り込みは不要）。
+
+---
+
 ## 2026-06-17 heartbeat (164回目)
 
 **アクション**: `/Users/umi/.openclaw/workspace/HEARTBEAT.md` を指定パスで読み、`tasks/QUEUE.md` の Ready / In Progress を確認。Ready 未完了なし、In Progress は `food-dx-shiro` のみ。古い会話由来の別タスクは広げず、前回の次アクションだった PDF auth flow の正式 Playwright spec 化を進めた。repo には Playwright 未導入のため依存追加は避け、将来の E2E runner 用に `apps/web/e2e/pdf-auth-flow.spec.ts` を追加し、現行CIで退行検知できるよう `scripts/check-pdf-auth-contract.mjs` に spec 契約も追加した。低リスク修正として local commit `c74d4ae test: add PDF auth Playwright contract` を作成した。
