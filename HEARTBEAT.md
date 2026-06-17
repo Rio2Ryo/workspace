@@ -59,6 +59,29 @@ git -C /Users/umi/.openclaw/workspace/cycle-tracker-app push --force origin main
 
 ---
 
+## 2026-06-17 heartbeat (163回目)
+
+**アクション**: `/Users/umi/.openclaw/workspace/HEARTBEAT.md` を指定パスで読み、`tasks/QUEUE.md` の Ready / In Progress を確認。Ready 未完了なし、In Progress は `food-dx-shiro` のみ。古い会話由来の別タスクは広げず、前回の次アクションだった PDF auth 契約の API 側拡張を確認した。API の `/api/pdf/templates` も `pdfRoutes.use(authenticate)` 配下で認証必須なのに、Web の `TemplateSelector` だけが素の `fetch('/api/pdf/templates')` を使っており、ログイン済みUIでもテンプレート取得が401になり得る認証漏れを検出したため、低リスク修正して local commit `31a67e2 fix: authenticate PDF template contract` を作成した。
+
+**検証**:
+- QUEUE Ready 未完了なし。In Progress = `food-dx-shiro`。
+- `food-dx-shiro`: repo `/Users/umi/.openclaw/workspace/food-dx-qwen/food-dx-system` は HEAD `31a67e2`、tracked 変更なし。
+- 原因: `apps/api/src/routes/pdf.ts` は `pdfRoutes.use(authenticate)` を先に適用しているため `/api/pdf/templates` も認証必須だが、`apps/web/src/components/pdf/TemplateSelector.tsx` は Authorization header なしで templates API を呼んでいた。
+- 修正: `TemplateSelector` に `getAuthHeaders()` を通し、`scripts/check-pdf-auth-contract.mjs` に TemplateSelector の auth header 契約と API `pdfRoutes.use(authenticate)` 配下に invoice / batch / templates / preview / download が並ぶ順序契約を追加。
+- `npm run test:web:pdf-auth-contract` → pass。
+- `npm run lint --workspace=@food-dx/web` → pass。
+- `npm run build:web` → pass（21 pages generated）。
+- 残っていた threads-watcher venv の Playwright/Chromium プロセスは停止済み。`next dev` / API `tsx watch` / Playwright / Vite / Wrangler dev など常駐 dev/test プロセスは残っていない。
+- `cycle-tracker-app`: local `HEAD` は `0522e96`、`origin/main` は `3d98fb7`。共通祖先なし。force push 承認サインなしのため未実行。
+- disk: `/System/Volumes/Data` は 94% 使用、空き 12GiB。通常の記録・品質確認は可能。
+- push / force push / deploy / 本番変更 / 秘密情報共有 / 削除系操作は未実行。
+
+**状態**: `food-dx-shiro` は担当=白。PDF action の認証付きBlob経路に続き、テンプレート取得と API route 側の auth 順序契約も静的テストで固定した。次アクションは PDF auth flow を正式 Playwright spec 化するか、ここまでのローカル検証結果をもとに GitHub 反映方針を整理すること。`cycle-tracker-app` は force push 承認待ちで、承認サインは `cycle-tracker force push OK`。disk cleanup は削除系操作のため、承認サイン `disk cleanup OK` なしでは実行しない。
+
+**通知判断**: notify=false（food-dx は自走で前進し、新規のHigh Risk判断やユーザー割り込み事項は発生していない）。
+
+---
+
 ## 2026-06-17 heartbeat (162回目)
 
 **アクション**: `/Users/umi/.openclaw/workspace/HEARTBEAT.md` を指定パスで読み、`tasks/QUEUE.md` の Ready / In Progress を確認。Ready 未完了なし、In Progress は `food-dx-shiro` のみ。古い会話由来の別タスクは広げず、前回の次アクションだった PDF auth flow の退行防止を進めたところ、documents 一覧の印刷ボタンと orders detail の `OrderActions` に未認証の `window.open('/api/pdf/...')` が残っていることを検出したため、低リスク修正して local commit `089c293 fix: cover remaining PDF auth flows` を作成した。
