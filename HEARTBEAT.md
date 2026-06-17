@@ -59,6 +59,33 @@ git -C /Users/umi/.openclaw/workspace/cycle-tracker-app push --force origin main
 
 ---
 
+## 2026-06-17 heartbeat (169回目)
+
+**アクション**: `/Users/umi/.openclaw/workspace/HEARTBEAT.md` を指定パスで読み、`tasks/QUEUE.md` の Ready / In Progress を確認。Ready 未完了なし、In Progress は `food-dx-shiro` のみ。古い会話由来の別タスクは広げず、前回の次アクション候補だった Playwright runner 導入を、push / deploy / 本番変更なしの低リスクローカル作業として実施した。`@playwright/test` を devDependency に追加し、root `playwright.config.ts` と `test:web:pdf-auth-e2e` script を追加。`apps/web/e2e/pdf-auth-flow.spec.ts` は実行時に汎用 `**/api/pdf/**` mock が preview API も拾う順序問題があったため、preview 専用routeが優先されるよう調整した。`scripts/check-pdf-auth-contract.mjs` に runner/config/script の契約も追加し、local commit `170c25d test: add PDF auth Playwright runner` を作成した。
+
+**検証**:
+- QUEUE Ready 未完了なし。In Progress = `food-dx-shiro`。
+- `food-dx-shiro`: repo `/Users/umi/.openclaw/workspace/food-dx-qwen/food-dx-system` は HEAD `170c25d`、tracked 変更なし。
+- 追加: root `playwright.config.ts`、`test:web:pdf-auth-e2e`、`@playwright/test` devDependency。
+- 初回 `npm run test:web:pdf-auth-e2e` は Chromium 未導入で fail。`npx playwright install chromium` 実行後、route順序修正を入れて再実行し 3/3 pass。
+- `npm run test:contracts` → pass（DB/E2E handoff contract、Web accessibility contract、PDF auth contract）。
+- `npm run test:web:pdf-auth-contract` → pass。
+- `npm run lint --workspace=@food-dx/web` → pass（Next.js plugin warning のみ）。
+- `npm run build:web` → pass（21 pages generated）。
+- `git diff --check` → pass。
+- `test-results/` は生成物のため `.gitignore` に追加し、削除操作はしていない。
+- tmux `food-dx-shiro` は存在。
+- 常駐 `next dev` / API `tsx watch` / Playwright / Vite / Wrangler dev は残っていない。
+- disk: `/System/Volumes/Data` は 95% 使用、空き 12GiB。通常の記録・品質確認は可能。
+- `cycle-tracker-app`: force push 承認サインなしのため未実行。承認サインは `cycle-tracker force push OK`。
+- push / force push / deploy / 本番変更 / 秘密情報共有 / 削除系操作は未実行。
+
+**状態**: `food-dx-shiro` は担当=白。PDF auth flow は静的契約だけでなく、ローカル Playwright runner でも 3本のE2E specを実行できる状態になった。次アクションは review branch push の承認が来れば `shiro/food-dx-system-workspace` へ反映、または追加E2E対象を限定して Playwright spec を増やすこと。`cycle-tracker-app` は force push 承認待ちで、承認サインは `cycle-tracker force push OK`。disk cleanup は削除系操作のため、承認サイン `disk cleanup OK` なしでは実行しない。
+
+**通知判断**: notify=false（food-dx は自走で前進し、force push / deploy / 本番変更など新規のHigh Risk実行はしていない。既存の review branch案・追加E2E対象・cycle-tracker force push 承認待ちは記録済みで、即時割り込みは不要）。
+
+---
+
 ## 2026-06-17 heartbeat (168回目)
 
 **アクション**: `/Users/umi/.openclaw/workspace/HEARTBEAT.md` を指定パスで読み、`tasks/QUEUE.md` の Ready / In Progress を確認。Ready 未完了なし、In Progress は `food-dx-shiro` のみ。古い会話由来の別タスクは広げず、前回までの PDF auth / a11y / DB handoff 契約を一括で回せる入口を追加した。依存追加・pushなしで root `package.json` に `test:contracts` を追加し、既存の `test:db-e2e-handoff-contract` / `test:web:a11y-contract` / `test:web:pdf-auth-contract` を順番に実行できるようにした。低リスク修正として local commit `57d46ab test: add aggregate contract script` を作成した。
