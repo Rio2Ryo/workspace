@@ -108,6 +108,28 @@ git -C /Users/umi/.openclaw/workspace/cycle-tracker-app push --force origin main
 
 ---
 
+## 2026-06-17 heartbeat (157回目)
+
+**アクション**: `/Users/umi/.openclaw/workspace/HEARTBEAT.md` を指定パスで読み、`tasks/QUEUE.md` の Ready / In Progress を確認。Ready 未完了なし、In Progress は `food-dx-shiro` のみ。古い会話由来の別タスクは広げず、前回の次アクションで残っていた低速ルート別ブラウザE2Eを継続し、`/orders/new` `/orders/history` `/approvals` `/settings/approvals` `/analytics/sales` `/analytics/customers` `/analytics/products` を確認した。
+
+**検証**:
+- QUEUE Ready 未完了なし。In Progress = `food-dx-shiro`。
+- `food-dx-shiro`: repo `/Users/umi/.openclaw/workspace/food-dx-qwen/food-dx-system` は HEAD `b8df61a`、tracked 変更なし。
+- 一時起動したAPI/Web + threads-watcher venv Playwrightで、seedアカウント `admin@foodmarket.co.jp` にログイン後、残7ルートを数秒間隔で低速確認。
+- 確認ルート: `/orders/new` `/orders/history` `/approvals` `/settings/approvals` `/analytics/sales` `/analytics/customers` `/analytics/products`。
+- 結果: console error 0、API/ページの4xx/5xx 0、429 0。
+- スクリーンショット: `/tmp/food-dx-e2e-residual/orders-new.png`、`orders-history.png`、`approvals.png`、`settings-approvals.png`、`analytics-sales.png`、`analytics-customers.png`、`analytics-products.png`。
+- dev API/Web/Playwright の一時プロセスは停止済み。`food-dx-shiro` の tmux session のみ管理用に存在。
+- `cycle-tracker-app`: local `HEAD` は `0522e96`、`origin/main` は `3d98fb7`。共通祖先なし。force push 承認サインなしのため未実行。
+- disk: `/System/Volumes/Data` は 94% 使用、空き 12GiB。通常の記録・品質確認は可能。
+- push / force push / deploy / 本番変更 / 秘密情報共有 / 削除系操作は未実行。
+
+**状態**: `food-dx-shiro` は担当=白。`/products` blocker修正後の代表ルートに加え、残7ルートも実ブラウザで console/network blocker なしを確認。次アクションは必要に応じて注文詳細・承認詳細・PDF/ドキュメントの深掘り操作確認を分割実施すること。`cycle-tracker-app` は force push 承認待ちで、承認サインは `cycle-tracker force push OK`。disk cleanup は削除系操作のため、承認サイン `disk cleanup OK` なしでは実行しない。
+
+**通知判断**: notify=false（food-dx は自走で前進し、disk も12GiBあり、High Risk判断やユーザー割り込み事項は新規発生していない）。
+
+---
+
 ## 2026-06-17 heartbeat (154回目)
 
 **アクション**: `/Users/umi/.openclaw/workspace/HEARTBEAT.md` を指定パスで読み、`tasks/QUEUE.md` の Ready / In Progress を確認。Ready 未完了なし、In Progress は `food-dx-shiro` のみ。`cycle-tracker-app force push` 承認パケットは承認サインなしのため未実行。disk / 実行中プロセス / cycle-tracker local/remote を read-only で確認した。
