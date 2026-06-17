@@ -59,6 +59,30 @@ git -C /Users/umi/.openclaw/workspace/cycle-tracker-app push --force origin main
 
 ---
 
+## 2026-06-17 heartbeat (155回目)
+
+**アクション**: `/Users/umi/.openclaw/workspace/HEARTBEAT.md` を指定パスで読み、`tasks/QUEUE.md` の Ready / In Progress を確認。Ready 未完了なし、In Progress は `food-dx-shiro` のみ。古い会話由来の別タスクは広げず、`food-dx-shiro` の管理状態・品質ゲート・disk・cycle-tracker force push 承認待ちだけを確認した。`food-dx-shiro` tmux session が消えていたため、同名 session を repo 直下で復旧した。
+
+**検証**:
+- QUEUE Ready 未完了なし。In Progress = `food-dx-shiro`。
+- `food-dx-shiro`: repo `/Users/umi/.openclaw/workspace/food-dx-qwen/food-dx-system` は HEAD `b0e29da`、tracked 変更なし。tmux `food-dx-shiro` は復旧済み。
+- `npm run test:db-e2e-handoff-contract` → pass。
+- `npm run test:web:a11y-contract` → pass。
+- `npm run lint` → pass（Next.js plugin warning のみ）。
+- `npm run build:api` → pass。
+- `npm run build:web` → pass（21 pages generated）。
+- `cycle-tracker-app`: local `HEAD` は `0522e96`、`origin/main` は `3d98fb7`。共通祖先なし。force push 承認サインなしのため未実行。
+- dev API/Web/Playwright/Vite/Wrangler など前回検証由来の常駐 dev/test プロセスは残っていない。`food-dx-shiro` の tmux session のみ管理用に存在。
+- disk: `/System/Volumes/Data` は 94% 使用、空き 13GiB。154回目の 162MiB から自然回復し、通常の記録・品質確認は可能な水準へ戻った。
+- workspace の既存 tracked 変更は `projects/threads-watcher/threads-watcher-status/state.json` と `state/shiro-workflows/*` の自動更新系のみ。今回のheartbeatでは巻き戻しなし。
+- push / force push / deploy / 本番変更 / 秘密情報共有 / 削除系操作は未実行。
+
+**状態**: `food-dx-shiro` は担当=白。local DB seed / API dynamic smoke / Web runtime blocker修正 / 通常ゲート全pass済みで、今回も契約テスト・a11y契約・lint・API/Web build は全pass。次アクションは rate limit を避けた低速ルート別ブラウザE2E、またはdev/test時のみrate limitを緩めた上で console/network screenshot 確認。`cycle-tracker-app` は force push 承認待ちで、承認サインは `cycle-tracker force push OK`。disk cleanup は削除系操作のため、承認サイン `disk cleanup OK` なしでは実行しない。
+
+**通知判断**: notify=false（disk は 13GiB まで自然回復し、品質ゲートも全pass。新規のHigh Risk判断やユーザー割り込み事項はない）。
+
+---
+
 ## 2026-06-17 heartbeat (154回目)
 
 **アクション**: `/Users/umi/.openclaw/workspace/HEARTBEAT.md` を指定パスで読み、`tasks/QUEUE.md` の Ready / In Progress を確認。Ready 未完了なし、In Progress は `food-dx-shiro` のみ。`cycle-tracker-app force push` 承認パケットは承認サインなしのため未実行。disk / 実行中プロセス / cycle-tracker local/remote を read-only で確認した。
