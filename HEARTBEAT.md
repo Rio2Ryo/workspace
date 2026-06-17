@@ -130,6 +130,34 @@ git -C /Users/umi/.openclaw/workspace/cycle-tracker-app push --force origin main
 
 ---
 
+## 2026-06-17 heartbeat (158回目)
+
+**アクション**: `/Users/umi/.openclaw/workspace/HEARTBEAT.md` を指定パスで読み、`tasks/QUEUE.md` の Ready / In Progress を確認。Ready 未完了なし、In Progress は `food-dx-shiro` のみ。古い会話由来の別タスクは広げず、前回の次アクションだった注文詳細・承認詳細・ドキュメント画面の深掘りブラウザE2Eを実施した。`/orders/:id` で seed API 形状をUIが正規化できず runtime error、`/approvals/:id` で詳細取得がTODOのまま空表示になる実UI blockerを検出したため、低リスク修正して local commit `f17c1e9 fix: normalize order detail data for seed UI` を作成した。
+
+**検証**:
+- QUEUE Ready 未完了なし。In Progress = `food-dx-shiro`。
+- `food-dx-shiro`: repo `/Users/umi/.openclaw/workspace/food-dx-qwen/food-dx-system` は HEAD `f17c1e9`、tracked 変更なし。
+- 原因1: seed API の order が `total` string / uppercase `status` / nested `user` / `warehouse` / `_count.items` を返す一方、Web の注文詳細が `totalAmount` number / lowercase status / `customerName` 前提で `toLocaleString` runtime error を出していた。
+- 原因2: `apps/web/src/app/approvals/[id]/page.tsx` の詳細取得がTODOのまま `null` を返し、承認詳細で `注文が見つかりません` になっていた。
+- 修正: `apps/web/src/lib/orders.ts` に注文APIレスポンス正規化を共通化し、orders一覧・注文詳細・承認詳細をseed形状に対応。承認詳細は `/api/orders/:id` と `/api/approvals/:orderId/history` から実データを取得するよう変更。
+- 一時起動したAPI/Web + Playwrightで `/orders/6841bd6b-f031-4bd3-b228-17c247a19a56`、`/approvals/6841bd6b-f031-4bd3-b228-17c247a19a56`、`/documents` を確認。
+- 結果: console error 0、page error 0、API/ページの4xx/5xx 0、429 0。
+- スクリーンショット: `/tmp/food-dx-e2e-details-fixed/orders_6841bd6b-f031-4bd3-b228-17c247a19a56.png`、`approvals_6841bd6b-f031-4bd3-b228-17c247a19a56.png`、`documents.png`。
+- `npm run lint --workspace=@food-dx/web` → pass。
+- `npm run build:web` → pass（21 pages generated）。
+- `npm run test:db-e2e-handoff-contract` → pass。
+- `npm run test:web:a11y-contract` → pass。
+- dev API/Web/Playwright の一時プロセスは停止済み。`food-dx-shiro` の tmux session のみ管理用に存在。
+- `cycle-tracker-app`: force push 承認サインなしのため未実行。承認サインは `cycle-tracker force push OK`。
+- disk: `/System/Volumes/Data` は 94% 使用、空き 12GiB。通常の記録・品質確認は可能。
+- push / force push / deploy / 本番変更 / 秘密情報共有 / 削除系操作は未実行。
+
+**状態**: `food-dx-shiro` は担当=白。代表ルート・残7ルートに続き、注文詳細・承認詳細・ドキュメント画面も実ブラウザで console/network blocker なしを確認。次アクションは必要に応じてPDFボタンやドキュメント生成系の操作深掘り、またはローカル検証結果をもとにGitHub反映方針を整理すること。`cycle-tracker-app` は force push 承認待ちで、承認サインは `cycle-tracker force push OK`。disk cleanup は削除系操作のため、承認サイン `disk cleanup OK` なしでは実行しない。
+
+**通知判断**: notify=false（food-dx は自走で前進し、disk も12GiBあり、High Risk判断やユーザー割り込み事項は新規発生していない）。
+
+---
+
 ## 2026-06-17 heartbeat (154回目)
 
 **アクション**: `/Users/umi/.openclaw/workspace/HEARTBEAT.md` を指定パスで読み、`tasks/QUEUE.md` の Ready / In Progress を確認。Ready 未完了なし、In Progress は `food-dx-shiro` のみ。`cycle-tracker-app force push` 承認パケットは承認サインなしのため未実行。disk / 実行中プロセス / cycle-tracker local/remote を read-only で確認した。
