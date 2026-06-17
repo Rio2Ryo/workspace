@@ -83,6 +83,31 @@ git -C /Users/umi/.openclaw/workspace/cycle-tracker-app push --force origin main
 
 ---
 
+## 2026-06-17 heartbeat (156回目)
+
+**アクション**: `/Users/umi/.openclaw/workspace/HEARTBEAT.md` を指定パスで読み、`tasks/QUEUE.md` の Ready / In Progress を確認。Ready 未完了なし、In Progress は `food-dx-shiro` のみ。古い会話由来の別タスクは広げず、`food-dx-shiro` の次アクションである低速ルート別ブラウザE2Eを代表7ルートで実施した。`/products` で `/api/products/filters` と `/api/products/search` が404になり console error を出す実UI blockerを検出したため、低リスク修正して local commit `b8df61a fix: keep product utility routes before id lookup` を作成した。
+
+**検証**:
+- QUEUE Ready 未完了なし。In Progress = `food-dx-shiro`。
+- `food-dx-shiro`: repo `/Users/umi/.openclaw/workspace/food-dx-qwen/food-dx-system` は HEAD `b8df61a`。変更は `apps/api/src/routes/products.ts` のroute順序のみ。
+- 一時起動したAPI/Web + threads-watcher venv Playwrightで `/dashboard` `/products` `/orders` `/notifications` `/documents` `/analytics` `/settings/notifications` を低速確認。初回は `/products` の filters/search が404、console errorあり。
+- 原因: `apps/api/src/routes/products.ts` で `/:id` が `/search` `/filters` `/suggestions` `/searches/*` より前にあり、静的pathが商品ID扱いになっていた。
+- 修正後の `/products` 再確認: `/api/products/filters` は 200/304、`/api/products/search` は 200/304。console error 0、4xx/5xx 0、429 0。スクリーンショット `/tmp/food-dx-e2e-products/products.png` 生成。
+- Next.js 遷移中の `dashboard?_rsc` request abort は残ったが、ログイン後遷移由来の benign navigation abort で対象API blockerではない。
+- `npm run lint --workspace=@food-dx/api` → pass。
+- `npm run build:api` → pass。
+- `npm run test:db-e2e-handoff-contract` → pass。
+- dev API/Web/Playwright の一時プロセスは停止済み。`food-dx-shiro` の tmux session のみ管理用に存在。
+- `cycle-tracker-app`: local `HEAD` は `0522e96`、`origin/main` は `3d98fb7`。共通祖先なし。force push 承認サインなしのため未実行。
+- disk: `/System/Volumes/Data` は 94% 使用、空き 12GiB。通常の記録・品質確認は可能。
+- push / force push / deploy / 本番変更 / 秘密情報共有 / 削除系操作は未実行。
+
+**状態**: `food-dx-shiro` は担当=白。local DB seed / API dynamic smoke / Web runtime blocker修正 / 通常ゲート pass に加え、今回 `/products` の実ブラウザ console/network blocker も解消。次アクションは同じ低速方式で残ルート（orders/new, history, approvals, analytics詳細）を分割確認し、console/network errorを潰すこと。`cycle-tracker-app` は force push 承認待ちで、承認サインは `cycle-tracker force push OK`。disk cleanup は削除系操作のため、承認サイン `disk cleanup OK` なしでは実行しない。
+
+**通知判断**: notify=false（food-dx は自走で前進し、disk も12GiBあり、High Risk判断やユーザー割り込み事項は新規発生していない）。
+
+---
+
 ## 2026-06-17 heartbeat (154回目)
 
 **アクション**: `/Users/umi/.openclaw/workspace/HEARTBEAT.md` を指定パスで読み、`tasks/QUEUE.md` の Ready / In Progress を確認。Ready 未完了なし、In Progress は `food-dx-shiro` のみ。`cycle-tracker-app force push` 承認パケットは承認サインなしのため未実行。disk / 実行中プロセス / cycle-tracker local/remote を read-only で確認した。
