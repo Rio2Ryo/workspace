@@ -59,6 +59,30 @@ git -C /Users/umi/.openclaw/workspace/cycle-tracker-app push --force origin main
 
 ---
 
+## 2026-06-17 heartbeat (162回目)
+
+**アクション**: `/Users/umi/.openclaw/workspace/HEARTBEAT.md` を指定パスで読み、`tasks/QUEUE.md` の Ready / In Progress を確認。Ready 未完了なし、In Progress は `food-dx-shiro` のみ。古い会話由来の別タスクは広げず、前回の次アクションだった PDF auth flow の退行防止を進めたところ、documents 一覧の印刷ボタンと orders detail の `OrderActions` に未認証の `window.open('/api/pdf/...')` が残っていることを検出したため、低リスク修正して local commit `089c293 fix: cover remaining PDF auth flows` を作成した。
+
+**検証**:
+- QUEUE Ready 未完了なし。In Progress = `food-dx-shiro`。
+- `food-dx-shiro`: repo `/Users/umi/.openclaw/workspace/food-dx-qwen/food-dx-system` は HEAD `089c293`、tracked 変更なし。
+- 原因: `apps/web/src/app/documents/page.tsx` の印刷ボタンと `apps/web/src/components/orders/OrderActions.tsx` が、前回の共通化から漏れて未認証の `window.open('/api/pdf/...')` を保持していた。
+- 修正: `apps/web/src/lib/auth-fetch.ts` に authenticated download/open helper を追加し、documents page / OrderActions / PdfDownloadButton / PdfPreview / PdfBatchGenerator の PDF action を Authorization 付き Blob URL 経由へ統一。
+- 退行防止: `scripts/check-pdf-auth-contract.mjs` と `npm run test:web:pdf-auth-contract` を追加し、PDF auth/preview/batch の静的契約を固定。
+- `npm run test:web:pdf-auth-contract` → pass。
+- `npm run lint --workspace=@food-dx/web` → pass。
+- `npm run build:web` → pass（21 pages generated）。
+- dev API/Web/Playwright/Vite/Wrangler など常駐 dev/test プロセスは起動していない。`food-dx-shiro` の tmux session のみ管理用に存在。
+- `cycle-tracker-app`: force push 承認サインなしのため未実行。承認サインは `cycle-tracker force push OK`。
+- disk: `/System/Volumes/Data` は通常運用可能な水準を維持。今回のheartbeatで削除系操作は未実行。
+- push / force push / deploy / 本番変更 / 秘密情報共有 / 削除系操作は未実行。
+
+**状態**: `food-dx-shiro` は担当=白。documents batch modal / PDF preview / batch API 契約安定化に続き、documents 一覧と orders detail に残っていた未認証 PDF action も解消し、PDF 系 UI の auth flow を静的契約テスト付きで固定した。次アクションは今回の PDF auth 契約を必要なら API 側 auth 要件と合わせて拡張するか、ローカル検証結果をもとに GitHub 反映方針を整理すること。`cycle-tracker-app` は force push 承認待ちで、承認サインは `cycle-tracker force push OK`。disk cleanup は削除系操作のため、承認サイン `disk cleanup OK` なしでは実行しない。
+
+**通知判断**: notify=false（food-dx は自走で前進し、新規のHigh Risk判断やユーザー割り込み事項は発生していない）。
+
+---
+
 ## 2026-06-17 heartbeat (155回目)
 
 **アクション**: `/Users/umi/.openclaw/workspace/HEARTBEAT.md` を指定パスで読み、`tasks/QUEUE.md` の Ready / In Progress を確認。Ready 未完了なし、In Progress は `food-dx-shiro` のみ。古い会話由来の別タスクは広げず、`food-dx-shiro` の管理状態・品質ゲート・disk・cycle-tracker force push 承認待ちだけを確認した。`food-dx-shiro` tmux session が消えていたため、同名 session を repo 直下で復旧した。
