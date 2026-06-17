@@ -59,6 +59,33 @@ git -C /Users/umi/.openclaw/workspace/cycle-tracker-app push --force origin main
 
 ---
 
+## 2026-06-18 heartbeat (179回目)
+
+**アクション**: `/Users/umi/.openclaw/workspace/HEARTBEAT.md` を指定パスで読み、`tasks/QUEUE.md` の Ready / In Progress を確認。Ready 未完了なし、In Progress は `food-dx-shiro` のみ。古い会話由来の別タスクは広げず、前回の次アクション候補だった未固定の再発注を、push / deploy / 本番変更なしの低リスクローカル作業として修正・E2E固定した。`apps/web/src/components/orders/ReorderModal.tsx` で数量差分判定が `item.quantity !== item.quantity` になっており常に false だったため、初期数量 `originalQuantity` を保持して変更時だけ `quantityOverrides[item.productId]` を送るよう修正。あわせて再発注対象checkboxと数量 +/- ボタンにアクセシブル名を追加。`apps/web/e2e/core-auth-smoke.spec.ts` に注文履歴から再発注モーダルを開き、数量を1増やして送信したとき `itemIds` / `quantityOverrides` / `notes` が `/api/order-history/reorder/${order.id}` へBearer付きで送られるE2Eを追加。`scripts/check-pdf-auth-contract.mjs` に同契約を追加し、local commit `0e70295 fix: preserve reorder quantity overrides` を作成した。
+
+**検証**:
+- QUEUE Ready 未完了なし。In Progress = `food-dx-shiro`。
+- `food-dx-shiro`: repo `/Users/umi/.openclaw/workspace/food-dx-qwen/food-dx-system` は HEAD `0e70295`、tracked 変更なし。
+- `npm run test:web:core-smoke-e2e -- --grep "reorder"` → 1/1 pass。
+- `node --check scripts/check-pdf-auth-contract.mjs` → pass。
+- `npm run test:web:pdf-auth-contract` → pass。
+- `npm run test:web:pdf-auth-e2e` → 5/5 pass。
+- `npm run test:contracts` → pass（DB/E2E handoff contract、Web accessibility contract、PDF auth contract）。
+- `git diff --check` → pass。
+- `npm run lint --workspace=@food-dx/web` → pass（Next.js plugin warning のみ）。
+- `npm run test:web:core-smoke-e2e` → 初回はPDF E2Eとの並列実行でwebServer競合が起き、後半9件が `ERR_CONNECTION_REFUSED`。単独再実行で 15/15 pass。
+- `npm run build:web` → 初回はE2E webServerと並列実行したため `_document` PageNotFound で fail。E2E終了後に単独再実行し pass（21 pages generated）。
+- `food-dx` 由来の常駐 `next dev` / API `tsx watch` / Playwright / Vite / Wrangler dev は残っていない。既存 `threads-watcher` Playwrightのみ検出。管理用 tmux `food-dx-shiro` は存在。
+- disk: `/System/Volumes/Data` は 95% 使用、空き 12GiB。通常の記録・品質確認は可能。
+- `cycle-tracker-app`: force push 承認サインなしのため未実行。承認サインは `cycle-tracker force push OK`。
+- push / force push / deploy / 本番変更 / 秘密情報共有 / 削除系操作は未実行。
+
+**状態**: `food-dx-shiro` は担当=白。authenticated route smoke、PDF auth、注文詳細PDF action、注文詳細PDFメールplaceholder、承認詳細の承認・却下placeholder、再発注数量変更payloadまでローカルPlaywright runnerで確認できる状態になった。次アクションは review branch push の承認が来れば `shiro/food-dx-system-workspace` へ反映、または未固定の注文作成・検索保存などを低リスク範囲で追加E2E対象として拡張すること。`cycle-tracker-app` は force push 承認待ちで、承認サインは `cycle-tracker force push OK`。disk cleanup は削除系操作のため、承認サイン `disk cleanup OK` なしでは実行しない。
+
+**通知判断**: notify=false（food-dx は自走で前進し、force push / deploy / 本番変更など新規のHigh Risk実行はしていない。既存の review branch案・追加E2E対象・cycle-tracker force push 承認待ちは記録済みで、即時割り込みは不要）。
+
+---
+
 ## 2026-06-18 heartbeat (178回目)
 
 **アクション**: `/Users/umi/.openclaw/workspace/HEARTBEAT.md` を指定パスで読み、`tasks/QUEUE.md` の Ready / In Progress を確認。Ready 未完了なし、In Progress は `food-dx-shiro` のみ。古い会話由来の別タスクは広げず、前回の次アクション候補だった承認却下の未固定UI操作を限定し、push / deploy / 本番変更なしの低リスクローカル作業として承認詳細の却下placeholder動作をE2E固定した。`apps/web/e2e/core-auth-smoke.spec.ts` の承認詳細placeholderテストを拡張し、`却下する` → `注文承認` → `注文を却下` で却下理由が未入力なら送信不可、理由入力後は `注文を却下しました` のdialogだけを出し、未実装の `/api/approvals/${order.id}/approve` / `/reject` へ予期しないrequestを発生させないことを確認。`scripts/check-pdf-auth-contract.mjs` に同契約を追加し、local commit `925691b test: cover approval rejection placeholder` を作成した。
