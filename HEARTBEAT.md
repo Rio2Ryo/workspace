@@ -59,6 +59,31 @@ git -C /Users/umi/.openclaw/workspace/cycle-tracker-app push --force origin main
 
 ---
 
+## 2026-06-17 heartbeat (164回目)
+
+**アクション**: `/Users/umi/.openclaw/workspace/HEARTBEAT.md` を指定パスで読み、`tasks/QUEUE.md` の Ready / In Progress を確認。Ready 未完了なし、In Progress は `food-dx-shiro` のみ。古い会話由来の別タスクは広げず、前回の次アクションだった PDF auth flow の正式 Playwright spec 化を進めた。repo には Playwright 未導入のため依存追加は避け、将来の E2E runner 用に `apps/web/e2e/pdf-auth-flow.spec.ts` を追加し、現行CIで退行検知できるよう `scripts/check-pdf-auth-contract.mjs` に spec 契約も追加した。低リスク修正として local commit `c74d4ae test: add PDF auth Playwright contract` を作成した。
+
+**検証**:
+- QUEUE Ready 未完了なし。In Progress = `food-dx-shiro`。
+- `food-dx-shiro`: repo `/Users/umi/.openclaw/workspace/food-dx-qwen/food-dx-system` は HEAD `c74d4ae`、tracked 変更なし。
+- 追加: `apps/web/e2e/pdf-auth-flow.spec.ts` で documents 画面の batch generation / selected-template preview / direct download / print / templates endpoint が Authorization header を使うことを Playwright spec として明文化。
+- 退行防止: `scripts/check-pdf-auth-contract.mjs` に Playwright spec の存在、Bearer header assertion、batch / preview / direct PDF / templates endpoint の網羅契約を追加。
+- `npm run test:web:pdf-auth-contract` → pass。
+- `npm run lint --workspace=@food-dx/web` → pass。
+- `npm run build:web` → pass（21 pages generated）。
+- `git diff --check` → pass。
+- `node --check scripts/check-pdf-auth-contract.mjs` → pass。
+- 残っていた threads-watcher venv の Playwright/Chromium プロセスは停止済み。`next dev` / API `tsx watch` / Playwright / Vite / Wrangler dev など常駐 dev/test プロセスは残っていない。
+- `cycle-tracker-app`: force push 承認サインなしのため未実行。承認サインは `cycle-tracker force push OK`。
+- disk: `/System/Volumes/Data` は 94% 使用、空き 12GiB。通常の記録・品質確認は可能。
+- push / force push / deploy / 本番変更 / 秘密情報共有 / 削除系操作は未実行。
+
+**状態**: `food-dx-shiro` は担当=白。PDF UI/API auth の修正に続き、documents/PDF auth flow を正式 Playwright spec と静的契約で固定した。次アクションは GitHub 反映方針を整理するか、Playwright 導入を別判断として扱うこと。`cycle-tracker-app` は force push 承認待ちで、承認サインは `cycle-tracker force push OK`。disk cleanup は削除系操作のため、承認サイン `disk cleanup OK` なしでは実行しない。
+
+**通知判断**: notify=false（food-dx は自走で前進し、新規のHigh Risk判断やユーザー割り込み事項は発生していない）。
+
+---
+
 ## 2026-06-17 heartbeat (163回目)
 
 **アクション**: `/Users/umi/.openclaw/workspace/HEARTBEAT.md` を指定パスで読み、`tasks/QUEUE.md` の Ready / In Progress を確認。Ready 未完了なし、In Progress は `food-dx-shiro` のみ。古い会話由来の別タスクは広げず、前回の次アクションだった PDF auth 契約の API 側拡張を確認した。API の `/api/pdf/templates` も `pdfRoutes.use(authenticate)` 配下で認証必須なのに、Web の `TemplateSelector` だけが素の `fetch('/api/pdf/templates')` を使っており、ログイン済みUIでもテンプレート取得が401になり得る認証漏れを検出したため、低リスク修正して local commit `31a67e2 fix: authenticate PDF template contract` を作成した。
