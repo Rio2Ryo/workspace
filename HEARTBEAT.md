@@ -158,6 +158,83 @@ git -C /Users/umi/.openclaw/workspace/cycle-tracker-app push --force origin main
 
 ---
 
+## 2026-06-17 heartbeat (159回目)
+
+**アクション**: `/Users/umi/.openclaw/workspace/HEARTBEAT.md` を指定パスで読み、`tasks/QUEUE.md` の Ready / In Progress を確認。Ready 未完了なし、In Progress は `food-dx-shiro` のみ。古い会話由来の別タスクは広げず、前回の次アクションだった PDF/ドキュメント系の深掘り確認を実施した。`PdfPreview` が `/api/pdf/preview/...` の base64 JSON を `<object>` へ直接渡しており、実装上プレビューが成立しない blocker と、documents 画面の dropdown preview が常に invoice 固定になるズレを検出したため、低リスク修正して local commit `ab637fe fix: load PDF previews from preview API responses` を作成した。
+
+**検証**:
+- QUEUE Ready 未完了なし。In Progress = `food-dx-shiro`。
+- `food-dx-shiro`: repo `/Users/umi/.openclaw/workspace/food-dx-qwen/food-dx-system` は HEAD `ab637fe`、tracked 変更なし。
+- 原因1: `apps/web/src/components/pdf/PdfPreview.tsx` は `/api/pdf/preview/:template/:id` を PDF バイナリ前提で `<object data=...>` に渡していたが、実際の API は `{ success, data: { pdf: base64, filename, mimeType } }` JSON を返していたため、プレビューが成立しない。
+- 原因2: `apps/web/src/components/pdf/PdfDownloadButton.tsx` の preview callback が template を渡さず、documents 画面の preview が常に invoice 固定になっていた。
+- 修正: `PdfPreview` を preview API の base64 JSON を取得して Blob URL 化し、iframe preview へ変更。`PdfDownloadButton` の `onPreview` を template 引数付きに変更し、documents 画面で選択templateをそのまま preview に渡すよう修正。
+- `npm run lint --workspace=@food-dx/web` → pass。
+- `npm run build:web` → pass（21 pages generated）。
+- `npm run test:db-e2e-handoff-contract` → pass。
+- API 契約確認: login で `accessToken` 取得後、`GET /api/pdf/preview/invoice/6841bd6b-f031-4bd3-b228-17c247a19a56?language=ja` は `success: true` + `mimeType: application/pdf` + base64 payload 長 4456 を返却。`GET /api/pdf/invoice/...` は 200 OK ヘッダを返却。
+- OpenClaw browser の localhost navigation は policy block で、今回の heartbeat では実ブラウザ目視までは到達していない。dev API/Web は起動して API 契約確認後に停止予定。`food-dx-shiro` tmux session のみ管理用に存在。
+- `cycle-tracker-app`: force push 承認サインなしのため未実行。承認サインは `cycle-tracker force push OK`。
+- disk: `/System/Volumes/Data` は 94% 使用、空き 12GiB。通常の記録・品質確認は可能。
+- push / force push / deploy / 本番変更 / 秘密情報共有 / 削除系操作は未実行。
+
+**状態**: `food-dx-shiro` は担当=白。代表ルート・残7ルート・注文詳細/承認詳細に続き、PDF preview 実装 blocker も解消し、API 契約ベースでは documents/PDF 系の主要経路が成立する状態まで前進。次アクションは batch generator や PDF download/print の分岐を深掘りし、localhost を開けるブラウザ環境が使えるタイミングで preview modal の目視確認を補完すること。`cycle-tracker-app` は force push 承認待ちで、承認サインは `cycle-tracker force push OK`。disk cleanup は削除系操作のため、承認サイン `disk cleanup OK` なしでは実行しない。
+
+**通知判断**: notify=false（food-dx は自走で前進し、disk も12GiBあり、High Risk判断やユーザー割り込み事項は新規発生していない）。
+
+---
+
+## 2026-06-17 heartbeat (160回目)
+
+**アクション**: `/Users/umi/.openclaw/workspace/HEARTBEAT.md` を指定パスで読み、`tasks/QUEUE.md` の Ready / In Progress を確認。Ready 未完了なし、In Progress は `food-dx-shiro` のみ。古い会話由来の別タスクは広げず、前回の次アクションだった PDF download/print と batch generator 分岐を深掘りした。`POST /api/pdf/batch` が orderIds 1件のときだけ PDF バイナリを返し、UI側の `PdfBatchGenerator` が常に JSON として読むため1件選択の一括生成だけ壊れる実UI blockerを検出したため、低リスク修正して local commit `7f4ee88 fix: keep PDF batch response shape stable` を作成した。
+
+**検証**:
+- QUEUE Ready 未完了なし。In Progress = `food-dx-shiro`。
+- `food-dx-shiro`: repo `/Users/umi/.openclaw/workspace/food-dx-qwen/food-dx-system` は HEAD `7f4ee88`、tracked 変更なし。
+- 原因: `apps/api/src/controllers/pdfController.ts` の `/api/pdf/batch` が `orderIds.length === 1` の場合だけ `Content-Type: application/pdf` の attachment を返し、2件以上では JSON を返していた。一方、Web の `PdfBatchGenerator` は常に `response.json()` で `data.pdfs` を読む設計。
+- 修正: `/api/pdf/batch` は1件/複数件に関係なく JSON 結果を返すよう統一。単体PDFダウンロード/印刷は既存の `/api/pdf/:template/:id` direct endpoint に任せる。
+- `npm run lint --workspace=@food-dx/api` → pass。
+- `npm run build:api` → pass。
+- `npm run test:db-e2e-handoff-contract` → pass。
+- 一時起動した API で seedアカウント `admin@foodmarket.co.jp` にログイン後、`POST /api/pdf/batch` を1件/2件で確認。どちらも `200 application/json`、`success: true`、`data.pdfs` 件数と `meta` が期待通り。
+- direct PDF確認: `GET /api/pdf/invoice/6841bd6b-f031-4bd3-b228-17c247a19a56?language=ja` は `200 application/pdf`、`Content-Disposition: attachment; filename="invoice_ORD-20260615-7702.pdf"`、content-lengthあり。
+- dev API は停止済み。`next dev` / API `tsx watch` / Playwright / Vite / Wrangler dev など常駐 dev/test プロセスは残っていない。
+- `cycle-tracker-app`: local `HEAD` は `0522e96`、`origin/main` は `3d98fb7`。共通祖先なし。force push 承認サインなしのため未実行。
+- disk: `/System/Volumes/Data` は 94% 使用、空き 12GiB。通常の記録・品質確認は可能。
+- push / force push / deploy / 本番変更 / 秘密情報共有 / 削除系操作は未実行。
+
+**状態**: `food-dx-shiro` は担当=白。代表ルート・詳細画面・PDF preview に続き、batch generator の1件/複数件API契約も安定化。次アクションは localhost を開けるブラウザ環境で documents の batch modal 1件/複数件操作を目視補完、またはローカル検証結果をもとにGitHub反映方針を整理すること。`cycle-tracker-app` は force push 承認待ちで、承認サインは `cycle-tracker force push OK`。disk cleanup は削除系操作のため、承認サイン `disk cleanup OK` なしでは実行しない。
+
+**通知判断**: notify=false（food-dx は自走で前進し、disk も12GiBあり、High Risk判断やユーザー割り込み事項は新規発生していない）。
+
+---
+
+## 2026-06-17 heartbeat (161回目)
+
+**アクション**: `/Users/umi/.openclaw/workspace/HEARTBEAT.md` を指定パスで読み、`tasks/QUEUE.md` の Ready / In Progress を確認。Ready 未完了なし、In Progress は `food-dx-shiro` のみ。古い会話由来の別タスクは広げず、前回の次アクションだった documents の batch modal 1件/複数件操作を実ブラウザで目視補完した。PDF系UI actions が Authorization を付けずに直接 `fetch` / `window.open` していたため、ログイン済みUIでも batch生成・PDF download/print・preview download/print が401になり得る実UI blockerを検出し、低リスク修正して local commit `6e61b8e fix: authenticate PDF UI actions` を作成した。
+
+**検証**:
+- QUEUE Ready 未完了なし。In Progress = `food-dx-shiro`。
+- `food-dx-shiro`: repo `/Users/umi/.openclaw/workspace/food-dx-qwen/food-dx-system` は HEAD `6e61b8e`、tracked 変更なし。
+- 原因: `PdfBatchGenerator` / `PdfDownloadButton` / `PdfPreview` がPDF系APIへAuthorizationを付けず、direct endpoint や preview download/print を未認証requestで呼び得る設計だった。
+- 修正: `apps/web/src/lib/auth-fetch.ts` を追加し、`access_token` をAuthorization headerへ付ける共通処理とBlob取得を実装。batch POST、download all、direct download/print、preview download/print を authenticated fetch + Blob URL 経由へ変更。
+- 一時起動した API/Web + Playwrightで documents batch modal の1件/2件生成を確認。console error 0、page error 0、API/ページの4xx/5xx 0、429 0。
+- スクリーンショット: `/tmp/food-dx-e2e-batch-modal-fixed/documents-loaded.png`、`single-modal-before.png`、`single-modal-results.png`、`multiple-modal-before.png`、`multiple-modal-results.png`、`documents-after-batch.png`。
+- 補助確認: direct invoice download と preview modal download はPDFファイルとして成功し、PDF系API 4xx/5xx なし。スクリーンショットは `/tmp/food-dx-e2e-pdf-auth-actions-fixed/`。補助確認中の dashboard/notification fetch abort console noise はルート遷移由来でPDF blockerではない。
+- `npm run lint --workspace=@food-dx/web` → pass。
+- `npm run build:web` → pass（21 pages generated）。
+- `npm run test:db-e2e-handoff-contract` → pass。
+- `npm run test:web:a11y-contract` → pass。
+- dev API/Web/Playwright の一時プロセスは停止済み。`food-dx-shiro` の tmux session のみ管理用に存在。
+- `cycle-tracker-app`: force push 承認サインなしのため未実行。承認サインは `cycle-tracker force push OK`。
+- disk: `/System/Volumes/Data` は 94% 使用、空き 12GiB。通常の記録・品質確認は可能。
+- push / force push / deploy / 本番変更 / 秘密情報共有 / 削除系操作は未実行。
+
+**状態**: `food-dx-shiro` は担当=白。PDF batch API契約安定化に続き、documents UIの batch modal 1件/2件生成とPDF系認証付きdownload/preview/print経路も成立する状態まで前進。次アクションはPDF auth flowを正式Playwright spec化するか、ローカル検証結果をもとにGitHub反映方針を整理すること。`cycle-tracker-app` は force push 承認待ちで、承認サインは `cycle-tracker force push OK`。disk cleanup は削除系操作のため、承認サイン `disk cleanup OK` なしでは実行しない。
+
+**通知判断**: notify=false（food-dx は自走で前進し、disk も12GiBあり、High Risk判断やユーザー割り込み事項は新規発生していない）。
+
+---
+
 ## 2026-06-17 heartbeat (154回目)
 
 **アクション**: `/Users/umi/.openclaw/workspace/HEARTBEAT.md` を指定パスで読み、`tasks/QUEUE.md` の Ready / In Progress を確認。Ready 未完了なし、In Progress は `food-dx-shiro` のみ。`cycle-tracker-app force push` 承認パケットは承認サインなしのため未実行。disk / 実行中プロセス / cycle-tracker local/remote を read-only で確認した。
