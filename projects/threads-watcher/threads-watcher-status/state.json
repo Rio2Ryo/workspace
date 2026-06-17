@@ -5,14 +5,27 @@
     "@bmw_intokyo"
   ],
   "last_check": {
-    "checked_at": "2026-06-16T23:58:48Z",
-    "found_count": 4,
+    "checked_at": "2026-06-17T22:53:58Z",
+    "found_count": 15,
     "new_count": 0,
-    "status": "partial_error",
-    "error": "profile extraction returned partial result: found=4 previous_max=15"
+    "status": "ok",
+    "error": null
   },
-  "saved_count": 101,
+  "saved_count": 102,
   "posts": [
+    {
+      "handle": "@hal.lifedesign",
+      "post_id": "DZtFL-NEpnW",
+      "post_url": "https://www.threads.com/@hal.lifedesign/post/DZtFL-NEpnW",
+      "first_seen_at": "2026-06-17T22:52:13Z",
+      "captured_at": "2026-06-17T22:52:19Z",
+      "screenshot_size_bytes": 884124,
+      "screenshot_width": 1280,
+      "screenshot_height": 1800,
+      "post_text": "今日は肩トレ。 ほぼ全種目PR更新。 寝不足の割に良くやったな自分。",
+      "posted_at": "2026-06-17T22:50:42.000Z",
+      "screenshot_path": "screenshots/hal.lifedesign/DZtFL-NEpnW.png"
+    },
     {
       "handle": "@hal.lifedesign",
       "post_id": "DZqnhd1kkRa",
@@ -1329,65 +1342,65 @@
   ],
   "recent_stats": {
     "window_hours": 24,
-    "total": 758,
-    "ok": 83,
-    "partial_error": 674,
+    "total": 993,
+    "ok": 308,
+    "partial_error": 684,
     "error": 1,
     "other": 0,
-    "success_rate": 0.10949868073878628,
-    "partial_error_rate": 0.8891820580474934,
+    "success_rate": 0.31017119838872104,
+    "partial_error_rate": 0.6888217522658611,
     "top_partial_error_reason": {
-      "reason": "profile extraction returned partial result: found=4 previous_max=16",
-      "count": 329
+      "reason": "profile extraction returned partial result: found=4 previous_max=15",
+      "count": 627
     }
   },
   "recent_stats_by_window": {
     "1": {
       "window_hours": 1,
-      "total": 42,
-      "ok": 2,
-      "partial_error": 40,
+      "total": 43,
+      "ok": 15,
+      "partial_error": 28,
       "error": 0,
       "other": 0,
-      "success_rate": 0.047619047619047616,
-      "partial_error_rate": 0.9523809523809523,
+      "success_rate": 0.3488372093023256,
+      "partial_error_rate": 0.6511627906976745,
       "top_partial_error_reason": {
         "reason": "profile extraction returned partial result: found=4 previous_max=15",
-        "count": 40
+        "count": 26
       }
     },
     "24": {
       "window_hours": 24,
-      "total": 758,
-      "ok": 83,
-      "partial_error": 674,
+      "total": 993,
+      "ok": 308,
+      "partial_error": 684,
       "error": 1,
       "other": 0,
-      "success_rate": 0.10949868073878628,
-      "partial_error_rate": 0.8891820580474934,
+      "success_rate": 0.31017119838872104,
+      "partial_error_rate": 0.6888217522658611,
       "top_partial_error_reason": {
-        "reason": "profile extraction returned partial result: found=4 previous_max=16",
-        "count": 329
+        "reason": "profile extraction returned partial result: found=4 previous_max=15",
+        "count": 627
       }
     },
     "168": {
       "window_hours": 168,
-      "total": 6796,
-      "ok": 83,
-      "partial_error": 6711,
-      "error": 2,
+      "total": 6778,
+      "ok": 389,
+      "partial_error": 6386,
+      "error": 3,
       "other": 0,
-      "success_rate": 0.012213066509711596,
-      "partial_error_rate": 0.9874926427310182,
+      "success_rate": 0.05739156093242845,
+      "partial_error_rate": 0.942165830628504,
       "top_partial_error_reason": {
         "reason": "profile extraction returned partial result: found=4 previous_max=16",
-        "count": 4573
+        "count": 3933
       }
     }
   },
   "sync_state": {
-    "cursor": 123,
-    "db_max": 124,
+    "cursor": 124,
+    "db_max": 125,
     "delta": 1,
     "cursor_file_exists": true
   },
@@ -1403,10 +1416,10 @@
     },
     {
       "handle": "@hal.lifedesign",
-      "incidents": 1,
-      "total_s": 426210,
-      "mean_s": 426210,
-      "median_s": 426210,
+      "incidents": 2,
+      "total_s": 488056,
+      "mean_s": 244028,
+      "median_s": 244028,
       "max_s": 426210
     }
   ],
@@ -1414,13 +1427,13 @@
     {
       "handle": "@bmw_intokyo",
       "warn_ts": 1781638098,
-      "current_bucket": 0.9
+      "current_bucket": 0.7
     },
     {
       "handle": "@hal.lifedesign",
-      "warn_ts": 1781639900,
-      "current_bucket": 0.9
+      "warn_ts": 1781702046,
+      "current_bucket": 0.6
     }
   ],
-  "snapshot_generated_at": "2026-06-16T23:58:48Z"
+  "snapshot_generated_at": "2026-06-17T22:53:58Z"
 }
