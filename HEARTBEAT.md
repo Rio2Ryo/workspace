@@ -59,6 +59,33 @@ git -C /Users/umi/.openclaw/workspace/cycle-tracker-app push --force origin main
 
 ---
 
+## 2026-06-18 heartbeat (177回目)
+
+**アクション**: `/Users/umi/.openclaw/workspace/HEARTBEAT.md` を指定パスで読み、`tasks/QUEUE.md` の Ready / In Progress を確認。Ready 未完了なし、In Progress は `food-dx-shiro` のみ。古い会話由来の別タスクは広げず、前回の次アクション候補だった注文・承認周辺の未固定UI操作から承認詳細の承認placeholderを限定し、push / deploy / 本番変更なしの低リスクローカル作業としてE2E固定した。`apps/web/e2e/core-auth-smoke.spec.ts` に、承認詳細で `承認する` → `注文承認` → confirm の現行placeholderを踏み、`注文を承認しました` のdialogだけを出し、未実装の `/api/approvals/${order.id}/approve` / `/reject` へ予期しないrequestを発生させないテストを追加。`scripts/check-pdf-auth-contract.mjs` に同契約を追加し、local commit `a5b9aa7 test: cover approval decision placeholder` を作成した。
+
+**検証**:
+- QUEUE Ready 未完了なし。In Progress = `food-dx-shiro`。
+- `food-dx-shiro`: repo `/Users/umi/.openclaw/workspace/food-dx-qwen/food-dx-system` は HEAD `a5b9aa7`、tracked 変更なし。
+- `npm run test:web:core-smoke-e2e -- --grep "approval detail"` → 2/2 pass。
+- `node --check scripts/check-pdf-auth-contract.mjs` → pass。
+- `npm run test:web:pdf-auth-contract` → pass。
+- `git diff --check` → pass。
+- `npm run test:web:core-smoke-e2e` → 14/14 pass。
+- `npm run test:web:pdf-auth-e2e` → 5/5 pass。
+- `npm run test:contracts` → pass（DB/E2E handoff contract、Web accessibility contract、PDF auth contract）。
+- `npm run lint --workspace=@food-dx/web` → pass（Next.js plugin warning のみ）。
+- `npm run build:web` → pass（21 pages generated）。
+- `food-dx` 由来の常駐 `next dev` / API `tsx watch` / Playwright / Vite / Wrangler dev は残っていない。管理用 tmux `food-dx-shiro` のみ存在。
+- disk: `/System/Volumes/Data` は 95% 使用、空き 12GiB。通常の記録・品質確認は可能。
+- `cycle-tracker-app`: force push 承認サインなしのため未実行。承認サインは `cycle-tracker force push OK`。
+- push / force push / deploy / 本番変更 / 秘密情報共有 / 削除系操作は未実行。
+
+**状態**: `food-dx-shiro` は担当=白。authenticated route smoke、PDF auth、注文詳細PDF action、注文詳細PDFメールplaceholder、承認詳細placeholderまでローカルPlaywright runnerで確認できる状態になった。次アクションは review branch push の承認が来れば `shiro/food-dx-system-workspace` へ反映、または未固定の再発注・承認却下などを低リスク範囲で追加E2E対象として拡張すること。`cycle-tracker-app` は force push 承認待ちで、承認サインは `cycle-tracker force push OK`。disk cleanup は削除系操作のため、承認サイン `disk cleanup OK` なしでは実行しない。
+
+**通知判断**: notify=false（food-dx は自走で前進し、force push / deploy / 本番変更など新規のHigh Risk実行はしていない。既存の review branch案・追加E2E対象・cycle-tracker force push 承認待ちは記録済みで、即時割り込みは不要）。
+
+---
+
 ## 2026-06-18 heartbeat (176回目)
 
 **アクション**: `/Users/umi/.openclaw/workspace/HEARTBEAT.md` を指定パスで読み、`tasks/QUEUE.md` の Ready / In Progress を確認。Ready 未完了なし、In Progress は `food-dx-shiro` のみ。古い会話由来の別タスクは広げず、前回の次アクション候補だった残るPDF/注文周辺操作を限定し、push / deploy / 本番変更なしの低リスクローカル作業として注文詳細PDFのメールplaceholder動作をE2E固定した。`apps/web/e2e/pdf-auth-flow.spec.ts` に、注文詳細の `PDF その他操作` から `メール - 請求書` を選んだ場合、現状どおり `メール送信機能は準備中です` のdialogだけを出し、`/api/pdf` / `/api/email` / `/api/notifications/send` への予期しない送信requestを発生させないテストを追加。`scripts/check-pdf-auth-contract.mjs` に同契約を追加し、local commit `08bbdfd test: cover order detail email PDF placeholder` を作成した。
