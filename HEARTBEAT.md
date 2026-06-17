@@ -59,6 +59,31 @@ git -C /Users/umi/.openclaw/workspace/cycle-tracker-app push --force origin main
 
 ---
 
+## 2026-06-17 heartbeat (170回目)
+
+**アクション**: `/Users/umi/.openclaw/workspace/HEARTBEAT.md` を指定パスで読み、`tasks/QUEUE.md` の Ready / In Progress を確認。Ready 未完了なし、In Progress は `food-dx-shiro` のみ。古い会話由来の別タスクは広げず、前回の次アクション候補だった追加E2E対象を限定し、push / deploy / 本番変更なしの低リスクローカル作業として authenticated core route smoke を追加した。`apps/web/e2e/core-auth-smoke.spec.ts` を新規追加し、`/dashboard` / `/products` / `/orders` の3画面について `localStorage` token seed、`/api/auth/me` bootstrap、主要API request の `Authorization: Bearer`、console error / page error / API 4xx/5xx がないことを Playwright route mock で固定。root `package.json` に `test:web:core-smoke-e2e` script を追加し、`scripts/check-pdf-auth-contract.mjs` に core smoke spec の存在・対象route・console/API failure検出契約を追加。local commit `78dd815 test: add core authenticated route smoke e2e` を作成した。
+
+**検証**:
+- QUEUE Ready 未完了なし。In Progress = `food-dx-shiro`。
+- `food-dx-shiro`: repo `/Users/umi/.openclaw/workspace/food-dx-qwen/food-dx-system` は HEAD `78dd815`、tracked 変更なし。
+- 初回 `npm run test:web:core-smoke-e2e` は products の `/api/products/searches/saved` mock不足と orders の表示前提ズレで fail。mockと期待値を修正後、3/3 pass。
+- `npm run test:web:pdf-auth-e2e` → 3/3 pass。
+- `npm run test:contracts` → pass（DB/E2E handoff contract、Web accessibility contract、PDF auth contract）。
+- `npm run test:web:pdf-auth-contract` → pass。
+- `npm run lint --workspace=@food-dx/web` → pass（Next.js plugin warning のみ）。
+- `npm run build:web` → pass（21 pages generated）。
+- `git diff --check` → pass。
+- `food-dx` 由来の常駐 `next dev` / API `tsx watch` / Playwright / Vite / Wrangler dev は残っていない。`threads-watcher` 由来の既存 Playwright/Chromium プロセスは別件で残存。
+- disk: `/System/Volumes/Data` は 95% 使用、空き 12GiB。通常の記録・品質確認は可能。
+- `cycle-tracker-app`: force push 承認サインなしのため未実行。承認サインは `cycle-tracker force push OK`。
+- push / force push / deploy / 本番変更 / 秘密情報共有 / 削除系操作は未実行。
+
+**状態**: `food-dx-shiro` は担当=白。PDF auth E2Eに加え、dashboard / products / orders の authenticated route smoke もローカル Playwright runner で実行できる状態になった。次アクションは review branch push の承認が来れば `shiro/food-dx-system-workspace` へ反映、または analytics / notifications など追加E2E対象をさらに限定して拡張すること。`cycle-tracker-app` は force push 承認待ちで、承認サインは `cycle-tracker force push OK`。disk cleanup は削除系操作のため、承認サイン `disk cleanup OK` なしでは実行しない。
+
+**通知判断**: notify=false（food-dx は自走で前進し、force push / deploy / 本番変更など新規のHigh Risk実行はしていない。既存の review branch案・追加E2E対象・cycle-tracker force push 承認待ちは記録済みで、即時割り込みは不要）。
+
+---
+
 ## 2026-06-17 heartbeat (169回目)
 
 **アクション**: `/Users/umi/.openclaw/workspace/HEARTBEAT.md` を指定パスで読み、`tasks/QUEUE.md` の Ready / In Progress を確認。Ready 未完了なし、In Progress は `food-dx-shiro` のみ。古い会話由来の別タスクは広げず、前回の次アクション候補だった Playwright runner 導入を、push / deploy / 本番変更なしの低リスクローカル作業として実施した。`@playwright/test` を devDependency に追加し、root `playwright.config.ts` と `test:web:pdf-auth-e2e` script を追加。`apps/web/e2e/pdf-auth-flow.spec.ts` は実行時に汎用 `**/api/pdf/**` mock が preview API も拾う順序問題があったため、preview 専用routeが優先されるよう調整した。`scripts/check-pdf-auth-contract.mjs` に runner/config/script の契約も追加し、local commit `170c25d test: add PDF auth Playwright runner` を作成した。
