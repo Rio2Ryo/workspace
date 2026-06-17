@@ -84,6 +84,31 @@ git -C /Users/umi/.openclaw/workspace/cycle-tracker-app push --force origin main
 
 ---
 
+## 2026-06-17 heartbeat (166回目)
+
+**アクション**: `/Users/umi/.openclaw/workspace/HEARTBEAT.md` を指定パスで読み、`tasks/QUEUE.md` の Ready / In Progress を確認。Ready 未完了なし、In Progress は `food-dx-shiro` のみ。古い会話由来の別タスクは広げず、前回候補だった Playwright runner 導入は依存追加を伴うため別判断に回し、依存追加なしで既存 Playwright spec 契約を補強した。全ページの `AuthProvider` が mount 時に `/api/auth/me` を呼ぶため、将来 runner を入れた際に documents/PDF spec が session bootstrap で詰まらないよう、`apps/web/e2e/pdf-auth-flow.spec.ts` に `/api/auth/me` route mock と Authorization header assertion を追加し、`scripts/check-pdf-auth-contract.mjs` にも同契約を追加した。低リスク修正として local commit `20a2cb2 test: cover PDF auth bootstrap in Playwright contract` を作成した。
+
+**検証**:
+- QUEUE Ready 未完了なし。In Progress = `food-dx-shiro`。
+- `food-dx-shiro`: repo `/Users/umi/.openclaw/workspace/food-dx-qwen/food-dx-system` は HEAD `20a2cb2`、tracked 変更なし。
+- 追加: `apps/web/e2e/pdf-auth-flow.spec.ts` が `/api/auth/me` も bearer token 付きで mock し、`AuthProvider` の初期session確認を満たす契約にした。
+- 退行防止: `scripts/check-pdf-auth-contract.mjs` に Playwright spec の `/api/auth/me` bootstrap 契約を追加。
+- `npm run test:web:pdf-auth-contract` → pass。
+- `node --check scripts/check-pdf-auth-contract.mjs` → pass。
+- `git diff --check` → pass。
+- `npm run lint --workspace=@food-dx/web` → pass。
+- `npm run build:web` → pass（21 pages generated）。
+- 常駐 `next dev` / API `tsx watch` / Playwright / Vite / Wrangler dev は残っていない。
+- `cycle-tracker-app`: force push 承認サインなしのため未実行。承認サインは `cycle-tracker force push OK`。
+- disk: `/System/Volumes/Data` は 94% 使用、空き 12GiB。通常の記録・品質確認は可能。
+- push / force push / deploy / 本番変更 / 秘密情報共有 / 削除系操作は未実行。
+
+**状態**: `food-dx-shiro` は担当=白。PDF UI/API auth の修正・静的契約・将来Playwright spec化・GitHub反映方針整理に続き、runner導入前の auth bootstrap 契約まで補強済み。次アクションは review branch push の承認が来れば `shiro/food-dx-system-workspace` へ反映、または Playwright runner 導入を依存追加の別判断として扱うこと。`cycle-tracker-app` は force push 承認待ちで、承認サインは `cycle-tracker force push OK`。disk cleanup は削除系操作のため、承認サイン `disk cleanup OK` なしでは実行しない。
+
+**通知判断**: notify=false（food-dx は自走で前進し、force push / deploy / 本番変更など新規のHigh Risk実行はしていない。review branch案と runner 導入判断は記録済みで、即時割り込みは不要）。
+
+---
+
 ## 2026-06-17 heartbeat (164回目)
 
 **アクション**: `/Users/umi/.openclaw/workspace/HEARTBEAT.md` を指定パスで読み、`tasks/QUEUE.md` の Ready / In Progress を確認。Ready 未完了なし、In Progress は `food-dx-shiro` のみ。古い会話由来の別タスクは広げず、前回の次アクションだった PDF auth flow の正式 Playwright spec 化を進めた。repo には Playwright 未導入のため依存追加は避け、将来の E2E runner 用に `apps/web/e2e/pdf-auth-flow.spec.ts` を追加し、現行CIで退行検知できるよう `scripts/check-pdf-auth-contract.mjs` に spec 契約も追加した。低リスク修正として local commit `c74d4ae test: add PDF auth Playwright contract` を作成した。
