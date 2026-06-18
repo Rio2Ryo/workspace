@@ -59,6 +59,31 @@ git -C /Users/umi/.openclaw/workspace/cycle-tracker-app push --force origin main
 
 ---
 
+## 2026-06-18 heartbeat (187回目)
+
+**アクション**: `/Users/umi/.openclaw/workspace/HEARTBEAT.md` を指定パスで読み、`tasks/QUEUE.md` の Ready / In Progress を確認。Ready 未完了なし、In Progress は `food-dx-shiro` のみ。古い会話由来の別タスクは広げず、前回の次アクション候補だった残る低リスクUIフローから発注履歴の頻出商品クイック再発注を限定し、push / deploy / 本番変更なしのローカル作業として `FrequentItems` の console-only placeholder を新規発注画面への実導線へ修正した。`apps/web/src/components/orders/FrequentItems.tsx` に `useRouter` を追加し、頻出商品の `productId` / `productName` / 平均数量 / 単価を `/orders/new` の既存prefill queryへ渡すよう変更。デスクトップのカートボタンへ `${productName}をクイック再発注` のアクセシブル名を付与し、モバイルの最上位商品追加ボタンも同じ導線へ接続。`apps/web/e2e/core-auth-smoke.spec.ts` に発注履歴の頻出商品ボタンから新規発注へ遷移し、商品・数量・合計金額がprefillされることを確認する spec を追加。`scripts/check-pdf-auth-contract.mjs` に同導線と console-only 再発防止契約を追加。local commit `7f14ee8 fix: prefill new orders from frequent items` を作成した。
+
+**検証**:
+- QUEUE Ready 未完了なし。In Progress = `food-dx-shiro`。
+- `food-dx-shiro`: repo `/Users/umi/.openclaw/workspace/food-dx-qwen/food-dx-system` は HEAD `7f14ee8`、tracked 変更なし。
+- `npm run test:web:core-smoke-e2e -- --grep "frequent item opens new order"` → 1/1 pass。
+- `node --check scripts/check-pdf-auth-contract.mjs` → pass。
+- `npm run test:web:pdf-auth-contract` → pass。
+- `git diff --check` → pass。
+- `npm run lint --workspace=@food-dx/web` → pass（Next.js plugin warning のみ）。
+- `npm run test:web:core-smoke-e2e` → 21/21 pass。
+- `npm run build:web` → pass（21 pages generated）。E2E webServer並列中の初回のみ既知の `/_document` PageNotFound でfail、E2E終了後の単独再実行でpass。
+- `food-dx` 由来の常駐 `next dev` / API `tsx watch` / Playwright / Vite / Wrangler dev は残っていない。管理用 tmux `food-dx-shiro` のみ存在。
+- disk: `/System/Volumes/Data` は 95% 使用、空き 12GiB。通常の記録・品質確認は可能。
+- `cycle-tracker-app`: force push 承認サインなしのため未実行。承認サインは `cycle-tracker force push OK`。
+- push / force push / deploy / 本番変更 / 秘密情報共有 / 削除系操作は未実行。
+
+**状態**: `food-dx-shiro` は担当=白。authenticated route smoke、PDF auth、注文詳細PDF action、注文詳細PDFメールplaceholder、承認詳細の承認/却下API送信、承認一覧の一括承認/一括却下API送信、通知センターからのテスト通知API送信、発注履歴の頻出商品から新規発注prefillまでローカルPlaywright runnerで確認できる状態になった。次アクションは review branch push の承認が来れば `shiro/food-dx-system-workspace` へ反映、未承認なら残る低リスクUIフローを追加E2E対象として限定して拡張すること。`cycle-tracker-app` は force push 承認待ちで、承認サインは `cycle-tracker force push OK`。disk cleanup は削除系操作のため、承認サイン `disk cleanup OK` なしでは実行しない。
+
+**通知判断**: notify=false（food-dx は自走で前進し、force push / deploy / 本番変更など新規のHigh Risk実行はしていない。既存の review branch案・追加E2E対象・cycle-tracker force push 承認待ちは記録済みで、即時割り込みは不要）。
+
+---
+
 ## 2026-06-18 heartbeat (186回目)
 
 **アクション**: `/Users/umi/.openclaw/workspace/HEARTBEAT.md` を指定パスで読み、`tasks/QUEUE.md` の Ready / In Progress を確認。Ready 未完了なし、In Progress は `food-dx-shiro` のみ。古い会話由来の別タスクは広げず、前回の次アクション候補だった残る低リスクUIフローから通知センターの設定導線とテスト通知送信を限定し、push / deploy / 本番変更なしのローカル作業として到達不能だった `PreferencesModal` を開けるよう修正し、既存APIの `POST /api/notifications/test` を叩く E2E を追加して固定した。`apps/web/src/app/notifications/page.tsx` に `通知設定` ボタンを追加して `setShowPreferencesModal(true)` でモーダルを開くよう変更し、`apps/web/e2e/core-auth-smoke.spec.ts` に通知ページからモーダルを開いて `メールをテスト` を押したとき Bearer 付き `/api/notifications/test` が送信され成功ダイアログが出ることを確認する spec を追加。`scripts/check-pdf-auth-contract.mjs` に通知ページの設定導線とテスト通知API契約を追加。local commit `65be850 fix: expose notification preferences test flow` を作成した。
