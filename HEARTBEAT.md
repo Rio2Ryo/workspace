@@ -3872,6 +3872,43 @@ npm run build:api && npm run build:web
 
 **次アクション**: 承認待ち。
 
+## 2026-06-18 heartbeat (188回目)
+
+**アクション**: `/Users/umi/.openclaw/workspace/HEARTBEAT.md` を指定パスで読み、`tasks/QUEUE.md` の Ready / In Progress を確認。Ready 未完了なし、In Progress は `food-dx-shiro` のみ。古い会話由来の別タスクは広げず、前回の次アクション候補だった残る低リスクUIフローからPDFメール送信導線を限定し、push / deploy / 本番変更なしのローカル作業として order detail と documents の email placeholder を実導線へ差し替えた。`apps/api/src/controllers/pdfController.ts` に `sendEmail=true` 時の実送信処理を追加し、SMTP 未設定なら `EMAIL_NOT_CONFIGURED`、送信先不在なら `EMAIL_RECIPIENT_REQUIRED` を返し、利用可能な場合は既存 `emailService` で注文担当者メールへ PDF 添付送信して JSON success を返すよう変更。`apps/api/src/services/emailService.ts` は attachment に `Buffer` を許可。`apps/web/src/lib/auth-fetch.ts` に `fetchAuthenticatedJson()` を追加し、`apps/web/src/components/orders/OrderActions.tsx` と `apps/web/src/components/pdf/PdfDownloadButton.tsx` のメール操作を `/api/pdf/download/:template/:id?sendEmail=true` へ接続、送信成功/失敗をダイアログで返すよう変更。`apps/web/e2e/pdf-auth-flow.spec.ts` は order detail / documents のメール送信アクションが Bearer 付き download-with-email API を呼ぶことを確認する spec に更新し、`scripts/check-pdf-auth-contract.mjs` も同契約へ更新。local commit `d4ee7a9 feat: send order PDFs by email` を作成した。
+
+**検証**:
+- QUEUE Ready 未完了なし。In Progress = `food-dx-shiro`。
+- `food-dx-shiro`: repo `/Users/umi/.openclaw/workspace/food-dx-qwen/food-dx-system` は HEAD `d4ee7a9`、tracked 変更なし。
+- `npm run test:web:pdf-auth-e2e` → 6/6 pass。
+- `npm run test:web:pdf-auth-contract` → pass。
+- `npm run lint --workspace=@food-dx/web` → pass（Next.js plugin warning のみ）。
+- `npm run build:api` → pass。
+- `npm run build:web` → pass（21 pages generated）。
+- `git diff --check` → pass。
+- push / force push / deploy / 本番変更 / 秘密情報共有 / 削除系操作は未実行。
+
+**状態**: `food-dx-shiro` は担当=白。authenticated route smoke、PDF auth、注文詳細PDF action、承認送信、通知テスト送信、頻出商品prefillに続き、order detail / documents の PDFメール送信導線もローカルで実装・固定した。次アクションは review branch push の承認が来れば `shiro/food-dx-system-workspace` へ反映、未承認なら残る低リスクUIフローを追加E2E対象として限定して拡張すること。`cycle-tracker-app` は force push 承認サイン待ちのまま変更なし。disk cleanup は削除系操作のため、承認サイン `disk cleanup OK` なしでは実行しない。
+
+**通知判断**: notify=false（food-dx は自走で前進し、High Risk 実行は増えていない。即時割り込みが必要な新規 blocker なし）。
+
+## 2026-06-18 heartbeat (189回目)
+
+**アクション**: `/Users/umi/.openclaw/workspace/HEARTBEAT.md` を指定パスで読み、`tasks/QUEUE.md` の Ready / In Progress を確認。Ready 未完了なし、In Progress は `food-dx-shiro` のみ。古い会話由来の別タスクは広げず、前回の次アクション候補だった残る低リスクAPIフローから承認ワークフロー通知を限定し、push / deploy / 本番変更なしのローカル作業として `approvalService` の TODO / console-only 通知 placeholder を実通知作成へ修正した。`apps/api/src/services/approvalService.ts` で次承認者への `APPROVAL_REQUEST`、注文作成者への承認/却下 `APPROVAL_RESULT` を既存 `notificationService.createAndSend()` 経由の `IN_APP` 通知として作成するよう変更し、通知失敗は承認処理を止めず logger に残すようにした。単体承認/却下だけでなく一括承認/却下でも通知されるよう、重複していた controller 側の `notificationEventHandler` 呼び出しを削除し、通知責務を service に集約した。`scripts/check-pdf-auth-contract.mjs` に承認通知が TODO / console-only に戻らない契約を追加。local commit `2ec9220 fix: send approval workflow notifications` を作成した。
+
+**検証**:
+- QUEUE Ready 未完了なし。In Progress = `food-dx-shiro`。
+- `food-dx-shiro`: repo `/Users/umi/.openclaw/workspace/food-dx-qwen/food-dx-system` は HEAD `2ec9220`、tracked 変更なし。
+- `npm run test:web:pdf-auth-contract` → pass。
+- `npm run lint --workspace=@food-dx/api` → pass。
+- `npm run build:api` → pass。
+- `npm run test:contracts` → pass（DB/E2E handoff contract、Web accessibility contract、PDF auth contract）。
+- `git diff --check` → pass。
+- push / force push / deploy / 本番変更 / 秘密情報共有 / 削除系操作は未実行。
+
+**状態**: 目的: 承認フローの通知が placeholder のまま止まる退行防止 / 現担当: 白 / 現状: 承認依頼・承認結果・却下結果の in-app 通知作成をAPI service層で固定済み / 次アクション: review branch push 承認が来れば `shiro/food-dx-system-workspace` へ反映、未承認なら残る低リスクUI/APIフローを追加E2E対象として限定して拡張 / 詰まり: review branch push と `cycle-tracker-app` force push は承認待ち、disk cleanup は削除系操作のため承認待ち / 支援候補: Yakon（承認が必要な場合のみ） / 期限: 次heartbeatで継続確認。
+
+**通知判断**: notify=false（food-dx は自走で前進し、High Risk 実行は増えていない。即時割り込みが必要な新規 blocker なし）。
+
 ## 2026-06-15 heartbeat (tick 89)
 
 **アクション**: 新タスク RAKUI [DONE] パケット発見・記録。STATUS.md + pending commits push。
