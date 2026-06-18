@@ -59,6 +59,29 @@ git -C /Users/umi/.openclaw/workspace/cycle-tracker-app push --force origin main
 
 ---
 
+## 2026-06-19 heartbeat (194回目)
+
+**アクション**: `/Users/umi/.openclaw/workspace/HEARTBEAT.md` を指定パスで読み、`tasks/QUEUE.md` の Ready / In Progress を確認。Ready 未完了なし、In Progress は `food-dx-shiro` のみ。古い会話由来の別タスクは広げず、前回の次アクション候補だった残る低リスクUIフローから商品検索結果の詳細導線を限定し、push / deploy / 本番変更なしのローカル作業として `/products/:id` の404導線を商品詳細ページへ修正した。従来は商品カードの「詳細」ボタンが `/products/${productId}` へ遷移する一方、Web側に `apps/web/src/app/products/[id]/page.tsx` が存在せず、既存API `GET /api/products/:id` へ到達できなかった。新規商品詳細ページを追加し、認証付き `api.get<ProductDetailResponse>(\`/api/products/${productId}\`)` で基本情報・価格・倉庫別在庫・価格履歴を表示し、「発注に追加」から既存 `/orders/new` prefill query へつなぐよう変更。`apps/web/e2e/core-auth-smoke.spec.ts` に商品一覧の「詳細」クリックから詳細ページへ遷移し、Bearer付き `/api/products/:id` が呼ばれ、発注prefill link が生成されるE2Eを追加。`scripts/check-pdf-auth-contract.mjs` と `scripts/db-e2e-routes.mjs` に商品詳細ルート契約とseed後確認ルートを追加。local commit `bbb923f fix: add product detail route smoke coverage` を作成した。
+
+**検証**:
+- QUEUE Ready 未完了なし。In Progress = `food-dx-shiro`。
+- `food-dx-shiro`: repo `/Users/umi/.openclaw/workspace/food-dx-qwen/food-dx-system` は HEAD `bbb923f`、tracked 変更なし。
+- `npm run test:web:core-smoke-e2e -- --grep "product detail"` → pass。
+- `npm run test:web:core-smoke-e2e` → 24/24 pass。
+- `npm run test:contracts` → pass（DB/E2E handoff contract、Web accessibility contract、PDF auth contract）。
+- `npm run test:web:pdf-auth-contract` → pass。
+- `npm run lint --workspace=@food-dx/web` → pass（Next.js plugin warning のみ）。
+- `npm run build:web` → pass（21 pages generated）。E2E webServer並列中の初回のみ既知の `/_document` PageNotFound でfail、E2E終了後の単独再実行でpass。
+- `git diff --check` → pass。
+- `food-dx` 由来の常駐 `next dev` / API `tsx watch` / Playwright / Vite / Wrangler dev は残っていない。管理用 tmux `food-dx-shiro` のみ存在。
+- disk: `/System/Volumes/Data` は 95% 使用、空き 11GiB。通常の記録・品質確認は可能。
+- `cycle-tracker-app`: force push 承認サインなしのため未実行。承認サインは `cycle-tracker force push OK`。
+- push / force push / deploy / 本番変更 / 秘密情報共有 / 削除系操作は未実行。
+
+**状態**: 目的: 商品検索結果の詳細導線が404のまま止まる退行防止 / 現担当: 白 / 現状: 商品詳細ページ・商品詳細API呼び出し・発注prefill link をE2Eと契約で固定済み / 次アクション: review branch push 承認が来れば `shiro/food-dx-system-workspace` へ反映、未承認なら残る低リスクUI/APIフローを追加E2E対象として限定して拡張 / 詰まり: review branch push と `cycle-tracker-app` force push は承認待ち、disk cleanup は削除系操作のため承認待ち / 支援候補: Yakon（承認が必要な場合のみ） / 期限: 次heartbeatで継続確認。
+
+**通知判断**: notify=false（food-dx は自走で前進し、High Risk 実行は増えていない。即時割り込みが必要な新規 blocker なし）。
+
 ## 2026-06-19 heartbeat (193回目)
 
 **アクション**: `/Users/umi/.openclaw/workspace/HEARTBEAT.md` を指定パスで読み、`tasks/QUEUE.md` の Ready / In Progress を確認。Ready 未完了なし、In Progress は `food-dx-shiro` のみ。古い会話由来の別タスクは広げず、前回の次アクション候補だった残る低リスクAPIフローから旧 `GET /api/orders/:id/pdf` endpoint を限定し、push / deploy / 本番変更なしのローカル作業として JSON placeholder から実PDF生成へ修正した。従来は同endpointだけ `PDF generation not implemented yet` を含む JSON を返しており、既存 `/api/pdf/*` 系の認証付きPDF実装から取り残されていた。`OrderController.generatePdf()` を shared `pdfService.generateInvoice()` に接続し、company scope を維持したまま `application/pdf` / `Content-Disposition: invoice_<orderNumber>.pdf` / `Content-Length` を返すよう変更。`scripts/check-pdf-auth-contract.mjs` に legacy order PDF endpoint が実PDFを返し、未実装メッセージへ戻らない契約を追加。local commit `2681052 fix: generate legacy order PDFs` を作成した。
