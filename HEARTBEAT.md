@@ -3983,3 +3983,27 @@ npm run build:api && npm run build:web
 **回答**: 「KATAOMOI push OK」
 
 **次アクション**: 承認待ち。
+
+## 2026-06-18 heartbeat (190回目)
+
+**アクション**: `/Users/umi/.openclaw/workspace/HEARTBEAT.md` を指定パスで読み、`tasks/QUEUE.md` の Ready / In Progress を確認。Ready 未完了なし、In Progress は `food-dx-shiro` のみ。古い会話由来の別タスクは広げず、前回の次アクション候補だった残る低リスクAPI/UIフローから商品検索の保存検索・検索履歴を限定し、push / deploy / 本番変更なしのローカル作業として `searchService` の console-only / mock / empty placeholder を process-local store へ修正した。`apps/api/src/services/searchService.ts` で検索履歴、人気検索、保存検索の保存・一覧・削除・利用回数更新を実データとして保持するよう変更し、`ProductController.searchProducts()` から検索履歴を記録、`POST /api/products/searches/saved/:id/use` を追加して保存検索利用回数を更新できるようにした。`apps/web/src/components/search/SearchHistory.tsx` は保存検索クリック時に同APIを呼び、利用回数をAPI結果で更新するよう変更。あわせて保存検索行の nested button 警告を解消するため、主操作ボタンと削除ボタンを兄弟要素へ分離した。`apps/web/e2e/core-auth-smoke.spec.ts` に保存検索を適用し、Bearer付き利用回数APIが呼ばれ `3回使用` に更新される focused E2E を追加。`scripts/check-pdf-auth-contract.mjs` に保存検索/検索履歴が TODO・console-only・mock empty 実装へ戻らない契約を追加。local commit `d3dd177 fix: record saved product search usage` を作成した。
+
+**検証**:
+- QUEUE Ready 未完了なし。In Progress = `food-dx-shiro`。
+- `food-dx-shiro`: repo `/Users/umi/.openclaw/workspace/food-dx-qwen/food-dx-system` は HEAD `d3dd177`、tracked 変更なし。
+- `npm run test:web:core-smoke-e2e -- --grep "saved search"` → 1/1 pass。
+- `npm run test:web:pdf-auth-contract` → pass。
+- `npm run test:contracts` → pass（DB/E2E handoff contract、Web accessibility contract、PDF auth contract）。
+- `npm run lint --workspace=@food-dx/api` → pass。
+- `npm run lint --workspace=@food-dx/web` → pass（Next.js plugin warning のみ）。
+- `npm run build:api` → pass。
+- `npm run build:web` → pass（21 pages generated）。
+- `git diff --check` → pass。
+- `food-dx` 由来の常駐 `next dev` / API `tsx watch` / Playwright / Vite / Wrangler dev は残っていない。管理用 tmux `food-dx-shiro` のみ存在。threads-watcher 由来のPlaywrightは別件で継続。
+- disk: `/System/Volumes/Data` は 95% 使用、空き 12GiB。通常の記録・品質確認は可能。
+- `cycle-tracker-app`: force push 承認サインなしのため未実行。承認サインは `cycle-tracker force push OK`。
+- push / force push / deploy / 本番変更 / 秘密情報共有 / 削除系操作は未実行。
+
+**状態**: 目的: 商品検索の保存検索/検索履歴が placeholder のまま止まる退行防止 / 現担当: 白 / 現状: 保存検索の保存・取得・適用・利用回数更新までAPI/UI/契約で固定済み / 次アクション: review branch push 承認が来れば `shiro/food-dx-system-workspace` へ反映、未承認なら残る低リスクUI/APIフローを追加E2E対象として限定して拡張 / 詰まり: review branch push と `cycle-tracker-app` force push は承認待ち、disk cleanup は削除系操作のため承認待ち / 支援候補: Yakon（承認が必要な場合のみ） / 期限: 次heartbeatで継続確認。
+
+**通知判断**: notify=false（food-dx は自走で前進し、High Risk 実行は増えていない。即時割り込みが必要な新規 blocker なし）。
