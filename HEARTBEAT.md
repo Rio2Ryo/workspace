@@ -59,6 +59,32 @@ git -C /Users/umi/.openclaw/workspace/cycle-tracker-app push --force origin main
 
 ---
 
+## 2026-06-18 heartbeat (183回目)
+
+**アクション**: `/Users/umi/.openclaw/workspace/HEARTBEAT.md` を指定パスで読み、`tasks/QUEUE.md` の Ready / In Progress を確認。Ready 未完了なし、In Progress は `food-dx-shiro` のみ。古い会話由来の別タスクは広げず、前回の次アクション候補だった残る低リスクUIフローから承認一覧ページを限定し、push / deploy / 本番変更なしのローカル作業として空配列TODOを実API読み込みへ修正・E2E固定した。`apps/web/src/app/approvals/page.tsx` が `loadData()` 内で TODO のまま pending approvals / workflows を空配列にしていたため、`apps/web/src/lib/api.ts` に `approvalsApi.getPendingApprovals()` を追加し、`GET /api/approvals/pending` と既存 `GET /api/approvals/workflows` を同時取得するよう変更。APIの `OrderApproval` を一覧UI用に正規化し、顧客名・金額・承認レベル・緊急度・期限を画面へ渡すようにした。`apps/web/e2e/core-auth-smoke.spec.ts` に `/approvals` で Bearer付き `GET /api/approvals/pending` / `GET /api/approvals/workflows` が呼ばれ、承認待ち注文とワークフローが表示されることを確認するE2Eを追加。`scripts/check-pdf-auth-contract.mjs` に同契約を追加し、local commit `77f5ae3 fix: load approvals through API` を作成した。
+
+**検証**:
+- QUEUE Ready 未完了なし。In Progress = `food-dx-shiro`。
+- `food-dx-shiro`: repo `/Users/umi/.openclaw/workspace/food-dx-qwen/food-dx-system` は HEAD `77f5ae3`、tracked 変更なし。
+- `npm run test:web:core-smoke-e2e -- --grep "approvals page loads pending approvals"` → 1/1 pass。
+- `node --check scripts/check-pdf-auth-contract.mjs` → pass。
+- `npm run test:web:pdf-auth-contract` → pass。
+- `git diff --check` → pass。
+- `npm run lint --workspace=@food-dx/web` → pass（Next.js plugin warning のみ）。
+- `npm run build:web` → pass（21 pages generated）。
+- `npm run test:contracts` → pass（DB/E2E handoff contract、Web accessibility contract、PDF auth contract）。
+- `npm run test:web:core-smoke-e2e` → 19/19 pass。
+- `food-dx` 由来の常駐 `next dev` / API `tsx watch` / Playwright / Vite / Wrangler dev は残っていない。管理用 tmux `food-dx-shiro` のみ存在。
+- disk: `/System/Volumes/Data` は 95% 使用、空き 11GiB。通常の記録・品質確認は可能。
+- `cycle-tracker-app`: force push 承認サインなしのため未実行。承認サインは `cycle-tracker force push OK`。
+- push / force push / deploy / 本番変更 / 秘密情報共有 / 削除系操作は未実行。
+
+**状態**: `food-dx-shiro` は担当=白。authenticated route smoke、PDF auth、注文詳細PDF action、注文詳細PDFメールplaceholder、承認詳細placeholder、再発注数量変更payload、保存検索、新規注文作成payload、通知設定保存payload、承認ワークフロー設定保存payload、承認一覧API読込までローカルPlaywright runnerで確認できる状態になった。次アクションは review branch push の承認が来れば `shiro/food-dx-system-workspace` へ反映、未承認なら残る低リスクUIフローを追加E2E対象として限定して拡張すること。`cycle-tracker-app` は force push 承認待ちで、承認サインは `cycle-tracker force push OK`。disk cleanup は削除系操作のため、承認サイン `disk cleanup OK` なしでは実行しない。
+
+**通知判断**: notify=false（food-dx は自走で前進し、force push / deploy / 本番変更など新規のHigh Risk実行はしていない。既存の review branch案・追加E2E対象・cycle-tracker force push 承認待ちは記録済みで、即時割り込みは不要）。
+
+---
+
 ## 2026-06-18 heartbeat (181回目)
 
 **アクション**: `/Users/umi/.openclaw/workspace/HEARTBEAT.md` を指定パスで読み、`tasks/QUEUE.md` の Ready / In Progress を確認。Ready 未完了なし、In Progress は `food-dx-shiro` のみ。古い会話由来の別タスクは広げず、前回の次アクション候補だった残る低リスクUIフローから通知設定ページを限定し、push / deploy / 本番変更なしのローカル作業として疑似保存を実API保存へ修正・E2E固定した。`apps/web/src/app/settings/notifications/page.tsx` が `setTimeout` だけで保存成功にしていたため、既存 `notificationsApi.getPreferences()` で現設定を読み込み、`notificationsApi.updatePreferences()` で `PUT /api/notifications/preferences` へ保存するよう変更。API側の `digestFrequency` は広い string 型のため、ページ境界で `NONE` / `DAILY` / `WEEKLY` / `REALTIME` へ正規化して build 型エラーを防いだ。あわせてサイレント時間・ダイジェスト設定の select にE2Eで安定して特定できるアクセシブル名を追加。`apps/web/e2e/core-auth-smoke.spec.ts` に `/settings/notifications` でメールOFF、Slack ON、サイレント時間20-8、週次金曜10時ダイジェストを保存し、Bearer付き `PUT /api/notifications/preferences` が期待payloadを送ることと成功表示を確認するE2Eを追加。`scripts/check-pdf-auth-contract.mjs` に同契約を追加し、local commit `e1c83a0 fix: save notification settings through API` を作成した。
