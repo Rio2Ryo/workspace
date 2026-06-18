@@ -59,6 +59,53 @@ git -C /Users/umi/.openclaw/workspace/cycle-tracker-app push --force origin main
 
 ---
 
+## 2026-06-19 heartbeat (192回目)
+
+**アクション**: `/Users/umi/.openclaw/workspace/HEARTBEAT.md` を指定パスで読み、`tasks/QUEUE.md` の Ready / In Progress を確認。Ready 未完了なし、In Progress は `food-dx-shiro` のみ。古い会話由来の別タスクは広げず、前回の次アクション候補だった残る低リスクUI/APIフローから分析ダッシュボードのエクスポート導線を限定し、push / deploy / 本番変更なしのローカル作業として `ExportButton` の認証キー不一致を修正した。従来は app の認証が `access_token` に統一されている一方、`ExportButton` だけ `localStorage.getItem('accessToken')` を読んでいたため、ログイン済みUIでも `/api/analytics/export/:type` へ有効な Bearer token が送られない可能性があった。`getAuthHeaders()` に統一し、`Content-Disposition` filename の貪欲matchで末尾quoteが download filename に混ざる問題も修正。`apps/web/e2e/core-auth-smoke.spec.ts` に sales export が Bearer 付きで呼ばれ、CSV download filename が `sales_analytics_30d.csv` になる focused E2E を追加。`scripts/check-pdf-auth-contract.mjs` に同契約を追加。local commit `c1b908e fix: authenticate analytics exports` を作成した。
+
+**検証**:
+- QUEUE Ready 未完了なし。In Progress = `food-dx-shiro`。
+- `food-dx-shiro`: repo `/Users/umi/.openclaw/workspace/food-dx-qwen/food-dx-system` は HEAD `c1b908e`、tracked 変更なし。
+- `npm run test:web:core-smoke-e2e -- --grep "analytics dashboard exports sales data"` → pass。
+- `npm run test:web:pdf-auth-contract` → pass。
+- `npm run test:contracts` → pass（DB/E2E handoff contract、Web accessibility contract、PDF auth contract）。
+- `npm run lint --workspace=@food-dx/web` → pass（Next.js plugin warning のみ）。
+- `npm run build:web` → pass（21 pages generated）。
+- `git diff --check` → pass。
+- `food-dx` 由来の常駐 `next dev` / API `tsx watch` / Playwright / Vite / Wrangler dev は残っていない。管理用 tmux `food-dx-shiro` のみ存在。`threads-watcher` 由来の Playwright は別件で継続。
+- disk: `/System/Volumes/Data` は 95% 使用、空き 11GiB。通常の記録・品質確認は可能。
+- `cycle-tracker-app`: force push 承認サインなしのため未実行。承認サインは `cycle-tracker force push OK`。
+- push / force push / deploy / 本番変更 / 秘密情報共有 / 削除系操作は未実行。
+
+**状態**: 目的: 分析エクスポートが旧localStorageキーで認証落ちする退行防止 / 現担当: 白 / 現状: analytics export が shared auth helper 経由で active token を使い、filename parsing もE2Eで固定済み / 次アクション: review branch push 承認が来れば `shiro/food-dx-system-workspace` へ反映、未承認なら残る低リスクUI/APIフローを追加E2E対象として限定して拡張 / 詰まり: review branch push と `cycle-tracker-app` force push は承認待ち、disk cleanup は削除系操作のため承認待ち / 支援候補: Yakon（承認が必要な場合のみ） / 期限: 次heartbeatで継続確認。
+
+**通知判断**: notify=false（food-dx は自走で前進し、High Risk 実行は増えていない。即時割り込みが必要な新規 blocker なし）。
+
+---
+
+## 2026-06-18 heartbeat (191回目)
+
+**アクション**: `/Users/umi/.openclaw/workspace/HEARTBEAT.md` を指定パスで読み、`tasks/QUEUE.md` の Ready / In Progress を確認。Ready 未完了なし、In Progress は `food-dx-shiro` のみ。古い会話由来の別タスクは広げず、前回の次アクション候補だった残る低リスクAPIフローから商品検索の在庫状態フィルタを限定し、push / deploy / 本番変更なしのローカル作業として `SearchService.search()` の `stockLevel` pagination bug を修正した。従来は `stockLevel` が Prisma where で扱えないため取得後に絞り込む設計だったが、先に `skip/take` してから在庫状態を絞っていたため、`total` / `hasMore` が未フィルタ件数のままになり、該当商品が2ページ目以降にあると現在ページから落ちる可能性があった。`filters.stockLevel` 指定時は在庫数量込みで候補を取得し、在庫状態で絞り込んだ後に `slice(skip, skip + limit)` でページングし、`total` も絞り込み後件数を返すよう変更。`scripts/check-pdf-auth-contract.mjs` に stockLevel のページング境界契約と旧 placeholder コメントの再発防止を追加。local commit `f453e46 fix: paginate stock-filtered product searches` を作成した。
+
+**検証**:
+- QUEUE Ready 未完了なし。In Progress = `food-dx-shiro`。
+- `food-dx-shiro`: repo `/Users/umi/.openclaw/workspace/food-dx-qwen/food-dx-system` は HEAD `f453e46`、tracked 変更なし。
+- `npm run test:web:pdf-auth-contract` → pass。
+- `npm run lint --workspace=@food-dx/api` → pass。
+- `npm run build:api` → pass。
+- `npm run test:contracts` → pass（DB/E2E handoff contract、Web accessibility contract、PDF auth contract）。
+- `git diff --check` → pass。
+- `food-dx` 由来の常駐 `next dev` / API `tsx watch` / Playwright / Vite / Wrangler dev は残っていない。管理用 tmux `food-dx-shiro` のみ存在。
+- disk: `/System/Volumes/Data` は 95% 使用、空き 12GiB。通常の記録・品質確認は可能。
+- `cycle-tracker-app`: force push 承認サインなしのため未実行。承認サインは `cycle-tracker force push OK`。
+- push / force push / deploy / 本番変更 / 秘密情報共有 / 削除系操作は未実行。
+
+**状態**: 目的: 商品検索の在庫状態フィルタがページング後処理で結果件数を壊す退行防止 / 現担当: 白 / 現状: stockLevel 指定時の絞り込み後total・hasMore・ページングをAPI service層と契約で固定済み / 次アクション: review branch push 承認が来れば `shiro/food-dx-system-workspace` へ反映、未承認なら残る低リスクUI/APIフローを追加E2E対象として限定して拡張 / 詰まり: review branch push と `cycle-tracker-app` force push は承認待ち、disk cleanup は削除系操作のため承認待ち / 支援候補: Yakon（承認が必要な場合のみ） / 期限: 次heartbeatで継続確認。
+
+**通知判断**: notify=false（food-dx は自走で前進し、High Risk 実行は増えていない。即時割り込みが必要な新規 blocker なし）。
+
+---
+
 ## 2026-06-18 heartbeat (187回目)
 
 **アクション**: `/Users/umi/.openclaw/workspace/HEARTBEAT.md` を指定パスで読み、`tasks/QUEUE.md` の Ready / In Progress を確認。Ready 未完了なし、In Progress は `food-dx-shiro` のみ。古い会話由来の別タスクは広げず、前回の次アクション候補だった残る低リスクUIフローから発注履歴の頻出商品クイック再発注を限定し、push / deploy / 本番変更なしのローカル作業として `FrequentItems` の console-only placeholder を新規発注画面への実導線へ修正した。`apps/web/src/components/orders/FrequentItems.tsx` に `useRouter` を追加し、頻出商品の `productId` / `productName` / 平均数量 / 単価を `/orders/new` の既存prefill queryへ渡すよう変更。デスクトップのカートボタンへ `${productName}をクイック再発注` のアクセシブル名を付与し、モバイルの最上位商品追加ボタンも同じ導線へ接続。`apps/web/e2e/core-auth-smoke.spec.ts` に発注履歴の頻出商品ボタンから新規発注へ遷移し、商品・数量・合計金額がprefillされることを確認する spec を追加。`scripts/check-pdf-auth-contract.mjs` に同導線と console-only 再発防止契約を追加。local commit `7f14ee8 fix: prefill new orders from frequent items` を作成した。
