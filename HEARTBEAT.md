@@ -59,6 +59,29 @@ git -C /Users/umi/.openclaw/workspace/cycle-tracker-app push --force origin main
 
 ---
 
+## 2026-06-19 heartbeat (193回目)
+
+**アクション**: `/Users/umi/.openclaw/workspace/HEARTBEAT.md` を指定パスで読み、`tasks/QUEUE.md` の Ready / In Progress を確認。Ready 未完了なし、In Progress は `food-dx-shiro` のみ。古い会話由来の別タスクは広げず、前回の次アクション候補だった残る低リスクAPIフローから旧 `GET /api/orders/:id/pdf` endpoint を限定し、push / deploy / 本番変更なしのローカル作業として JSON placeholder から実PDF生成へ修正した。従来は同endpointだけ `PDF generation not implemented yet` を含む JSON を返しており、既存 `/api/pdf/*` 系の認証付きPDF実装から取り残されていた。`OrderController.generatePdf()` を shared `pdfService.generateInvoice()` に接続し、company scope を維持したまま `application/pdf` / `Content-Disposition: invoice_<orderNumber>.pdf` / `Content-Length` を返すよう変更。`scripts/check-pdf-auth-contract.mjs` に legacy order PDF endpoint が実PDFを返し、未実装メッセージへ戻らない契約を追加。local commit `2681052 fix: generate legacy order PDFs` を作成した。
+
+**検証**:
+- QUEUE Ready 未完了なし。In Progress = `food-dx-shiro`。
+- `food-dx-shiro`: repo `/Users/umi/.openclaw/workspace/food-dx-qwen/food-dx-system` は HEAD `2681052`、tracked 変更なし。
+- `npm run test:web:pdf-auth-contract` → pass。
+- `npm run build:api` → pass。
+- `npm run lint --workspace=@food-dx/api` → pass。
+- `npm run test:contracts` → pass（DB/E2E handoff contract、Web accessibility contract、PDF auth contract）。
+- `git diff --check` → pass。
+- `food-dx` 由来の常駐 `next dev` / API `tsx watch` / Playwright / Vite / Wrangler dev は残っていない。管理用 tmux `food-dx-shiro` のみ存在。`threads-watcher` 由来の Playwright は別件で継続。
+- disk: `/System/Volumes/Data` は 95% 使用、空き 11GiB。通常の記録・品質確認は可能。
+- `cycle-tracker-app`: force push 承認サインなしのため未実行。承認サインは `cycle-tracker force push OK`。
+- push / force push / deploy / 本番変更 / 秘密情報共有 / 削除系操作は未実行。
+
+**状態**: 目的: 旧注文PDF endpoint が placeholder のまま止まる退行防止 / 現担当: 白 / 現状: legacy order PDF endpoint も shared PDF service 経由で invoice PDF を返すよう固定済み / 次アクション: review branch push 承認が来れば `shiro/food-dx-system-workspace` へ反映、未承認なら残る低リスクUI/APIフローを追加E2E対象として限定して拡張 / 詰まり: review branch push と `cycle-tracker-app` force push は承認待ち、disk cleanup は削除系操作のため承認待ち / 支援候補: Yakon（承認が必要な場合のみ） / 期限: 次heartbeatで継続確認。
+
+**通知判断**: notify=false（food-dx は自走で前進し、High Risk 実行は増えていない。即時割り込みが必要な新規 blocker なし）。
+
+---
+
 ## 2026-06-19 heartbeat (192回目)
 
 **アクション**: `/Users/umi/.openclaw/workspace/HEARTBEAT.md` を指定パスで読み、`tasks/QUEUE.md` の Ready / In Progress を確認。Ready 未完了なし、In Progress は `food-dx-shiro` のみ。古い会話由来の別タスクは広げず、前回の次アクション候補だった残る低リスクUI/APIフローから分析ダッシュボードのエクスポート導線を限定し、push / deploy / 本番変更なしのローカル作業として `ExportButton` の認証キー不一致を修正した。従来は app の認証が `access_token` に統一されている一方、`ExportButton` だけ `localStorage.getItem('accessToken')` を読んでいたため、ログイン済みUIでも `/api/analytics/export/:type` へ有効な Bearer token が送られない可能性があった。`getAuthHeaders()` に統一し、`Content-Disposition` filename の貪欲matchで末尾quoteが download filename に混ざる問題も修正。`apps/web/e2e/core-auth-smoke.spec.ts` に sales export が Bearer 付きで呼ばれ、CSV download filename が `sales_analytics_30d.csv` になる focused E2E を追加。`scripts/check-pdf-auth-contract.mjs` に同契約を追加。local commit `c1b908e fix: authenticate analytics exports` を作成した。
