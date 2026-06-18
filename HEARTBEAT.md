@@ -85,6 +85,29 @@ git -C /Users/umi/.openclaw/workspace/cycle-tracker-app push --force origin main
 
 ---
 
+## 2026-06-18 heartbeat (182回目)
+
+**アクション**: `/Users/umi/.openclaw/workspace/HEARTBEAT.md` を指定パスで読み、`tasks/QUEUE.md` の Ready / In Progress を確認。Ready 未完了なし、In Progress は `food-dx-shiro` のみ。古い会話由来の別タスクは広げず、前回の次アクション候補だった残る低リスクUIフローから承認ワークフロー設定ページを限定し、push / deploy / 本番変更なしのローカル作業として疑似実装を実API保存へ修正・E2E固定した。`apps/web/src/app/settings/approvals/page.tsx` の `fetchWorkflows` / `createWorkflow` / `updateWorkflow` / `deleteWorkflow` が TODO のまま alert-only だったため、`apps/web/src/lib/api.ts` に `approvalsApi` を追加し、`GET/POST/PUT/DELETE /api/approvals/workflows` を通すよう変更。あわせて `apps/api/src/services/approvalService.ts` の `updateWorkflow` が `levels` を更新せず、未指定 `minAmount` / `maxAmount` を null へ潰してしまうギャップを修正し、levels 差し替え・重複level検証・partial update保持に対応。`apps/web/e2e/core-auth-smoke.spec.ts` に `/settings/approvals` でワークフロー作成とデフォルト切替を行い、Bearer付き `POST/PUT /api/approvals/workflows` が期待payloadを送ることを確認するE2Eを追加。local commit `aa5ee22 fix: save approval workflow settings through API` を作成した。
+
+**検証**:
+- QUEUE Ready 未完了なし。In Progress = `food-dx-shiro`。
+- `food-dx-shiro`: repo `/Users/umi/.openclaw/workspace/food-dx-qwen/food-dx-system` は HEAD `aa5ee22`、tracked 変更なし。
+- `npm run test:web:core-smoke-e2e -- --grep "approval settings page persists workflow creation and default toggle through the API"` → 1/1 pass。
+- `npm run lint --workspace=@food-dx/web` → pass（Next.js plugin warning のみ）。
+- `npm run build:api` → pass。
+- `npm run build:web` → pass（21 pages generated）。
+- `git diff --check` → pass。
+- `food-dx-shiro` tmux session は存在。`food-dx` 由来の常駐 dev/test プロセスは今回確認していない。
+- disk: `/System/Volumes/Data` は 95% 使用、空き 12GiB。
+- `cycle-tracker-app`: force push 承認サインなしのため未実行。承認サインは `cycle-tracker force push OK`。
+- push / force push / deploy / 本番変更 / 秘密情報共有 / 削除系操作は未実行。
+
+**状態**: `food-dx-shiro` は担当=白。authenticated route smoke、PDF auth、注文詳細PDF action、注文詳細PDFメールplaceholder、承認詳細placeholder、再発注数量変更payload、保存検索、新規注文作成payload、通知設定保存payload、承認ワークフロー設定保存payloadまでローカルPlaywright runnerで確認できる状態になった。次アクションは review branch push の承認が来れば `shiro/food-dx-system-workspace` へ反映、未承認なら残る低リスクUIフローを追加E2E対象として限定して拡張すること。`cycle-tracker-app` は force push 承認待ちで、承認サインは `cycle-tracker force push OK`。disk cleanup は削除系操作のため、承認サイン `disk cleanup OK` なしでは実行しない。
+
+**通知判断**: notify=false（food-dx は自走で前進し、force push / deploy / 本番変更など新規のHigh Risk実行はしていない。既存の review branch案・追加E2E対象・cycle-tracker force push 承認待ちは記録済みで、即時割り込みは不要）。
+
+---
+
 ## 2026-06-18 heartbeat (180回目)
 
 **アクション**: `/Users/umi/.openclaw/workspace/HEARTBEAT.md` を指定パスで読み、`tasks/QUEUE.md` の Ready / In Progress を確認。Ready 未完了なし、In Progress は `food-dx-shiro` のみ。古い会話由来の別タスクは広げず、前回候補の検索保存が local commit `43ae157 test: cover saved product search flow` で固定済みであることを確認し、未固定だった新規注文作成を push / deploy / 本番変更なしの低リスクローカル作業として実API送信まで修正・E2E固定した。`apps/web/src/app/orders/new/page.tsx` の送信処理を疑似成功から `ordersApi.create` へ変更し、選択商品を `items: [{ productId, quantity }]`、備考を `notes`、配送メモを `shippingNotes` として送るようにした。あわせて入力欄・商品select・数量/単価入力・削除ボタンへE2Eで安定して特定できるアクセシブル名を追加。`apps/web/e2e/core-auth-smoke.spec.ts` に `/orders/new?productId=...&productName=...&quantity=2&unitPrice=1200` から注文作成し、`POST /api/orders` がBearer付きで `items` / `notes` / `shippingNotes` を送ることと成功dialogを確認するE2Eを追加。`scripts/check-pdf-auth-contract.mjs` に同契約を追加し、local commit `3f43f2f fix: submit new orders through API` を作成した。
