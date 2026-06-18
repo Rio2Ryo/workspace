@@ -59,6 +59,31 @@ git -C /Users/umi/.openclaw/workspace/cycle-tracker-app push --force origin main
 
 ---
 
+## 2026-06-19 heartbeat (198回目)
+
+**アクション**: `/Users/umi/.openclaw/workspace/HEARTBEAT.md` を指定パスで読み、`tasks/QUEUE.md` の Ready / In Progress を確認。Ready 未完了なし、In Progress は `food-dx-shiro` のみ。古い会話由来の別タスクは広げず、前回の次アクション候補だった残る低リスクUI/APIフローから承認ワークフロー設定の削除導線を限定し、push / deploy / 本番変更なしのローカル作業として既存API `DELETE /api/approvals/workflows/:id` への送信をE2Eと契約で固定した。`apps/web/e2e/core-auth-smoke.spec.ts` に `/settings/approvals` で `標準承認フロー` を削除し、確認dialogと成功dialog、Bearer付きDELETE、対象workflow idを検証するE2Eを追加。`scripts/check-pdf-auth-contract.mjs` に同E2Eと削除対象idの契約を追加。local commit `7d742f8 test: cover approval workflow deletion` を作成した。
+
+**検証**:
+- QUEUE Ready 未完了なし。In Progress = `food-dx-shiro`。
+- `food-dx-shiro`: repo `/Users/umi/.openclaw/workspace/food-dx-qwen/food-dx-system` は HEAD `7d742f8`、tracked 変更なし。
+- `npm run test:web:core-smoke-e2e -- --grep "approval settings page deletes workflows"` → pass。
+- `npm run test:web:core-smoke-e2e` → 27/27 pass。
+- `npm run test:web:pdf-auth-contract` → pass。
+- `npm run test:contracts` → pass（DB/E2E handoff contract、Web accessibility contract、PDF auth contract）。
+- `npm run lint --workspace=@food-dx/web` → pass（Next.js plugin warning のみ）。
+- `npm run build:web` → pass（21 pages generated）。
+- `git diff --check` → pass。
+- `food-dx` 由来の常駐 `next dev` / API `tsx watch` / Playwright / Vite / Wrangler dev は残っていない。管理用 tmux `food-dx-shiro` のみ存在。
+- disk: `/System/Volumes/Data` は 95% 使用、空き 11GiB。通常の記録・品質確認は可能。
+- `cycle-tracker-app`: force push 承認サインなしのため未実行。承認サインは `cycle-tracker force push OK`。
+- push / force push / deploy / 本番変更 / 秘密情報共有 / 削除系操作は未実行。
+
+**状態**: 目的: 承認ワークフロー削除がUIだけで退行しないようAPI送信を固定 / 現担当: 白 / 現状: 削除導線をBearer付きDELETE・dialog・対象idまでE2Eと契約で固定済み / 次アクション: review branch push 承認が来れば `shiro/food-dx-system-workspace` へ反映、未承認なら残る低リスクUI/APIフローを追加E2E対象として限定して拡張 / 詰まり: review branch push と `cycle-tracker-app` force push は承認待ち、disk cleanup は削除系操作のため承認待ち / 支援候補: Yakon（承認が必要な場合のみ） / 期限: 次heartbeatで継続確認。
+
+**通知判断**: notify=false（food-dx は自走で前進し、High Risk 実行は増えていない。即時割り込みが必要な新規 blocker なし）。
+
+---
+
 ## 2026-06-19 heartbeat (197回目)
 
 **アクション**: `/Users/umi/.openclaw/workspace/HEARTBEAT.md` を指定パスで読み、`tasks/QUEUE.md` の Ready / In Progress を確認。Ready 未完了なし、In Progress は `food-dx-shiro` のみ。古い会話由来の別タスクは広げず、前回の次アクション候補だった残る低リスクUI/APIフローから承認一覧のワークフロー編集導線を限定し、push / deploy / 本番変更なしのローカル作業として存在しない `/settings/approvals/:id` への遷移を既存の `/settings/approvals?workflowId=...` へ接続した。従来は `apps/web/src/app/approvals/page.tsx` のワークフロー「編集」が旧導線 `/settings/approvals/:id` 形式へ遷移する一方、Web側に `apps/web/src/app/settings/approvals/[id]/page.tsx` が存在せず、承認一覧から編集すると404になり得た。`apps/web/src/app/settings/approvals/page.tsx` は `workflowId` query を読み、既存の `ApprovalWorkflowBuilder` を該当ワークフローで開くよう修正し、`useSearchParams` は Suspense 境界で包んで static build も通るようにした。`apps/web/e2e/core-auth-smoke.spec.ts` に承認一覧のワークフロー「編集」から既存設定画面へ遷移し、編集フォームが対象ワークフロー名で開くE2Eを追加。`scripts/check-pdf-auth-contract.mjs` に dead route へ戻らない契約を追加。local commit `3c7497c fix: route workflow edit to settings editor` を作成した。
