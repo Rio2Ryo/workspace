@@ -5,14 +5,27 @@
     "@bmw_intokyo"
   ],
   "last_check": {
-    "checked_at": "2026-06-19T00:39:36Z",
+    "checked_at": "2026-06-19T01:00:48Z",
     "found_count": 4,
     "new_count": 0,
     "status": "partial_error",
     "error": "profile extraction returned partial result: found=4 previous_max=15"
   },
-  "saved_count": 103,
+  "saved_count": 104,
   "posts": [
+    {
+      "handle": "@hal.lifedesign",
+      "post_id": "DZv4RMgkoIG",
+      "post_url": "https://www.threads.com/@hal.lifedesign/post/DZv4RMgkoIG",
+      "first_seen_at": "2026-06-19T00:56:28Z",
+      "captured_at": "2026-06-19T00:56:34Z",
+      "screenshot_size_bytes": 552574,
+      "screenshot_width": 1280,
+      "screenshot_height": 1800,
+      "post_text": "ここ最近の自分にこの紙貼っときたいw OUT OF SERVICE Tシャツつくろうかなw",
+      "posted_at": "2026-06-19T00:55:32.000Z",
+      "screenshot_path": "screenshots/hal.lifedesign/DZv4RMgkoIG.png"
+    },
     {
       "handle": "@hal.lifedesign",
       "post_id": "DZv2OitEvt7",
@@ -1356,64 +1369,64 @@
   "recent_stats": {
     "window_hours": 24,
     "total": 1011,
-    "ok": 143,
-    "partial_error": 868,
+    "ok": 141,
+    "partial_error": 870,
     "error": 0,
     "other": 0,
-    "success_rate": 0.1414441147378833,
-    "partial_error_rate": 0.8585558852621167,
+    "success_rate": 0.1394658753709199,
+    "partial_error_rate": 0.8605341246290801,
     "top_partial_error_reason": {
       "reason": "profile extraction returned partial result: found=4 previous_max=15",
-      "count": 845
+      "count": 849
     }
   },
   "recent_stats_by_window": {
     "1": {
       "window_hours": 1,
-      "total": 42,
-      "ok": 7,
-      "partial_error": 35,
+      "total": 43,
+      "ok": 5,
+      "partial_error": 38,
       "error": 0,
       "other": 0,
-      "success_rate": 0.16666666666666666,
-      "partial_error_rate": 0.8333333333333334,
+      "success_rate": 0.11627906976744186,
+      "partial_error_rate": 0.8837209302325582,
       "top_partial_error_reason": {
         "reason": "profile extraction returned partial result: found=4 previous_max=15",
-        "count": 32
+        "count": 38
       }
     },
     "24": {
       "window_hours": 24,
       "total": 1011,
-      "ok": 143,
-      "partial_error": 868,
+      "ok": 141,
+      "partial_error": 870,
       "error": 0,
       "other": 0,
-      "success_rate": 0.1414441147378833,
-      "partial_error_rate": 0.8585558852621167,
+      "success_rate": 0.1394658753709199,
+      "partial_error_rate": 0.8605341246290801,
       "top_partial_error_reason": {
         "reason": "profile extraction returned partial result: found=4 previous_max=15",
-        "count": 845
+        "count": 849
       }
     },
     "168": {
       "window_hours": 168,
       "total": 6778,
-      "ok": 557,
-      "partial_error": 6218,
+      "ok": 559,
+      "partial_error": 6216,
       "error": 3,
       "other": 0,
-      "success_rate": 0.08217763352021246,
-      "partial_error_rate": 0.91737975804072,
+      "success_rate": 0.08247270581292417,
+      "partial_error_rate": 0.9170846857480083,
       "top_partial_error_reason": {
         "reason": "profile extraction returned partial result: found=4 previous_max=16",
-        "count": 2978
+        "count": 2965
       }
     }
   },
   "sync_state": {
-    "cursor": 125,
-    "db_max": 126,
+    "cursor": 126,
+    "db_max": 127,
     "delta": 1,
     "cursor_file_exists": true
   },
@@ -1448,5 +1461,5 @@
       "current_bucket": 0.8
     }
   ],
-  "snapshot_generated_at": "2026-06-19T00:39:36Z"
+  "snapshot_generated_at": "2026-06-19T01:00:48Z"
 }
