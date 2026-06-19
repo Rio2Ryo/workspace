@@ -59,6 +59,30 @@ git -C /Users/umi/.openclaw/workspace/cycle-tracker-app push --force origin main
 
 ---
 
+## 2026-06-19 heartbeat (210回目)
+
+**アクション**: `/Users/umi/.openclaw/workspace/HEARTBEAT.md` を指定パスで読み、`tasks/QUEUE.md` の Ready / In Progress を確認。Ready 未完了なし、In Progress は `food-dx-shiro` のみ。古い会話由来の別タスクは広げず、前回の次アクション候補だった残る低リスクUI/APIフローから認証hookの共有APIクライアント統一を限定し、push / deploy / 本番変更なしのローカル作業として `useAuth` の raw `fetch('/api/auth/me')` / `fetch('/api/auth/login')` / `fetch('/api/auth/logout')` と hook内直書きBearerへ戻る退行を防いだ。`apps/web/src/hooks/useAuth.tsx` は `authApi.getCurrentUser()` / `authApi.login()` / `authApi.logout()` 経由へ統一。`apps/web/src/lib/api.ts` は `getCurrentUser()` を現API形状と既存smoke mockの両方に耐える型へ拡張。`scripts/check-pdf-auth-contract.mjs` に raw auth fetch / 直書き bearer へ戻らない契約を追加。local commit `ca1615b fix: route auth hook through API client` を作成した。
+
+**検証**:
+- QUEUE Ready 未完了なし。In Progress = `food-dx-shiro`。
+- `food-dx-shiro`: repo `/Users/umi/.openclaw/workspace/food-dx-qwen/food-dx-system` は HEAD `ca1615b`、tracked 変更なし。
+- `npm run test:web:pdf-auth-contract` → pass。
+- `npm run lint --workspace=@food-dx/web` → pass。
+- `npm run build:web` → pass（21 pages generated）。
+- `npm run test:web:core-smoke-e2e -- --grep "dashboard loads"` → 2/2 pass。
+- `npm run test:contracts` → pass（DB/E2E handoff contract、Web accessibility contract、PDF auth contract）。
+- `git diff --check` → pass。
+- `food-dx` 由来の常駐 `next dev` / API `tsx watch` / Playwright / Vite / Wrangler dev は残っていない。管理用 tmux `food-dx-shiro` のみ存在。
+- disk: `/System/Volumes/Data` は 95% 使用、空き 12GiB。通常の記録・品質確認は可能。
+- `cycle-tracker-app`: force push 承認サインなしのため未実行。承認サインは `cycle-tracker force push OK`。
+- push / force push / deploy / 本番変更 / 秘密情報共有 / 削除系操作は未実行。
+
+**状態**: 目的: 認証bootstrap/login/logoutが raw fetch / hook内Bearer直書きに戻る退行防止 / 現担当: 白 / 現状: AuthProvider を shared authApi 経由に統一し、focused E2Eと契約で固定済み / 次アクション: review branch push 承認が来れば `shiro/food-dx-system-workspace` へ反映、未承認なら残る低リスクUI/APIフローを追加E2E対象として限定して拡張 / 詰まり: review branch push と `cycle-tracker-app` force push は承認待ち、disk cleanup は削除系操作のため承認待ち / 支援候補: Yakon（承認が必要な場合のみ） / 期限: 次heartbeatで継続確認。
+
+**通知判断**: notify=false（food-dx は自走で前進し、High Risk 実行は増えていない。即時割り込みが必要な新規 blocker なし）。
+
+---
+
 ## 2026-06-19 heartbeat (209回目)
 
 **アクション**: `/Users/umi/.openclaw/workspace/HEARTBEAT.md` を指定パスで読み、`tasks/QUEUE.md` の Ready / In Progress を確認。Ready 未完了なし、In Progress は `food-dx-shiro` のみ。古い会話由来の別タスクは広げず、前回の次アクション候補だった残る低リスクUI/APIフローからPDF一括生成の共有APIクライアント統一を限定し、push / deploy / 本番変更なしのローカル作業として direct `fetch('/api/pdf/batch')` と `getAuthHeaders()` 直書きへ戻る退行を防いだ。`apps/web/src/lib/api.ts` に `pdfApi.generateBatch()` を追加し、`apps/web/src/components/pdf/PdfBatchGenerator.tsx` は共有APIクライアント経由へ統一。`scripts/check-pdf-auth-contract.mjs` に direct fetch / 直書き auth へ戻らない契約を追加。local commit `a3c2ed2 fix: route PDF batch generation through API client` を作成した。
