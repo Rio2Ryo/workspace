@@ -59,6 +59,31 @@ git -C /Users/umi/.openclaw/workspace/cycle-tracker-app push --force origin main
 
 ---
 
+## 2026-06-19 heartbeat (208回目)
+
+**アクション**: `/Users/umi/.openclaw/workspace/HEARTBEAT.md` を指定パスで読み、`tasks/QUEUE.md` の Ready / In Progress を確認。Ready 未完了なし、In Progress は `food-dx-shiro` のみ。古い会話由来の別タスクは広げず、前回の次アクション候補だった残る低リスクUI/APIフローから分析エクスポートの共有APIクライアント統一を限定し、push / deploy / 本番変更なしのローカル作業として direct `fetch('/api/analytics/export/...')` と `getAuthHeaders()` 直書きへ戻る退行を防いだ。`apps/web/src/lib/api.ts` に認証付き `getBlob()` を追加し、`analyticsApi.exportData()` を blob/file response 取得へ変更。`apps/web/src/components/analytics/ExportButton.tsx` は共有 `analyticsApi.exportData()` 経由へ統一し、`scripts/check-pdf-auth-contract.mjs` に direct fetch / 直書き auth へ戻らない契約を追加。local commit `7867301 fix: route analytics exports through API client` を作成した。
+
+**検証**:
+- QUEUE Ready 未完了なし。In Progress = `food-dx-shiro`。
+- `food-dx-shiro`: repo `/Users/umi/.openclaw/workspace/food-dx-qwen/food-dx-system` は HEAD `7867301`、tracked 変更なし。
+- `npm run test:web:core-smoke-e2e -- --grep "analytics dashboard exports sales data"` → 1/1 pass。
+- `npm run test:web:core-smoke-e2e` → 33/33 pass。
+- `npm run test:web:pdf-auth-contract` → pass。
+- `npm run test:contracts` → pass（DB/E2E handoff contract、Web accessibility contract、PDF auth contract）。
+- `npm run lint --workspace=@food-dx/web` → pass。
+- `npm run build:web` → pass（21 pages generated）。E2E webServer並列中の初回のみ既知の `/_document` PageNotFound でfail、E2E終了後の単独再実行でpass。
+- `git diff --check` → pass。
+- `food-dx` 由来の常駐 `next dev` / API `tsx watch` / Playwright / Vite / Wrangler dev は残っていない。管理用 tmux `food-dx-shiro` のみ存在。threads-watcher 由来のPlaywrightは別件で継続。
+- disk: `/System/Volumes/Data` は 95% 使用、空き 12GiB。通常の記録・品質確認は可能。
+- `cycle-tracker-app`: force push 承認サインなしのため未実行。承認サインは `cycle-tracker force push OK`。
+- push / force push / deploy / 本番変更 / 秘密情報共有 / 削除系操作は未実行。
+
+**状態**: 目的: 分析エクスポートが direct fetch / 直書き auth に戻る退行防止 / 現担当: 白 / 現状: analytics export を shared analyticsApi + authenticated blob response 経由に統一し、既存E2Eと契約で固定済み / 次アクション: review branch push 承認が来れば `shiro/food-dx-system-workspace` へ反映、未承認なら残る低リスクUI/APIフローを追加E2E対象として限定して拡張 / 詰まり: review branch push と `cycle-tracker-app` force push は承認待ち、disk cleanup は削除系操作のため承認待ち / 支援候補: Yakon（承認が必要な場合のみ） / 期限: 次heartbeatで継続確認。
+
+**通知判断**: notify=false（food-dx は自走で前進し、High Risk 実行は増えていない。即時割り込みが必要な新規 blocker なし）。
+
+---
+
 ## 2026-06-19 heartbeat (207回目)
 
 **アクション**: `/Users/umi/.openclaw/workspace/HEARTBEAT.md` を指定パスで読み、`tasks/QUEUE.md` の Ready / In Progress を確認。Ready 未完了なし、In Progress は `food-dx-shiro` のみ。古い会話由来の別タスクは広げず、前回の次アクション候補だった残る低リスクUI/APIフローから注文取得系の共有APIクライアント統一を限定し、push / deploy / 本番変更なしのローカル作業として raw `api.get('/api/orders')` や承認履歴の raw call へ戻る退行を防いだ。`apps/web/src/lib/api.ts` の `ordersApi.list()` / `ordersApi.getById()` をページ別レスポンス型に使える generic にし、`approvalsApi.getOrderHistory()` を追加。`apps/web/src/app/orders/page.tsx`、`apps/web/src/app/orders/[id]/page.tsx`、`apps/web/src/app/documents/page.tsx`、`apps/web/src/app/approvals/[id]/page.tsx` は注文取得・承認履歴取得を共有APIクライアント経由へ統一。`scripts/check-pdf-auth-contract.mjs` に注文一覧/詳細/書類/承認詳細が raw order API call へ戻らない契約を追加。local commit `b259059 fix: route order fetches through API client` を作成した。
