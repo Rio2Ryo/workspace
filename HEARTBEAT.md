@@ -59,6 +59,31 @@ git -C /Users/umi/.openclaw/workspace/cycle-tracker-app push --force origin main
 
 ---
 
+## 2026-06-19 heartbeat (201回目)
+
+**アクション**: `/Users/umi/.openclaw/workspace/HEARTBEAT.md` を指定パスで読み、`tasks/QUEUE.md` の Ready / In Progress を確認。Ready 未完了なし、In Progress は `food-dx-shiro` のみ。古い会話由来の別タスクは広げず、前回の次アクション候補だった残る低リスクUI/APIフローから商品検索の保存済み検索削除導線を限定し、push / deploy / 本番変更なしのローカル作業として `DELETE /api/products/searches/saved/:id` の送信をE2Eと契約で固定した。`apps/web/src/components/search/SearchHistory.tsx` の削除処理を共有 `productsApi.deleteSavedSearch()` 経由へ寄せ、`apps/web/e2e/core-auth-smoke.spec.ts` に保存済み検索の削除でBearer付きDELETEが送られ、一覧が空状態へ更新されるE2Eを追加。`scripts/check-pdf-auth-contract.mjs` に同E2Eと共有APIクライアント契約を追加。local commit `e4fe43b test: cover saved search deletion` を作成した。
+
+**検証**:
+- QUEUE Ready 未完了なし。In Progress = `food-dx-shiro`。
+- `food-dx-shiro`: repo `/Users/umi/.openclaw/workspace/food-dx-qwen/food-dx-system` は HEAD `e4fe43b`、tracked 変更なし。
+- `npm run test:web:core-smoke-e2e -- --grep "saved search"` → 2/2 pass。
+- `npm run test:web:core-smoke-e2e` → 31/31 pass。
+- `npm run test:web:pdf-auth-contract` → pass。
+- `npm run test:contracts` → pass（DB/E2E handoff contract、Web accessibility contract、PDF auth contract）。
+- `npm run lint --workspace=@food-dx/web` → pass。
+- `npm run build:web` → pass（21 pages generated）。
+- `git diff --check` → pass。
+- `food-dx` 由来の常駐 `next dev` / API `tsx watch` / Playwright / Vite / Wrangler dev は残っていない。管理用 tmux `food-dx-shiro` のみ存在。
+- disk: `/System/Volumes/Data` は 95% 使用、空き 12GiB。通常の記録・品質確認は可能。
+- `cycle-tracker-app`: force push 承認サインなしのため未実行。承認サインは `cycle-tracker force push OK`。
+- push / force push / deploy / 本番変更 / 秘密情報共有 / 削除系操作は未実行。
+
+**状態**: 目的: 保存済み商品検索の削除がUIだけで退行しないようAPI送信を固定 / 現担当: 白 / 現状: 削除を共有APIクライアント・Bearer付きDELETE・空状態反映・契約チェックまで固定済み / 次アクション: review branch push 承認が来れば `shiro/food-dx-system-workspace` へ反映、未承認なら残る低リスクUI/APIフローを追加E2E対象として限定して拡張 / 詰まり: review branch push と `cycle-tracker-app` force push は承認待ち、disk cleanup は削除系操作のため承認待ち / 支援候補: Yakon（承認が必要な場合のみ） / 期限: 次heartbeatで継続確認。
+
+**通知判断**: notify=false（food-dx は自走で前進し、High Risk 実行は増えていない。即時割り込みが必要な新規 blocker なし）。
+
+---
+
 ## 2026-06-19 heartbeat (200回目)
 
 **アクション**: `/Users/umi/.openclaw/workspace/HEARTBEAT.md` を指定パスで読み、`tasks/QUEUE.md` の Ready / In Progress を確認。Ready 未完了なし、In Progress は `food-dx-shiro` のみ。古い会話由来の別タスクは広げず、前回の次アクション候補だった残る低リスクUI/APIフローから通知センターの削除導線を限定し、push / deploy / 本番変更なしのローカル作業として `DELETE /api/notifications/:id` の送信をE2Eと契約で固定した。`apps/web/e2e/core-auth-smoke.spec.ts` に通知一覧から「通知を削除」を押したとき Bearer付きDELETEが送られ、一覧が空状態へ更新され、未読数も0へ戻るE2Eを追加。`scripts/check-pdf-auth-contract.mjs` に同E2Eと `useNotifications` / `notificationsApi.delete()` の削除API契約を追加。local commit `2f93e14 test: cover notification deletion action` を作成した。
