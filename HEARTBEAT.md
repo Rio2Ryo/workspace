@@ -59,6 +59,30 @@ git -C /Users/umi/.openclaw/workspace/cycle-tracker-app push --force origin main
 
 ---
 
+## 2026-06-19 heartbeat (203回目)
+
+**アクション**: `/Users/umi/.openclaw/workspace/HEARTBEAT.md` を指定パスで読み、`tasks/QUEUE.md` の Ready / In Progress を確認。Ready 未完了なし、In Progress は `food-dx-shiro` のみ。古い会話由来の別タスクは広げず、前回の次アクション候補だった残る低リスクUI/APIフローからダッシュボード共有APIクライアントを限定し、push / deploy / 本番変更なしのローカル作業として存在しない旧route `/api/dashboard/orders/trend` へ戻る退行を防いだ。`apps/web/src/lib/api.ts` の `dashboardApi.getOrderTrend()` を実装済みroute `/api/dashboard/order-trends` へ修正し、stats / trend / product movement / alerts のレスポンスshapeを実APIに合わせた。`apps/web/src/app/dashboard/page.tsx` は raw `api.get()` ではなく共有 `dashboardApi` 経由で統一し、`scripts/check-pdf-auth-contract.mjs` に旧routeとraw dashboard fetchへ戻らない契約を追加。local commit `100cf31 fix: align dashboard API client routes` を作成した。
+
+**検証**:
+- QUEUE Ready 未完了なし。In Progress = `food-dx-shiro`。
+- `food-dx-shiro`: repo `/Users/umi/.openclaw/workspace/food-dx-qwen/food-dx-system` は HEAD `100cf31`、tracked 変更なし。
+- `npm run test:web:core-smoke-e2e -- --grep "dashboard loads"` → 2/2 pass。
+- `npm run test:web:core-smoke-e2e` → 32/32 pass。
+- `npm run test:web:pdf-auth-contract` → pass。
+- `npm run test:contracts` → pass（DB/E2E handoff contract、Web accessibility contract、PDF auth contract）。
+- `npm run lint --workspace=@food-dx/web` → pass。
+- `npm run build:web` → pass（21 pages generated）。
+- `git diff --check` → pass。
+- disk: `/System/Volumes/Data` は 95% 使用、空き 12GiB。通常の記録・品質確認は可能。
+- `cycle-tracker-app`: force push 承認サインなしのため未実行。承認サインは `cycle-tracker force push OK`。
+- push / force push / deploy / 本番変更 / 秘密情報共有 / 削除系操作は未実行。
+
+**状態**: 目的: ダッシュボード共有APIクライアントが存在しない旧routeへ戻る退行防止 / 現担当: 白 / 現状: dashboard page を shared dashboardApi 経由に統一し、order-trends route・response shape・契約チェックまで固定済み / 次アクション: review branch push 承認が来れば `shiro/food-dx-system-workspace` へ反映、未承認なら残る低リスクUI/APIフローを追加E2E対象として限定して拡張 / 詰まり: review branch push と `cycle-tracker-app` force push は承認待ち、disk cleanup は削除系操作のため承認待ち / 支援候補: Yakon（承認が必要な場合のみ） / 期限: 次heartbeatで継続確認。
+
+**通知判断**: notify=false（food-dx は自走で前進し、High Risk 実行は増えていない。即時割り込みが必要な新規 blocker なし）。
+
+---
+
 ## 2026-06-19 heartbeat (202回目)
 
 **アクション**: `/Users/umi/.openclaw/workspace/HEARTBEAT.md` を指定パスで読み、`tasks/QUEUE.md` の Ready / In Progress を確認。Ready 未完了なし、In Progress は `food-dx-shiro` のみ。古い会話由来の別タスクは広げず、前回の次アクション候補だった残る低リスクUI/APIフローから発注履歴の比較導線を限定し、push / deploy / 本番変更なしのローカル作業として既存 `POST /api/order-history/compare` へ画面から到達できるよう修正した。`apps/web/src/app/orders/history/page.tsx` に `OrderComparison` の表示導線を追加し、`apps/web/src/components/orders/OrderComparison.tsx` は共有APIクライアントがunwrapした `response.comparison` を読むよう修正。`apps/web/e2e/core-auth-smoke.spec.ts` に発注履歴から比較パネルを開き、2件の発注IDでBearer付きcompare APIが送られ、比較結果が表示されるE2Eを追加。`scripts/check-pdf-auth-contract.mjs` に同導線とレスポンスunwrap契約を追加。local commit `a54219f fix: expose order history comparison flow` を作成した。
