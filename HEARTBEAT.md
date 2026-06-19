@@ -59,6 +59,31 @@ git -C /Users/umi/.openclaw/workspace/cycle-tracker-app push --force origin main
 
 ---
 
+## 2026-06-19 heartbeat (202回目)
+
+**アクション**: `/Users/umi/.openclaw/workspace/HEARTBEAT.md` を指定パスで読み、`tasks/QUEUE.md` の Ready / In Progress を確認。Ready 未完了なし、In Progress は `food-dx-shiro` のみ。古い会話由来の別タスクは広げず、前回の次アクション候補だった残る低リスクUI/APIフローから発注履歴の比較導線を限定し、push / deploy / 本番変更なしのローカル作業として既存 `POST /api/order-history/compare` へ画面から到達できるよう修正した。`apps/web/src/app/orders/history/page.tsx` に `OrderComparison` の表示導線を追加し、`apps/web/src/components/orders/OrderComparison.tsx` は共有APIクライアントがunwrapした `response.comparison` を読むよう修正。`apps/web/e2e/core-auth-smoke.spec.ts` に発注履歴から比較パネルを開き、2件の発注IDでBearer付きcompare APIが送られ、比較結果が表示されるE2Eを追加。`scripts/check-pdf-auth-contract.mjs` に同導線とレスポンスunwrap契約を追加。local commit `a54219f fix: expose order history comparison flow` を作成した。
+
+**検証**:
+- QUEUE Ready 未完了なし。In Progress = `food-dx-shiro`。
+- `food-dx-shiro`: repo `/Users/umi/.openclaw/workspace/food-dx-qwen/food-dx-system` は HEAD `a54219f`、tracked 変更なし。
+- `npm run test:web:core-smoke-e2e -- --grep "order history page compares"` → 1/1 pass。
+- `npm run test:web:core-smoke-e2e` → 32/32 pass。
+- `npm run test:web:pdf-auth-contract` → pass。
+- `npm run test:contracts` → pass（DB/E2E handoff contract、Web accessibility contract、PDF auth contract）。
+- `npm run lint --workspace=@food-dx/web` → pass。
+- `npm run build:web` → pass（21 pages generated）。
+- `git diff --check` → pass。
+- `food-dx` 由来の常駐 `next dev` / API `tsx watch` / Playwright / Vite / Wrangler dev は残っていない。管理用 tmux `food-dx-shiro` のみ存在。
+- disk: `/System/Volumes/Data` は 95% 使用、空き 12GiB。通常の記録・品質確認は可能。
+- `cycle-tracker-app`: force push 承認サインなしのため未実行。承認サインは `cycle-tracker force push OK`。
+- push / force push / deploy / 本番変更 / 秘密情報共有 / 削除系操作は未実行。
+
+**状態**: 目的: 発注履歴の比較機能が実API実装済みなのにUIから到達できない退行防止 / 現担当: 白 / 現状: 発注比較をUI導線・Bearer付きPOST・結果表示・契約チェックまで固定済み / 次アクション: review branch push 承認が来れば `shiro/food-dx-system-workspace` へ反映、未承認なら残る低リスクUI/APIフローを追加E2E対象として限定して拡張 / 詰まり: review branch push と `cycle-tracker-app` force push は承認待ち、disk cleanup は削除系操作のため承認待ち / 支援候補: Yakon（承認が必要な場合のみ） / 期限: 次heartbeatで継続確認。
+
+**通知判断**: notify=false（food-dx は自走で前進し、High Risk 実行は増えていない。即時割り込みが必要な新規 blocker なし）。
+
+---
+
 ## 2026-06-19 heartbeat (201回目)
 
 **アクション**: `/Users/umi/.openclaw/workspace/HEARTBEAT.md` を指定パスで読み、`tasks/QUEUE.md` の Ready / In Progress を確認。Ready 未完了なし、In Progress は `food-dx-shiro` のみ。古い会話由来の別タスクは広げず、前回の次アクション候補だった残る低リスクUI/APIフローから商品検索の保存済み検索削除導線を限定し、push / deploy / 本番変更なしのローカル作業として `DELETE /api/products/searches/saved/:id` の送信をE2Eと契約で固定した。`apps/web/src/components/search/SearchHistory.tsx` の削除処理を共有 `productsApi.deleteSavedSearch()` 経由へ寄せ、`apps/web/e2e/core-auth-smoke.spec.ts` に保存済み検索の削除でBearer付きDELETEが送られ、一覧が空状態へ更新されるE2Eを追加。`scripts/check-pdf-auth-contract.mjs` に同E2Eと共有APIクライアント契約を追加。local commit `e4fe43b test: cover saved search deletion` を作成した。
