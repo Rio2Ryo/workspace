@@ -59,6 +59,29 @@ git -C /Users/umi/.openclaw/workspace/cycle-tracker-app push --force origin main
 
 ---
 
+## 2026-06-19 heartbeat (205回目)
+
+**アクション**: `/Users/umi/.openclaw/workspace/HEARTBEAT.md` を指定パスで読み、`tasks/QUEUE.md` の Ready / In Progress を確認。Ready 未完了なし、In Progress は `food-dx-shiro` のみ。古い会話由来の別タスクは広げず、前回の次アクション候補だった残る低リスクUI/APIフローから商品検索サジェストの共有APIクライアント統一を限定し、push / deploy / 本番変更なしのローカル作業として raw `api.get()` へ戻る退行を防いだ。`apps/web/src/components/search/SearchBar.tsx` はサジェスト取得を共有 `productsApi.getSuggestions(query, 8)` 経由へ統一し、`apps/web/e2e/core-auth-smoke.spec.ts` に商品検索バーのサジェストAPI呼び出しを固定するE2Eを追加。`scripts/check-pdf-auth-contract.mjs` に `SearchBar` が raw product suggestions API call へ戻らない契約を追加。local commit `b3e2a9f fix: route product suggestions through API client` を作成した。
+
+**検証**:
+- QUEUE Ready 未完了なし。In Progress = `food-dx-shiro`。
+- `food-dx-shiro`: repo `/Users/umi/.openclaw/workspace/food-dx-qwen/food-dx-system` は HEAD `b3e2a9f`、tracked 変更なし。
+- `npm run test:web:core-smoke-e2e -- --grep "products search bar"` → 1/1 pass。
+- `npm run test:web:core-smoke-e2e` → 33/33 pass。
+- `npm run test:web:pdf-auth-contract` → pass。
+- `npm run test:contracts` → pass（DB/E2E handoff contract、Web accessibility contract、PDF auth contract）。
+- `npm run lint --workspace=@food-dx/web` → pass。
+- `npm run build:web` → pass（21 pages generated）。
+- `git diff --check` → pass。
+- `cycle-tracker-app`: force push 承認サインなしのため未実行。承認サインは `cycle-tracker force push OK`。
+- push / force push / deploy / 本番変更 / 秘密情報共有 / 削除系操作は未実行。
+
+**状態**: 目的: 商品検索サジェストが raw API call に戻る退行防止 / 現担当: 白 / 現状: SearchBar を shared productsApi 経由に統一し、Bearer付き suggestions API をE2Eと契約で固定済み / 次アクション: review branch push 承認が来れば `shiro/food-dx-system-workspace` へ反映、未承認なら残る低リスクUI/APIフローを追加E2E対象として限定して拡張 / 詰まり: review branch push と `cycle-tracker-app` force push は承認待ち、disk cleanup は削除系操作のため承認待ち / 支援候補: Yakon（承認が必要な場合のみ） / 期限: 次heartbeatで継続確認。
+
+**通知判断**: notify=false（food-dx は自走で前進し、High Risk 実行は増えていない。即時割り込みが必要な新規 blocker なし）。
+
+---
+
 ## 2026-06-19 heartbeat (204回目)
 
 **アクション**: `/Users/umi/.openclaw/workspace/HEARTBEAT.md` を指定パスで読み、`tasks/QUEUE.md` の Ready / In Progress を確認。Ready 未完了なし、In Progress は `food-dx-shiro` のみ。古い会話由来の別タスクは広げず、前回の次アクション候補だった残る低リスクUI/APIフローから商品検索ページの共有APIクライアント統一を限定し、push / deploy / 本番変更なしのローカル作業として raw `api.get()` / `api.post()` へ戻る退行を防いだ。`apps/web/src/app/products/page.tsx` と `apps/web/src/app/products/search/page.tsx` は filter / search / saved search 作成を共有 `productsApi` 経由へ統一し、複数値queryも配列として保持するよう修正。`apps/web/src/components/search/SearchHistory.tsx` の保存検索一覧取得も `productsApi.getSavedSearches()` へ寄せ、`scripts/check-pdf-auth-contract.mjs` に raw product API call へ戻らない契約を追加。local commit `a3e80c0 fix: route product search through API client` を作成した。
