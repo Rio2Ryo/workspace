@@ -59,6 +59,32 @@ git -C /Users/umi/.openclaw/workspace/cycle-tracker-app push --force origin main
 
 ---
 
+## 2026-06-21 heartbeat (217回目)
+
+**アクション**: `/Users/umi/.openclaw/workspace/HEARTBEAT.md` を指定パスで読み、`tasks/QUEUE.md` の Ready / In Progress を確認。Ready 未完了なし、In Progress は `food-dx-shiro` のみ。古い会話由来の別タスクは広げず、前回の次アクション候補だった残る低リスクUIフローから商品一覧/商品検索のカード操作を限定し、push / deploy / 本番変更なしのローカル作業として `window.location.href` によるフルリロード遷移を Next.js client router へ差し替えた。`apps/web/src/app/products/page.tsx` と `apps/web/src/app/products/search/page.tsx` は `useRouter()` の `router.push()` で商品詳細 `/products/:id` と新規発注 `/orders/new?...` へ遷移し、`scripts/check-pdf-auth-contract.mjs` に同導線が `window.location.href` へ戻らない契約を追加。local commit `4fcec8b fix: route product actions through app navigation` を作成した。
+
+**検証**:
+- QUEUE Ready 未完了なし。In Progress = `food-dx-shiro`。
+- `food-dx-shiro`: repo `/Users/umi/.openclaw/workspace/food-dx-qwen/food-dx-system` は HEAD `4fcec8b`、tracked 変更なし。
+- `npm run test:web:core-smoke-e2e -- --grep "products page detail action"` → 1/1 pass。
+- `npm run test:web:core-smoke-e2e` → 36/36 pass。
+- `npm run test:web:pdf-auth-contract` → pass。
+- `npm run test:contracts` → pass（DB/E2E handoff contract、Web accessibility contract、PDF auth contract）。
+- `npm run lint --workspace=@food-dx/web` → pass。
+- `npm run build:web` → pass（21 pages generated）。
+- `git diff --check` → pass。
+- 管理用 tmux `food-dx-shiro` は存在。
+- `food-dx` 由来の常駐 dev/test プロセスなし。
+- disk: `/System/Volumes/Data` は 96% 使用、空き 10GiB。通常の記録・品質確認は可能だが、disk cleanup は削除系操作のため未実行。
+- `cycle-tracker-app`: force push 承認サインなしのため未実行。承認サインは `cycle-tracker force push OK`。
+- push / force push / deploy / 本番変更 / 秘密情報共有 / 削除系操作は未実行。
+
+**状態**: 目的: 商品一覧/検索結果の詳細・発注導線がフルリロード実装へ戻る退行防止 / 現担当: 白 / 現状: 商品詳細遷移はfocused E2Eとフルcore smokeで確認し、詳細/発注導線のrouter利用を契約で固定済み / 次アクション: review branch push 承認が来れば `shiro/food-dx-system-workspace` へ反映、未承認なら残る低リスクUI/APIフローを追加E2E対象として限定して拡張 / 詰まり: review branch push と `cycle-tracker-app` force push は承認待ち、disk cleanup は削除系操作のため承認待ち / 支援候補: Yakon（承認が必要な場合のみ） / 期限: 次heartbeatで継続確認。
+
+**通知判断**: notify=false（food-dx は自走で前進し、High Risk 実行は増えていない。即時割り込みが必要な新規 blocker なし）。
+
+---
+
 ## 2026-06-21 heartbeat (216回目)
 
 **アクション**: `/Users/umi/.openclaw/workspace/HEARTBEAT.md` を指定パスで読み、`tasks/QUEUE.md` の Ready / In Progress を確認。Ready 未完了なし、In Progress は `food-dx-shiro` のみ。古い会話由来の別タスクは広げず、前回の次アクション候補だった残る低リスクUIフローからヘッダー通知ベルの通知センター導線を限定し、push / deploy / 本番変更なしのローカル作業として `window.location.href = '/notifications'` のフルリロード遷移を Next.js client router へ差し替えた。`apps/web/src/components/notifications/NotificationBell.tsx` は `useRouter()` の `router.push('/notifications')` で通知センターへ遷移し、`apps/web/e2e/core-auth-smoke.spec.ts` にダッシュボードの通知ベルを開く、通知を既読化する、`すべての通知を見る` から `/notifications` へ遷移するE2Eを追加。`scripts/check-pdf-auth-contract.mjs` に通知ベルが `window.location.href` へ戻らない契約を追加。local commit `873afe6 fix: route notification bell through app navigation` を作成した。
