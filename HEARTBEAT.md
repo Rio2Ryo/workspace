@@ -59,6 +59,33 @@ git -C /Users/umi/.openclaw/workspace/cycle-tracker-app push --force origin main
 
 ---
 
+## 2026-06-20 heartbeat (213回目)
+
+**アクション**: `/Users/umi/.openclaw/workspace/HEARTBEAT.md` を指定パスで読み、`tasks/QUEUE.md` の Ready / In Progress を確認。Ready 未完了なし、In Progress は `food-dx-shiro` のみ。古い会話由来の別タスクは広げず、前回の次アクション候補だった残る低リスクUI/APIフローから商品検索履歴を限定し、push / deploy / 本番変更なしのローカル作業として `SearchHistory` の localStorage + 仮timestamp 依存を実APIへ差し替えた。`apps/api/src/services/searchService.ts` に検索履歴の取得/削除を追加し、`apps/api/src/controllers/ProductController.ts` と `apps/api/src/routes/products.ts` で `GET/DELETE /api/products/searches/history` を公開。`apps/web/src/lib/api.ts` に `productsApi.getSearchHistory()` / `clearSearchHistory()` を追加し、`apps/web/src/components/search/SearchHistory.tsx` は最近の検索一覧・クリアを共有APIクライアント経由へ統一。あわせて `useSearchUrlState` の `query` / `temperatureType` / `stockLevel` / `sortField` / `sortOrder` / `viewMode` を実URLキーへ正しく変換し、最近検索クリック後に検索APIへ反映されるよう修正。`apps/web/e2e/core-auth-smoke.spec.ts` に検索履歴取得・適用・削除のE2Eを追加し、`scripts/check-pdf-auth-contract.mjs` に localStorage/mock timestamp へ戻らない契約を追加。local commit `7f70dee fix: load product search history through API` を作成した。
+
+**検証**:
+- QUEUE Ready 未完了なし。In Progress = `food-dx-shiro`。
+- `food-dx-shiro`: repo `/Users/umi/.openclaw/workspace/food-dx-qwen/food-dx-system` は HEAD `7f70dee`、tracked 変更なし。
+- `npm run test:web:core-smoke-e2e -- --grep "recent product search history"` → 1/1 pass。
+- `npm run test:web:core-smoke-e2e` → 34/34 pass。
+- `npm run test:web:pdf-auth-contract` → pass。
+- `npm run test:contracts` → pass（DB/E2E handoff contract、Web accessibility contract、PDF auth contract）。
+- `npm run lint --workspace=@food-dx/api` → pass。
+- `npm run lint --workspace=@food-dx/web` → pass。
+- `npm run build:api` → pass。
+- `npm run build:web` → pass（21 pages generated）。E2E webServer並列中の初回のみ既知の `/_document` PageNotFound でfail、E2E終了後の単独再実行でpass。
+- `git diff --check` → pass。
+- `food-dx` 由来の常駐 `next dev` / API `tsx watch` / Playwright / Vite / Wrangler dev は残っていない。管理用 tmux `food-dx-shiro` のみ存在。
+- disk: `/System/Volumes/Data` は 96% 使用、空き 10GiB。通常の記録・品質確認は可能だが、disk cleanup は削除系操作のため未実行。
+- `cycle-tracker-app`: force push 承認サインなしのため未実行。承認サインは `cycle-tracker force push OK`。
+- push / force push / deploy / 本番変更 / 秘密情報共有 / 削除系操作は未実行。
+
+**状態**: 目的: 商品検索履歴が画面内 localStorage / 仮timestamp 実装へ戻る退行防止 / 現担当: 白 / 現状: 検索履歴の記録済みデータ取得・最近検索適用・履歴クリアをAPI/UI/E2E/契約で固定済み / 次アクション: review branch push 承認が来れば `shiro/food-dx-system-workspace` へ反映、未承認なら残る低リスクUI/APIフローを追加E2E対象として限定して拡張 / 詰まり: review branch push と `cycle-tracker-app` force push は承認待ち、disk cleanup は削除系操作のため承認待ち / 支援候補: Yakon（承認が必要な場合のみ） / 期限: 次heartbeatで継続確認。
+
+**通知判断**: notify=false（food-dx は自走で前進し、High Risk 実行は増えていない。即時割り込みが必要な新規 blocker なし）。
+
+---
+
 ## 2026-06-20 heartbeat (212回目)
 
 **アクション**: `/Users/umi/.openclaw/workspace/HEARTBEAT.md` を指定パスで読み、`tasks/QUEUE.md` の Ready / In Progress を確認。Ready 未完了なし、In Progress は `food-dx-shiro` のみ。古い会話由来の別タスクは広げず、前回の次アクション候補だった残る低リスクUI/APIフローから通知一覧・既読化・削除・通知設定・テスト通知の共有APIクライアント統一を限定し、push / deploy / 本番変更なしのローカル作業として `useNotifications` 内のローカル `notificationsApi` 定義と raw `api.patch/delete/get/put/post` へ戻る退行を防いだ。`apps/web/src/lib/api.ts` に `notificationsApi` と通知レスポンス型を集約し、`apps/web/src/hooks/useNotifications.ts` と `apps/web/src/app/settings/notifications/page.tsx` は共有APIクライアント経由へ統一。`scripts/check-pdf-auth-contract.mjs` に hook内API直書き禁止と共有通知API契約を追加。local commit `e0c0ec1 fix: route notifications through API client` を作成した。
