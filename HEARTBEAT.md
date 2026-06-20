@@ -59,6 +59,31 @@ git -C /Users/umi/.openclaw/workspace/cycle-tracker-app push --force origin main
 
 ---
 
+## 2026-06-21 heartbeat (221回目)
+
+**アクション**: `/Users/umi/.openclaw/workspace/HEARTBEAT.md` を指定パスで読み、`tasks/QUEUE.md` の Ready / In Progress を確認。Ready 未完了なし、In Progress は `food-dx-shiro` のみ。古い会話由来の別タスクは広げず、前回の次アクション候補だった残る低リスクUI/APIフローからPDFプレビュー取得の共有APIクライアント統一を限定し、push / deploy / 本番変更なしのローカル作業として `PdfPreview` の direct `api.get('/api/pdf/preview/...')` を `pdfApi.getPreview()` 経由へ差し替えた。`apps/web/src/lib/api.ts` に `PdfPreviewResponse` と `pdfApi.getPreview(template, orderId, language)` を追加し、`apps/web/src/components/pdf/PdfPreview.tsx` は共有PDF APIクライアントでプレビューJSONを取得するよう統一。`scripts/check-pdf-auth-contract.mjs` に同導線が direct preview API call へ戻らない契約を追加。local commit `3383015 fix: route PDF preview through API client` を作成した。
+
+**検証**:
+- QUEUE Ready 未完了なし。In Progress = `food-dx-shiro`。
+- `food-dx-shiro`: repo `/Users/umi/.openclaw/workspace/food-dx-qwen/food-dx-system` は HEAD `3383015`、tracked 変更なし。
+- `npm run test:web:pdf-auth-contract` → pass。
+- `npm run lint --workspace=@food-dx/web` → pass。
+- `git diff --check` → pass。
+- `npm run test:web:pdf-auth-e2e` → 6/6 pass。
+- `npm run test:contracts` → pass（DB/E2E handoff contract、Web accessibility contract、PDF auth contract）。
+- `npm run build:web` → pass（21 pages generated。E2E webServer並列中の既知 `/_document` 競合は単独再実行でpass）。
+- 管理用 tmux `food-dx-shiro` は存在。
+- `food-dx` 由来の常駐 dev/test プロセスなし。
+- disk: `/System/Volumes/Data` は 96% 使用、空き 10GiB。通常の記録・品質確認は可能だが、disk cleanup は削除系操作のため未実行。
+- `cycle-tracker-app`: force push 承認サインなしのため未実行。承認サインは `cycle-tracker force push OK`。
+- push / force push / deploy / 本番変更 / 秘密情報共有 / 削除系操作は未実行。
+
+**状態**: 目的: PDFプレビュー取得が direct API call に戻る退行防止 / 現担当: 白 / 現状: PDFテンプレート・一括生成・プレビュー取得を shared `pdfApi` 経由に統一し、PDF auth E2Eと契約で固定済み / 次アクション: review branch push 承認が来れば `shiro/food-dx-system-workspace` へ反映、未承認なら残る低リスクUI/APIフローを追加E2E対象として限定して拡張 / 詰まり: review branch push と `cycle-tracker-app` force push は承認待ち、disk cleanup は削除系操作のため承認待ち / 支援候補: Yakon（承認が必要な場合のみ） / 期限: 次heartbeatで継続確認。
+
+**通知判断**: notify=false（food-dx は自走で前進し、High Risk 実行は増えていない。即時割り込みが必要な新規 blocker なし）。
+
+---
+
 ## 2026-06-21 heartbeat (220回目)
 
 **アクション**: `/Users/umi/.openclaw/workspace/HEARTBEAT.md` を指定パスで読み、`tasks/QUEUE.md` の Ready / In Progress を確認。Ready 未完了なし、In Progress は `food-dx-shiro` のみ。古い会話由来の別タスクは広げず、前回の次アクション候補だった残る低リスクAPIフローからテンプレート通知の配送状態永続化を限定し、push / deploy / 本番変更なしのローカル作業として `sendFromTemplate()` が配送結果後も `channelStatus=PENDING` の通知を返し続ける不整合を修正した。`apps/api/src/services/notificationService.ts` は通常通知とテンプレート通知の配送結果判定を `getDeliveryChannelStatus()` に集約し、`SENT` / `PARTIAL` / `FAILED` を永続化した更新後通知を返すよう変更。テンプレート通知で全チャンネルが無効な場合も通常通知と同様に `IN_APP` へフォールバックするよう固定し、quiet hours の placeholder comment も明示的な遅延配送キュー表現へ整理した。`scripts/check-pdf-auth-contract.mjs` に同退行防止契約を追加。local commit `0c6519e fix: persist templated notification delivery status` を作成した。
