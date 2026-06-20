@@ -5,14 +5,27 @@
     "@bmw_intokyo"
   ],
   "last_check": {
-    "checked_at": "2026-06-20T00:51:54Z",
+    "checked_at": "2026-06-20T01:41:54Z",
     "found_count": 4,
     "new_count": 0,
     "status": "partial_error",
     "error": "profile extraction returned partial result: found=4 previous_max=15"
   },
-  "saved_count": 105,
+  "saved_count": 106,
   "posts": [
+    {
+      "handle": "@hal.lifedesign",
+      "post_id": "DZyht05khT2",
+      "post_url": "https://www.threads.com/@hal.lifedesign/post/DZyht05khT2",
+      "first_seen_at": "2026-06-20T01:37:20Z",
+      "captured_at": "2026-06-20T01:37:26Z",
+      "screenshot_size_bytes": 828393,
+      "screenshot_width": 1280,
+      "screenshot_height": 1800,
+      "post_text": "今日の沖縄の海と空。 太陽の光を浴びながら目の前に広がる海と空を眺めつつ、波の音や海辺にいる人たちの幸せそうな声を耳にしているこのひととき。 なんて贅沢なんだろう。",
+      "posted_at": "2026-06-20T01:36:11.000Z",
+      "screenshot_path": "screenshots/hal.lifedesign/DZyht05khT2.png"
+    },
     {
       "handle": "@hal.lifedesign",
       "post_id": "DZycYlpkqJB",
@@ -1382,64 +1395,64 @@
   "recent_stats": {
     "window_hours": 24,
     "total": 1010,
-    "ok": 385,
-    "partial_error": 625,
+    "ok": 388,
+    "partial_error": 622,
     "error": 0,
     "other": 0,
-    "success_rate": 0.3811881188118812,
-    "partial_error_rate": 0.6188118811881188,
+    "success_rate": 0.38415841584158417,
+    "partial_error_rate": 0.6158415841584158,
     "top_partial_error_reason": {
       "reason": "profile extraction returned partial result: found=4 previous_max=15",
-      "count": 587
+      "count": 586
     }
   },
   "recent_stats_by_window": {
     "1": {
       "window_hours": 1,
-      "total": 43,
-      "ok": 11,
-      "partial_error": 32,
+      "total": 42,
+      "ok": 17,
+      "partial_error": 25,
       "error": 0,
       "other": 0,
-      "success_rate": 0.2558139534883721,
-      "partial_error_rate": 0.7441860465116279,
+      "success_rate": 0.40476190476190477,
+      "partial_error_rate": 0.5952380952380952,
       "top_partial_error_reason": {
         "reason": "profile extraction returned partial result: found=4 previous_max=15",
-        "count": 31
+        "count": 24
       }
     },
     "24": {
       "window_hours": 24,
       "total": 1010,
-      "ok": 385,
-      "partial_error": 625,
+      "ok": 388,
+      "partial_error": 622,
       "error": 0,
       "other": 0,
-      "success_rate": 0.3811881188118812,
-      "partial_error_rate": 0.6188118811881188,
+      "success_rate": 0.38415841584158417,
+      "partial_error_rate": 0.6158415841584158,
       "top_partial_error_reason": {
         "reason": "profile extraction returned partial result: found=4 previous_max=15",
-        "count": 587
+        "count": 586
       }
     },
     "168": {
       "window_hours": 168,
-      "total": 6784,
-      "ok": 944,
-      "partial_error": 5838,
+      "total": 6785,
+      "ok": 960,
+      "partial_error": 5823,
       "error": 2,
       "other": 0,
-      "success_rate": 0.1391509433962264,
-      "partial_error_rate": 0.8605542452830188,
+      "success_rate": 0.1414885777450258,
+      "partial_error_rate": 0.8582166543846721,
       "top_partial_error_reason": {
-        "reason": "profile extraction returned partial result: found=4 previous_max=16",
-        "count": 2227
+        "reason": "profile extraction returned partial result: found=4 previous_max=15",
+        "count": 2221
       }
     }
   },
   "sync_state": {
-    "cursor": 127,
-    "db_max": 128,
+    "cursor": 128,
+    "db_max": 129,
     "delta": 1,
     "cursor_file_exists": true
   },
@@ -1466,13 +1479,13 @@
     {
       "handle": "@bmw_intokyo",
       "warn_ts": 1781638098,
-      "current_bucket": 0.8
+      "current_bucket": 0.6
     },
     {
       "handle": "@hal.lifedesign",
       "warn_ts": 1781889103,
-      "current_bucket": 0.8
+      "current_bucket": 0.6
     }
   ],
-  "snapshot_generated_at": "2026-06-20T00:51:54Z"
+  "snapshot_generated_at": "2026-06-20T01:41:54Z"
 }
