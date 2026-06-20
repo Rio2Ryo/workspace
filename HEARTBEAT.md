@@ -59,6 +59,30 @@ git -C /Users/umi/.openclaw/workspace/cycle-tracker-app push --force origin main
 
 ---
 
+## 2026-06-20 heartbeat (212回目)
+
+**アクション**: `/Users/umi/.openclaw/workspace/HEARTBEAT.md` を指定パスで読み、`tasks/QUEUE.md` の Ready / In Progress を確認。Ready 未完了なし、In Progress は `food-dx-shiro` のみ。古い会話由来の別タスクは広げず、前回の次アクション候補だった残る低リスクUI/APIフローから通知一覧・既読化・削除・通知設定・テスト通知の共有APIクライアント統一を限定し、push / deploy / 本番変更なしのローカル作業として `useNotifications` 内のローカル `notificationsApi` 定義と raw `api.patch/delete/get/put/post` へ戻る退行を防いだ。`apps/web/src/lib/api.ts` に `notificationsApi` と通知レスポンス型を集約し、`apps/web/src/hooks/useNotifications.ts` と `apps/web/src/app/settings/notifications/page.tsx` は共有APIクライアント経由へ統一。`scripts/check-pdf-auth-contract.mjs` に hook内API直書き禁止と共有通知API契約を追加。local commit `e0c0ec1 fix: route notifications through API client` を作成した。
+
+**検証**:
+- QUEUE Ready 未完了なし。In Progress = `food-dx-shiro`。
+- `food-dx-shiro`: repo `/Users/umi/.openclaw/workspace/food-dx-qwen/food-dx-system` は HEAD `e0c0ec1`、tracked 変更なし。
+- `npm run test:web:core-smoke-e2e -- --grep "notifications page"` → 5/5 pass。
+- `npm run test:web:pdf-auth-contract` → pass。
+- `npm run test:contracts` → pass（DB/E2E handoff contract、Web accessibility contract、PDF auth contract）。
+- `npm run lint --workspace=@food-dx/web` → pass。
+- `npm run build:web` → pass（21 pages generated）。
+- `git diff --check` → pass。
+- `food-dx` 由来の常駐 `next dev` / API `tsx watch` / Playwright / Vite / Wrangler dev は残っていない。管理用 tmux `food-dx-shiro` のみ存在。threads-watcher 由来のPlaywrightは別件で継続。
+- disk: `/System/Volumes/Data` は 96% 使用、空き 9.5GiB。通常の記録・品質確認は可能だが、disk cleanup は削除系操作のため未実行。
+- `cycle-tracker-app`: force push 承認サインなしのため未実行。承認サインは `cycle-tracker force push OK`。
+- push / force push / deploy / 本番変更 / 秘密情報共有 / 削除系操作は未実行。
+
+**状態**: 目的: 通知UI/APIフローが hook内ローカルAPI定義・直書きHTTP操作へ戻る退行防止 / 現担当: 白 / 現状: 通知一覧・未読数・既読化・一括既読・削除・設定読込/保存・テスト通知を shared notificationsApi 経由に統一し、focused E2Eと契約で固定済み / 次アクション: review branch push 承認が来れば `shiro/food-dx-system-workspace` へ反映、未承認なら残る低リスクUI/APIフローを追加E2E対象として限定して拡張 / 詰まり: review branch push と `cycle-tracker-app` force push は承認待ち、disk cleanup は削除系操作のため承認待ち / 支援候補: Yakon（承認が必要な場合のみ） / 期限: 次heartbeatで継続確認。
+
+**通知判断**: notify=false（food-dx は自走で前進し、High Risk 実行は増えていない。即時割り込みが必要な新規 blocker なし）。
+
+---
+
 ## 2026-06-19 heartbeat (211回目)
 
 **アクション**: `/Users/umi/.openclaw/workspace/HEARTBEAT.md` を指定パスで読み、`tasks/QUEUE.md` の Ready / In Progress を確認。Ready 未完了なし、In Progress は `food-dx-shiro` のみ。古い会話由来の別タスクは広げず、前回の次アクション候補だった残る低リスクUI/APIフローからPDFテンプレート取得の共有APIクライアント統一を限定し、push / deploy / 本番変更なしのローカル作業として `TemplateSelector` の raw `fetch('/api/pdf/templates')` と `getAuthHeaders()` 直書きへ戻る退行を防いだ。`apps/web/src/lib/api.ts` に `pdfApi.getTemplates()` を追加し、`apps/web/src/components/pdf/TemplateSelector.tsx` は共有APIクライアント経由へ統一。`scripts/check-pdf-auth-contract.mjs` に raw template fetch / 直書き auth へ戻らない契約を追加。local commit `afb79ac fix: route PDF template loading through API client` を作成した。
