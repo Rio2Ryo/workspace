@@ -5,14 +5,27 @@
     "@bmw_intokyo"
   ],
   "last_check": {
-    "checked_at": "2026-06-19T01:00:48Z",
+    "checked_at": "2026-06-20T00:51:54Z",
     "found_count": 4,
     "new_count": 0,
     "status": "partial_error",
     "error": "profile extraction returned partial result: found=4 previous_max=15"
   },
-  "saved_count": 104,
+  "saved_count": 105,
   "posts": [
+    {
+      "handle": "@hal.lifedesign",
+      "post_id": "DZycYlpkqJB",
+      "post_url": "https://www.threads.com/@hal.lifedesign/post/DZycYlpkqJB",
+      "first_seen_at": "2026-06-20T00:50:22Z",
+      "captured_at": "2026-06-20T00:50:28Z",
+      "screenshot_size_bytes": 453429,
+      "screenshot_width": 1280,
+      "screenshot_height": 1800,
+      "post_text": "今日は脚トレ。 最近脚トレすると吐きそうになるんだけど…",
+      "posted_at": "2026-06-20T00:49:36.000Z",
+      "screenshot_path": "screenshots/hal.lifedesign/DZycYlpkqJB.png"
+    },
     {
       "handle": "@hal.lifedesign",
       "post_id": "DZv4RMgkoIG",
@@ -1368,65 +1381,65 @@
   ],
   "recent_stats": {
     "window_hours": 24,
-    "total": 1011,
-    "ok": 141,
-    "partial_error": 870,
+    "total": 1010,
+    "ok": 385,
+    "partial_error": 625,
     "error": 0,
     "other": 0,
-    "success_rate": 0.1394658753709199,
-    "partial_error_rate": 0.8605341246290801,
+    "success_rate": 0.3811881188118812,
+    "partial_error_rate": 0.6188118811881188,
     "top_partial_error_reason": {
       "reason": "profile extraction returned partial result: found=4 previous_max=15",
-      "count": 849
+      "count": 587
     }
   },
   "recent_stats_by_window": {
     "1": {
       "window_hours": 1,
       "total": 43,
-      "ok": 5,
-      "partial_error": 38,
+      "ok": 11,
+      "partial_error": 32,
       "error": 0,
       "other": 0,
-      "success_rate": 0.11627906976744186,
-      "partial_error_rate": 0.8837209302325582,
+      "success_rate": 0.2558139534883721,
+      "partial_error_rate": 0.7441860465116279,
       "top_partial_error_reason": {
         "reason": "profile extraction returned partial result: found=4 previous_max=15",
-        "count": 38
+        "count": 31
       }
     },
     "24": {
       "window_hours": 24,
-      "total": 1011,
-      "ok": 141,
-      "partial_error": 870,
+      "total": 1010,
+      "ok": 385,
+      "partial_error": 625,
       "error": 0,
       "other": 0,
-      "success_rate": 0.1394658753709199,
-      "partial_error_rate": 0.8605341246290801,
+      "success_rate": 0.3811881188118812,
+      "partial_error_rate": 0.6188118811881188,
       "top_partial_error_reason": {
         "reason": "profile extraction returned partial result: found=4 previous_max=15",
-        "count": 849
+        "count": 587
       }
     },
     "168": {
       "window_hours": 168,
-      "total": 6778,
-      "ok": 559,
-      "partial_error": 6216,
-      "error": 3,
+      "total": 6784,
+      "ok": 944,
+      "partial_error": 5838,
+      "error": 2,
       "other": 0,
-      "success_rate": 0.08247270581292417,
-      "partial_error_rate": 0.9170846857480083,
+      "success_rate": 0.1391509433962264,
+      "partial_error_rate": 0.8605542452830188,
       "top_partial_error_reason": {
         "reason": "profile extraction returned partial result: found=4 previous_max=16",
-        "count": 2965
+        "count": 2227
       }
     }
   },
   "sync_state": {
-    "cursor": 126,
-    "db_max": 127,
+    "cursor": 127,
+    "db_max": 128,
     "delta": 1,
     "cursor_file_exists": true
   },
@@ -1442,10 +1455,10 @@
     },
     {
       "handle": "@hal.lifedesign",
-      "incidents": 2,
-      "total_s": 488056,
-      "mean_s": 244028,
-      "median_s": 244028,
+      "incidents": 13,
+      "total_s": 642092,
+      "mean_s": 49391,
+      "median_s": 1201,
       "max_s": 426210
     }
   ],
@@ -1457,9 +1470,9 @@
     },
     {
       "handle": "@hal.lifedesign",
-      "warn_ts": 1781702046,
+      "warn_ts": 1781889103,
       "current_bucket": 0.8
     }
   ],
-  "snapshot_generated_at": "2026-06-19T01:00:48Z"
+  "snapshot_generated_at": "2026-06-20T00:51:54Z"
 }
