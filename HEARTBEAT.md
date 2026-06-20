@@ -59,6 +59,29 @@ git -C /Users/umi/.openclaw/workspace/cycle-tracker-app push --force origin main
 
 ---
 
+## 2026-06-21 heartbeat (215回目)
+
+**アクション**: `/Users/umi/.openclaw/workspace/HEARTBEAT.md` を指定パスで読み、`tasks/QUEUE.md` の Ready / In Progress を確認。Ready 未完了なし、In Progress は `food-dx-shiro` のみ。古い会話由来の別タスクは広げず、前回の次アクション候補だった残る低リスクAPIフローから通知リンク生成を限定し、push / deploy / 本番変更なしのローカル作業として `APP_URL` 未設定時に通知/承認リンクが `undefined/...` になる退行を防いだ。`apps/api/src/services/notificationEventHandler.ts` と `apps/api/src/services/approvalService.ts` に `makeAppLink()` を追加し、`APP_URL` / `NEXT_PUBLIC_APP_URL` があれば末尾スラッシュを正規化した絶対URL、なければ相対パスを入れるよう変更。`scripts/check-pdf-auth-contract.mjs` に通知リンクが direct `process.env.APP_URL` 連結へ戻らない契約を追加。local commit `6d387f9 fix: guard notification links without app url` を作成した。
+
+**検証**:
+- QUEUE Ready 未完了なし。In Progress = `food-dx-shiro`。
+- `food-dx-shiro`: repo `/Users/umi/.openclaw/workspace/food-dx-qwen/food-dx-system` は HEAD `6d387f9`、tracked 変更なし。
+- `npm run test:web:pdf-auth-contract` → pass。
+- `npm run lint --workspace=@food-dx/api` → pass。
+- `npm run build:api` → pass。
+- `npm run test:contracts` → pass（DB/E2E handoff contract、Web accessibility contract、PDF auth contract）。
+- `git diff --check` → pass。
+- 管理用 tmux `food-dx-shiro` は存在。
+- disk: `/System/Volumes/Data` は 96% 使用、空き 10GiB。通常の記録・品質確認は可能だが、disk cleanup は削除系操作のため未実行。
+- `cycle-tracker-app`: force push 承認サインなしのため未実行。承認サインは `cycle-tracker force push OK`。
+- push / force push / deploy / 本番変更 / 秘密情報共有 / 削除系操作は未実行。
+
+**状態**: 目的: 通知・承認・在庫/日次ダイジェストのリンクが `undefined` host を含む退行防止 / 現担当: 白 / 現状: 通知リンクはURL未設定環境でも相対リンクとして安全に保持され、契約で固定済み / 次アクション: review branch push 承認が来れば `shiro/food-dx-system-workspace` へ反映、未承認なら残る低リスクUI/APIフローを追加E2E対象として限定して拡張 / 詰まり: review branch push と `cycle-tracker-app` force push は承認待ち、disk cleanup は削除系操作のため承認待ち / 支援候補: Yakon（承認が必要な場合のみ） / 期限: 次heartbeatで継続確認。
+
+**通知判断**: notify=false（food-dx は自走で前進し、High Risk 実行は増えていない。即時割り込みが必要な新規 blocker なし）。
+
+---
+
 ## 2026-06-20 heartbeat (214回目)
 
 **アクション**: `/Users/umi/.openclaw/workspace/HEARTBEAT.md` を指定パスで読み、`tasks/QUEUE.md` の Ready / In Progress を確認。Ready 未完了なし、In Progress は `food-dx-shiro` のみ。古い会話由来の別タスクは広げず、前回の次アクション候補だった残る低リスクUI/APIフローから検索バー内の最近検索を限定し、push / deploy / 本番変更なしのローカル作業として `SearchBar` に残っていた `localStorage.getItem/setItem('recentSearches')` と仮ローカル履歴更新を共有APIへ差し替えた。`apps/web/src/components/search/SearchBar.tsx` はAPI由来の `RecentSearch` を `productsApi.getSearchHistory(10)` で読み、`productsApi.clearSearchHistory()` でクリアするよう変更。`apps/web/e2e/core-auth-smoke.spec.ts` に検索バー履歴の取得・適用・クリアE2Eを追加し、`scripts/check-pdf-auth-contract.mjs` に検索バーが localStorage 履歴へ戻らない契約を追加。local commit `2d57dc9 fix: load search bar history through API` を作成した。
