@@ -5,14 +5,27 @@
     "@bmw_intokyo"
   ],
   "last_check": {
-    "checked_at": "2026-06-21T00:08:21Z",
+    "checked_at": "2026-06-21T03:58:27Z",
     "found_count": 4,
     "new_count": 0,
     "status": "partial_error",
     "error": "profile extraction returned partial result: found=4 previous_max=15"
   },
-  "saved_count": 107,
+  "saved_count": 108,
   "posts": [
+    {
+      "handle": "@hal.lifedesign",
+      "post_id": "DZ1WUvsj7CG",
+      "post_url": "https://www.threads.com/@hal.lifedesign/post/DZ1WUvsj7CG",
+      "first_seen_at": "2026-06-21T03:55:20Z",
+      "captured_at": "2026-06-21T03:55:25Z",
+      "screenshot_size_bytes": 536379,
+      "screenshot_width": 1280,
+      "screenshot_height": 1800,
+      "post_text": "昨日参加したサクモトさんとサイテクカレッジさんの素敵なイベント。 サクモトさんの半生を聴きつつ、サイテクカレッジのへんとなさんのとんでもないエネルギーを浴びつつ、学生さんや他の参加者さんと交流できる本当に刺激的なイベントでした。 次回を楽しみにしてます！",
+      "posted_at": "2026-06-21T03:54:22.000Z",
+      "screenshot_path": "screenshots/hal.lifedesign/DZ1WUvsj7CG.png"
+    },
     {
       "handle": "@hal.lifedesign",
       "post_id": "DZ08S72j7iG",
@@ -1407,65 +1420,65 @@
   ],
   "recent_stats": {
     "window_hours": 24,
-    "total": 1009,
-    "ok": 409,
-    "partial_error": 600,
+    "total": 1010,
+    "ok": 420,
+    "partial_error": 590,
     "error": 0,
     "other": 0,
-    "success_rate": 0.4053518334985134,
-    "partial_error_rate": 0.5946481665014867,
+    "success_rate": 0.4158415841584158,
+    "partial_error_rate": 0.5841584158415841,
     "top_partial_error_reason": {
       "reason": "profile extraction returned partial result: found=4 previous_max=15",
-      "count": 540
+      "count": 528
     }
   },
   "recent_stats_by_window": {
     "1": {
       "window_hours": 1,
       "total": 42,
-      "ok": 16,
-      "partial_error": 26,
+      "ok": 14,
+      "partial_error": 28,
       "error": 0,
       "other": 0,
-      "success_rate": 0.38095238095238093,
-      "partial_error_rate": 0.6190476190476191,
+      "success_rate": 0.3333333333333333,
+      "partial_error_rate": 0.6666666666666666,
       "top_partial_error_reason": {
         "reason": "profile extraction returned partial result: found=4 previous_max=15",
-        "count": 24
+        "count": 25
       }
     },
     "24": {
       "window_hours": 24,
-      "total": 1009,
-      "ok": 409,
-      "partial_error": 600,
+      "total": 1010,
+      "ok": 420,
+      "partial_error": 590,
       "error": 0,
       "other": 0,
-      "success_rate": 0.4053518334985134,
-      "partial_error_rate": 0.5946481665014867,
+      "success_rate": 0.4158415841584158,
+      "partial_error_rate": 0.5841584158415841,
       "top_partial_error_reason": {
         "reason": "profile extraction returned partial result: found=4 previous_max=15",
-        "count": 540
+        "count": 528
       }
     },
     "168": {
       "window_hours": 168,
       "total": 6785,
-      "ok": 1342,
-      "partial_error": 5441,
+      "ok": 1416,
+      "partial_error": 5367,
       "error": 2,
       "other": 0,
-      "success_rate": 0.19778924097273398,
-      "partial_error_rate": 0.8019159911569639,
+      "success_rate": 0.20869565217391303,
+      "partial_error_rate": 0.7910095799557848,
       "top_partial_error_reason": {
         "reason": "profile extraction returned partial result: found=4 previous_max=15",
-        "count": 2724
+        "count": 2802
       }
     }
   },
   "sync_state": {
-    "cursor": 129,
-    "db_max": 130,
+    "cursor": 130,
+    "db_max": 131,
     "delta": 1,
     "cursor_file_exists": true
   },
@@ -1481,9 +1494,9 @@
     },
     {
       "handle": "@hal.lifedesign",
-      "incidents": 20,
-      "total_s": 719274,
-      "mean_s": 35963,
+      "incidents": 22,
+      "total_s": 751109,
+      "mean_s": 34141,
       "median_s": 3002,
       "max_s": 426210
     }
@@ -1496,9 +1509,9 @@
     },
     {
       "handle": "@hal.lifedesign",
-      "warn_ts": 1781974396,
+      "warn_ts": 1782010734,
       "current_bucket": 0.5
     }
   ],
-  "snapshot_generated_at": "2026-06-21T00:08:21Z"
+  "snapshot_generated_at": "2026-06-21T03:58:27Z"
 }
