@@ -59,6 +59,31 @@ git -C /Users/umi/.openclaw/workspace/cycle-tracker-app push --force origin main
 
 ---
 
+## 2026-06-21 heartbeat (231回目)
+
+**アクション**: `/Users/umi/.openclaw/workspace/HEARTBEAT.md` を指定パスで読み、`tasks/QUEUE.md` の Ready / In Progress を確認。Ready 未完了なし、In Progress は `food-dx-shiro` のみ。古い会話由来の別タスクは広げず、前回の次アクション候補だった残る低リスクUIフローから、承認ワークフロー設定の入力検証と削除確認が blocking `alert()` / `confirm()` に依存している箇所を限定し、push / deploy / 本番変更なしのローカル作業としてページ内の `role=alert` フィードバックへ置換した。`apps/web/src/components/approvals/ApprovalWorkflowBuilder.tsx` はワークフロー名未入力・承認レベル未追加をインライン表示し、`apps/web/src/app/settings/approvals/page.tsx` は削除確認をカード内確認パネルへ変更。`apps/web/e2e/core-auth-smoke.spec.ts` は作成検証と削除確認が dialog を出さずページ内 alert/status を表示することを確認するよう更新。`scripts/check-pdf-auth-contract.mjs` に旧 `alert('ワークフロー名...')` / `confirm('本当に...')` へ戻らない契約を追加。local commit `db315d8 fix: show approval workflow validation inline` を作成した。
+
+**検証**:
+- QUEUE Ready 未完了なし。In Progress = `food-dx-shiro`。
+- `food-dx-shiro`: repo `/Users/umi/.openclaw/workspace/food-dx-qwen/food-dx-system` は HEAD `db315d8`、tracked 変更なし。
+- `npm run test:web:core-smoke-e2e -- --grep "approval settings page"` → 2/2 pass。
+- `npm run test:web:core-smoke-e2e` → 38/38 pass。
+- `npm run test:web:pdf-auth-contract` → pass。
+- `npm run lint --workspace=@food-dx/web` → pass。
+- `npm run test:contracts` → pass（DB/E2E handoff contract、Web accessibility contract、PDF auth contract）。
+- `npm run build:web` → pass（21 pages generated。並行E2E中の既知 `/_document` 競合は単独再実行でpass）。
+- `git diff --check` → pass。
+- 管理用 tmux `food-dx-shiro` は存在。
+- disk: `/System/Volumes/Data` は 96% 使用、空き 9.7GiB。通常の記録・品質確認は可能だが、disk cleanup は削除系操作のため未実行。
+- `cycle-tracker-app`: force push 承認サインなしのため未実行。承認サインは `cycle-tracker force push OK`。
+- push / force push / deploy / 本番変更 / 秘密情報共有 / 削除系操作は未実行。
+
+**状態**: 目的: 承認ワークフロー設定の入力検証・削除確認がブラウザalert/confirm実装へ戻る退行防止 / 現担当: 白 / 現状: ワークフロー名未入力・承認レベル未追加・削除確認をインライン表示でE2Eと契約に固定済み / 次アクション: review branch push 承認が来れば `shiro/food-dx-system-workspace` へ反映、未承認なら残る低リスクUI/APIフローを追加E2E対象として限定して拡張 / 詰まり: review branch push と `cycle-tracker-app` force push は承認待ち、disk cleanup は削除系操作のため承認待ち / 支援候補: Yakon（承認が必要な場合のみ） / 期限: 次heartbeatで継続確認。
+
+**通知判断**: notify=false（food-dx は自走で前進し、High Risk 実行は増えていない。即時割り込みが必要な新規 blocker なし）。
+
+---
+
 ## 2026-06-21 heartbeat (230回目)
 
 **アクション**: `/Users/umi/.openclaw/workspace/HEARTBEAT.md` を指定パスで読み、`tasks/QUEUE.md` の Ready / In Progress を確認。Ready 未完了なし、In Progress は `food-dx-shiro` のみ。古い会話由来の別タスクは広げず、前回の次アクション候補だった残る低リスクUIフローから、通知設定モーダルのテスト通知成功/失敗結果が blocking `alert()` に依存している箇所を限定し、push / deploy / 本番変更なしのローカル作業としてページ内の `role=status` / `role=alert` フィードバックへ置換した。`apps/web/src/components/notifications/PreferencesModal.tsx` はテスト通知の成功・失敗をインライン表示し、`apps/web/e2e/core-auth-smoke.spec.ts` はテスト通知送信が dialog を出さずページ内statusを表示することを確認するよう更新。`scripts/check-pdf-auth-contract.mjs` に旧 `alert('テスト通知...')` へ戻らない契約を追加。local commit `664aab1 fix: show notification test feedback inline` を作成した。
