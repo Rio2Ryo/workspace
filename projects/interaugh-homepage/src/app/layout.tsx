@@ -2,9 +2,9 @@ import type { Metadata } from "next";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "Interaugh | スマート名刺で、ビジネスの可能性を最大化する",
+  title: "Interaugh ｜ 世界を、巻き込む",
   description:
-    "Interaughのスマート名刺サービスLP。NFC × AIで名刺交換後の導線を最適化し、ビジネスの可能性を広げます。",
+    "Interaugh（インタラフ）— Web3と日本のものづくりで、日本の才能を世界の舞台へ。Nチケ・KATAOMOI・CryptoWashiを展開。",
 };
 
 export default function RootLayout({
