@@ -5,14 +5,27 @@
     "@bmw_intokyo"
   ],
   "last_check": {
-    "checked_at": "2026-06-21T03:58:27Z",
+    "checked_at": "2026-06-21T07:28:17Z",
     "found_count": 4,
     "new_count": 0,
     "status": "partial_error",
     "error": "profile extraction returned partial result: found=4 previous_max=15"
   },
-  "saved_count": 108,
+  "saved_count": 109,
   "posts": [
+    {
+      "handle": "@hal.lifedesign",
+      "post_id": "DZ1usrbDyvB",
+      "post_url": "https://www.threads.com/@hal.lifedesign/post/DZ1usrbDyvB",
+      "first_seen_at": "2026-06-21T07:28:00Z",
+      "captured_at": "2026-06-21T07:28:05Z",
+      "screenshot_size_bytes": 577467,
+      "screenshot_width": 1280,
+      "screenshot_height": 1800,
+      "post_text": "今日は @vivian_u_2525 さんが出展するZINEフェス沖縄へ。 ZINEとかなんも知らなかったけど興味津々。 素敵でディープなクリエイターさんたちの作品やお話をいっぱい見て聞いてクリエイティブ濃度が高すぎて胃もたれしそうw カモノハシの持ち方も教えてもらったから目の前にカモノハシ現れても多分大丈夫。 僕も次回は出展してみたいかも。",
+      "posted_at": "2026-06-21T07:27:21.000Z",
+      "screenshot_path": "screenshots/hal.lifedesign/DZ1usrbDyvB.png"
+    },
     {
       "handle": "@hal.lifedesign",
       "post_id": "DZ1WUvsj7CG",
@@ -1421,15 +1434,15 @@
   "recent_stats": {
     "window_hours": 24,
     "total": 1010,
-    "ok": 420,
-    "partial_error": 590,
+    "ok": 418,
+    "partial_error": 592,
     "error": 0,
     "other": 0,
-    "success_rate": 0.4158415841584158,
-    "partial_error_rate": 0.5841584158415841,
+    "success_rate": 0.41386138613861384,
+    "partial_error_rate": 0.5861386138613861,
     "top_partial_error_reason": {
       "reason": "profile extraction returned partial result: found=4 previous_max=15",
-      "count": 528
+      "count": 537
     }
   },
   "recent_stats_by_window": {
@@ -1444,41 +1457,41 @@
       "partial_error_rate": 0.6666666666666666,
       "top_partial_error_reason": {
         "reason": "profile extraction returned partial result: found=4 previous_max=15",
-        "count": 25
+        "count": 28
       }
     },
     "24": {
       "window_hours": 24,
       "total": 1010,
-      "ok": 420,
-      "partial_error": 590,
+      "ok": 418,
+      "partial_error": 592,
       "error": 0,
       "other": 0,
-      "success_rate": 0.4158415841584158,
-      "partial_error_rate": 0.5841584158415841,
+      "success_rate": 0.41386138613861384,
+      "partial_error_rate": 0.5861386138613861,
       "top_partial_error_reason": {
         "reason": "profile extraction returned partial result: found=4 previous_max=15",
-        "count": 528
+        "count": 537
       }
     },
     "168": {
       "window_hours": 168,
       "total": 6785,
-      "ok": 1416,
-      "partial_error": 5367,
+      "ok": 1475,
+      "partial_error": 5308,
       "error": 2,
       "other": 0,
-      "success_rate": 0.20869565217391303,
-      "partial_error_rate": 0.7910095799557848,
+      "success_rate": 0.21739130434782608,
+      "partial_error_rate": 0.7823139277818718,
       "top_partial_error_reason": {
         "reason": "profile extraction returned partial result: found=4 previous_max=15",
-        "count": 2802
+        "count": 2890
       }
     }
   },
   "sync_state": {
-    "cursor": 130,
-    "db_max": 131,
+    "cursor": 131,
+    "db_max": 132,
     "delta": 1,
     "cursor_file_exists": true
   },
@@ -1505,13 +1518,13 @@
     {
       "handle": "@bmw_intokyo",
       "warn_ts": 1781959985,
-      "current_bucket": 0.7
+      "current_bucket": 0.6
     },
     {
       "handle": "@hal.lifedesign",
       "warn_ts": 1782010734,
-      "current_bucket": 0.5
+      "current_bucket": 0.6
     }
   ],
-  "snapshot_generated_at": "2026-06-21T03:58:27Z"
+  "snapshot_generated_at": "2026-06-21T07:28:17Z"
 }
