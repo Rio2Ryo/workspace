@@ -59,6 +59,30 @@ git -C /Users/umi/.openclaw/workspace/cycle-tracker-app push --force origin main
 
 ---
 
+## 2026-06-21 heartbeat (233回目)
+
+**アクション**: `/Users/umi/.openclaw/workspace/HEARTBEAT.md` を指定パスで読み、`tasks/QUEUE.md` の Ready / In Progress を確認。Ready 未完了なし、In Progress は `food-dx-shiro` のみ。古い会話由来の別タスクは広げず、前回までの低リスクUI修正が個別契約に閉じすぎないよう、push / deploy / 本番変更なしのローカル作業として `scripts/check-pdf-auth-contract.mjs` に `apps/web/src` 横断ガードを追加した。共有API helper (`apps/web/src/lib/api.ts`, `apps/web/src/lib/auth-fetch.ts`) 以外で raw `fetch('/api/...')`、blocking `alert()` / `confirm()`、`window.location.href/assign/replace/reload` が戻った場合に contract fail する。local commit `148c44e test: guard web UI regression patterns` を作成した。
+
+**検証**:
+- QUEUE Ready 未完了なし。In Progress = `food-dx-shiro`。
+- `food-dx-shiro`: repo `/Users/umi/.openclaw/workspace/food-dx-qwen/food-dx-system` は HEAD `148c44e`、tracked 変更なし。
+- `rg "fetch\\(['\\\"](/api|\\$\\{.*api)|api\\.(get|post|put|patch|delete)\\(['\\\"]/?api" apps/web/src -n` → 共有API client 内の `authApi.logout` のみ。
+- `npm run test:web:pdf-auth-contract` → pass。
+- `npm run test:contracts` → pass（DB/E2E handoff contract、Web accessibility contract、PDF auth contract）。
+- `npm run lint --workspace=@food-dx/web` → pass（Next.js plugin warning のみ）。
+- `npm run build:web` → pass（21 pages generated）。
+- `git diff --check` → pass。
+- 管理用 tmux `food-dx-shiro` は存在。
+- disk: `/System/Volumes/Data` は 96% 使用、空き 8.9GiB。通常の記録・品質確認は可能だが、disk cleanup は削除系操作のため未実行。
+- `cycle-tracker-app`: force push 承認サインなしのため未実行。承認サインは `cycle-tracker force push OK`。
+- push / force push / deploy / 本番変更 / 秘密情報共有 / 削除系操作は未実行。
+
+**状態**: 目的: Web UI/APIフローが raw API fetch・blocking dialog・full reload/navigation 実装へ戻る退行防止 / 現担当: 白 / 現状: 個別E2E/契約に加え、`apps/web/src` 横断の禁止パターン契約を追加し、全契約・lint・buildで固定済み / 次アクション: review branch push 承認が来れば `shiro/food-dx-system-workspace` へ反映、未承認なら残る低リスクUI/APIフローを追加E2E対象として限定して拡張 / 詰まり: review branch push と `cycle-tracker-app` force push は承認待ち、disk cleanup は削除系操作のため承認待ち / 支援候補: Yakon（承認が必要な場合のみ） / 期限: 次heartbeatで継続確認。
+
+**通知判断**: notify=false（food-dx は自走で前進し、High Risk 実行は増えていない。即時割り込みが必要な新規 blocker なし）。
+
+---
+
 ## 2026-06-21 heartbeat (232回目)
 
 **アクション**: `/Users/umi/.openclaw/workspace/HEARTBEAT.md` を指定パスで読み、`tasks/QUEUE.md` の Ready / In Progress を確認。Ready 未完了なし、In Progress は `food-dx-shiro` のみ。古い会話由来の別タスクは広げず、前回の次アクション候補だった残る低リスクUIフローから、order detail / documents の PDFメール送信成功・失敗結果が blocking `alert()` に依存している箇所を限定し、push / deploy / 本番変更なしのローカル作業としてページ内の `role=status` / `role=alert` フィードバックへ置換した。`apps/web/src/components/orders/OrderActions.tsx` と `apps/web/src/components/pdf/PdfDownloadButton.tsx` はメール送信結果をインライン表示し、`apps/web/e2e/pdf-auth-flow.spec.ts` は PDFメール送信が dialog を出さずページ内 status を表示することを確認するよう更新。`scripts/check-pdf-auth-contract.mjs` に旧 `alert()` へ戻らない契約を追加。local commit `7853cf9 fix: show PDF email feedback inline` を作成した。
