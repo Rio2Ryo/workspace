@@ -5,14 +5,27 @@
     "@bmw_intokyo"
   ],
   "last_check": {
-    "checked_at": "2026-06-20T01:41:54Z",
+    "checked_at": "2026-06-21T00:08:21Z",
     "found_count": 4,
     "new_count": 0,
     "status": "partial_error",
     "error": "profile extraction returned partial result: found=4 previous_max=15"
   },
-  "saved_count": 106,
+  "saved_count": 107,
   "posts": [
+    {
+      "handle": "@hal.lifedesign",
+      "post_id": "DZ08S72j7iG",
+      "post_url": "https://www.threads.com/@hal.lifedesign/post/DZ08S72j7iG",
+      "first_seen_at": "2026-06-21T00:08:03Z",
+      "captured_at": "2026-06-21T00:08:08Z",
+      "screenshot_size_bytes": 463582,
+      "screenshot_width": 1280,
+      "screenshot_height": 1800,
+      "post_text": "今日は胸トレ。 ベンチはPR更新できず。 まぁそんなこともあるわな。 HALOも\"推定1RMは前回比-2.8kgですが、総ボリュームは同水準を維持。コンディションに応じて高重量を避けボリュームを確保する自己調整は、回復状況に合わせて負荷を管理する的確な判断です。\"って言ってくれてるし。",
+      "posted_at": "2026-06-21T00:06:56.000Z",
+      "screenshot_path": "screenshots/hal.lifedesign/DZ08S72j7iG.png"
+    },
     {
       "handle": "@hal.lifedesign",
       "post_id": "DZyht05khT2",
@@ -1394,28 +1407,28 @@
   ],
   "recent_stats": {
     "window_hours": 24,
-    "total": 1010,
-    "ok": 388,
-    "partial_error": 622,
+    "total": 1009,
+    "ok": 409,
+    "partial_error": 600,
     "error": 0,
     "other": 0,
-    "success_rate": 0.38415841584158417,
-    "partial_error_rate": 0.6158415841584158,
+    "success_rate": 0.4053518334985134,
+    "partial_error_rate": 0.5946481665014867,
     "top_partial_error_reason": {
       "reason": "profile extraction returned partial result: found=4 previous_max=15",
-      "count": 586
+      "count": 540
     }
   },
   "recent_stats_by_window": {
     "1": {
       "window_hours": 1,
       "total": 42,
-      "ok": 17,
-      "partial_error": 25,
+      "ok": 16,
+      "partial_error": 26,
       "error": 0,
       "other": 0,
-      "success_rate": 0.40476190476190477,
-      "partial_error_rate": 0.5952380952380952,
+      "success_rate": 0.38095238095238093,
+      "partial_error_rate": 0.6190476190476191,
       "top_partial_error_reason": {
         "reason": "profile extraction returned partial result: found=4 previous_max=15",
         "count": 24
@@ -1423,36 +1436,36 @@
     },
     "24": {
       "window_hours": 24,
-      "total": 1010,
-      "ok": 388,
-      "partial_error": 622,
+      "total": 1009,
+      "ok": 409,
+      "partial_error": 600,
       "error": 0,
       "other": 0,
-      "success_rate": 0.38415841584158417,
-      "partial_error_rate": 0.6158415841584158,
+      "success_rate": 0.4053518334985134,
+      "partial_error_rate": 0.5946481665014867,
       "top_partial_error_reason": {
         "reason": "profile extraction returned partial result: found=4 previous_max=15",
-        "count": 586
+        "count": 540
       }
     },
     "168": {
       "window_hours": 168,
       "total": 6785,
-      "ok": 960,
-      "partial_error": 5823,
+      "ok": 1342,
+      "partial_error": 5441,
       "error": 2,
       "other": 0,
-      "success_rate": 0.1414885777450258,
-      "partial_error_rate": 0.8582166543846721,
+      "success_rate": 0.19778924097273398,
+      "partial_error_rate": 0.8019159911569639,
       "top_partial_error_reason": {
         "reason": "profile extraction returned partial result: found=4 previous_max=15",
-        "count": 2221
+        "count": 2724
       }
     }
   },
   "sync_state": {
-    "cursor": 128,
-    "db_max": 129,
+    "cursor": 129,
+    "db_max": 130,
     "delta": 1,
     "cursor_file_exists": true
   },
@@ -1460,32 +1473,32 @@
   "mttr_summary": [
     {
       "handle": "@bmw_intokyo",
-      "incidents": 1,
-      "total_s": 426210,
-      "mean_s": 426210,
-      "median_s": 426210,
+      "incidents": 2,
+      "total_s": 747197,
+      "mean_s": 373598,
+      "median_s": 373598,
       "max_s": 426210
     },
     {
       "handle": "@hal.lifedesign",
-      "incidents": 13,
-      "total_s": 642092,
-      "mean_s": 49391,
-      "median_s": 1201,
+      "incidents": 20,
+      "total_s": 719274,
+      "mean_s": 35963,
+      "median_s": 3002,
       "max_s": 426210
     }
   ],
   "open_incidents": [
     {
       "handle": "@bmw_intokyo",
-      "warn_ts": 1781638098,
-      "current_bucket": 0.6
+      "warn_ts": 1781959985,
+      "current_bucket": 0.7
     },
     {
       "handle": "@hal.lifedesign",
-      "warn_ts": 1781889103,
-      "current_bucket": 0.6
+      "warn_ts": 1781974396,
+      "current_bucket": 0.5
     }
   ],
-  "snapshot_generated_at": "2026-06-20T01:41:54Z"
+  "snapshot_generated_at": "2026-06-21T00:08:21Z"
 }
