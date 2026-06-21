@@ -59,6 +59,32 @@ git -C /Users/umi/.openclaw/workspace/cycle-tracker-app push --force origin main
 
 ---
 
+## 2026-06-21 heartbeat (226回目)
+
+**アクション**: `/Users/umi/.openclaw/workspace/HEARTBEAT.md` を指定パスで読み、`tasks/QUEUE.md` の Ready / In Progress を確認。Ready 未完了なし、In Progress は `food-dx-shiro` のみ。古い会話由来の別タスクは広げず、前回の次アクション候補だった残る低リスクUIフローから、商品一覧/商品検索の保存検索・共有結果が blocking `alert()` に依存している箇所を限定し、push / deploy / 本番変更なしのローカル作業としてインラインの `role=status` / `role=alert` フィードバックへ置換した。`apps/web/src/app/products/page.tsx` と `apps/web/src/app/products/search/page.tsx` は保存検索成功/失敗と共有URLコピー成功/失敗をページ内バナーで表示し、`apps/web/e2e/core-auth-smoke.spec.ts` は保存・共有が dialog を出さずページ内ステータスを表示することを確認するよう更新。`scripts/check-pdf-auth-contract.mjs` に旧 `alert('検索...')` へ戻らない契約を追加。local commit `4c7a7e6 fix: show product search feedback inline` を作成した。
+
+**検証**:
+- QUEUE Ready 未完了なし。In Progress = `food-dx-shiro`。
+- `food-dx-shiro`: repo `/Users/umi/.openclaw/workspace/food-dx-qwen/food-dx-system` は HEAD `4c7a7e6`、tracked 変更なし。
+- `npm run test:web:core-smoke-e2e -- --grep "saves the current search"` → 1/1 pass。
+- `npm run test:web:core-smoke-e2e -- --grep "saved search|shares canonical search URLs"` → 3/3 pass。
+- `npm run test:web:core-smoke-e2e` → 37/37 pass。
+- `npm run test:web:pdf-auth-contract` → pass。
+- `npm run lint --workspace=@food-dx/web` → pass。
+- `npm run test:contracts` → pass（DB/E2E handoff contract、Web accessibility contract、PDF auth contract）。
+- `npm run build:web` → pass（21 pages generated）。
+- `git diff --check` → pass。
+- 管理用 tmux `food-dx-shiro` は存在。
+- disk: `/System/Volumes/Data` は 96% 使用、空き 9.9GiB。通常の記録・品質確認は可能だが、disk cleanup は削除系操作のため未実行。
+- `cycle-tracker-app`: force push 承認サインなしのため未実行。承認サインは `cycle-tracker force push OK`。
+- push / force push / deploy / 本番変更 / 秘密情報共有 / 削除系操作は未実行。
+
+**状態**: 目的: 商品検索の保存/共有結果がブラウザalert実装へ戻る退行防止 / 現担当: 白 / 現状: 商品一覧/検索の保存・共有フィードバックをインライン表示でE2Eと契約に固定済み / 次アクション: review branch push 承認が来れば `shiro/food-dx-system-workspace` へ反映、未承認なら残る低リスクUI/APIフローを追加E2E対象として限定して拡張 / 詰まり: review branch push と `cycle-tracker-app` force push は承認待ち、disk cleanup は削除系操作のため承認待ち / 支援候補: Yakon（承認が必要な場合のみ） / 期限: 次heartbeatで継続確認。
+
+**通知判断**: notify=false（food-dx は自走で前進し、High Risk 実行は増えていない。即時割り込みが必要な新規 blocker なし）。
+
+---
+
 ## 2026-06-21 heartbeat (225回目)
 
 **アクション**: `/Users/umi/.openclaw/workspace/HEARTBEAT.md` を指定パスで読み、`tasks/QUEUE.md` の Ready / In Progress を確認。Ready 未完了なし、In Progress は `food-dx-shiro` のみ。古い会話由来の別タスクは広げず、前回の次アクション候補だった残る低リスクUIフローから、承認ワークフロー設定ページの作成・更新・削除・デフォルト変更結果が blocking `alert()` に依存している箇所を限定し、push / deploy / 本番変更なしのローカル作業としてインラインの `role=status` / `role=alert` フィードバックへ置換した。`apps/web/src/app/settings/approvals/page.tsx` は workflow API 成功/失敗をページ内バナーで表示し、`apps/web/e2e/core-auth-smoke.spec.ts` は作成・デフォルト変更・削除の成功表示をページ内ステータスとして確認するよう更新。`scripts/check-pdf-auth-contract.mjs` に旧 `alert('ワークフロー...')` へ戻らない契約を追加。local commit `3855ed8 fix: show approval workflow feedback inline` を作成した。
